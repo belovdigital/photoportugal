@@ -434,14 +434,6 @@ export default async function BookingsPage() {
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
                         <PayButton bookingId={booking.id} amount={Number(booking.total_price)} blind={!!booking.blind_booking} />
                       )}
-                      {!isPhotographer && ["delivered", "disputed"].includes(booking.status) && booking.delivery_token && (
-                        <Link
-                          href={`/delivery/${booking.delivery_token}`}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700"
-                        >
-                          {t("viewPhotos")}
-                        </Link>
-                      )}
                     </div>
                   }
                 />
@@ -652,7 +644,7 @@ export default async function BookingsPage() {
                   drops below it. */}
               {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
                 <div className="mt-4">
-                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} deliveryToken={booking.delivery_token} tipped={!!booking.tip_amount_cents} />
+                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} deliveryToken={booking.delivery_token} tipped={!!booking.tip_amount_cents} locked={!booking.delivery_accepted} />
                 </div>
               )}
 

@@ -3042,7 +3042,7 @@
     "deleteFailed": "Could not delete these photos. Nothing was removed.",
     "deletePartial": "Removed {removed}, but {failed} could not be deleted. Try again for the rest.",
     "includeFailed": "Could not change these photos",
-    "extrasSelected": "{count} extra photos selected",
+    "extrasSelected": "{count, plural, one {# extra photo selected} other {# extra photos selected}}",
     "extrasBuy": "Buy",
     "extrasClear": "Clear",
     "extrasError": "Could not start the purchase",
@@ -3073,7 +3073,13 @@
     "giftUnsaved": "Press Save to let your client pick {count, plural, one {# extra photo} other {# extra photos}} for free.",
     "giftMoreThanExtras": "There {available, plural, one {is only # extra photo} other {are only # extra photos}} to give right now.",
     "giftAll": "Give them all",
-    "moveSurplus": "Move the last {over} down"
+    "moveSurplus": "Move the last {over} down",
+    "extraPick": "Add",
+    "extraPicked": "Added",
+    "plusExtrasAvailable": "+ {count} extra to choose from",
+    "extrasBannerTitle": "{count, plural, one {# extra photo from your session} other {# extra photos from your session}}",
+    "extrasHowTo": "They are the ones with a watermark. Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. €{price} each.",
+    "extrasFreeFirst": "Your {count} free ones are taken off first — pick that many and you pay nothing."
   },
   "availability": {
     "pageTitle": "Availability",
@@ -3567,7 +3573,8 @@
     },
     "reviewPhotoPreview": "Review photo preview",
     "tipChipsHeading": "Make {name}’s day — add a tip?",
-    "tipChipsError": "Could not start the payment — try again."
+    "tipChipsError": "Could not start the payment — try again.",
+    "reviewAfterAccept": "You can leave a review once you have accepted your photos."
   },
   "payButton": {
     "pay": "Pay €{total}",

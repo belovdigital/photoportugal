@@ -2822,7 +2822,7 @@
     "deleteFailed": "Não foi possível eliminar estas fotos. Nada foi removido.",
     "deletePartial": "Removidas {removed}, mas {failed} não foram eliminadas. Tente novamente para as restantes.",
     "includeFailed": "Não foi possível alterar estas fotografias",
-    "extrasSelected": "{count} fotografias extra selecionadas",
+    "extrasSelected": "{count, plural, one {# fotografia extra selecionada} other {# fotografias extra selecionadas}}",
     "extrasBuy": "Comprar",
     "extrasClear": "Limpar",
     "extrasError": "Não foi possível iniciar a compra",
@@ -2853,7 +2853,13 @@
     "giftUnsaved": "Carregue em Guardar para o cliente poder escolher {count, plural, one {# fotografia extra} other {# fotografias extra}} de graça.",
     "giftMoreThanExtras": "Só {available, plural, one {existe # fotografia extra} other {existem # fotografias extra}} para oferecer neste momento.",
     "giftAll": "Oferecer todas",
-    "moveSurplus": "Mover as últimas {over} para baixo"
+    "moveSurplus": "Mover as últimas {over} para baixo",
+    "extraPick": "Juntar",
+    "extraPicked": "Junta",
+    "plusExtrasAvailable": "+ {count} extra à escolha",
+    "extrasBannerTitle": "{count, plural, one {# fotografia extra da sua sessão} other {# fotografias extra da sua sessão}}",
+    "extrasHowTo": "São as que têm marca de água. Toque em Juntar nas que gostar — ficam reunidas no fundo da página e só paga quando carregar em Comprar. {price} € cada.",
+    "extrasFreeFirst": "As suas {count} gratuitas são descontadas primeiro — escolha esse número e não paga nada."
   },
   "availability": {
     "pageTitle": "Disponibilidade",
@@ -3347,7 +3353,8 @@
     },
     "reviewPhotoPreview": "Pré-visualização da foto da avaliação",
     "tipChipsHeading": "Faça o dia de {name} — deixar uma gorjeta?",
-    "tipChipsError": "Não foi possível iniciar o pagamento — tente novamente."
+    "tipChipsError": "Não foi possível iniciar o pagamento — tente novamente.",
+    "reviewAfterAccept": "Poderá deixar uma avaliação depois de aceitar as suas fotografias."
   },
   "payButton": {
     "pay": "Pagar €{total}",

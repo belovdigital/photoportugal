@@ -3048,7 +3048,7 @@
     "deleteFailed": "Diese Fotos konnten nicht gelöscht werden. Es wurde nichts entfernt.",
     "deletePartial": "{removed} entfernt, aber {failed} konnten nicht gelöscht werden. Versuchen Sie es für den Rest erneut.",
     "includeFailed": "Diese Fotos konnten nicht geändert werden",
-    "extrasSelected": "{count} zusätzliche Fotos ausgewählt",
+    "extrasSelected": "{count, plural, one {# zusätzliches Foto ausgewählt} other {# zusätzliche Fotos ausgewählt}}",
     "extrasBuy": "Kaufen",
     "extrasClear": "Leeren",
     "extrasError": "Der Kauf konnte nicht gestartet werden",
@@ -3079,7 +3079,13 @@
     "giftUnsaved": "Auf Speichern drücken, damit Ihre Kundschaft {count, plural, one {# zusätzliches Foto} other {# zusätzliche Fotos}} gratis wählen kann.",
     "giftMoreThanExtras": "Es {available, plural, one {gibt derzeit nur # zusätzliches Foto} other {gibt derzeit nur # zusätzliche Fotos}} zu verschenken.",
     "giftAll": "Alle verschenken",
-    "moveSurplus": "Die letzten {over} verschieben"
+    "moveSurplus": "Die letzten {over} verschieben",
+    "extraPick": "Dazu",
+    "extraPicked": "Dabei",
+    "plusExtrasAvailable": "+ {count} zusätzliche zur Auswahl",
+    "extrasBannerTitle": "{count, plural, one {# zusätzliches Foto aus Ihrer Session} other {# zusätzliche Fotos aus Ihrer Session}}",
+    "extrasHowTo": "Es sind die mit Wasserzeichen. Tippen Sie bei jedem gewünschten Foto auf Dazu — sie sammeln sich unten auf der Seite, bezahlt wird erst mit Kaufen. Je {price} €.",
+    "extrasFreeFirst": "Ihre {count} kostenlosen werden zuerst abgezogen — wählen Sie so viele und Sie zahlen nichts."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",
@@ -3573,7 +3579,8 @@
     },
     "reviewPhotoPreview": "Vorschau des Bewertungsfotos",
     "tipChipsHeading": "Machen Sie {name} eine Freude — Trinkgeld geben?",
-    "tipChipsError": "Zahlung konnte nicht gestartet werden — bitte erneut versuchen."
+    "tipChipsError": "Zahlung konnte nicht gestartet werden — bitte erneut versuchen.",
+    "reviewAfterAccept": "Eine Bewertung ist möglich, sobald Sie Ihre Fotos abgenommen haben."
   },
   "payButton": {
     "pay": "{total} € zahlen",

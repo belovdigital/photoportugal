@@ -13,7 +13,7 @@ import { VideoReviewRecorder } from "./VideoReviewRecorder";
 const MIN_REVIEW_WORDS = 10;
 const countWords = (s: string) => (s.trim() ? s.trim().split(/\s+/).filter(Boolean).length : 0);
 
-export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped }: {
+export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped, locked }: {
   bookingId: string;
   photographerName: string;
   /** Delivery token — enables the optional tip chips on the 5★ success
@@ -21,6 +21,9 @@ export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped 
   deliveryToken?: string | null;
   /** A paid tip already exists — never re-ask. */
   tipped?: boolean;
+  /** Photos delivered but not accepted yet — reviewing before looking at them
+   *  is backwards, so the buttons show what is coming and stay inert. */
+  locked?: boolean;
 }) {
   const router = useRouter();
   const t = useTranslations("reviewForm");
@@ -152,8 +155,9 @@ export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped 
 
   return (
     <div ref={containerRef}>
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className={`flex flex-col gap-2 sm:flex-row ${locked ? "pointer-events-none opacity-40 grayscale" : ""}`} aria-disabled={locked || undefined}>
         <button
+          disabled={locked}
           onClick={() => setOpen(true)}
           className="flex-1 group relative overflow-hidden rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-6 py-4 text-base font-bold text-gray-900 shadow-md transition hover:from-yellow-500 hover:to-amber-600 hover:shadow-lg"
         >
@@ -164,6 +168,7 @@ export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped 
           </span>
         </button>
         <button
+          disabled={locked}
           onClick={() => setShowVideoRecorder(true)}
           className="flex-1 sm:flex-none group relative overflow-hidden rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 px-6 py-4 text-base font-bold text-white shadow-md transition hover:from-primary-600 hover:to-primary-800 hover:shadow-lg"
         >
@@ -176,6 +181,7 @@ export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped 
           </span>
         </button>
       </div>
+      {locked && <p className="mt-2 text-center text-xs text-gray-500">{t("reviewAfterAccept")}</p>}
 
       {showVideoRecorder && (
         <VideoReviewRecorder

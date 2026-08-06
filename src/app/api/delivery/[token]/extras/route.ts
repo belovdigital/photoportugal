@@ -153,7 +153,7 @@ export async function POST(
         "UPDATE delivery_photos SET purchased_at = NOW() WHERE id = ANY($1::uuid[]) AND purchased_at IS NULL",
         [rows.rows.map((r: { id: string }) => r.id)]
       );
-      return { count: rows.rows.length };
+      return { count: rows.rows.length, left: remaining - rows.rows.length };
     }).catch((err: unknown) => {
       // The unique index turns a concurrent double-redeem of the same photo
       // into a clean conflict rather than a duplicate gift.
@@ -180,7 +180,16 @@ export async function POST(
       buildDeliveryZip(booking.id, "extras")
     ).catch(() => {});
     import("@/lib/telegram").then(({ sendTelegram }) =>
-      sendTelegram(`🎁 <b>Клиент выбрал подарочные фото</b>\n\n${gifted.count} шт · бронь <code>${booking.id.slice(0, 8)}</code>`, "bookings")
+      // Says "бесплатно" out loud: this endpoint only ever redeems the gift.
+      // Anything the client also chose to BUY goes through checkout and is
+      // reported separately by the purchase alert — reading "10 шт" here after
+      // selecting 11 looked like the eleventh had silently vanished.
+      sendTelegram(
+        `🎁 <b>Клиент забрал подарочные фото</b>\n\n${gifted.count} шт бесплатно` +
+        (gifted.left > 0 ? ` · осталось в подарке: ${gifted.left}` : " · подарок исчерпан") +
+        `\nЕсли выбрал больше — платная часть придёт отдельным сообщением.` +
+        `\nБронь <code>${booking.id.slice(0, 8)}</code>`,
+        "bookings")
     ).catch(() => {});
     import("@/lib/realtime").then((m) => {
       m.notifyUser(booking.client_id, "delivery_uploaded", { bookingId: booking.id });

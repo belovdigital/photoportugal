@@ -3295,7 +3295,7 @@
     "deleteFailed": "No se pudieron eliminar estas fotos. No se ha quitado nada.",
     "deletePartial": "Se eliminaron {removed}, pero {failed} no se pudieron borrar. Inténtalo de nuevo con el resto.",
     "includeFailed": "No se pudieron cambiar estas fotos",
-    "extrasSelected": "{count} fotos extra seleccionadas",
+    "extrasSelected": "{count, plural, one {# foto extra seleccionada} other {# fotos extra seleccionadas}}",
     "extrasBuy": "Comprar",
     "extrasClear": "Vaciar",
     "extrasError": "No se pudo iniciar la compra",
@@ -3326,7 +3326,13 @@
     "giftUnsaved": "Pulse Guardar para que su cliente pueda elegir {count, plural, one {# foto extra} other {# fotos extra}} gratis.",
     "giftMoreThanExtras": "Ahora mismo solo {available, plural, one {hay # foto extra} other {hay # fotos extra}} para regalar.",
     "giftAll": "Regalarlas todas",
-    "moveSurplus": "Bajar las últimas {over}"
+    "moveSurplus": "Bajar las últimas {over}",
+    "extraPick": "Añadir",
+    "extraPicked": "Añadida",
+    "plusExtrasAvailable": "+ {count} extra para elegir",
+    "extrasBannerTitle": "{count, plural, one {# foto extra de tu sesión} other {# fotos extra de tu sesión}}",
+    "extrasHowTo": "Son las que llevan marca de agua. Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} € cada una.",
+    "extrasFreeFirst": "Tus {count} gratuitas se descuentan primero — elige esa cantidad y no pagas nada."
   },
   "availability": {
     "pageTitle": "Disponibilidad",
@@ -3820,7 +3826,8 @@
     },
     "reviewPhotoPreview": "Vista previa de foto de reseña",
     "tipChipsHeading": "Alegra el día a {name} — ¿dejar una propina?",
-    "tipChipsError": "No se pudo iniciar el pago — inténtalo de nuevo."
+    "tipChipsError": "No se pudo iniciar el pago — inténtalo de nuevo.",
+    "reviewAfterAccept": "Podrás dejar una reseña cuando hayas aceptado tus fotos."
   },
   "payButton": {
     "pay": "Pagar {total} €",

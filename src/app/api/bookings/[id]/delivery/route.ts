@@ -542,8 +542,10 @@ export async function POST(
       // offer. Announcing 60 sets up the exact dispute ("significantly fewer
       // photos than promised") that the unfiltered count creates out of thin air.
       const photoCount = await queryOne<{ count: string; extras: string }>(
-        `SELECT COUNT(*) FILTER (WHERE is_included IS NOT FALSE) AS count,
-                COUNT(*) FILTER (WHERE is_included = FALSE) AS extras
+        `SELECT COUNT(*) FILTER (WHERE is_included IS NOT FALSE
+                                   AND COALESCE(media_type, 'image') <> 'video') AS count,
+                COUNT(*) FILTER (WHERE is_included = FALSE
+                                   AND COALESCE(media_type, 'image') <> 'video') AS extras
            FROM delivery_photos WHERE booking_id = $1`, [id]
       );
       const count = photoCount?.count || "0";
@@ -672,7 +674,8 @@ export async function POST(
            WHERE b.id = $1`, [id]
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}`, "bookings");
+          sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}` +
+          (extrasCount > 0 ? `\n${extrasCount} extra photo${extrasCount === 1 ? "" : "s"} on sale at €2.90` : ""), "bookings");
         }).catch((err) => console.error("[delivery] telegram error:", err));
       } catch {}
 

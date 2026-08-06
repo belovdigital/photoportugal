@@ -163,13 +163,16 @@ export function DeliveryGalleryClient({
           onError={() => { loadedCountRef.current += 1; tryGrow(); }}
         />
         {locked && (
-          <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-2">
+          /* A bare "+" in a 28px circle told nobody anything, and on a phone it
+             was barely a tap target. A labelled pill across the bottom says what
+             pressing it does, and the whole tile is clickable anyway. */
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
             <span
-              className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-[13px] font-bold ${
-                picked ? "border-primary-500 bg-primary-500 text-white" : "border-white bg-black/40 text-white"
+              className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-bold shadow-lg ${
+                picked ? "bg-primary-600 text-white" : "bg-white/95 text-gray-900"
               }`}
             >
-              {picked ? "✓" : "+"}
+              {picked ? `✓ ${t("extraPicked")}` : `＋ ${t("extraPick")}`}
             </span>
           </div>
         )}

@@ -109,9 +109,19 @@ export function DeliveryPageClient({
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(extrasKey);
-      if (raw) setSelectedExtras(new Set(JSON.parse(raw) as string[]));
+      if (!raw) return;
+      const saved = new Set(JSON.parse(raw) as string[]);
+      const stillLocked = new Set((gallery?.photos ?? []).filter((ph) => ph.locked).map((ph) => ph.id));
+      // Only prune once the gallery is loaded, otherwise the basket is wiped
+      // before there is anything to compare it against.
+      const next = gallery ? new Set([...saved].filter((id) => stillLocked.has(id))) : saved;
+      setSelectedExtras(next);
+      if (gallery) {
+        if (next.size === 0) sessionStorage.removeItem(extrasKey);
+        else sessionStorage.setItem(extrasKey, JSON.stringify([...next]));
+      }
     } catch { /* a corrupt basket is not worth an error screen */ }
-  }, [extrasKey]);
+  }, [extrasKey, gallery]);
 
   function toggleExtra(id: string) {
     setSelectedExtras((prev) => {
@@ -461,7 +471,9 @@ export function DeliveryPageClient({
       {/* Stats & Download */}
       <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-xl border border-warm-200 bg-white p-5 sm:flex-row">
         <div className="text-sm text-gray-500">
-          <strong className="text-gray-900">{gallery.photo_count}</strong> {gallery.photo_count !== 1 ? t("photoPlural") : t("photoSingular")} &middot;{" "}
+          <strong className="text-gray-900">{gallery.photo_count - (gallery.extras_available ?? 0)}</strong> {gallery.photo_count - (gallery.extras_available ?? 0) !== 1 ? t("photoPlural") : t("photoSingular")}
+          {(gallery.extras_available ?? 0) > 0 && <span className="ml-1 text-gray-500">{t("plusExtrasAvailable", { count: gallery.extras_available ?? 0 })}</span>}
+          {" "}&middot;{" "}
           {totalSize > 1024 * 1024
             ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
             : `${(totalSize / 1024).toFixed(0)} KB`}
@@ -597,9 +609,19 @@ export function DeliveryPageClient({
       )}
 
       {/* Gallery */}
-      {(gallery?.gift_remaining ?? 0) > 0 && (gallery?.extras_available ?? 0) > 0 && (
-        <div className="mb-4 rounded-2xl border border-accent-200 bg-accent-50 px-5 py-4 text-sm text-accent-800">
-          🎁 {t("giftBanner", { count: gallery.gift_remaining ?? 0 })}
+      {(gallery?.extras_available ?? 0) > 0 && (
+        <div className="mb-5 mt-8 rounded-2xl border-2 border-accent-200 bg-accent-50 p-5">
+          <p className="text-base font-bold text-accent-900">
+            {(gallery?.gift_remaining ?? 0) > 0
+              ? `🎁 ${t("giftBanner", { count: gallery.gift_remaining ?? 0 })}`
+              : `✨ ${t("extrasBannerTitle", { count: gallery.extras_available ?? 0 })}`}
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-accent-800">
+            {t("extrasHowTo", { price: "2,90" })}
+          </p>
+          {(gallery?.gift_remaining ?? 0) > 0 && (
+            <p className="mt-1 text-sm text-accent-800">{t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}</p>
+          )}
         </div>
       )}
       <DeliveryGalleryClient
