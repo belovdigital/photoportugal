@@ -2557,7 +2557,8 @@
     "extrasPriceBody": "Photos you shoot beyond what a package promises can be sold in the delivery gallery. Set what YOU receive per photo — we add our fee on top and show your client the final price.",
     "extrasPriceYouGet": "You receive",
     "extrasPriceClientPays": "Client pays",
-    "extrasPriceHint": "Applies to every package. Bookings keep the price that was set when they were made, so changing it never affects a gallery your client is already looking at."
+    "extrasPriceHint": "Applies to every package. Bookings keep the price that was set when they were made, so changing it never affects a gallery your client is already looking at.",
+    "save": "Save"
   },
   "subscriptions": {
     "title": "Subscriptions",

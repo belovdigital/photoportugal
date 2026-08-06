@@ -2804,7 +2804,8 @@
     "extrasPriceBody": "Las fotos que hagas por encima de lo que promete un paquete pueden venderse en la galería de entrega. Indica lo que TÚ recibes por foto — nosotros añadimos nuestra comisión y mostramos al cliente el precio final.",
     "extrasPriceYouGet": "Tú recibes",
     "extrasPriceClientPays": "El cliente paga",
-    "extrasPriceHint": "Se aplica a todos los paquetes. Cada reserva conserva el precio vigente cuando se hizo, así que cambiarlo nunca afecta a una galería que tu cliente ya está viendo."
+    "extrasPriceHint": "Se aplica a todos los paquetes. Cada reserva conserva el precio vigente cuando se hizo, así que cambiarlo nunca afecta a una galería que tu cliente ya está viendo.",
+    "save": "Guardar"
   },
   "subscriptions": {
     "title": "Suscripciones",

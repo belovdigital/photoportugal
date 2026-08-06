@@ -2804,7 +2804,8 @@
     "extrasPriceBody": "Les photos prises au-delà de ce que promet un forfait peuvent être vendues dans la galerie de livraison. Indiquez ce que VOUS recevez par photo — nous ajoutons nos frais et affichons le prix final au client.",
     "extrasPriceYouGet": "Vous recevez",
     "extrasPriceClientPays": "Le client paie",
-    "extrasPriceHint": "S'applique à tous les forfaits. Chaque réservation conserve le prix en vigueur au moment où elle a été faite : le modifier n'affecte jamais une galerie que votre client consulte déjà."
+    "extrasPriceHint": "S'applique à tous les forfaits. Chaque réservation conserve le prix en vigueur au moment où elle a été faite : le modifier n'affecte jamais une galerie que votre client consulte déjà.",
+    "save": "Enregistrer"
   },
   "subscriptions": {
     "title": "Abonnements",

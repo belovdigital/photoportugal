@@ -2557,7 +2557,8 @@
     "extrasPriceBody": "As fotografias que tira além do que o pacote promete podem ser vendidas na galeria de entrega. Defina o que RECEBE por fotografia — acrescentamos a nossa taxa e mostramos ao cliente o preço final.",
     "extrasPriceYouGet": "Recebe",
     "extrasPriceClientPays": "O cliente paga",
-    "extrasPriceHint": "Aplica-se a todos os pacotes. Cada marcação guarda o preço em vigor quando foi feita, por isso alterá-lo nunca afeta uma galeria que o cliente já está a ver."
+    "extrasPriceHint": "Aplica-se a todos os pacotes. Cada marcação guarda o preço em vigor quando foi feita, por isso alterá-lo nunca afeta uma galeria que o cliente já está a ver.",
+    "save": "Guardar"
   },
   "subscriptions": {
     "title": "Subscrições",

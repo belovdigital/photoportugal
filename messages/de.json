@@ -2557,7 +2557,8 @@
     "extrasPriceBody": "Fotos über das hinaus, was ein Paket zusagt, können in der Liefergalerie verkauft werden. Legen Sie fest, was SIE pro Foto erhalten — wir schlagen unsere Gebühr auf und zeigen der Kundschaft den Endpreis.",
     "extrasPriceYouGet": "Sie erhalten",
     "extrasPriceClientPays": "Kundschaft zahlt",
-    "extrasPriceHint": "Gilt für alle Pakete. Jede Buchung behält den Preis, der bei ihrer Erstellung galt — eine Änderung betrifft nie eine Galerie, die Ihre Kundschaft bereits ansieht."
+    "extrasPriceHint": "Gilt für alle Pakete. Jede Buchung behält den Preis, der bei ihrer Erstellung galt — eine Änderung betrifft nie eine Galerie, die Ihre Kundschaft bereits ansieht.",
+    "save": "Speichern"
   },
   "subscriptions": {
     "title": "Abonnements",
