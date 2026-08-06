@@ -225,6 +225,7 @@ export async function POST(
       id: photo.id,
       locked: isLocked,
       purchased: !!photo.purchased_at,
+      paid: photo.paid_for,
       url: resolvedUrl,
       preview_url: resolvedPreview,
       thumbnail_url: resolvedThumb,

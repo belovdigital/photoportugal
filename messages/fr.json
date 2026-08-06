@@ -3356,7 +3356,8 @@
     "extrasSomeGone": "{count, plural, one {# photo n'est plus disponible} other {# photos ne sont plus disponibles}} — votre galerie a été actualisée. Choisissez à nouveau.",
     "swapNotOwned": "Cette photo est déjà à vous — échangez plutôt contre une de votre forfait.",
     "swapNotVideo": "Les vidéos sont toujours incluses et ne peuvent pas être échangées.",
-    "yoursBadge": "Cadeau"
+    "yoursBadge": "Cadeau",
+    "swapNotPaid": "Les photos achetées restent à vous — échangez plutôt contre une de votre forfait ou une offerte."
   },
   "availability": {
     "pageTitle": "Disponibilités",

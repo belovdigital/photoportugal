@@ -62,6 +62,10 @@ interface Photo {
   /** Already the client's — bought or gifted. Never swappable in either
    *  direction: it would free a slot they had paid to fill. */
   purchased?: boolean;
+  /** Paid for with money, as opposed to taken from the photographer's gift.
+   *  A paid photo can never be swapped — its original is already downloadable,
+   *  so trading places would buy the whole shoot one frame at a time. */
+  paid?: boolean;
 }
 
 function formatDuration(s: number | null | undefined): string {
@@ -160,7 +164,9 @@ export function DeliveryGalleryClient({
       //
       // This is most of the "yours" pile once a gift has been taken — 10 of 15
       // on a live gallery — so refusing in silence made dragging look broken.
-      if (a.purchased || b.purchased) { flash(t("swapNotOwned")); return; }
+      // Gifts are still watermarked previews before acceptance, so exchanging
+      // one is re-picking the gift, not taking anything back.
+      if (a.paid || b.paid) { flash(t("swapNotPaid")); return; }
       if (a.media_type === "video" || b.media_type === "video") { flash(t("swapNotVideo")); return; }
       const inId = from === "offer" ? activeId : overId;
       const outId = from === "offer" ? overId : activeId;
@@ -303,7 +309,7 @@ export function DeliveryGalleryClient({
         />
         {/* Dragging is not obvious and is fiddly on a phone, so the exchange
             also has a button you can see. Same picker as the lightbox. */}
-        {!locked && photo.purchased && (
+        {!locked && photo.purchased && !photo.paid && (
           <span className="absolute right-1.5 top-1.5 z-20 rounded-md bg-green-600/90 px-2 py-1 text-[10px] font-bold text-white shadow">
             {t("yoursBadge")}
           </span>
@@ -495,7 +501,7 @@ export function DeliveryGalleryClient({
                 <div className="mx-auto max-w-3xl rounded-2xl bg-gray-900/95 p-4 shadow-2xl">
                   <p className="mb-3 text-center text-sm font-semibold text-white">{t("swapPickOut")}</p>
                   <div className="flex gap-2 overflow-x-auto pb-1">
-                    {photos.filter((p) => !p.locked && !p.purchased && p.media_type !== "video").map((cand) => (
+                    {photos.filter((p) => !p.locked && !p.paid && p.media_type !== "video").map((cand) => (
                       <button
                         key={cand.id}
                         type="button"

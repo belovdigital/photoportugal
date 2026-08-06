@@ -2883,7 +2883,8 @@
     "extrasSomeGone": "{count, plural, one {# fotografia já não está disponível} other {# fotografias já não estão disponíveis}} — a galeria foi atualizada. Escolha novamente.",
     "swapNotOwned": "Essa fotografia já é sua — troque por uma do seu pacote.",
     "swapNotVideo": "Os vídeos estão sempre incluídos e não podem ser trocados.",
-    "yoursBadge": "Presente"
+    "yoursBadge": "Presente",
+    "swapNotPaid": "As fotografias que comprou continuam suas — troque por uma do seu pacote ou por uma oferecida."
   },
   "availability": {
     "pageTitle": "Disponibilidade",

@@ -136,7 +136,51 @@ export async function POST(
     if (moveIn.media_type === "video" || moveOut.media_type === "video") {
       return { error: "Videos are always included and cannot be swapped", status: 400 };
     }
-    // Already the client's — in either direction this would be nonsense.
+    // A PAID photo can never move. Its original is served the moment the money
+    // lands, so letting it trade places would mean buying one frame,
+    // downloading it, swapping, downloading the next — the whole shoot for the
+    // price of one.
+    const paidRow = await client.query(
+      `SELECT delivery_photo_id, amount_cents FROM delivery_extra_purchases
+        WHERE booking_id = $1 AND delivery_photo_id = ANY($2::uuid[]) AND status = 'paid'`,
+      [booking.id, [inId, outId]]
+    );
+    const isPaid = (id: string) =>
+      paidRow.rows.some((r: { delivery_photo_id: string; amount_cents: number }) =>
+        r.delivery_photo_id === id && r.amount_cents > 0);
+    if (isPaid(inId) || isPaid(outId)) {
+      return { error: "Photos you have paid for stay yours", status: 409 };
+    }
+
+    // A GIFT is different. Before acceptance it is still a watermarked preview
+    // — nothing has been downloaded — so exchanging it is the client changing
+    // their mind about which frames the photographer's gift applies to, not a
+    // refund. Re-point the redemption instead of touching is_included: the
+    // package count is not involved on either side.
+    const giftOut = paidRow.rows.find((r: { delivery_photo_id: string; amount_cents: number }) =>
+      r.delivery_photo_id === outId && r.amount_cents === 0);
+    if (giftOut) {
+      if (moveIn.is_included !== false || moveIn.purchased_at) {
+        return { error: "Pick a photo that is still on offer", status: 409 };
+      }
+      await client.query(
+        "UPDATE delivery_photos SET purchased_at = NULL WHERE id = $1 AND booking_id = $2",
+        [outId, booking.id]
+      );
+      await client.query(
+        "UPDATE delivery_photos SET purchased_at = NOW() WHERE id = $1 AND booking_id = $2",
+        [inId, booking.id]
+      );
+      await client.query(
+        `UPDATE delivery_extra_purchases
+            SET delivery_photo_id = $1,
+                photo_filename = (SELECT filename FROM delivery_photos WHERE id = $1)
+          WHERE booking_id = $2 AND delivery_photo_id = $3 AND status = 'paid' AND amount_cents = 0`,
+        [inId, booking.id, outId]
+      );
+      return { ok: true as const, included: -1, gift: true };
+    }
+
     if (moveIn.purchased_at || moveOut.purchased_at) {
       return { error: "Photos you already own stay yours", status: 409 };
     }
