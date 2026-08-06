@@ -20,6 +20,9 @@ interface PackageProps {
     features?: string[];
   };
   photographerSlug: string;
+  /** What the client pays per extra photo from this photographer, in cents.
+   *  Same across all their packages — it is an account-level rate. */
+  extrasPriceCents?: number | null;
   // When set, this card represents a gift-card redemption: hide price,
   // show "Covered by your gift" badge, CTA reads "Book my gift session".
   giftMode?: { tier: "express" | "full"; tierLabel: string } | null;
@@ -59,7 +62,7 @@ function formatDescription(desc: string) {
   return <p className="text-sm text-gray-500">{desc}</p>;
 }
 
-export function PackageCard({ pkg, photographerSlug, giftMode = null }: PackageProps) {
+export function PackageCard({ pkg, photographerSlug, giftMode = null, extrasPriceCents = null }: PackageProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: session, status } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
@@ -120,6 +123,16 @@ export function PackageCard({ pkg, photographerSlug, giftMode = null }: PackageP
           {tc("dayDelivery", { days: pkg.delivery_days || 7 })}
         </span>
       </div>
+
+      {/* Stated up front rather than discovered in the gallery: the count above
+          is what you get, and anything beyond it has a known price. */}
+      {!!extrasPriceCents && (
+        <p className="mt-1.5 text-[11px] text-gray-400">
+          {t("extrasNote", {
+            price: new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(extrasPriceCents / 100),
+          })}
+        </p>
+      )}
 
       {/* Expandable description */}
       {hasDescription && (

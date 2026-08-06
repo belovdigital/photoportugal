@@ -18,6 +18,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
 import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
+import { clientExtraPriceCents, DEFAULT_EXTRA_PHOTO_PAYOUT_CENTS } from "@/lib/extras-pricing";
 import { RequestCustomPackageCard } from "@/components/ui/RequestCustomPackageCard";
 import { BusinessQuoteCard } from "@/components/ui/BusinessQuoteCard";
 import { localeAlternates, openGraphIdentity } from "@/lib/seo";
@@ -148,6 +149,7 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       experience_years: number;
       is_verified: boolean;
       is_featured: boolean;
+      extra_photo_payout_cents: number | null;
       is_founding: boolean;
       is_approved: boolean;
       plan: string;
@@ -160,7 +162,8 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       `SELECT p.id, p.slug, u.name, ${tagCol} as tagline, ${bioCol} as bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
-              p.rating, p.review_count, p.session_count, u.last_seen_at, p.avg_response_minutes
+              p.rating, p.review_count, p.session_count, u.last_seen_at, p.avg_response_minutes,
+              p.extra_photo_payout_cents
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1`,
@@ -1137,7 +1140,7 @@ export default async function PhotographerProfilePage({
                   <div className="-mx-4 sm:-mx-6 lg:-mx-0 flex gap-3 overflow-x-auto snap-x snap-mandatory overscroll-x-contain px-4 sm:px-6 pt-3 pb-2 lg:flex-col lg:gap-4 lg:overflow-x-visible lg:px-0 lg:py-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {photographer.packages.map((pkg: { id: string; slug?: string | null; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
                       <div key={pkg.id} className="snap-center shrink-0 w-[78vw] max-w-[340px] lg:w-auto lg:max-w-none">
-                        <PackageCard pkg={pkg} photographerSlug={photographer.slug} giftMode={giftCard ? { tier: giftCard.tier, tierLabel: giftCard.meta.label } : null} />
+                        <PackageCard pkg={pkg} photographerSlug={photographer.slug} giftMode={giftCard ? { tier: giftCard.tier, tierLabel: giftCard.meta.label } : null} extrasPriceCents={clientExtraPriceCents(photographer.extra_photo_payout_cents ?? DEFAULT_EXTRA_PHOTO_PAYOUT_CENTS)} />
                       </div>
                     ))}
                     {/* "Request a custom package" pseudo-card — sibling of

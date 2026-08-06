@@ -1309,7 +1309,8 @@
       "viewDetails": "View details",
       "bookThisPackage": "Book This Package",
       "fullyBookedUntil": "Fully booked until {date}",
-      "viewFullDetails": "Full details →"
+      "viewFullDetails": "Full details →",
+      "extrasNote": "Extra photos from your session: {price} each, optional"
     },
     "portfolioGallery": {
       "title": "Portfolio",

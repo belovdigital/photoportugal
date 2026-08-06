@@ -1309,7 +1309,8 @@
       "viewDetails": "Ver detalhes",
       "bookThisPackage": "Reservar Este Pacote",
       "fullyBookedUntil": "Totalmente reservado até {date}",
-      "viewFullDetails": "Mais detalhes →"
+      "viewFullDetails": "Mais detalhes →",
+      "extrasNote": "Fotografias extra da sua sessão: {price} cada, opcional"
     },
     "portfolioGallery": {
       "title": "Portfólio",
