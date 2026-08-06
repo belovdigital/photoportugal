@@ -3096,7 +3096,6 @@
     "sectionOnOfferPaid": "{price} pro Foto. Bei den gewünschten auf Dazu tippen, dann Kaufen — oder eines auf ein Foto ziehen, das Ihnen weniger gefällt, und gratis tauschen.",
     "swapInstead": "Diese stattdessen nehmen",
     "swapPickOut": "Welches soll sie ersetzen? Antippen.",
-    "deliveredExtrasOnSale": "{count, plural, one {# zusätzliches Foto steht im Angebot — {price} für Sie bei Verkauf.} other {# zusätzliche Fotos stehen im Angebot — {price} für Sie pro Verkauf.}}",
     "giftConfirm": "Es gehört Ihnen dann sofort und lässt sich nicht rückgängig machen. Hinzufügen?",
     "takeAllBtnFree": "Alle {count} gratis nehmen",
     "takeAllBtn": "Alle {count} nehmen",
@@ -3112,7 +3111,9 @@
     "swapNotPaid": "Bezahlte Fotos bleiben Ihnen — tauschen Sie stattdessen gegen eines aus Ihrem Paket oder ein geschenktes.",
     "sectionYoursSwapHint": "Lieber ein anderes Bild? Ziehen Sie ein Foto aus Zusätzliche auf eines hier — sie tauschen, gratis.",
     "giftedBadge": "Geschenkt",
-    "deliveredGiftState": "Sie haben {count, plural, one {# Gratisfoto} other {# Gratisfotos}} verschenkt — {taken} bisher genommen."
+    "statDelivered": "Geliefert",
+    "statOnOffer": "Im Angebot · je {price}",
+    "statGiftTaken": "Gratisfotos genommen"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

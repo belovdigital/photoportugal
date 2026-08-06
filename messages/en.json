@@ -3095,7 +3095,6 @@
     "sectionOnOfferPaid": "{price} each. Tap Add on the ones you want, then Buy — or drag one up onto a photo you like less and swap them for free.",
     "swapInstead": "Take this one instead",
     "swapPickOut": "Which one should it replace? Tap it.",
-    "deliveredExtrasOnSale": "{count, plural, one {# extra photo is on offer — {price} to you if it sells.} other {# extra photos are on offer — {price} to you on each one sold.}}",
     "giftConfirm": "These become yours straight away and cannot be undone. Add this one?",
     "takeAllBtnFree": "Take all {count} free",
     "takeAllBtn": "Take all {count}",
@@ -3111,7 +3110,9 @@
     "swapNotPaid": "Photos you paid for stay yours — swap onto one from your package or a gifted one instead.",
     "sectionYoursSwapHint": "Prefer a different shot? Drag any photo from Extra onto one here — they swap, free.",
     "giftedBadge": "Gifted",
-    "deliveredGiftState": "You gave {count, plural, one {# free photo} other {# free photos}} — {taken} taken so far."
+    "statDelivered": "Delivered",
+    "statOnOffer": "On offer · {price} each",
+    "statGiftTaken": "Free photos taken"
   },
   "availability": {
     "pageTitle": "Availability",

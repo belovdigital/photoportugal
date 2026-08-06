@@ -2870,7 +2870,6 @@
     "sectionOnOfferPaid": "{price} cada. Toque em Juntar nas que quiser e depois Comprar — ou arraste uma para cima de outra de que goste menos e troque-as de graça.",
     "swapInstead": "Levar esta em vez de outra",
     "swapPickOut": "Qual substitui? Toque nela.",
-    "deliveredExtrasOnSale": "{count, plural, one {# fotografia extra está à venda — {price} para si se for vendida.} other {# fotografias extra estão à venda — {price} para si por cada uma vendida.}}",
     "giftConfirm": "Passa a ser sua de imediato e não pode ser desfeito. Juntar esta?",
     "takeAllBtnFree": "Levar todas as {count} de graça",
     "takeAllBtn": "Levar todas as {count}",
@@ -2886,7 +2885,9 @@
     "swapNotPaid": "As fotografias que comprou continuam suas — troque por uma do seu pacote ou por uma oferecida.",
     "sectionYoursSwapHint": "Prefere outra? Arraste uma fotografia de Extra para cima de uma destas — trocam de lugar, de graça.",
     "giftedBadge": "Oferecida",
-    "deliveredGiftState": "Ofereceu {count, plural, one {# fotografia grátis} other {# fotografias grátis}} — {taken} já escolhidas."
+    "statDelivered": "Entregues",
+    "statOnOffer": "À venda · {price} cada",
+    "statGiftTaken": "Grátis já escolhidas"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

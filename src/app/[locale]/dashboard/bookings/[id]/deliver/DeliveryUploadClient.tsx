@@ -306,6 +306,10 @@ export function DeliveryUploadClient({
   // the warning there would be a permanent alarm with no off switch — and on
   // this platform 26 finished deliveries are legitimately over their promise.
   const movableIncluded = includedPhotos.filter((p) => p.media_type !== "video" && !p.purchased_at);
+  // Still for sale = held back AND not yet taken. Counting the ones the client
+  // already has as "on offer" overstated both the count and the earnings.
+  const stillOnOffer = extraPhotos.filter((p) => p.media_type !== "video" && !p.purchased_at).length;
+  const giftTakenCount = parseInt(giftTaken, 10) || 0;
   const overBy = requiredPhotos > 0 && !delivered && !clientAccepted
     ? Math.max(0, movableIncluded.length - requiredPhotos)
     : 0;
@@ -1215,7 +1219,7 @@ export function DeliveryUploadClient({
       {photos.length > 0 && (
         <div className="mt-4">
           {delivered ? (
-            <div className="rounded-xl border border-accent-200 bg-accent-50 p-4">
+            <div className="rounded-2xl border-2 border-accent-200 bg-accent-50 p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-100">
                   <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
@@ -1223,22 +1227,35 @@ export function DeliveryUploadClient({
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-accent-700 text-sm">{t("photosDelivered")}</p>
-                  {/* The card announced the send and said nothing about the
-                      other pile, which is where the photographer's next euro
-                      comes from. */}
-                  {extraPhotos.filter((p) => p.media_type !== "video").length > 0 && (
-                    <p className="mt-0.5 text-xs font-semibold text-amber-700">
-                      {t("deliveredExtrasOnSale", { count: extraPhotos.filter((p) => p.media_type !== "video").length, price: payout(extrasPayoutCents) })}
-                    </p>
-                  )}
-                  {giftSlots > 0 && (
-                    <p className="mt-0.5 text-xs font-semibold text-green-700">
-                      🎁 {t("deliveredGiftState", { count: giftSlots, taken: parseInt(giftTaken, 10) || 0 })}
-                    </p>
-                  )}
+                  <p className="font-display text-xl font-bold text-gray-900">{t("photosDelivered")}</p>
+
+                  {/* Three facts, three blocks. They were five sentences of
+                      11px text stacked in a column, and the middle one was
+                      wrong: it counted photos the client had already taken as
+                      still being on offer. */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-lg bg-white px-3 py-2 ring-1 ring-accent-200">
+                      <span className="block text-lg font-bold text-gray-900">{includedPhotoCount}</span>
+                      <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">{t("statDelivered")}</span>
+                    </span>
+                    {stillOnOffer > 0 && (
+                      <span className="rounded-lg bg-white px-3 py-2 ring-1 ring-amber-200">
+                        <span className="block text-lg font-bold text-amber-800">{stillOnOffer}</span>
+                        <span className="block text-[11px] font-medium uppercase tracking-wide text-amber-700">
+                          {t("statOnOffer", { price: payout(extrasPayoutCents) })}
+                        </span>
+                      </span>
+                    )}
+                    {giftSlots > 0 && (
+                      <span className="rounded-lg bg-white px-3 py-2 ring-1 ring-green-200">
+                        <span className="block text-lg font-bold text-green-700">{giftTakenCount}/{giftSlots}</span>
+                        <span className="block text-[11px] font-medium uppercase tracking-wide text-green-700">{t("statGiftTaken")}</span>
+                      </span>
+                    )}
+                  </div>
+
                   {canEdit && (
-                    <p className="mt-0.5 text-xs text-accent-700/80">{t("canStillEditUntilAccepted")}</p>
+                    <p className="mt-3 text-xs text-accent-700/80">{t("canStillEditUntilAccepted")}</p>
                   )}
                   {initialPassword && (
                     <p className="mt-1 text-xs text-accent-700/80">
@@ -1246,7 +1263,7 @@ export function DeliveryUploadClient({
                     </p>
                   )}
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-start gap-2">
                   {/* Re-send only while the client can still accept — a fresh
                       link + email, e.g. after adding photos or an admin
                       re-open that rotated the token. */}
@@ -1254,13 +1271,13 @@ export function DeliveryUploadClient({
                     <button
                       onClick={handleResend}
                       disabled={resending}
-                      className="rounded-lg border border-accent-600 bg-white px-3 py-1.5 text-xs font-semibold text-accent-700 hover:bg-accent-50 disabled:opacity-50"
+                      className="rounded-xl border border-accent-600 bg-white px-4 py-2.5 text-sm font-semibold text-accent-700 hover:bg-accent-50 disabled:opacity-50"
                     >
                       {resending ? t("resending") : resent ? t("resent") : t("resendToClient")}
                     </button>
                   )}
                   {deliveryUrl && (
-                    <button onClick={copyLink} className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700">
+                    <button onClick={copyLink} className="rounded-xl bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-700">
                       {copied ? t("copied") : t("copy")} link
                     </button>
                   )}
