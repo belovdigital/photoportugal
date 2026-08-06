@@ -606,7 +606,7 @@
         },
         "howReceivePhotos": {
           "q": "How do I receive my photos?",
-          "a": "You'll receive a link to your private, password-protected gallery. Every photo your package promised is professionally edited and available for high-resolution download — individually or as a full ZIP archive. Delivery time varies by photographer and is shown on each package.\n\nPhotographers usually shoot more than the package promises. Any extra frames appear in the same gallery, watermarked, at €2.90 each — always optional, and never taken from the number you booked."
+          "a": "You'll receive a link to your private, password-protected gallery. Every photo your package promised is professionally edited and available for high-resolution download — individually or as a full ZIP archive. Delivery time varies by photographer and is shown on each package.\n\nPhotographers usually shoot more than the package promises. Any extra frames appear in the same gallery, watermarked, at a price your photographer sets — always optional, and never taken from the number you booked."
         },
         "requestLocations": {
           "q": "Can I request specific locations?",
@@ -664,11 +664,11 @@
       },
       "deliveryTime": {
         "question": "How long until I receive my photos?",
-        "answer": "Delivery time depends on the package you choose — each package shows the estimated delivery days on the photographer's profile (typically 3–14 days). Once ready, you'll receive a link to a private, password-protected gallery. You'll first see watermarked previews to review the photos. Once you approve the delivery, the photos you booked open in full resolution and you can download them one by one or all together as a ZIP archive. If your photographer shot more than the package promises, those extra frames stay watermarked and you can add any of them for €2.90 each — optional, and never instead of the photos you booked."
+        "answer": "Delivery time depends on the package you choose — each package shows the estimated delivery days on the photographer's profile (typically 3–14 days). Once ready, you'll receive a link to a private, password-protected gallery. You'll first see watermarked previews to review the photos. Once you approve the delivery, the photos you booked open in full resolution and you can download them one by one or all together as a ZIP archive. If your photographer shot more than the package promises, those extra frames stay watermarked and you can add any of them for a price your photographer sets — optional, and never instead of the photos you booked."
       },
       "notHappy": {
         "question": "What if I'm not happy with the photos?",
-        "answer": "You have 7 days after delivery to accept your photos or open a dispute. Valid reasons for a dispute include: fewer photos in your delivery than promised, wrong location, severe technical issues, or photographer no-show. Extra photos offered at €2.90 are not a shortfall — they are added to the number you booked, never taken from it. We'll work with both parties to find a fair resolution — reshoot, partial refund, or full refund. Note that subjective style preferences are not grounds for a refund, so review portfolios carefully before booking. See our <a href=\"/terms\">Terms of Service</a> for details."
+        "answer": "You have 7 days after delivery to accept your photos or open a dispute. Valid reasons for a dispute include: fewer photos in your delivery than promised, wrong location, severe technical issues, or photographer no-show. Extra photos offered at the price your photographer set are not a shortfall — they are added to the number you booked, never taken from it. We'll work with both parties to find a fair resolution — reshoot, partial refund, or full refund. Note that subjective style preferences are not grounds for a refund, so review portfolios carefully before booking. See our <a href=\"/terms\">Terms of Service</a> for details."
       },
       "galleryAccess": {
         "question": "How long can I access my photo gallery?",
@@ -724,11 +724,11 @@
       },
       "extraPhotos": {
         "question": "What are the extra photos in my gallery and what do they cost?",
-        "answer": "Photographers usually shoot more than the package promises. The photos you booked are yours and sit in your gallery as normal — nothing you paid for is held back. Anything above that number is offered as an extra photo at €2.90 each, all in: no fee on top, no minimum, nothing to subscribe to. Buying is entirely optional, and if your gallery shows no extra photos it means your photographer uploaded exactly the number you were promised. See our <a href=\"/support\">Help Center</a> for how to pick and download them."
+        "answer": "Photographers usually shoot more than the package promises. The photos you booked are yours and sit in your gallery as normal — nothing you paid for is held back. Anything above that number is offered as an extra photo at a price your photographer sets, all in: no fee on top, no minimum, nothing to subscribe to. Buying is entirely optional, and if your gallery shows no extra photos it means your photographer uploaded exactly the number you were promised. See our <a href=\"/support\">Help Center</a> for how to pick and download them."
       },
       "extraPhotosGift": {
         "question": "What does it mean when my photographer gifts me extra photos?",
-        "answer": "Some photographers hand you a few of the extra photos for free. A line at the top of your gallery tells you how many you can pick, you choose the ones you like best, and they open in full resolution straight away. There is nothing to pay and no card to enter. If you want more than the free ones, the rest are €2.90 each and the free ones always come off first."
+        "answer": "Some photographers hand you a few of the extra photos for free. A line at the top of your gallery tells you how many you can pick, you choose the ones you like best, and they open in full resolution straight away. There is nothing to pay and no card to enter. If you want more than the free ones, the rest are a price your photographer sets and the free ones always come off first."
       }
     },
     "helpCenterCta": "Need more detailed answers?",
@@ -2159,7 +2159,7 @@
           "acceptance": "After delivery, the client has <strong>7 days</strong> to accept the photos or open a dispute",
           "autoRelease": "If the client does not respond within 7 days, the photographer may contact support to resolve the payment release. After <strong>14 days</strong> of client inactivity, payment is automatically released to the photographer",
           "galleryAccess": "Delivered photo galleries remain accessible for <strong>90 days</strong>",
-          "extras": "A photographer may offer additional photos from the same session, beyond the number the package promised, at a fixed <strong>€2.90 each</strong>. Buying them is optional, they are never deducted from the promised count, and a photographer may also grant a number of them free. Purchased photos remain the client's and cannot be withdrawn. The purchase window closes when the gallery expires"
+          "extras": "A photographer may offer additional photos from the same session, beyond the number the package promised, at a fixed <strong>a price your photographer sets</strong>. Buying them is optional, they are never deducted from the promised count, and a photographer may also grant a number of them free. Purchased photos remain the client's and cannot be withdrawn. The purchase window closes when the gallery expires"
         }
       },
       "disputes": {
@@ -2552,7 +2552,12 @@
     "portfolioBusinessHint": "Corporate work only — shoots you did for a company: events, conferences, team and office sessions, brand content. Anything you upload here is tagged Business and appears on a separate tab of your public profile, never mixed with your other photos. A client in a suit booking their own session is a Studio or Solo Portrait, not Business.",
     "noBusinessPhotos": "No business photos yet",
     "uploadBusinessWork": "Upload corporate work to appear on the Business tab of your profile and in For Business searches.",
-    "moveToMainPortfolio": "Move to main portfolio"
+    "moveToMainPortfolio": "Move to main portfolio",
+    "extrasPriceTitle": "Your price for extra photos",
+    "extrasPriceBody": "Photos you shoot beyond what a package promises can be sold in the delivery gallery. Set what YOU receive per photo — we add our fee on top and show your client the final price.",
+    "extrasPriceYouGet": "You receive",
+    "extrasPriceClientPays": "Client pays",
+    "extrasPriceHint": "Applies to every package. Bookings keep the price that was set when they were made, so changing it never affects a gallery your client is already looking at."
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -2751,7 +2756,7 @@
         },
         "receivePhotos": {
           "question": "How do I receive my photos?",
-          "answer": "After your photoshoot, your photographer edits your photos and uploads them to a private, password-protected gallery. You'll get an email and a dashboard notification with the link and the password. View them online, download them one by one, or take the whole set in a single download. Your gallery stays open for 90 days.\n\nYour photographer may also add extra photos from the same session — frames beyond the number you booked. Those are optional and cost €2.90 each. The photos you booked are in your gallery either way."
+          "answer": "After your photoshoot, your photographer edits your photos and uploads them to a private, password-protected gallery. You'll get an email and a dashboard notification with the link and the password. View them online, download them one by one, or take the whole set in a single download. Your gallery stays open for 90 days.\n\nYour photographer may also add extra photos from the same session — frames beyond the number you booked. Those are optional and cost a price your photographer sets. The photos you booked are in your gallery either way."
         },
         "notHappy": {
           "question": "What if I'm not happy with my photos?",
@@ -2779,7 +2784,7 @@
         },
         "extraPhotos": {
           "question": "What are the extra photos in my gallery?",
-          "answer": "Your photographer almost always shoots more than the number you booked. Those extra frames used to be deleted. Now you get to see them.\n\nThe photos you booked are yours. They are already in your gallery, already paid for, and they stay yours whatever you decide next.\n\nEverything above that number appears as an extra photo, with a watermark on it until you decide. Each one costs **€2.90 — that's the whole price**. Nothing is added, there's no minimum, nothing renews. Take one, take ten, take none.\n\nIf your gallery has no extra photos, your photographer uploaded exactly the number you were promised."
+          "answer": "Your photographer almost always shoots more than the number you booked. Those extra frames used to be deleted. Now you get to see them.\n\nThe photos you booked are yours. They are already in your gallery, already paid for, and they stay yours whatever you decide next.\n\nEverything above that number appears as an extra photo, with a watermark on it until you decide. Each one costs **the price your photographer set — that's the whole price**. Nothing is added, there's no minimum, nothing renews. Take one, take ten, take none.\n\nIf your gallery has no extra photos, your photographer uploaded exactly the number you were promised."
         },
         "extraPhotosBuy": {
           "question": "How do I buy an extra photo, and how do I download it?",
@@ -2787,7 +2792,7 @@
         },
         "extraPhotosGift": {
           "question": "My photographer gave me free photos. What does that mean?",
-          "answer": "Exactly what it says: your photographer decided to give you some of the extra photos for free, and you choose which ones.\n\nA line at the top of your gallery tells you how many you can pick — three, for example. Tap the three you love most and they open in full resolution. Nothing to pay, no card needed.\n\nWant more than the free ones? The rest are €2.90 each, and the free ones always come off first."
+          "answer": "Exactly what it says: your photographer decided to give you some of the extra photos for free, and you choose which ones.\n\nA line at the top of your gallery tells you how many you can pick — three, for example. Tap the three you love most and they open in full resolution. Nothing to pay, no card needed.\n\nWant more than the free ones? The rest are a price your photographer sets, and the free ones always come off first."
         }
       },
       "photographers": {
@@ -2837,19 +2842,19 @@
         },
         "sellExtras": {
           "question": "I shot more photos than the package promised. What do I do with them?",
-          "answer": "Show them to your client instead of deleting them. On the delivery screen your photos sit in two groups: **In the delivery** — what your client gets, the photos the package promised — and **Extra photos**, which your client can buy for €2.90 each.\n\nUpload more than you promised and the first ones fill the delivery; the rest drop into the extras. Nothing is fixed — hover a photo and move it up or down until both groups look right. The Share button unlocks once the delivery holds exactly what you promised.\n\nTwo rules, that is all. The delivery is the promise, exactly: if the package says 20 photos, 20 go out — the screen will not send more or fewer. And a photo your client has bought is theirs — you cannot delete it or take it back.\n\nUpload exactly what you promised and none of this appears. No prices, no extras, nothing for your client to buy."
+          "answer": "Show them to your client instead of deleting them. On the delivery screen your photos sit in two groups: **In the delivery** — what your client gets, the photos the package promised — and **Extra photos**, which your client can buy for a price your photographer sets.\n\nUpload more than you promised and the first ones fill the delivery; the rest drop into the extras. Nothing is fixed — hover a photo and move it up or down until both groups look right. The Share button unlocks once the delivery holds exactly what you promised.\n\nTwo rules, that is all. The delivery is the promise, exactly: if the package says 20 photos, 20 go out — the screen will not send more or fewer. And a photo your client has bought is theirs — you cannot delete it or take it back.\n\nUpload exactly what you promised and none of this appears. No prices, no extras, nothing for your client to buy."
         },
         "extrasEarnings": {
           "question": "What do I earn on an extra photo?",
-          "answer": "€2.00 per photo, every time. Your client pays €2.90 and that is their final price — no service fee on top, no surprise at checkout.\n\nYour plan makes no difference here. Free, Pro or Premium: an extra photo pays you €2.00.\n\nSo a client who buys 10 extra photos adds €20.00 to that booking, on top of the package."
+          "answer": "your own price per photo, every time. Your client pays the price your photographer set and that is their final price — no service fee on top, no surprise at checkout.\n\nYour plan makes no difference here. Free, Pro or Premium: an extra photo pays you your price.\n\nSo a client who buys 10 extra photos adds €20.00 to that booking, on top of the package."
         },
         "extrasWhenPaid": {
           "question": "When does the money for extra photos reach me?",
-          "answer": "Straight away. Extra photos do not wait for your client to accept the gallery — the moment the payment clears, your €2.00 per photo is on its way to your Stripe account and the sale shows up in your dashboard. From Stripe to your bank takes the usual 2–7 business days.\n\nThe gallery stays open for 90 days after your client accepts it, so photos can still sell weeks after the shoot."
+          "answer": "Straight away. Extra photos do not wait for your client to accept the gallery — the moment the payment clears, your your own price per photo is on its way to your Stripe account and the sale shows up in your dashboard. From Stripe to your bank takes the usual 2–7 business days.\n\nThe gallery stays open for 90 days after your client accepts it, so photos can still sell weeks after the shoot."
         },
         "giftPhotos": {
           "question": "Can I give my client extra photos for free?",
-          "answer": "Yes, and it is worth doing. On the delivery screen, next to the photo counter, say how many photos you want to give — 3 is a good number. Your client then picks any 3 of the extra photos, free.\n\nIt costs you nothing. Those frames are already shot and edited; you are giving away work you would have deleted.\n\nIt is also the kindest way for a client to discover that more photos exist at all. They open the gallery, see they have 3 free picks, go through the rest looking for favourites — and often keep a few more at €2.90 each. The free ones come off first; they only pay for what is left."
+          "answer": "Yes, and it is worth doing. On the delivery screen, next to the photo counter, say how many photos you want to give — 3 is a good number. Your client then picks any 3 of the extra photos, free.\n\nIt costs you nothing. Those frames are already shot and edited; you are giving away work you would have deleted.\n\nIt is also the kindest way for a client to discover that more photos exist at all. They open the gallery, see they have 3 free picks, go through the rest looking for favourites — and often keep a few more at a price your photographer sets. The free ones come off first; they only pay for what is left."
         },
         "extrasNoPressure": {
           "question": "Does my client have to buy anything?",
@@ -2867,7 +2872,7 @@
         },
         "serviceFees": {
           "question": "What are the service fees?",
-          "answer": "**For clients:** A 15% service fee is added on top of the package price. For example, a €299 package costs €344 total. This fee covers payment processing, platform maintenance, and client support.\n\n**For photographers:** A commission is deducted from each booking based on your plan:\n• Free plan — 20% commission\n• Pro plan — 15% commission\n• Premium plan — 10% commission\n\n**Extra photos:** If a photographer offers photos beyond what the package promised, they cost **€2.90 each, all in** — no service fee on top for the client. The photographer receives €2.00 of that regardless of their plan.\n\nThere are no hidden fees. All fees are displayed transparently before any transaction."
+          "answer": "**For clients:** A 15% service fee is added on top of the package price. For example, a €299 package costs €344 total. This fee covers payment processing, platform maintenance, and client support.\n\n**For photographers:** A commission is deducted from each booking based on your plan:\n• Free plan — 20% commission\n• Pro plan — 15% commission\n• Premium plan — 10% commission\n\n**Extra photos:** If a photographer offers photos beyond what the package promised, they cost **a price your photographer sets, all in** — no service fee on top for the client. The photographer receives your own price for it regardless of their plan.\n\nThere are no hidden fees. All fees are displayed transparently before any transaction."
         },
         "refundPolicy": {
           "question": "What is the refund policy?",
@@ -3056,7 +3061,7 @@
     "sectionIncluded": "In the delivery · {count, plural, one {# photo} other {# photos}}",
     "sectionIncludedHint": "What your client gets. Drag to reorder, or drag a photo down to the extras.",
     "sectionExtras": "Extra photos · {count}",
-    "sectionExtrasHint": "Offered to your client at €2.90 each — you get €2.00. Drag one up to include it instead.",
+    "sectionExtrasHint": "Offered to your client at a price your photographer sets — you get your price. Drag one up to include it instead.",
     "sectionExtrasEmpty": "Nothing here yet — you uploaded exactly what the package promised. Upload more and the surplus lands here.",
     "moveToExtras": "Move to extras ↓",
     "moveToDelivery": "↑ Add to delivery",
@@ -3079,17 +3084,24 @@
     "extrasBannerTitle": "{count, plural, one {# extra photo from your session} other {# extra photos from your session}}",
     "extrasHowTo": "They are the ones with a watermark. Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. €{price} each.",
     "extrasFreeFirst": "Your {count} free ones are taken off first — pick that many and you pay nothing.",
-    "confirmShareExtras": "{count, plural, one {# more photo goes on offer at €2.90 — your client can buy it, or take it free if you set a gift.} other {# more photos go on offer at €2.90 each — your client can buy them, or take some free if you set a gift.}}",
+    "confirmShareExtras": "{count, plural, one {# more photo goes on offer at the price your photographer set — your client can buy it, or take it free if you set a gift.} other {# more photos go on offer at a price your photographer sets — your client can buy them, or take some free if you set a gift.}}",
     "extraPickFree": "Add free",
     "sectionYours": "{count, plural, one {# photo is yours} other {# photos are yours}}",
     "sectionOnOffer": "{count, plural, one {# more you can add} other {# more you can add}}",
     "sectionYoursHint": "Yours already — nothing to pay. Drag any photo from Extra onto one here to swap them, free.",
     "sectionOnOfferFree": "{count, plural, one {Your photographer is giving you # of these, free. Tap Add free — or swap one into your package in place of another.} other {Your photographer is giving you # of these, free. Tap Add free on the ones you want — or swap one into your package in place of another.}}",
-    "sectionOnOfferPaid": "€2.90 each. Tap Add on the ones you want, then Buy — or drag one up onto a photo you like less and swap them for free.",
+    "sectionOnOfferPaid": "{price} each. Tap Add on the ones you want, then Buy — or drag one up onto a photo you like less and swap them for free.",
     "swapInstead": "Take this one instead",
     "swapPickOut": "Which one should it replace? Tap it.",
-    "deliveredExtrasOnSale": "{count, plural, one {# extra photo is on offer at €2.90 — you get €2.00 if it sells.} other {# extra photos are on offer at €2.90 each — you get €2.00 on each one sold.}}",
-    "giftConfirm": "These become yours straight away and cannot be undone. Add this one?"
+    "deliveredExtrasOnSale": "{count, plural, one {# extra photo is on offer at the price your photographer set — you get your price if it sells.} other {# extra photos are on offer at a price your photographer sets — you get your own price on each one sold.}}",
+    "giftConfirm": "These become yours straight away and cannot be undone. Add this one?",
+    "takeAllBtnFree": "Take all {count} free",
+    "takeAllBtn": "Take all {count}",
+    "takeAllTitle": "Take them all?",
+    "takeAllFree": "All {count} are free — they become yours straight away and this cannot be undone.",
+    "takeAllMixed": "{free} are free and become yours now. The other {paid} go into your basket for {total} — you still choose whether to buy.",
+    "takeAllPaid": "All {count} go into your basket for {total}. Nothing is charged until you press Buy.",
+    "takeAllConfirm": "Yes, take them"
   },
   "availability": {
     "pageTitle": "Availability",
@@ -3292,7 +3304,7 @@
     "offerWithdrawn": "Offer withdrawn",
     "withdrawOffer": "Withdraw offer",
     "withdrawOfferConfirm": "Withdraw this offer? The client will no longer be able to book it.",
-    "deliveryExtrasLine": "{count, plural, one {# extra photo you can add for €2.90} other {# extra photos you can add for €2.90 each}}"
+    "deliveryExtrasLine": "{count, plural, one {# extra photo you can add for the price your photographer set} other {# extra photos you can add for a price your photographer sets}}"
   },
   "settings": {
     "title": "Settings",
@@ -4312,6 +4324,6 @@
     "s8title": "Install the mobile app",
     "s8body": "Push notifications hit you within seconds — way faster than email. You can reply from a beach, the gym, anywhere. Search \"{brand}\" on App Store or Play Store, or tap the badges below.",
     "s9title": "Sell the frames you'd have deleted",
-    "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for €2.90 — you get €2.00 of that on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Upload exactly what you promised and none of this appears to anyone."
+    "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for the price your photographer set — you get your own price for it on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Upload exactly what you promised and none of this appears to anyone."
   }
 }

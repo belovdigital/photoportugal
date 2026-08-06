@@ -7,7 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { auth } from "@/lib/auth";
-import { EXTRA_PHOTO_PRICE_CENTS } from "@/lib/extras-pricing";
+import { resolveExtrasPricing } from "@/lib/extras-pricing";
 
 // Admins (verified via the admin_token cookie) can pull any gallery
 // without a password — used by the Recent Visitors panel to inspect
@@ -64,6 +64,9 @@ export async function POST(
     extras_zip_size: number | null;
     gift_slots: number;
     gift_used: number;
+    extra_photo_price_cents: number | null;
+    extra_photo_payout_cents: number | null;
+    profile_extra_photo_payout_cents: number | null;
     zip_size: number | null;
   }>(
     `SELECT b.id, b.client_id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
@@ -74,6 +77,8 @@ export async function POST(
             b.payment_status,
             COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size,
             COALESCE(ez.ready, FALSE) as extras_zip_ready, ez.zip_size as extras_zip_size,
+            b.extra_photo_price_cents, b.extra_photo_payout_cents,
+            pp.extra_photo_payout_cents as profile_extra_photo_payout_cents,
             COALESCE(b.extras_gift_slots, 0) as gift_slots,
             (SELECT COUNT(*)::int FROM delivery_extra_purchases g
               WHERE g.booking_id = b.id AND g.status = 'paid' AND g.amount_cents = 0) as gift_used
@@ -245,7 +250,7 @@ export async function POST(
     // What the extras strip needs to price a basket without hardcoding the
     // number in the browser. The server charges from its own constant either
     // way; this is display only.
-    extras_price_cents: EXTRA_PHOTO_PRICE_CENTS,
+    extras_price_cents: resolveExtrasPricing(booking).priceCents,
     gift_remaining: Math.max(0, booking.gift_slots - booking.gift_used),
     extras_available: photos.filter((p) => p.locked).length,
     delivery_accepted: isAccepted,

@@ -109,6 +109,7 @@ export function DeliveryPageClient({
   // basket is silently emptied and they have to find every photo again.
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
   const [buyingExtras, setBuyingExtras] = useState(false);
+  const [takingAll, setTakingAll] = useState(false);
   const extrasKey = `delivery_extras_${token}`;
 
   useEffect(() => {
@@ -195,6 +196,63 @@ export function DeliveryPageClient({
     } catch {
       alert(t("extrasError"));
       return false;
+    }
+  }
+
+  // A photographer who shot 500 against a promise of 400 and gifted the
+  // difference should not be sending their client on a hundred taps. One
+  // button: the free part is redeemed in a single call, the rest lands in the
+  // basket with its total showing — which is also the moment a client decides
+  // the remainder is worth paying for.
+  async function takeAllExtras() {
+    if (takingAll) return;
+    const locked = (gallery?.photos ?? []).filter((p) => p.locked).map((p) => p.id);
+    if (locked.length === 0) return;
+    const freeCount = Math.min(gallery?.gift_remaining ?? 0, locked.length);
+    const freeIds = locked.slice(0, freeCount);
+    const paidIds = locked.slice(freeCount);
+
+    const ok = await confirm(
+      t("takeAllTitle"),
+      freeCount > 0 && paidIds.length > 0
+        ? t("takeAllMixed", { free: freeCount, paid: paidIds.length, total: money(paidIds.length * (gallery?.extras_price_cents ?? 290)) })
+        : freeCount > 0
+          ? t("takeAllFree", { count: freeCount })
+          : t("takeAllPaid", { count: paidIds.length, total: money(paidIds.length * (gallery?.extras_price_cents ?? 290)) }),
+      { confirmLabel: t("takeAllConfirm") }
+    );
+    if (!ok) return;
+
+    setTakingAll(true);
+    const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+    try {
+      if (freeIds.length > 0) {
+        const res = await fetch(`/api/delivery/${token}/extras`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gift: true, photo_ids: freeIds, password: pw }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(data?.error || t("extrasError"));
+          return;
+        }
+        const again = await fetch(`/api/delivery/${token}/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw }),
+        });
+        if (again.ok) setGallery(await again.json());
+      }
+      // The paid remainder is a basket, not a charge — they still press Buy.
+      if (paidIds.length > 0) {
+        setSelectedExtras(new Set(paidIds));
+        try { sessionStorage.setItem(extrasKey, JSON.stringify(paidIds)); } catch {}
+      }
+    } catch {
+      alert(t("extrasError"));
+    } finally {
+      setTakingAll(false);
     }
   }
 
@@ -692,6 +750,9 @@ export function DeliveryPageClient({
         onToggleExtra={toggleExtra}
         onSwap={swapPhoto}
         onReorder={reorderPhotos}
+        onTakeAll={takeAllExtras}
+        takingAll={takingAll}
+        extrasPriceCents={gallery?.extras_price_cents ?? 290}
         giftLeft={gallery?.gift_remaining ?? 0}
       />
 

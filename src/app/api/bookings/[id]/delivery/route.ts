@@ -586,7 +586,7 @@ export async function POST(
               <h2 style="color: #C94536;">Your Photo Previews Are Ready!</h2>
               <p>Hi ${firstName},</p>
               <p><strong>${details.photographer_name}</strong> has uploaded <strong>${count} photo previews</strong> from your session for you to review.</p>
-              ${extrasCount > 0 ? `<p>There ${extrasCount === 1 ? "is" : "are"} also <strong>${extrasCount} extra ${extrasCount === 1 ? "photo" : "photos"}</strong> in the gallery that ${extrasCount === 1 ? "was" : "were"} not part of your package. You can see ${extrasCount === 1 ? "it" : "them"} straight away, and add ${extrasCount === 1 ? "it" : "any of them"} to your download for &euro;2.90 each if you want to.</p>` : ""}
+              ${extrasCount > 0 ? `<p>There ${extrasCount === 1 ? "is" : "are"} also <strong>${extrasCount} extra ${extrasCount === 1 ? "photo" : "photos"}</strong> in the gallery that ${extrasCount === 1 ? "was" : "were"} not part of your package. You can see ${extrasCount === 1 ? "it" : "them"} straight away, and add ${extrasCount === 1 ? "it" : "any of them"} to your download if you want to — the price is shown in the gallery.</p>` : ""}
               <p>Please take a moment to browse through them. The previews include a watermark — this is normal and will be removed once you approve the delivery.</p>
 
               <div style="margin: 20px 0; padding: 16px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0;">
@@ -679,7 +679,7 @@ export async function POST(
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}` +
-          (extrasCount > 0 ? `\n${extrasCount} extra photo${extrasCount === 1 ? "" : "s"} on sale at €2.90` : ""), "bookings");
+          (extrasCount > 0 ? `\n${extrasCount} extra photo${extrasCount === 1 ? "" : "s"} on sale` : ""), "bookings");
         }).catch((err) => console.error("[delivery] telegram error:", err));
       } catch {}
 

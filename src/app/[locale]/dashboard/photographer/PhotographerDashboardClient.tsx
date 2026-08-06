@@ -427,6 +427,34 @@ export function PhotographerDashboardClient({
   const inBusinessSection = portfolioSection === "business";
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
+  const [extrasPriceDraft, setExtrasPriceDraft] = useState("5");
+  const [savingExtrasPrice, setSavingExtrasPrice] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/dashboard/extras-price")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.payout_cents) setExtrasPriceDraft(String(d.payout_cents / 100)); })
+      .catch(() => {});
+  }, []);
+
+  async function saveExtrasPrice() {
+    const cents = Math.round((parseFloat(extrasPriceDraft) || 0) * 100);
+    setSavingExtrasPrice(true);
+    try {
+      const res = await fetch("/api/dashboard/extras-price", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payout_cents: cents }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(data?.error || "Could not save your price"); return; }
+      setExtrasPriceDraft(String(data.payout_cents / 100));
+    } catch {
+      alert("Could not save your price");
+    } finally {
+      setSavingExtrasPrice(false);
+    }
+  }
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -1454,6 +1482,50 @@ export function PhotographerDashboardClient({
         {/* === PACKAGES TAB === */}
         {activeTab === "packages" && (
           <div>
+            {/* Account-level, and it belongs here: this is the tab where a
+                photographer sets what things cost. One rate across every
+                package — a client comparing two packages from the same
+                photographer must not find two prices for the same thing. */}
+            <div className="mb-6 rounded-2xl border-2 border-accent-200 bg-accent-50 p-5">
+              <h3 className="font-display text-xl font-bold text-accent-900">💶 {t("extrasPriceTitle")}</h3>
+              <p className="mt-1 text-sm text-accent-800">{t("extrasPriceBody")}</p>
+              <div className="mt-4 flex flex-wrap items-end gap-4">
+                <div>
+                  <label htmlFor="extras-price" className="block text-xs font-semibold uppercase tracking-wide text-accent-700">
+                    {t("extrasPriceYouGet")}
+                  </label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-2xl font-bold text-accent-900">&euro;</span>
+                    <input
+                      id="extras-price"
+                      type="number"
+                      inputMode="decimal"
+                      min={1}
+                      max={100}
+                      step={0.5}
+                      value={extrasPriceDraft}
+                      onChange={(e) => setExtrasPriceDraft(e.target.value)}
+                      className="w-28 rounded-lg border border-accent-300 bg-white px-3 py-2 text-2xl font-bold text-accent-900 focus:border-accent-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="rounded-xl bg-white px-4 py-2.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("extrasPriceClientPays")}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    &euro;{(Math.ceil(Math.round((parseFloat(extrasPriceDraft) || 0) * 100 * 1.25) / 10) * 10 / 100).toFixed(2)}
+                  </p>
+                </div>
+                <button
+                  onClick={saveExtrasPrice}
+                  disabled={savingExtrasPrice || !parseFloat(extrasPriceDraft)}
+                  className="rounded-xl bg-accent-600 px-6 py-3 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-40"
+                >
+                  {savingExtrasPrice ? "…" : t("save")}
+                </button>
+              </div>
+              <p className="mt-3 text-xs text-accent-700">{t("extrasPriceHint")}</p>
+            </div>
+
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
                 {t("createPackagesPrompt")}

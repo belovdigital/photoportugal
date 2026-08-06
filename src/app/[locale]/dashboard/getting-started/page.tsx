@@ -424,7 +424,7 @@ function ExtraPhotosMockup() {
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="relative aspect-square rounded bg-gradient-to-br from-amber-100 to-amber-200">
               {i === 0 && (
-                <span className="absolute inset-x-0 bottom-0 rounded-b bg-white/90 text-center text-[7px] font-bold text-gray-700">&euro;2.90</span>
+                <span className="absolute inset-x-0 bottom-0 rounded-b bg-white/90 text-center text-[7px] font-bold text-gray-700">&euro;6.30</span>
               )}
             </div>
           ))}

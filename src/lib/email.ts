@@ -734,11 +734,11 @@ export async function sendDeliveryAcceptedToPhotographer(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
       ${extrasOnOffer > 0 ? `<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#6b7280;">${pickT({
-        en: `${extrasOnOffer} extra photo${extrasOnOffer === 1 ? "" : "s"} you held back ${extrasOnOffer === 1 ? "is" : "are"} still on offer in this gallery for another 90 days. You earn &euro;2.00 on each one sold.`,
-        pt: `${extrasOnOffer} fotografia${extrasOnOffer === 1 ? "" : "s"} extra que guardou continua${extrasOnOffer === 1 ? "" : "m"} à venda nesta galeria durante mais 90 dias. Recebe 2,00 &euro; por cada uma vendida.`,
-        de: `${extrasOnOffer} zurückgehaltene Zusatzfoto${extrasOnOffer === 1 ? "" : "s"} ${extrasOnOffer === 1 ? "bleibt" : "bleiben"} in dieser Galerie noch 90 Tage im Angebot. Pro Verkauf erhalten Sie 2,00 &euro;.`,
-        es: `${extrasOnOffer} foto${extrasOnOffer === 1 ? "" : "s"} extra que guardaste sigue${extrasOnOffer === 1 ? "" : "n"} a la venta en esta galería durante 90 días más. Ganas 2,00 &euro; por cada una vendida.`,
-        fr: `${extrasOnOffer} photo${extrasOnOffer === 1 ? "" : "s"} supplémentaire${extrasOnOffer === 1 ? "" : "s"} que vous avez gardée${extrasOnOffer === 1 ? "" : "s"} reste${extrasOnOffer === 1 ? "" : "nt"} proposée${extrasOnOffer === 1 ? "" : "s"} pendant encore 90 jours. Vous gagnez 2,00 &euro; par vente.`,
+        en: `${extrasOnOffer} extra photo${extrasOnOffer === 1 ? "" : "s"} you held back ${extrasOnOffer === 1 ? "is" : "are"} still on offer in this gallery for another 90 days. You earn your own price on each one sold.`,
+        pt: `${extrasOnOffer} fotografia${extrasOnOffer === 1 ? "" : "s"} extra que guardou continua${extrasOnOffer === 1 ? "" : "m"} à venda nesta galeria durante mais 90 dias. Recebe o seu preço por cada uma vendida.`,
+        de: `${extrasOnOffer} zurückgehaltene Zusatzfoto${extrasOnOffer === 1 ? "" : "s"} ${extrasOnOffer === 1 ? "bleibt" : "bleiben"} in dieser Galerie noch 90 Tage im Angebot. Pro Verkauf erhalten Sie Ihren eigenen Preis.`,
+        es: `${extrasOnOffer} foto${extrasOnOffer === 1 ? "" : "s"} extra que guardaste sigue${extrasOnOffer === 1 ? "" : "n"} a la venta en esta galería durante 90 días más. Ganas tu propio precio por cada una vendida.`,
+        fr: `${extrasOnOffer} photo${extrasOnOffer === 1 ? "" : "s"} supplémentaire${extrasOnOffer === 1 ? "" : "s"} que vous avez gardée${extrasOnOffer === 1 ? "" : "s"} reste${extrasOnOffer === 1 ? "" : "nt"} proposée${extrasOnOffer === 1 ? "" : "s"} pendant encore 90 jours. Vous gagnez votre propre prix par vente.`,
       }, locale)}</p>` : ""}
       ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.cta)}
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.reviewPrompt}</p>

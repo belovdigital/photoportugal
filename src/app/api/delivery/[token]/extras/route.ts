@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { EXTRA_PHOTO_PRICE_CENTS, EXTRA_PHOTO_PAYOUT_CENTS, EXTRA_PHOTO_PLATFORM_FEE_CENTS } from "@/lib/extras-pricing";
+import { resolveExtrasPricing } from "@/lib/extras-pricing";
 import crypto from "crypto";
 import { query, queryOne, withTransaction } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
@@ -24,9 +24,6 @@ export const dynamic = "force-dynamic";
 // The rows are written pending BEFORE the redirect and only the webhook marks
 // them paid. Abandon the checkout, close the tab, have the card decline — no
 // row is ever flipped, nothing unlocks.
-const PRICE_CENTS = EXTRA_PHOTO_PRICE_CENTS;
-const PAYOUT_CENTS = EXTRA_PHOTO_PAYOUT_CENTS;
-const PLATFORM_FEE_CENTS = EXTRA_PHOTO_PLATFORM_FEE_CENTS;
 const MAX_PHOTOS_PER_ORDER = 200;
 
 // One notification per burst of gift picks, not one per photo.
@@ -130,12 +127,17 @@ export async function POST(
     client_email: string;
     client_stripe_customer_id: string | null;
     locale: string | null;
+    extra_photo_price_cents: number | null;
+    extra_photo_payout_cents: number | null;
+    profile_extra_photo_payout_cents: number | null;
   }>(
     `SELECT b.id, b.client_id, b.gift_recipient_user_id, b.delivery_password,
             b.delivery_expires_at::text as delivery_expires_at,
             b.photographer_id, u.name as photographer_name,
             cu.email as client_email, cu.stripe_customer_id as client_stripe_customer_id,
-            cu.locale
+            cu.locale,
+            b.extra_photo_price_cents, b.extra_photo_payout_cents,
+            pp.extra_photo_payout_cents as profile_extra_photo_payout_cents
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -144,6 +146,11 @@ export async function POST(
     [token]
   );
   if (!booking) return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
+
+  // The booking's own snapshot wins, so a rate change never rewrites a price
+  // the client has already been shown.
+  const { priceCents: PRICE_CENTS, payoutCents: PAYOUT_CENTS, platformFeeCents: PLATFORM_FEE_CENTS } =
+    resolveExtrasPricing(booking);
 
   // Auth: identical recognition to the verify and tip endpoints — a signed-in
   // owner, or the gallery password everyone else was given.

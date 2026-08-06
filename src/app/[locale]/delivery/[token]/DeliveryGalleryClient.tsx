@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
   DragOverlay, type DragStartEvent, type DragEndEvent,
@@ -78,6 +78,9 @@ export function DeliveryGalleryClient({
   onToggleExtra,
   onSwap,
   onReorder,
+  onTakeAll,
+  takingAll = false,
+  extrasPriceCents = 290,
   giftLeft = 0,
 }: {
   photos: Photo[];
@@ -88,11 +91,18 @@ export function DeliveryGalleryClient({
   onSwap?: (inId: string, outId: string) => Promise<boolean>;
   /** Full ordered id list after a within-pile drag. */
   onReorder?: (ids: string[]) => Promise<void>;
+  /** One tap for the whole offer — free part redeemed, paid part basketed. */
+  onTakeAll?: () => Promise<void>;
+  takingAll?: boolean;
+  extrasPriceCents?: number;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
 }) {
   const t = useTranslations("delivery");
+  const locale = useLocale();
+  const money = (cents: number) =>
+    new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(cents / 100);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [swapFor, setSwapFor] = useState<string | null>(null);
   const [swapping, setSwapping] = useState(false);
@@ -386,10 +396,24 @@ export function DeliveryGalleryClient({
                   {t("sectionOnOffer", { count: lockedAll.length })}
                 </h3>
                 <p className="text-sm text-amber-800">
-                  {giftLeft > 0 ? t("sectionOnOfferFree", { count: giftLeft }) : t("sectionOnOfferPaid")}
+                  {giftLeft > 0
+                    ? t("sectionOnOfferFree", { count: giftLeft })
+                    : t("sectionOnOfferPaid", { price: money(extrasPriceCents) })}
                 </p>
               </div>
             </div>
+            {onTakeAll && !deliveryAccepted && (
+              <button
+                type="button"
+                onClick={onTakeAll}
+                disabled={takingAll}
+                className="mt-4 w-full rounded-xl bg-amber-600 px-6 py-3.5 text-base font-bold text-white shadow-md transition hover:bg-amber-700 disabled:opacity-50"
+              >
+                {takingAll ? "…" : giftLeft >= lockedAll.length
+                  ? t("takeAllBtnFree", { count: lockedAll.length })
+                  : t("takeAllBtn", { count: lockedAll.length })}
+              </button>
+            )}
             <SortableContext items={lockedIndexed.map(({ p }) => p.id)} strategy={rectSortingStrategy}>
               {renderMasonry(lockedIndexed, canRearrange)}
             </SortableContext>
