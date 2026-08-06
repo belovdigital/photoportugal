@@ -334,6 +334,39 @@ export async function POST(
         }, { status: 409 });
       }
 
+      // Everything beyond the promise becomes purchasable at the moment of
+      // publishing — unless the photographer already curated the selection by
+      // hand, which is what `is_included = FALSE` on any row means.
+      //
+      // The flip has to happen here rather than at upload time: only now is it
+      // settled how many were promised and how many arrived. Doing nothing
+      // therefore means "the client gets exactly what was promised and the
+      // rest is offered for sale", not "the client gets everything free".
+      //
+      // Videos are never touched: they were never part of a photo count and
+      // they are not sold.
+      if (requiredPhotos > 0) {
+        const alreadyCurated = await queryOne<{ count: string }>(
+          "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1 AND is_included = FALSE",
+          [id]
+        );
+        if (parseInt(alreadyCurated?.count || "0") === 0) {
+          await queryOne(
+            `WITH ranked AS (
+               SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order, created_at) AS rn
+                 FROM delivery_photos
+                WHERE booking_id = $1 AND COALESCE(media_type, 'image') <> 'video'
+             )
+             UPDATE delivery_photos dp
+                SET is_included = FALSE
+               FROM ranked r
+              WHERE dp.id = r.id AND r.rn > $2 AND dp.purchased_at IS NULL
+              RETURNING dp.id`,
+            [id, requiredPhotos]
+          );
+        }
+      }
+
       // Generate delivery token and mark as delivered
       const token = crypto.randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days
