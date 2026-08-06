@@ -2863,7 +2863,10 @@
     "confirmShareExtras": "{count, plural, one {Mais # fotografia fica à venda por 2,90 € — o cliente pode comprá-la, ou recebê-la de graça se definir um presente.} other {Mais # fotografias ficam à venda por 2,90 € cada — o cliente pode comprá-las, ou receber algumas de graça se definir um presente.}}",
     "extraPickFree": "Juntar grátis",
     "sectionYours": "{count, plural, one {# fotografia é sua} other {# fotografias são suas}}",
-    "sectionOnOffer": "{count, plural, one {mais # que pode juntar} other {mais # que pode juntar}}"
+    "sectionOnOffer": "{count, plural, one {mais # que pode juntar} other {mais # que pode juntar}}",
+    "sectionYoursHint": "Já estão na sua galeria — nada a pagar.",
+    "sectionOnOfferFree": "{count, plural, one {O seu fotógrafo oferece-lhe # destas, grátis. Toque em Juntar grátis.} other {O seu fotógrafo oferece-lhe # destas, grátis. Toque em Juntar grátis nas que quiser.}}",
+    "sectionOnOfferPaid": "2,90 € cada. Toque em Juntar nas que quiser e depois Comprar em baixo."
   },
   "availability": {
     "pageTitle": "Disponibilidade",

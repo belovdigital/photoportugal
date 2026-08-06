@@ -3336,7 +3336,10 @@
     "confirmShareExtras": "{count, plural, one {# photo de plus est proposée à 2,90 € — votre client peut l'acheter, ou la recevoir gratuitement si vous définissez un cadeau.} other {# photos de plus sont proposées à 2,90 € pièce — votre client peut les acheter, ou en recevoir gratuitement si vous définissez un cadeau.}}",
     "extraPickFree": "Ajouter gratuit",
     "sectionYours": "{count, plural, one {# photo est à vous} other {# photos sont à vous}}",
-    "sectionOnOffer": "{count, plural, one {# de plus à ajouter} other {# de plus à ajouter}}"
+    "sectionOnOffer": "{count, plural, one {# de plus à ajouter} other {# de plus à ajouter}}",
+    "sectionYoursHint": "Déjà dans votre galerie — rien à payer.",
+    "sectionOnOfferFree": "{count, plural, one {Votre photographe vous en offre #. Touchez Ajouter gratuit.} other {Votre photographe vous en offre #. Touchez Ajouter gratuit sur celles que vous voulez.}}",
+    "sectionOnOfferPaid": "2,90 € pièce. Touchez Ajouter sur celles que vous voulez, puis Acheter en bas."
   },
   "availability": {
     "pageTitle": "Disponibilités",

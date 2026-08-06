@@ -174,10 +174,10 @@ export function DeliveryGalleryClient({
           /* A bare "+" in a 28px circle told nobody anything, and on a phone it
              was barely a tap target. A labelled pill across the bottom says what
              pressing it does, and the whole tile is clickable anyway. */
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent p-2 pt-8">
             <span
-              className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-bold shadow-lg ${
-                picked ? "bg-primary-600 text-white" : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white/95 text-gray-900"
+              className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold shadow-lg ring-1 ring-black/5 ${
+                picked ? "bg-green-600 text-white" : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white text-gray-900"
               }`}
             >
               {picked ? `✓ ${t("extraPicked")}` : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")}`}
@@ -243,14 +243,37 @@ export function DeliveryGalleryClient({
           are rock solid. */}
       {split ? (
         <>
-          <h3 className="mt-8 border-b-2 border-accent-200 pb-2 text-base font-bold text-gray-900">
-            ✓ {t("sectionYours", { count: ownedIndexed.length })}
-          </h3>
+          {/* A hairline rule between two walls of thumbnails was invisible.
+              Each group gets a real header — icon, size, and one line saying
+              what the group IS — and the paid group sits inside a tinted
+              panel so it reads as a different place, not a scroll position. */}
+          <div className="mt-10 flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100 text-xl text-green-700">✓</span>
+            <div className="min-w-0">
+              <h3 className="font-display text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
+                {t("sectionYours", { count: ownedIndexed.length })}
+              </h3>
+              <p className="text-sm text-gray-500">{t("sectionYoursHint")}</p>
+            </div>
+          </div>
           {renderMasonry(ownedIndexed)}
-          <h3 className="mt-10 border-b-2 border-amber-200 pb-2 text-base font-bold text-amber-800">
-            {giftLeft > 0 ? "🎁" : "＋"} {t("sectionOnOffer", { count: lockedIndexed.length })}
-          </h3>
-          {renderMasonry(lockedIndexed)}
+
+          <div className="mt-12 rounded-3xl border-2 border-amber-200 bg-amber-50/60 p-4 sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-200 text-xl">
+                {giftLeft > 0 ? "🎁" : "＋"}
+              </span>
+              <div className="min-w-0">
+                <h3 className="font-display text-2xl font-bold leading-tight text-amber-900 sm:text-3xl">
+                  {t("sectionOnOffer", { count: lockedIndexed.length })}
+                </h3>
+                <p className="text-sm text-amber-800">
+                  {giftLeft > 0 ? t("sectionOnOfferFree", { count: giftLeft }) : t("sectionOnOfferPaid")}
+                </p>
+              </div>
+            </div>
+            {renderMasonry(lockedIndexed)}
+          </div>
         </>
       ) : (
         renderMasonry(indexed)

@@ -467,15 +467,18 @@ export function DeliveryPageClient({
       </div>
 
       {/* Stats & Download */}
-      <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-xl border border-warm-200 bg-white p-5 sm:flex-row">
+      <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-warm-200 bg-white p-5">
         <div className="text-sm text-gray-500">
-          <strong className="text-gray-900">{gallery.photo_count - (gallery.extras_available ?? 0)}</strong> {gallery.photo_count - (gallery.extras_available ?? 0) !== 1 ? t("photoPlural") : t("photoSingular")}
-          {(gallery.extras_available ?? 0) > 0 && <span className="ml-1 text-gray-500">{t("plusExtrasAvailable", { count: gallery.extras_available ?? 0 })}</span>}
-          {" "}&middot;{" "}
-          {totalSize > 1024 * 1024
-            ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
-            : `${(totalSize / 1024).toFixed(0)} KB`}
-          <span className="ml-3 text-xs text-gray-400">{t("availableUntil", { date: expiresDate })}</span>
+          <span className="block text-lg font-bold text-gray-900">
+            {gallery.photo_count - (gallery.extras_available ?? 0)} {gallery.photo_count - (gallery.extras_available ?? 0) !== 1 ? t("photoPlural") : t("photoSingular")}
+            {(gallery.extras_available ?? 0) > 0 && <span className="font-medium text-gray-500">{" "}{t("plusExtrasAvailable", { count: gallery.extras_available ?? 0 })}</span>}
+          </span>
+          <span className="mt-0.5 block text-xs text-gray-400">
+            {totalSize > 1024 * 1024
+              ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
+              : `${(totalSize / 1024).toFixed(0)} KB`}
+            {" · "}{t("availableUntil", { date: expiresDate })}
+          </span>
         </div>
         {/* Only AFTER acceptance. The main archive is written once, at
             acceptance, and now contains everything the client owns by then —
@@ -575,11 +578,11 @@ export function DeliveryPageClient({
             ) : null}
             </>
           ) : (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-2xl border border-warm-200 bg-warm-50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-semibold text-amber-800">{t("happyWithPhotos")}</p>
-                  <p className="mt-1 text-sm text-amber-700">
+                  <p className="font-semibold text-gray-800">{t("happyWithPhotos")}</p>
+                  <p className="mt-1 text-sm text-gray-600">
                     {t("acceptDeliveryPrompt")} {gallery.payment_status === "paid" ? t("acceptDeliveryPaymentNote") : ""}
                   </p>
                 </div>
@@ -588,7 +591,7 @@ export function DeliveryPageClient({
                   <button
                     onClick={handleAcceptDelivery}
                     disabled={accepting}
-                    className="shrink-0 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                    className="shrink-0 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
                   >
                     {accepting ? t("accepting") : t("acceptDelivery")}
                   </button>
