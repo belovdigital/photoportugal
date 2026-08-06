@@ -2049,6 +2049,24 @@ async function runReminders(): Promise<NextResponse> {
       ).catch(() => {});
     }
 
+    // Archives that never finished. buildDeliveryZip swallows its failures and
+    // returns null, so a build that dies leaves ready = FALSE forever and the
+    // client watches a spinner that will never resolve.
+    const staleZips = await query<{ booking_id: string }>(
+      `SELECT DISTINCT dp.booking_id
+         FROM delivery_photos dp
+         LEFT JOIN delivery_extras_zip ez ON ez.booking_id = dp.booking_id
+        WHERE dp.purchased_at IS NOT NULL
+          AND dp.purchased_at < NOW() - INTERVAL '15 minutes'
+          AND COALESCE(ez.ready, FALSE) = FALSE
+          AND (ez.updated_at IS NULL OR ez.updated_at < NOW() - INTERVAL '15 minutes')`
+    );
+    for (const z of staleZips) {
+      const { buildDeliveryZip } = await import("@/lib/build-zip");
+      buildDeliveryZip(z.booking_id, "extras").catch(() => {});
+    }
+    if (staleZips.length > 0) console.log(`[cron] extras sweep: rebuilding ${staleZips.length} stalled archives`);
+
     // Payouts still owed. Grouped per order so one transfer covers an order,
     // exactly as the webhook does, and under the same idempotency key.
     const owed = await query<{ order_id: string; booking_id: string; payout_total: string; photographer_stripe_id: string | null; stripe_ready: boolean }>(

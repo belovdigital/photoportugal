@@ -169,6 +169,30 @@ export function DeliveryPageClient({
           if (params.get("extras") === "success") {
             setSelectedExtras(new Set());
             try { sessionStorage.removeItem(extrasKey); } catch {}
+            // The redirect from Stripe regularly beats the webhook by a second
+            // or two, so the first read still shows everything locked. Re-read
+            // a few times rather than leaving the buyer looking at photos they
+            // have just paid for, still behind a watermark.
+            let tries = 0;
+            const settle = setInterval(async () => {
+              tries += 1;
+              try {
+                const again = await fetch(`/api/delivery/${token}/verify`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password: cached || "" }),
+                });
+                if (again.ok) {
+                  const fresh = await again.json();
+                  if ((fresh.extras_owned ?? 0) > (data.extras_owned ?? 0)) {
+                    setGallery(fresh);
+                    clearInterval(settle);
+                    return;
+                  }
+                }
+              } catch { /* keep trying until the attempt budget runs out */ }
+              if (tries >= 10) clearInterval(settle);
+            }, 3000);
           }
         }
         setAutoLoading(false);
