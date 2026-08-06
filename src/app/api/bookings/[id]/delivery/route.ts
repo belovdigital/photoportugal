@@ -925,9 +925,14 @@ export async function POST(
       }
 
       const item = await queryOne<{ id: string }>(
-        `INSERT INTO delivery_photos (booking_id, url, preview_url, thumbnail_url, filename, file_size, sort_order, media_type, width, height)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'image', $8, $9) RETURNING id`,
-        [id, url, previewUrl, cleanThumbUrl, downloadName, file.size, sortOrder++, imgWidth, imgHeight]
+        // After the gallery has been shared the promise is already settled and
+        // the publish-time trim no longer runs, so a photo added now defaulting
+        // to is_included = TRUE ships free AND puts the package permanently
+        // over its count — which then makes every later swap fail with a 500.
+        // Anything arriving late is an extra until somebody says otherwise.
+        `INSERT INTO delivery_photos (booking_id, url, preview_url, thumbnail_url, filename, file_size, sort_order, media_type, width, height, is_included)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'image', $8, $9, $10) RETURNING id`,
+        [id, url, previewUrl, cleanThumbUrl, downloadName, file.size, sortOrder++, imgWidth, imgHeight, !booking.delivery_token]
       );
 
       const publicUrl = isS3Path(url) ? await getPresignedUrl(s3KeyFromPath(url), 3600) : url;

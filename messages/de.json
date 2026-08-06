@@ -934,11 +934,6 @@
         "reward": "3 Jahre Premium kostenlos",
         "rewardDetail": "Premium-Plan 3 Jahre kostenlos — als Dankeschön dafür, dass Sie uns zuerst vertraut haben. Geschlossen — alle 25 Plätze sind vergeben."
       },
-      "first50": {
-        "label": "Erste 50",
-        "reward": "3 Monate Pro kostenlos",
-        "rewardDetail": "Pro-Plan (Wert 29 €/Mon.) 3 Monate kostenlos. Danach freie Planwahl."
-      },
       "first100": {
         "label": "Erste 100",
         "reward": "6 Monate Premium kostenlos",
@@ -2391,7 +2386,6 @@
     "uploading": "Wird hochgeladen...",
     "coverImage": "Titelbild",
     "coverHintLandscape": "Dieses Foto erscheint als Hintergrund Ihrer Karte auf der Fotografenseite. Verwenden Sie ein Querformat-Foto, empfohlene Größe: 1200×600 px (max. 10 MB).",
-    "coverHintDrag": "",
     "coverPreviewLabel": "Vorschau – ziehen Sie das Bild nach oben oder unten, um die Position anzupassen",
     "uploadCover": "Titelbild hochladen",
     "noCover": "Kein Titelbild",
@@ -3095,7 +3089,8 @@
     "sectionOnOfferPaid": "Je 2,90 €. Bei den gewünschten auf Dazu tippen, dann Kaufen — oder eines auf ein Foto ziehen, das Ihnen weniger gefällt, und gratis tauschen.",
     "swapInstead": "Diese stattdessen nehmen",
     "swapPickOut": "Welches soll sie ersetzen? Antippen.",
-    "deliveredExtrasOnSale": "{count, plural, one {# zusätzliches Foto steht für 2,90 € im Angebot — Sie erhalten 2,00 € bei Verkauf.} other {# zusätzliche Fotos stehen für je 2,90 € im Angebot — Sie erhalten 2,00 € pro Verkauf.}}"
+    "deliveredExtrasOnSale": "{count, plural, one {# zusätzliches Foto steht für 2,90 € im Angebot — Sie erhalten 2,00 € bei Verkauf.} other {# zusätzliche Fotos stehen für je 2,90 € im Angebot — Sie erhalten 2,00 € pro Verkauf.}}",
+    "giftConfirm": "Es gehört Ihnen dann sofort und lässt sich nicht rückgängig machen. Hinzufügen?"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

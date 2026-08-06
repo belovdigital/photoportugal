@@ -1899,8 +1899,12 @@ async function runReminders(): Promise<NextResponse> {
           "SELECT url, preview_url FROM delivery_photos WHERE booking_id = $1",
           [booking.id]
         );
-        const zipRow = await queryOne<{ zip_path: string | null; extras_zip_path: string | null }>(
-          "SELECT zip_path, extras_zip_path FROM bookings WHERE id = $1", [booking.id]
+        // extras_zip_path was dropped from bookings by db/delivery-extras-zip-table.sql;
+        // selecting it threw on every run and the whole cleanup section silently
+        // did nothing. The candidate query already excludes any booking with a
+        // purchase, so no extras archive is ever in scope here.
+        const zipRow = await queryOne<{ zip_path: string | null }>(
+          "SELECT zip_path FROM bookings WHERE id = $1", [booking.id]
         );
 
         // Delete delivery_photos records from DB
@@ -1915,7 +1919,6 @@ async function runReminders(): Promise<NextResponse> {
         const allUrls = [
           ...blobs.flatMap((b) => [b.url, b.preview_url].filter((u): u is string => !!u)),
           zipRow?.zip_path || null,
-          zipRow?.extras_zip_path || null,
         ].filter((u): u is string => !!u);
 
         for (const url of allUrls) {

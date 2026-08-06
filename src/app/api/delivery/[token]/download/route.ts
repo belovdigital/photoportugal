@@ -148,7 +148,13 @@ export async function GET(
 
   const photos = await query<{ url: string; filename: string }>(
     wantsExtras
-      ? "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND purchased_at IS NOT NULL ORDER BY sort_order, created_at"
+      // Must match src/lib/build-zip.ts exactly, or the streamed archive and
+      // the prebuilt one contain different photos.
+      ? `SELECT dp.url, dp.filename FROM delivery_photos dp
+           JOIN bookings b ON b.id = dp.booking_id
+          WHERE dp.booking_id = $1 AND dp.purchased_at IS NOT NULL
+            AND (b.delivery_accepted_at IS NULL OR dp.purchased_at > b.delivery_accepted_at)
+          ORDER BY dp.sort_order, dp.created_at`
       : "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at",
     [booking.id]
   );

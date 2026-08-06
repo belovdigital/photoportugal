@@ -1893,11 +1893,6 @@
         "reward": "3 años de Premium gratis",
         "rewardDetail": "Plan Premium gratis durante 3 años como agradecimiento por confiar en nosotros desde el principio. Cerrado — las 25 plazas están ocupadas."
       },
-      "first50": {
-        "label": "Primeros 50",
-        "reward": "3 meses de Pro gratis",
-        "rewardDetail": "Plan Pro (valor 29 €/mes) gratis durante 3 meses. Después, elija cualquier plan."
-      },
       "first100": {
         "label": "Primeros 100",
         "reward": "6 meses Premium gratis",
@@ -2638,7 +2633,6 @@
     "uploading": "Subiendo...",
     "coverImage": "Imagen de portada",
     "coverHintLandscape": "Esta foto aparece como fondo de su tarjeta en la página de fotógrafos. Use una foto en horizontal, tamaño recomendado: 1200×600 px (máx 10 MB).",
-    "coverHintDrag": "",
     "coverPreviewLabel": "Vista previa — arrastre la imagen arriba o abajo para ajustar la posición",
     "uploadCover": "Subir portada",
     "noCover": "Sin portada",
@@ -3342,7 +3336,8 @@
     "sectionOnOfferPaid": "2,90 € cada una. Toca Añadir en las que quieras y luego Comprar — o arrastra una sobre otra que te guste menos y cámbialas gratis.",
     "swapInstead": "Llevarme esta en su lugar",
     "swapPickOut": "¿A cuál sustituye? Tócala.",
-    "deliveredExtrasOnSale": "{count, plural, one {# foto extra está a la venta por 2,90 € — recibes 2,00 € si se vende.} other {# fotos extra están a la venta por 2,90 € cada una — recibes 2,00 € por cada una vendida.}}"
+    "deliveredExtrasOnSale": "{count, plural, one {# foto extra está a la venta por 2,90 € — recibes 2,00 € si se vende.} other {# fotos extra están a la venta por 2,90 € cada una — recibes 2,00 € por cada una vendida.}}",
+    "giftConfirm": "Pasa a ser tuya de inmediato y no se puede deshacer. ¿Añadir esta?"
   },
   "availability": {
     "pageTitle": "Disponibilidad",
@@ -3791,8 +3786,8 @@
     "minWordsHint": "Escribe al menos {min} palabras.",
     "rewardHint": "🎁 Envíela y le enviaremos por email un código del 10 % de descuento después de aprobar la reseña.",
     "rewardEmailed": "Gracias — le enviaremos el código de descuento por email después de aprobar la reseña.",
-    "rewardBadge": "10 % off",
-    "videoRewardBadge": "15 % off",
+    "rewardBadge": "10 % de descuento",
+    "videoRewardBadge": "15 % de descuento",
     "reviewPlaceholder": "Cuente a otros sobre su experiencia...",
     "submitting": "Enviando...",
     "submitReview": "Enviar reseña",

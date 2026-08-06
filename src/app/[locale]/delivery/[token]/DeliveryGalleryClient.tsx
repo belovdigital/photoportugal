@@ -85,7 +85,7 @@ export function DeliveryGalleryClient({
   selectedExtras?: Set<string>;
   onToggleExtra?: (id: string) => void;
   /** Exchange a locked photo for one currently in the package. */
-  onSwap?: (inId: string, outId: string) => Promise<void>;
+  onSwap?: (inId: string, outId: string) => Promise<boolean>;
   /** Full ordered id list after a within-pile drag. */
   onReorder?: (ids: string[]) => Promise<void>;
   /** Free picks the photographer granted and the client has not spent yet.
@@ -234,9 +234,16 @@ export function DeliveryGalleryClient({
   // Two groups, because "yours" and "for sale" are different things and mixing
   // them made a client hunt for which tiles were which. Owned = in the package
   // or already taken (gift or purchase); the rest are still on offer.
-  const ownedIndexed = useMemo(() => indexed.filter(({ p }) => !p.locked), [indexed]);
-  const lockedIndexed = useMemo(() => indexed.filter(({ p }) => p.locked), [indexed]);
-  const split = lockedIndexed.length > 0 && ownedIndexed.length > 0;
+  // Split from the FULL array, then batch each pile on its own. Slicing a
+  // single prefix first meant that on any package promising more photos than
+  // one batch, the whole first batch was "yours" and the paid section rendered
+  // empty — 58% of packages on this platform, and the section that sells.
+  const all = useMemo(() => photos.map((p, i) => ({ p, i })), [photos]);
+  const ownedAll = useMemo(() => all.filter(({ p }) => !p.locked), [all]);
+  const lockedAll = useMemo(() => all.filter(({ p }) => p.locked), [all]);
+  const ownedIndexed = useMemo(() => ownedAll.slice(0, visibleCount), [ownedAll, visibleCount]);
+  const lockedIndexed = useMemo(() => lockedAll.slice(0, visibleCount), [lockedAll, visibleCount]);
+  const split = lockedAll.length > 0 && ownedAll.length > 0;
 
   function renderCell(photo: Photo, index: number, drag?: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) {
     const isVideo = photo.media_type === "video";
@@ -360,7 +367,7 @@ export function DeliveryGalleryClient({
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100 text-xl text-green-700">✓</span>
             <div className="min-w-0">
               <h3 className="font-display text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
-                {t("sectionYours", { count: ownedIndexed.length })}
+                {t("sectionYours", { count: ownedAll.length })}
               </h3>
               <p className="text-sm text-gray-500">{t("sectionYoursHint")}</p>
             </div>
@@ -376,7 +383,7 @@ export function DeliveryGalleryClient({
               </span>
               <div className="min-w-0">
                 <h3 className="font-display text-2xl font-bold leading-tight text-amber-900 sm:text-3xl">
-                  {t("sectionOnOffer", { count: lockedIndexed.length })}
+                  {t("sectionOnOffer", { count: lockedAll.length })}
                 </h3>
                 <p className="text-sm text-amber-800">
                   {giftLeft > 0 ? t("sectionOnOfferFree", { count: giftLeft }) : t("sectionOnOfferPaid")}
@@ -402,7 +409,9 @@ export function DeliveryGalleryClient({
       )}
 
       {/* Batch-loading sentinel — grows the grid before the bottom is reached. */}
-      {visibleCount < photos.length && <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />}
+      {visibleCount < Math.max(ownedAll.length, lockedAll.length, photos.length) && (
+        <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />
+      )}
 
       {/* Lightbox */}
       {lightboxIndex !== null && photos[lightboxIndex] && (
@@ -426,7 +435,10 @@ export function DeliveryGalleryClient({
                         disabled={swapping}
                         onClick={async () => {
                           setSwapping(true);
-                          try { await onSwap?.(photos[lightboxIndex!].id, cand.id); setSwapFor(null); closeLightbox(); }
+                          try {
+                            const ok = await onSwap?.(photos[lightboxIndex!].id, cand.id);
+                            if (ok) { setSwapFor(null); closeLightbox(); }
+                          }
                           finally { setSwapping(false); }
                         }}
                         className="h-20 w-20 shrink-0 overflow-hidden rounded-lg ring-2 ring-transparent transition hover:ring-white disabled:opacity-40"
@@ -453,11 +465,11 @@ export function DeliveryGalleryClient({
                   >
                     {selectedExtras?.has(photos[lightboxIndex].id)
                       ? `✓ ${t("extraPicked")}`
-                      : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")} · €2.90`}
+                      : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")}`}
                   </button>
                   {/* Free, and the reason the package count is the photographer's
                       to set but the choice of frames is not. */}
-                  {onSwap && (
+                  {canRearrange && (
                     <button
                       type="button"
                       onClick={() => setSwapFor(photos[lightboxIndex!].id)}

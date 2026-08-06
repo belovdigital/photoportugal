@@ -530,7 +530,7 @@ export async function POST(req: NextRequest) {
             // second payment aborts the whole statement on 23505, so NONE of
             // that order unlocks, the webhook 500s, and Stripe redelivers the
             // same failure for days while the money sits captured.
-            const paidRows = await query<{ id: string; booking_id: string; delivery_photo_id: string; payout_cents: number }>(
+            const paidRows = await query<{ id: string; booking_id: string; delivery_photo_id: string; payout_cents: number; amount_cents: number }>(
               `UPDATE delivery_extra_purchases dep
                   SET status = 'paid', paid_at = NOW(),
                       stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id)
@@ -540,7 +540,7 @@ export async function POST(req: NextRequest) {
                      WHERE prev.delivery_photo_id = dep.delivery_photo_id
                        AND prev.status = 'paid'
                   )
-                RETURNING id, booking_id, delivery_photo_id, payout_cents`,
+                RETURNING id, booking_id, delivery_photo_id, payout_cents, amount_cents`,
               [orderId, extraPi]
             );
 
@@ -596,7 +596,9 @@ export async function POST(req: NextRequest) {
               );
 
               const payoutTotal = paidRows.reduce((sum, r) => sum + r.payout_cents, 0);
-              const grossEur = ((paidRows.length * 290) / 100).toFixed(2);
+              // Read what was actually charged rather than re-deriving it from
+              // a hardcoded price — the price is about to become per-photographer.
+              const grossEur = (paidRows.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0) / 100).toFixed(2);
               const payoutEur = (payoutTotal / 100).toFixed(2);
 
               if (ctx?.photographer_stripe_id && ctx.stripe_ready) {

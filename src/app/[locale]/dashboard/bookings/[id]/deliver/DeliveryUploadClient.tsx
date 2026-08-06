@@ -293,14 +293,15 @@ export function DeliveryUploadClient({
   // no move buttons, no gift panel and a server that refuses every write, so
   // the warning there would be a permanent alarm with no off switch — and on
   // this platform 26 finished deliveries are legitimately over their promise.
+  const movableIncluded = includedPhotos.filter((p) => p.media_type !== "video" && !p.purchased_at);
   const overBy = requiredPhotos > 0 && !delivered && !clientAccepted
-    ? Math.max(0, includedPhotoCount - requiredPhotos)
+    ? Math.max(0, movableIncluded.length - requiredPhotos)
     : 0;
 
   // Moving 180 photos one at a time is not a workflow. The API already takes
   // an array; this is the single call that does the whole split.
   const surplusIds = overBy > 0
-    ? includedPhotos.filter((p) => p.media_type !== "video" && !p.purchased_at).slice(requiredPhotos).map((p) => p.id)
+    ? movableIncluded.slice(requiredPhotos).map((p) => p.id)
     : [];
 
   // Dragging: within a pile it reorders, across piles it also changes what the
@@ -342,7 +343,10 @@ export function DeliveryUploadClient({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setPhotos(before);
+        // Keep the flip that DID commit; only the ordering failed.
+        setPhotos(flipped
+          ? before.map((p) => (p.id === flipped.id ? { ...p, is_included: flipped.included } : p))
+          : before);
         alert(data?.error || t("includeFailed"));
       }
     } catch {
@@ -461,6 +465,7 @@ export function DeliveryUploadClient({
       }
     } catch {
       setPhotos(before);
+      alert(t("includeFailed"));
     }
   }
 

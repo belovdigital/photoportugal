@@ -934,11 +934,6 @@
         "reward": "3 anos de Premium grátis",
         "rewardDetail": "Plano Premium gratuito durante 3 anos, como agradecimento por ter confiado em nós primeiro. Encerrado — as 25 vagas foram todas preenchidas."
       },
-      "first50": {
-        "label": "Primeiros 50",
-        "reward": "3 meses de Pro grátis",
-        "rewardDetail": "Plano Pro (valor de €29/mês) gratuito durante 3 meses. Depois escolha qualquer plano."
-      },
       "first100": {
         "label": "Primeiros 100",
         "reward": "6 meses Premium grátis",
@@ -2391,7 +2386,6 @@
     "uploading": "A carregar...",
     "coverImage": "Imagem de Capa",
     "coverHintLandscape": "Esta foto aparece como fundo do seu cartão na página de fotógrafos. Use uma foto horizontal, tamanho recomendado: 1200×600px (máx. 10MB).",
-    "coverHintDrag": "",
     "coverPreviewLabel": "Pré-visualização — arraste a imagem para cima ou para baixo para ajustar",
     "uploadCover": "Carregar Capa",
     "noCover": "Sem capa",
@@ -2869,7 +2863,8 @@
     "sectionOnOfferPaid": "2,90 € cada. Toque em Juntar nas que quiser e depois Comprar — ou arraste uma para cima de outra de que goste menos e troque-as de graça.",
     "swapInstead": "Levar esta em vez de outra",
     "swapPickOut": "Qual substitui? Toque nela.",
-    "deliveredExtrasOnSale": "{count, plural, one {# fotografia extra está à venda por 2,90 € — recebe 2,00 € se for vendida.} other {# fotografias extra estão à venda por 2,90 € cada — recebe 2,00 € por cada uma vendida.}}"
+    "deliveredExtrasOnSale": "{count, plural, one {# fotografia extra está à venda por 2,90 € — recebe 2,00 € se for vendida.} other {# fotografias extra estão à venda por 2,90 € cada — recebe 2,00 € por cada uma vendida.}}",
+    "giftConfirm": "Passa a ser sua de imediato e não pode ser desfeito. Juntar esta?"
   },
   "availability": {
     "pageTitle": "Disponibilidade",
@@ -3318,8 +3313,8 @@
     "minWordsHint": "Escreva pelo menos {min} palavras.",
     "rewardHint": "🎁 Envie e enviaremos por email um código de 10% de desconto depois da avaliação ser aprovada.",
     "rewardEmailed": "Obrigado — o seu código de desconto será enviado por email depois da avaliação ser aprovada.",
-    "rewardBadge": "10% off",
-    "videoRewardBadge": "15% off",
+    "rewardBadge": "10% de desconto",
+    "videoRewardBadge": "15% de desconto",
     "reviewPlaceholder": "Conte aos outros sobre a sua experiência...",
     "submitting": "A submeter...",
     "submitReview": "Submeter Avaliação",
@@ -3940,7 +3935,7 @@
     "title": "Fotógrafo de Férias em Portugal — Reserve Sessões Fotográficas Profissionais",
     "description": "Reserve um fotógrafo profissional de férias em Portugal. {photographers}+ fotógrafos em Lisboa, Porto, Algarve, Sintra e {locations}+ localizações. {reviews}A partir de €{price}.",
     "ogTitle": "Fotógrafo de Férias em Portugal — Photo Portugal",
-    "ogDescription": "{photographers}+ fotógrafos profissionais em Portugal. A partir de €{price}.",
+    "ogDescription": "{photographers}+ fotógrafos profissionais em Portugal. {reviews}A partir de €{price}.",
     "schemaWebsite": "Encontre e reserve fotógrafos profissionais em Portugal para sessões fotográficas de férias.",
     "schemaService": "Marketplace de fotografia de férias em Portugal. Reserve fotógrafos profissionais em Lisboa, Porto, Algarve e mais de {locations} localizações.",
     "reviewsCount": "{count}+ avaliações verificadas. ",

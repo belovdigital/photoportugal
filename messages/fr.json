@@ -1360,11 +1360,6 @@
         "reward": "3 ans de Premium offerts",
         "rewardDetail": "Plan Premium offert pendant 3 ans, en remerciement de nous avoir fait confiance les premiers. Fermé — les 25 places sont toutes prises."
       },
-      "first50": {
-        "label": "Premiers 50",
-        "reward": "3 mois de Pro gratuit",
-        "rewardDetail": "Plan Pro (valeur 29 €/mois) gratuit pendant 3 mois. Ensuite, choisissez n'importe quel plan."
-      },
       "first100": {
         "label": "100 premiers",
         "reward": "6 mois Premium offerts",
@@ -2638,7 +2633,6 @@
     "uploading": "Téléversement...",
     "coverImage": "Image de couverture",
     "coverHintLandscape": "Cette photo apparaît comme arrière-plan de votre carte sur la page des photographes. Utilisez une photo paysage, taille recommandée : 1200×600 px (max 10 Mo).",
-    "coverHintDrag": "",
     "coverPreviewLabel": "Aperçu — faites glisser l'image vers le haut ou le bas pour ajuster la position",
     "uploadCover": "Téléverser la couverture",
     "noCover": "Pas de couverture",
@@ -3342,7 +3336,8 @@
     "sectionOnOfferPaid": "2,90 € pièce. Touchez Ajouter sur celles que vous voulez, puis Acheter — ou glissez-en une sur une photo qui vous plaît moins pour les échanger gratuitement.",
     "swapInstead": "Prendre celle-ci à la place",
     "swapPickOut": "Laquelle remplace-t-elle ? Touchez-la.",
-    "deliveredExtrasOnSale": "{count, plural, one {# photo supplémentaire est proposée à 2,90 € — vous recevez 2,00 € si elle se vend.} other {# photos supplémentaires sont proposées à 2,90 € pièce — vous recevez 2,00 € par vente.}}"
+    "deliveredExtrasOnSale": "{count, plural, one {# photo supplémentaire est proposée à 2,90 € — vous recevez 2,00 € si elle se vend.} other {# photos supplémentaires sont proposées à 2,90 € pièce — vous recevez 2,00 € par vente.}}",
+    "giftConfirm": "Elle est à vous immédiatement et c'est irréversible. Ajouter celle-ci ?"
   },
   "availability": {
     "pageTitle": "Disponibilités",

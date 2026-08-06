@@ -66,6 +66,11 @@ export function DeliveryPageClient({
 }) {
   const t = useTranslations("delivery");
   const locale = useLocale();
+  // "€5.80" was being printed into Portuguese, German, Spanish and French
+  // galleries whose every other price reads "5,80 €". The locale knows where
+  // the symbol goes; nothing here should be deciding that.
+  const money = (cents: number) =>
+    new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(cents / 100);
   const { data: session } = useSession();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -142,6 +147,8 @@ export function DeliveryPageClient({
 
   async function redeemGift(id: string) {
     if (redeeming) return;
+    const ok = await confirm(t("extraPickFree"), t("giftConfirm"), { confirmLabel: t("extraPickFree") });
+    if (!ok) return;
     setRedeeming(id);
     try {
       const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
@@ -168,7 +175,7 @@ export function DeliveryPageClient({
   // The photographer sets HOW MANY photos the package holds; the client picks
   // WHICH. The server does it as one count-preserving swap, so nothing here
   // needs to reason about the promise — it just re-reads the result.
-  async function swapPhoto(inId: string, outId: string) {
+  async function swapPhoto(inId: string, outId: string): Promise<boolean> {
     const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
     try {
       const res = await fetch(`/api/delivery/${token}/swap`, {
@@ -177,15 +184,17 @@ export function DeliveryPageClient({
         body: JSON.stringify({ in: inId, out: outId, password: pw }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { alert(data?.error || t("extrasError")); return; }
+      if (!res.ok) { alert(data?.error || t("extrasError")); return false; }
       const again = await fetch(`/api/delivery/${token}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pw }),
       });
       if (again.ok) setGallery(await again.json());
+      return true;
     } catch {
       alert(t("extrasError"));
+      return false;
     }
   }
 
@@ -197,14 +206,20 @@ export function DeliveryPageClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: ids, password: pw }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data?.error || t("extrasError"));
+        return;
+      }
       const again = await fetch(`/api/delivery/${token}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pw }),
       });
       if (again.ok) setGallery(await again.json());
-    } catch { /* order is cosmetic; a failed drag is not worth an alert */ }
+    } catch {
+      alert(t("extrasError"));
+    }
   }
 
   async function buyExtras() {
@@ -663,7 +678,7 @@ export function DeliveryPageClient({
               : `✨ ${t("extrasBannerTitle", { count: gallery.extras_available ?? 0 })}`}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-accent-800">
-            {t("extrasHowTo", { price: "2,90" })}
+            {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
           </p>
           {(gallery?.gift_remaining ?? 0) > 0 && (
             <p className="mt-1 text-sm text-accent-800">{t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}</p>
@@ -695,9 +710,9 @@ export function DeliveryPageClient({
               {(() => {
                 const free = Math.min(selectedExtras.size, gallery.gift_remaining ?? 0);
                 const paid = selectedExtras.size - free;
-                if (free > 0 && paid > 0) return t("giftFreeLine", { free, paid, total: ((paid * (gallery.extras_price_cents ?? 290)) / 100).toFixed(2) });
+                if (free > 0 && paid > 0) return t("giftFreeLine", { free, paid, total: money(paid * (gallery.extras_price_cents ?? 290)) });
                 if (free > 0) return t("giftAllFree", { count: free });
-                return `€${((paid * (gallery.extras_price_cents ?? 290)) / 100).toFixed(2)}`;
+                return money(paid * (gallery.extras_price_cents ?? 290));
               })()}
             </p>
           </div>

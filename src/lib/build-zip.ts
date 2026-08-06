@@ -54,11 +54,16 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     // snapshot yet, so nothing qualifies.
     const photos = await query<{ url: string; filename: string }>(
       set === "extras"
+        // Before acceptance there is no frozen main archive to duplicate, so
+        // everything owned belongs here; from acceptance onward the main file
+        // already holds it and only later purchases qualify. The identical
+        // predicate lives in download/route.ts — the two used to disagree, so
+        // the client got a different set depending on whether the prebuilt
+        // file happened to exist yet.
         ? `SELECT dp.url, dp.filename FROM delivery_photos dp
              JOIN bookings b ON b.id = dp.booking_id
             WHERE dp.booking_id = $1 AND dp.purchased_at IS NOT NULL
-              AND b.delivery_accepted_at IS NOT NULL
-              AND dp.purchased_at > b.delivery_accepted_at
+              AND (b.delivery_accepted_at IS NULL OR dp.purchased_at > b.delivery_accepted_at)
             ORDER BY dp.sort_order, dp.created_at`
         : `SELECT url, filename FROM delivery_photos
             WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL)
