@@ -3091,7 +3091,7 @@
     "extraPickFree": "Gratis dazu",
     "sectionYours": "{count, plural, one {# Foto gehört Ihnen} other {# Fotos gehören Ihnen}}",
     "sectionOnOffer": "{count, plural, one {# weiteres zur Auswahl} other {# weitere zur Auswahl}}",
-    "sectionYoursHint": "Gehören schon Ihnen — nichts zu zahlen. Ziehen Sie ein Foto aus Zusätzliche auf eines hier, um sie gratis zu tauschen.",
+    "sectionYoursHint": "Gehören schon Ihnen — nichts zu zahlen.",
     "sectionOnOfferFree": "{count, plural, one {Ihr Fotograf schenkt Ihnen # davon. Auf Gratis dazu tippen — oder eines gegen ein anderes aus Ihrem Paket tauschen.} other {Ihr Fotograf schenkt Ihnen # davon. Tippen Sie bei den gewünschten auf Gratis dazu — oder tauschen Sie eines gegen ein anderes aus Ihrem Paket.}}",
     "sectionOnOfferPaid": "{price} pro Foto. Bei den gewünschten auf Dazu tippen, dann Kaufen — oder eines auf ein Foto ziehen, das Ihnen weniger gefällt, und gratis tauschen.",
     "swapInstead": "Diese stattdessen nehmen",
@@ -3109,7 +3109,8 @@
     "extrasSomeGone": "{count, plural, one {# Foto ist nicht mehr verfügbar} other {# Fotos sind nicht mehr verfügbar}} — Ihre Galerie wurde aktualisiert. Bitte erneut wählen.",
     "swapNotOwned": "Dieses Foto gehört Ihnen bereits — tauschen Sie stattdessen gegen eines aus Ihrem Paket.",
     "swapNotVideo": "Videos sind immer enthalten und lassen sich nicht tauschen.",
-    "swapNotPaid": "Bezahlte Fotos bleiben Ihnen — tauschen Sie stattdessen gegen eines aus Ihrem Paket oder ein geschenktes."
+    "swapNotPaid": "Bezahlte Fotos bleiben Ihnen — tauschen Sie stattdessen gegen eines aus Ihrem Paket oder ein geschenktes.",
+    "sectionYoursSwapHint": "Lieber ein anderes Bild? Ziehen Sie ein Foto aus Zusätzliche auf eines hier — sie tauschen, gratis."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

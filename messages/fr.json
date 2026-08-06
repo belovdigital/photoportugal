@@ -3338,7 +3338,7 @@
     "extraPickFree": "Ajouter gratuit",
     "sectionYours": "{count, plural, one {# photo est à vous} other {# photos sont à vous}}",
     "sectionOnOffer": "{count, plural, one {# de plus à ajouter} other {# de plus à ajouter}}",
-    "sectionYoursHint": "Déjà à vous — rien à payer. Faites glisser une photo de Supplémentaires sur l'une d'elles pour les échanger, gratuitement.",
+    "sectionYoursHint": "Déjà à vous — rien à payer.",
     "sectionOnOfferFree": "{count, plural, one {Votre photographe vous en offre #. Touchez Ajouter gratuit — ou échangez-la contre une autre de votre forfait.} other {Votre photographe vous en offre #. Touchez Ajouter gratuit sur celles que vous voulez — ou échangez-en une contre une autre de votre forfait.}}",
     "sectionOnOfferPaid": "{price} pièce. Touchez Ajouter sur celles que vous voulez, puis Acheter — ou glissez-en une sur une photo qui vous plaît moins pour les échanger gratuitement.",
     "swapInstead": "Prendre celle-ci à la place",
@@ -3356,7 +3356,8 @@
     "extrasSomeGone": "{count, plural, one {# photo n'est plus disponible} other {# photos ne sont plus disponibles}} — votre galerie a été actualisée. Choisissez à nouveau.",
     "swapNotOwned": "Cette photo est déjà à vous — échangez plutôt contre une de votre forfait.",
     "swapNotVideo": "Les vidéos sont toujours incluses et ne peuvent pas être échangées.",
-    "swapNotPaid": "Les photos achetées restent à vous — échangez plutôt contre une de votre forfait ou une offerte."
+    "swapNotPaid": "Les photos achetées restent à vous — échangez plutôt contre une de votre forfait ou une offerte.",
+    "sectionYoursSwapHint": "Vous préférez une autre ? Faites glisser une photo de Supplémentaires sur l'une d'elles — elles s'échangent, gratuitement."
   },
   "availability": {
     "pageTitle": "Disponibilités",

@@ -3338,7 +3338,7 @@
     "extraPickFree": "Añadir gratis",
     "sectionYours": "{count, plural, one {# foto es tuya} other {# fotos son tuyas}}",
     "sectionOnOffer": "{count, plural, one {# más que puedes añadir} other {# más que puedes añadir}}",
-    "sectionYoursHint": "Ya son tuyas — nada que pagar. Arrastra una foto de Extra sobre una de estas para cambiarlas, gratis.",
+    "sectionYoursHint": "Ya son tuyas — nada que pagar.",
     "sectionOnOfferFree": "{count, plural, one {Tu fotógrafo te regala # de estas. Toca Añadir gratis — o cámbiala por otra de tu paquete.} other {Tu fotógrafo te regala # de estas. Toca Añadir gratis en las que quieras — o cámbialas por otras de tu paquete.}}",
     "sectionOnOfferPaid": "{price} cada una. Toca Añadir en las que quieras y luego Comprar — o arrastra una sobre otra que te guste menos y cámbialas gratis.",
     "swapInstead": "Llevarme esta en su lugar",
@@ -3356,7 +3356,8 @@
     "extrasSomeGone": "{count, plural, one {# foto ya no está disponible} other {# fotos ya no están disponibles}} — tu galería se ha actualizado. Elige de nuevo.",
     "swapNotOwned": "Esa foto ya es tuya — cámbiala por una de tu paquete.",
     "swapNotVideo": "Los vídeos siempre están incluidos y no se pueden cambiar.",
-    "swapNotPaid": "Las fotos que compraste son tuyas — cámbialas por una de tu paquete o por una regalada."
+    "swapNotPaid": "Las fotos que compraste son tuyas — cámbialas por una de tu paquete o por una regalada.",
+    "sectionYoursSwapHint": "¿Prefieres otra? Arrastra una foto de Extra sobre una de estas — se cambian, gratis."
   },
   "availability": {
     "pageTitle": "Disponibilidad",

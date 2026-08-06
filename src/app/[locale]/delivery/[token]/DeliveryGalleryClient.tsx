@@ -424,6 +424,13 @@ export function DeliveryGalleryClient({
                 {t("sectionYours", { count: ownedAll.length })}
               </h3>
               <p className="text-sm text-gray-500">{t("sectionYoursHint")}</p>
+              {/* The one instruction that unlocks the feature was grey text at
+                  the end of a grey sentence. It is the sentence. */}
+              {canRearrange && lockedAll.length > 0 && (
+                <p className="mt-1 inline-block rounded-lg bg-accent-50 px-2.5 py-1 text-sm font-bold text-accent-800 ring-1 ring-accent-200">
+                  ⇄ {t("sectionYoursSwapHint")}
+                </p>
+              )}
             </div>
           </div>
           <SortableContext items={ownedIndexed.map(({ p }) => p.id)} strategy={rectSortingStrategy}>
