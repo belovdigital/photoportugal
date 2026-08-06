@@ -155,7 +155,7 @@ export function DeliveryGalleryClient({
       <div
         key={photo.id}
         className={`cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative${picked ? " ring-2 ring-primary-500" : ""}`}
-        onClick={() => (locked && onToggleExtra ? onToggleExtra(photo.id) : openLightbox(index))}
+        onClick={() => openLightbox(index)}
         onContextMenu={(e) => e.preventDefault()}
       >
         <img
@@ -174,14 +174,18 @@ export function DeliveryGalleryClient({
           /* A bare "+" in a 28px circle told nobody anything, and on a phone it
              was barely a tap target. A labelled pill across the bottom says what
              pressing it does, and the whole tile is clickable anyway. */
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent p-2 pt-8">
-            <span
-              className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold shadow-lg ring-1 ring-black/5 ${
-                picked ? "bg-green-600 text-white" : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white text-gray-900"
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent p-2 pt-8">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleExtra?.(photo.id); }}
+              /* Translucent so the photograph underneath still reads — this is
+                 the thing the client is deciding about. */
+              className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold shadow-lg ring-1 ring-black/10 backdrop-blur-sm transition hover:brightness-105 ${
+                picked ? "bg-green-600/90 text-white" : giftLeft > 0 ? "bg-accent-600/90 text-white" : "bg-white/75 text-gray-900"
               }`}
             >
               {picked ? `✓ ${t("extraPicked")}` : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")}`}
-            </span>
+            </button>
           </div>
         )}
         {isVideo && (
@@ -290,6 +294,25 @@ export function DeliveryGalleryClient({
           aria-label={t("photoViewer")}
           onClick={closeLightbox}
         >
+          {/* Deciding happens at full size, so the choice lives here too. */}
+          {photos[lightboxIndex].locked && onToggleExtra && (
+            <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-4" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => onToggleExtra(photos[lightboxIndex!].id)}
+                className={`rounded-2xl px-8 py-4 text-base font-bold shadow-2xl transition ${
+                  selectedExtras?.has(photos[lightboxIndex].id)
+                    ? "bg-green-600 text-white"
+                    : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white text-gray-900"
+                }`}
+              >
+                {selectedExtras?.has(photos[lightboxIndex].id)
+                  ? `✓ ${t("extraPicked")}`
+                  : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")} · €2.90`}
+              </button>
+            </div>
+          )}
+
           {/* Close button */}
           <button
             onClick={closeLightbox}

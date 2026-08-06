@@ -638,7 +638,10 @@ export function DeliveryPageClient({
 
       {/* Extras basket — only exists when the photographer held something back */}
       {selectedExtras.size > 0 && (
-        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-warm-200 bg-white/95 px-5 py-4 shadow-lg backdrop-blur">
+        /* Over a wall of photographs a pale card with a soft shadow simply
+           disappeared. Heavier glass, a real border and a deep shadow so it
+           reads as a layer above the page rather than another tile. */
+        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-white/60 bg-white/80 px-5 py-4 shadow-[0_8px_40px_rgba(0,0,0,0.28)] ring-1 ring-black/10 backdrop-blur-xl backdrop-saturate-150">
           <div>
             <p className="text-sm font-semibold text-gray-900">
               {t("extrasSelected", { count: selectedExtras.size })}
