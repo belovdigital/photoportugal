@@ -165,6 +165,13 @@ interface AdminStats {
   turnoverThisMonth: number;
   revenue: number;
   revenueThisMonth: number;
+  // Extra photos sold after delivery — already folded into revenue/turnover
+  // above, broken out here so the numbers stay traceable.
+  extrasTurnover: number;
+  extrasRevenue: number;
+  extrasPayout: number;
+  extrasSold: number;
+  extrasGifted: number;
   reviews: number;
   messages: number;
   blogPosts: number;
@@ -301,8 +308,8 @@ function fmtDate(day: string, bucket: "day" | "week" | "month" = "day") {
 
 function BarChart({ title, subtitle, filled, field, color, bucket }: {
   title: string; subtitle: string;
-  filled: { day: string; turnover: number; service_fee: number; platform_fee: number; revenue: number; count: number }[];
-  field: "turnover" | "revenue" | "service_fee" | "platform_fee"; color: string;
+  filled: { day: string; turnover: number; service_fee: number; platform_fee: number; extras: number; revenue: number; count: number }[];
+  field: "turnover" | "revenue" | "service_fee" | "platform_fee" | "extras"; color: string;
   bucket: "day" | "week" | "month";
 }) {
   const max = Math.max(...filled.map(d => d[field]), 1);
@@ -405,7 +412,7 @@ function UpcomingEvents({ onNavigate }: { onNavigate: () => void }) {
 type RevenuePreset = "7" | "30" | "90" | "365" | "all" | "custom";
 
 function RevenueCharts() {
-  const [rows, setRows] = useState<{ day: string; turnover: number; service_fee: number; platform_fee: number; revenue: number; count: number }[]>([]);
+  const [rows, setRows] = useState<{ day: string; turnover: number; service_fee: number; platform_fee: number; extras: number; revenue: number; count: number }[]>([]);
   const [bucket, setBucket] = useState<"day" | "week" | "month">("day");
   const [preset, setPreset] = useState<RevenuePreset>("all");
   const [customFrom, setCustomFrom] = useState("");
@@ -857,11 +864,20 @@ export function AdminDashboard({
                   ) : (
                     <p className="mt-1 text-xs text-gray-400">service fees + commissions earned</p>
                   )}
+                  {stats.extrasRevenue > 0 && (
+                    <p className="mt-1 text-xs text-gray-400">incl. &euro;{stats.extrasRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} from extra photos</p>
+                  )}
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Turnover</p>
                   <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.turnover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   <p className="mt-1 text-xs text-gray-400">&euro;{stats.turnoverThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} this month</p>
+                  {(stats.extrasSold > 0 || stats.extrasGifted > 0) && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      {stats.extrasSold} extra photo{stats.extrasSold === 1 ? "" : "s"} sold (&euro;{stats.extrasTurnover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                      {stats.extrasGifted > 0 && `, ${stats.extrasGifted} gifted`}
+                    </p>
+                  )}
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Paid bookings</p>

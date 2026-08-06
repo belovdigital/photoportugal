@@ -140,6 +140,7 @@ export interface PhotographerBookingStats {
   cancelled_bookings: number;
   total_revenue: number;
   total_payout: number;
+  extras_payout: number;
   last_booking_at: string | null;
   first_booking_at: string | null;
 }
@@ -892,7 +893,12 @@ function Leaderboard({
                         {s.cancelled_bookings > 0 && <span className="ml-1 text-[10px] text-gray-400">(−{s.cancelled_bookings})</span>}
                       </td>
                       <td className="px-3 py-2.5 text-right font-medium text-gray-900">€{Math.round(s.total_revenue).toLocaleString()}</td>
-                      <td className="px-3 py-2.5 text-right text-gray-500 hidden md:table-cell">€{Math.round(s.total_payout).toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right text-gray-500 hidden md:table-cell">
+                        €{Math.round(s.total_payout + (s.extras_payout || 0)).toLocaleString()}
+                        {s.extras_payout > 0 && (
+                          <span className="block text-[10px] text-accent-600">incl. €{s.extras_payout.toFixed(2)} extras</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2.5 text-xs text-gray-500 capitalize hidden sm:table-cell">{p.plan}</td>
                       <td className="px-3 py-2.5 text-right text-xs text-gray-500 hidden md:table-cell">
                         {p.rating ? `${Number(p.rating).toFixed(1)} (${p.review_count})` : "—"}

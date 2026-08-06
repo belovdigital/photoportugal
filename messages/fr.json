@@ -1032,7 +1032,7 @@
         },
         "howReceivePhotos": {
           "q": "Comment recevrai-je mes photos ?",
-          "a": "Vous recevrez un lien vers une galerie privée protégée par mot de passe. Toutes les photos sont professionnellement éditées et disponibles en haute résolution — individuellement ou en archive ZIP complète. Le délai de livraison varie selon le photographe et est indiqué sur chaque forfait."
+          "a": "Vous recevrez un lien vers votre galerie privée, protégée par mot de passe. Chaque photo promise par votre forfait est retouchée professionnellement et téléchargeable en haute résolution — une par une ou dans une archive ZIP complète. Le délai de livraison dépend du photographe et figure sur chaque forfait.\n\nLes photographes prennent souvent plus de photos que le forfait n'en promet. Les photos supplémentaires apparaissent dans la même galerie, filigranées, à 2,90 € pièce — toujours facultatives et jamais retirées du nombre que vous avez réservé."
         },
         "requestLocations": {
           "q": "Puis-je demander des lieux spécifiques ?",
@@ -1090,15 +1090,15 @@
       },
       "deliveryTime": {
         "question": "Quand vais-je recevoir mes photos ?",
-        "answer": "Le délai de livraison dépend du forfait choisi — chaque forfait indique le nombre de jours estimé sur le profil du photographe (généralement 3 à 14 jours). Une fois prêtes, vous recevrez un lien vers une galerie privée protégée par mot de passe. Vous verrez d'abord des aperçus avec watermark pour examiner les photos. Une fois la livraison approuvée, vous accéderez aux images haute résolution et pourrez tout télécharger en archive ZIP."
+        "answer": "Le délai de livraison dépend du forfait choisi — chaque forfait indique le nombre de jours estimé sur le profil du photographe (généralement 3 à 14 jours). Une fois prêtes, vous recevrez un lien vers une galerie privée protégée par mot de passe. Vous verrez d'abord des aperçus en filigrane pour examiner les photos. Une fois la livraison approuvée, les photos réservées s'ouvrent en haute résolution et vous pouvez les télécharger une par une ou toutes ensemble en archive ZIP. Si votre photographe a pris plus de photos que le forfait n'en promet, celles-ci restent en filigrane et vous pouvez en ajouter autant que vous voulez à 2,90 € pièce — facultatif, et jamais à la place des photos réservées."
       },
       "notHappy": {
         "question": "Et si je ne suis pas satisfait des photos ?",
-        "answer": "Vous avez 7 jours après la livraison pour accepter vos photos ou ouvrir un litige. Motifs valables : significativement moins de photos que promis, mauvais lieu, problèmes techniques graves, photographe absent. Nous travaillerons avec les deux parties pour trouver une résolution équitable — nouvelle séance, remboursement partiel ou intégral. Notez que les préférences de style subjectives ne sont pas un motif de remboursement, donc examinez attentivement les portfolios avant de réserver. Voir nos <a href=\"/terms\">Conditions d'utilisation</a> pour les détails."
+        "answer": "Vous avez 7 jours après la livraison pour accepter vos photos ou ouvrir un litige. Motifs valables : moins de photos dans la livraison que promis, mauvais lieu, problèmes techniques graves, photographe absent. Les photos supplémentaires proposées à 2,90 € ne sont pas un manquement : elles s'ajoutent au nombre réservé, elles n'en sont jamais retirées. Nous travaillerons avec les deux parties pour trouver une résolution équitable — nouvelle séance, remboursement partiel ou intégral. Notez que les préférences de style subjectives ne sont pas un motif de remboursement, donc examinez attentivement les portfolios avant de réserver. Voir nos <a href=\"/terms\">Conditions d'utilisation</a> pour les détails."
       },
       "galleryAccess": {
         "question": "Combien de temps puis-je accéder à ma galerie ?",
-        "answer": "Votre galerie privée reste accessible pendant 90 jours après la livraison. Nous recommandons de télécharger toutes vos photos pendant cette période. Vous pouvez les télécharger individuellement ou en archive ZIP complète."
+        "answer": "Votre galerie privée reste accessible pendant 90 jours après la livraison. Nous recommandons de télécharger toutes vos photos pendant cette période. Vous pouvez les télécharger individuellement ou en archive ZIP complète. Ces 90 jours sont aussi votre délai pour prendre les photos supplémentaires proposées par votre photographe : quand la galerie ferme, elles ferment avec elle."
       },
       "rain": {
         "question": "Et s'il pleut le jour de ma séance photo ?",
@@ -1147,6 +1147,14 @@
       "lateDelivery": {
         "question": "Et si mes photos sont livrées en retard ?",
         "answer": "Les photos doivent être livrées dans le délai indiqué dans votre forfait. Si la livraison a 3 jours ou plus de retard, vous pouvez demander un remboursement partiel jusqu'à 20 % du prix du forfait. Si la livraison a 14 jours ou plus de retard, vous avez droit à un remboursement intégral. Vous pouvez ouvrir un litige depuis votre tableau de bord pour demander un remboursement pour livraison tardive."
+      },
+      "extraPhotos": {
+        "question": "Que sont les photos supplémentaires dans ma galerie et combien coûtent-elles ?",
+        "answer": "Les photographes prennent en général plus de photos que le forfait n'en promet. Les photos que vous avez réservées sont à vous et se trouvent normalement dans votre galerie : rien de ce que vous avez payé n'est retenu. Tout ce qui dépasse ce nombre est proposé en photo supplémentaire à 2,90 € pièce, prix final : aucun frais en plus, aucun minimum, aucun abonnement. L'achat est entièrement facultatif et, si votre galerie n'affiche aucune photo supplémentaire, c'est que votre photographe a mis en ligne exactement le nombre promis. Notre <a href=\"/aide\">Centre d'aide</a> explique comment les choisir et les télécharger."
+      },
+      "extraPhotosGift": {
+        "question": "Qu'est-ce que cela veut dire quand mon photographe m'offre des photos supplémentaires ?",
+        "answer": "Certains photographes vous offrent quelques-unes des photos supplémentaires. Une ligne en haut de votre galerie indique combien vous pouvez en prendre, vous choisissez celles que vous préférez et elles s'ouvrent tout de suite en haute résolution. Rien à payer, aucune carte à saisir. Si vous en voulez plus que le cadeau, les autres sont à 2,90 € pièce et les gratuites sont toujours décomptées en premier."
       }
     },
     "helpCenterCta": "Besoin de réponses plus détaillées ?",
@@ -2402,7 +2410,8 @@
           "lateFullRefund": "Si le photographe ne livre pas dans les <strong>14 jours suivant le délai</strong>, le client reçoit un remboursement intégral et le compte du photographe peut être suspendu",
           "acceptance": "Après la livraison, le client a <strong>7 jours</strong> pour accepter les photos ou ouvrir un litige",
           "autoRelease": "Si le client ne répond pas sous 7 jours, le photographe peut contacter le support pour résoudre la libération du paiement. Après <strong>14 jours</strong> d'inactivité du client, le paiement est automatiquement libéré au photographe",
-          "galleryAccess": "Les galeries de photos livrées restent accessibles pendant <strong>90 jours</strong>"
+          "galleryAccess": "Les galeries de photos livrées restent accessibles pendant <strong>90 jours</strong>",
+          "extras": "Le photographe peut proposer des photos supplémentaires de la même séance, au-delà du nombre promis par le forfait, au prix fixe de <strong>2,90 € pièce</strong>. L'achat est facultatif, ces photos ne sont jamais déduites du nombre promis, et le photographe peut également en offrir gratuitement. Les photos achetées appartiennent au client et ne peuvent être reprises. La fenêtre d'achat se ferme à l'expiration de la galerie"
         }
       },
       "disputes": {
@@ -2410,7 +2419,7 @@
         "intro": "Si vous n'êtes pas satisfait des photos livrées, vous pouvez ouvrir un litige sous 7 jours après la livraison. Photo Portugal examinera le litige et répondra sous <strong>5 jours ouvrés</strong>, en travaillant avec les deux parties pour atteindre une résolution équitable.",
         "groundsTitle": "Motifs valables de litige :",
         "grounds": {
-          "fewer": "Significativement moins de photos que promis dans le forfait",
+          "fewer": "Nettement moins de photos dans la livraison que le forfait ne le promettait. Les photos supplémentaires proposées à l'achat s'ajoutent à ce nombre, ne s'en retranchent jamais, et ne constituent pas un motif de litige",
           "wrongLocation": "Photos prises au mauvais lieu ou de mauvais sujets",
           "technical": "Problèmes techniques graves (flou extrême, surexposition, corruption)",
           "noShow": "Absence du photographe ou séance incomplète"
@@ -2996,11 +3005,11 @@
         },
         "receivePhotos": {
           "question": "Comment recevoir mes photos ?",
-          "answer": "Après votre séance, le photographe éditera et téléversera vos photos dans une galerie privée protégée par mot de passe. Vous recevrez un e-mail et une notification dans le tableau de bord avec le lien et le mot de passe. Vous pouvez visionner les photos en ligne, les télécharger individuellement ou téléverser l'ensemble en archive ZIP. Votre galerie reste accessible pendant 90 jours."
+          "answer": "Après votre séance, votre photographe retouche vos photos et les met en ligne dans une galerie privée protégée par mot de passe. Vous recevez un e-mail et une notification dans votre tableau de bord avec le lien et le mot de passe. Vous pouvez les regarder en ligne, les télécharger une par une, ou prendre l'ensemble en un seul téléchargement. Votre galerie reste ouverte 90 jours.\n\nVotre photographe peut aussi ajouter des photos supplémentaires de la même séance — des images au-delà du nombre réservé. Elles sont facultatives et coûtent 2,90 € chacune. Les photos que vous avez réservées sont dans votre galerie dans tous les cas."
         },
         "notHappy": {
           "question": "Et si je ne suis pas satisfait de mes photos ?",
-          "answer": "Vous avez 7 jours après la livraison pour examiner vos photos. S'il y a un problème légitime, vous pouvez ouvrir un litige depuis votre tableau de bord.\n\n**Motifs valables de litige :**\n• Significativement moins de photos que promis\n• Mauvais lieu ou mauvais sujets\n• Problèmes techniques graves (flou, problèmes d'exposition)\n• Absence du photographe ou séance incomplète\n\n**Résolutions possibles :**\n• Nouvelle séance sans coût supplémentaire\n• Remboursement partiel (20 à 50 %)\n• Remboursement intégral\n\nNotez que les préférences subjectives comme le style d'édition ne sont pas un motif de remboursement."
+          "answer": "Vous avez 7 jours après la livraison pour examiner vos photos. S'il y a un problème légitime, vous pouvez ouvrir un litige depuis votre tableau de bord.\n\n**Motifs valables de litige :**\n• Moins de photos dans la livraison que promis\n• Mauvais lieu ou mauvais sujets\n• Problèmes techniques graves (flou, problèmes d'exposition)\n• Absence du photographe ou séance incomplète\n\n**Résolutions possibles :**\n• Nouvelle séance sans coût supplémentaire\n• Remboursement partiel (20 à 50 %)\n• Remboursement intégral\n\nLes photos supplémentaires proposées ne sont pas une livraison incomplète. Elles s'ajoutent au nombre réservé, jamais à sa place : ce qui compte, c'est le nombre de photos déjà ouvertes dans votre galerie.\n\nNotez que les préférences subjectives comme le style d'édition ne sont pas un motif de remboursement."
         },
         "paymentReleased": {
           "question": "Quand mon paiement est-il libéré au photographe ?",
@@ -3021,6 +3030,18 @@
         "smsNotifications": {
           "question": "Vais-je recevoir des notifications SMS ?",
           "answer": "Oui, si vous ajoutez votre numéro de téléphone dans Paramètres. Vous recevrez des SMS pour : confirmations de réservation, rappels de séance (24 heures avant), notifications de livraison de photos et propositions de changement de date. Vous pouvez gérer vos préférences SMS dans vos paramètres de notification."
+        },
+        "extraPhotos": {
+          "question": "Que sont les photos supplémentaires dans ma galerie ?",
+          "answer": "Votre photographe prend presque toujours plus de photos que le nombre réservé. Avant, les images en trop étaient supprimées. Maintenant, vous pouvez les voir.\n\nLes photos que vous avez réservées sont à vous. Elles sont déjà dans votre galerie, déjà payées, et elles le restent quoi que vous décidiez.\n\nTout ce qui dépasse ce nombre apparaît comme photo supplémentaire, avec un filigrane tant que vous n'avez pas choisi. Chacune coûte **2,90 € — c'est le prix final**. Rien ne s'ajoute, aucun minimum, aucun abonnement. Prenez-en une, dix ou aucune.\n\nSi votre galerie ne contient aucune photo supplémentaire, c'est que votre photographe a mis en ligne exactement le nombre promis."
+        },
+        "extraPhotosBuy": {
+          "question": "Comment acheter une photo supplémentaire et la télécharger ?",
+          "answer": "Touchez les photos supplémentaires qui vous plaisent. Une barre apparaît en bas de la galerie avec le nombre et le total : 3 photos, 8,70 €. Touchez Acheter et payez par carte.\n\nVous revenez dans votre galerie et les photos sont ouvertes en haute résolution, sans filigrane. Vous pouvez les télécharger une par une tout de suite ; quelques minutes plus tard, un second téléchargement apparaît avec toutes vos photos supplémentaires réunies.\n\nLes photos que vous avez réservées gardent leur propre téléchargement, exactement comme avant.\n\nVous pouvez en ajouter tant que votre galerie est ouverte — 90 jours à partir du jour où vous acceptez vos photos."
+        },
+        "extraPhotosGift": {
+          "question": "Mon photographe m'offre des photos. Qu'est-ce que cela veut dire ?",
+          "answer": "Exactement ce que cela dit : votre photographe a décidé de vous offrir quelques-unes des photos supplémentaires, et c'est vous qui choisissez lesquelles.\n\nUne ligne en haut de votre galerie indique combien vous pouvez en prendre — trois, par exemple. Touchez les trois que vous préférez et elles s'ouvrent en haute résolution. Rien à payer, aucune carte à saisir.\n\nVous en voulez plus que le cadeau ? Les autres sont à 2,90 € chacune, et les gratuites sont toujours décomptées en premier."
         }
       },
       "photographers": {
@@ -3067,6 +3088,30 @@
         "realTimeChat": {
           "question": "Comment fonctionne la messagerie ?",
           "answer": "Les messages sont livrés en temps réel — vous verrez les nouveaux messages apparaître instantanément sans rafraîchir la page. Un point vert indique une connexion active. Vous pouvez envoyer des messages texte et photos. Vous recevrez aussi des notifications e-mail et SMS pour les nouveaux messages (si activé dans les paramètres)."
+        },
+        "sellExtras": {
+          "question": "J'ai pris plus de photos que le forfait n'en promet. Qu'est-ce que j'en fais ?",
+          "answer": "Montrez-les à votre client plutôt que de les supprimer. Sur l'écran de livraison, vos photos sont réparties en deux groupes : **Dans la livraison** — ce que votre client reçoit, les photos promises par le forfait — et **Photos supplémentaires**, que votre client peut acheter 2,90 € pièce.\n\nSi vous en téléversez plus que promis, les premières remplissent la livraison et les autres descendent dans les supplémentaires. Rien n'est figé : survolez une photo et faites-la monter ou descendre jusqu'à ce que les deux groupes vous conviennent. Puis envoyez.\n\nDeux règles, pas plus. Vous pouvez livrer plus que promis, jamais moins : si le forfait annonce 20 photos, il en part au moins 20. Et une photo déjà achetée appartient à votre client — impossible de la supprimer ou de la reprendre.\n\nSi vous téléversez exactement ce que vous avez promis, rien de tout cela n'apparaît. Aucun prix, aucune photo supplémentaire, rien à acheter."
+        },
+        "extrasEarnings": {
+          "question": "Combien me rapporte une photo supplémentaire ?",
+          "answer": "2,00 € par photo, à chaque fois. Votre client paie 2,90 € et c'est son prix final — aucun frais de service en plus, aucune surprise au moment de payer.\n\nVotre plan n'y change rien. Free, Pro ou Premium : une photo supplémentaire vous rapporte 2,00 €.\n\nUn client qui achète 10 photos supplémentaires ajoute donc 20,00 € à cette réservation, en plus du forfait."
+        },
+        "extrasWhenPaid": {
+          "question": "Quand l'argent des photos supplémentaires arrive-t-il ?",
+          "answer": "Tout de suite. Les photos supplémentaires n'attendent pas que votre client accepte la galerie : dès que le paiement est validé, vos 2,00 € par photo partent vers votre compte Stripe et la vente s'affiche dans votre tableau de bord. De Stripe à votre banque, comptez les 2–7 jours ouvrés habituels.\n\nLa galerie reste ouverte 90 jours après son acceptation : des photos peuvent donc encore se vendre plusieurs semaines après la séance."
+        },
+        "giftPhotos": {
+          "question": "Puis-je offrir des photos supplémentaires à mon client ?",
+          "answer": "Oui, et cela vaut le coup. Sur l'écran de livraison, à côté du compteur de photos, indiquez combien vous voulez offrir — 3, c'est un bon chiffre. Votre client choisit ensuite les 3 photos supplémentaires qu'il veut, gratuitement.\n\nCela ne vous coûte rien. Ces images sont déjà prises et retouchées : vous offrez un travail que vous auriez supprimé.\n\nC'est aussi la plus jolie façon de faire découvrir à un client qu'il existe d'autres photos. Il ouvre la galerie, voit ses 3 photos offertes, parcourt les autres à la recherche de ses préférées — et en garde souvent quelques-unes de plus à 2,90 €. Les photos offertes sont décomptées en premier ; il ne paie que le reste."
+        },
+        "extrasNoPressure": {
+          "question": "Mon client est-il obligé d'acheter quelque chose ?",
+          "answer": "Non, jamais. La livraison se suffit à elle-même : toutes les photos promises y sont et, dès que votre client l'accepte, il les télécharge en pleine résolution. Il peut s'en tenir là et ne jamais regarder les photos supplémentaires.\n\nLes photos supplémentaires sont une proposition, pas une condition. Ne sortez jamais une photo promise de la livraison pour forcer une vente — de toute façon, l'écran ne vous laissera pas en envoyer moins que promis."
+        },
+        "giveEverything": {
+          "question": "Et si je veux tout donner à mon client ?",
+          "answer": "Alors donnez tout. Faites passer chaque photo dans la livraison et il ne reste rien à vendre : la galerie de votre client ne parle pas de photos supplémentaires et n'affiche aucun prix.\n\nVous pouvez aussi rester entre les deux : livrer 25 des 35 photos prises et en proposer 10, ou en proposer 10 et laisser votre client en choisir 3 gratuitement. C'est votre décision à chaque réservation, et vous pouvez décider autrement la fois suivante."
         }
       },
       "payments": {
@@ -3076,7 +3121,7 @@
         },
         "serviceFees": {
           "question": "Quels sont les frais de service ?",
-          "answer": "**Pour les clients :** Des frais de service de 15 % sont ajoutés au prix du forfait. Par exemple, un forfait de 299 € coûte 344 € au total. Ces frais couvrent le traitement des paiements, la maintenance de la plateforme et le support client.\n\n**Pour les photographes :** Une commission est déduite de chaque réservation selon votre plan :\n• Plan Free — 20 % de commission\n• Plan Pro — 15 % de commission\n• Plan Premium — 10 % de commission\n\nIl n'y a pas de frais cachés. Tous les frais sont affichés de manière transparente avant toute transaction."
+          "answer": "**Pour les clients :** Des frais de service de 15 % sont ajoutés au prix du forfait. Par exemple, un forfait de 299 € coûte 344 € au total. Ces frais couvrent le traitement des paiements, la maintenance de la plateforme et le support client.\n\n**Pour les photographes :** Une commission est déduite de chaque réservation selon votre plan :\n• Plan Free — 20 % de commission\n• Plan Pro — 15 % de commission\n• Plan Premium — 10 % de commission\n\n**Photos supplémentaires :** Si un photographe propose des photos au-delà de ce que le forfait promettait, elles coûtent **2,90 € pièce, tout compris** — sans frais de service ajoutés pour le client. Le photographe en reçoit 2,00 €, quel que soit son plan.\n\nIl n'y a pas de frais cachés. Tous les frais sont affichés de manière transparente avant toute transaction."
         },
         "refundPolicy": {
           "question": "Quelle est la politique de remboursement ?",
@@ -3232,8 +3277,8 @@
     "tipLater": "Peut-être plus tard",
     "tipThanks": "Merci ! Votre pourboire est en route vers {name}.",
     "tipError": "Impossible de démarrer le paiement — veuillez réessayer.",
-    "peekHeading": "Partager un aperçu",
-    "peekSub": "Envoyez {count, plural, one {cette # photo} other {ces # photos}} comme premier regard pendant la retouche — les clients adorent. Pas de téléchargement, aperçus propres, ne compte pas comme livraison.",
+    "peekHeading": "Encore en retouche ? Envoyez un aperçu",
+    "peekSub": "Envoyez {count, plural, one {# photo} other {# photos}} tout de suite pendant que vous terminez le reste. Les clients adorent ne pas attendre. Ce n'est pas la livraison — rien n'est téléchargeable.",
     "peekSend": "Envoyer l’aperçu ({count})",
     "peekSent": "✨ Aperçu envoyé — {count, plural, one {# photo} other {# photos}}. Continuez à téléverser vers la livraison complète.",
     "peekCopyLink": "Copier le lien de l’aperçu",
@@ -3249,10 +3294,7 @@
     "deleteAllCount": "Tout supprimer ({count})",
     "deleteFailed": "Impossible de supprimer ces photos. Rien n'a été retiré.",
     "deletePartial": "{removed} supprimées, mais {failed} n'ont pas pu l'être. Réessayez pour le reste.",
-    "includeInDelivery": "Inclure",
-    "excludeFromDelivery": "Retenir",
     "includeFailed": "Impossible de modifier ces photos",
-    "notIncludedBadge": "Hors livraison",
     "extrasSelected": "{count} photos supplémentaires sélectionnées",
     "extrasBuy": "Acheter",
     "extrasClear": "Vider",
@@ -3260,15 +3302,23 @@
     "extrasLockedHint": "Photos supplémentaires de votre séance — touchez pour ajouter",
     "extrasDownload": "Télécharger vos {count} photos supplémentaires",
     "extrasZipPreparing": "Préparation de vos photos supplémentaires…",
-    "willBecomeExtra": "Extra à l'envoi",
-    "extrasPreviewHint": "Les {included} premières restent dans la livraison — {extras} seront proposées au client comme extras payants. Utilisez Sélectionner → Retenir pour en choisir d'autres.",
     "save": "Enregistrer",
-    "giftSlotsLabel": "Offrir des extras",
-    "giftSlotsHint": "Le client choisit gratuitement ce nombre de photos supplémentaires.",
     "giftBanner": "Votre photographe vous offre {count} photos supplémentaires — choisissez-les gratuitement",
     "giftGet": "Recevoir {count} gratuites",
     "giftAllFree": "{count} gratuites — un cadeau de votre photographe",
-    "giftFreeLine": "{free} gratuites · {paid} de plus pour €{total}"
+    "giftFreeLine": "{free} gratuites · {paid} de plus pour €{total}",
+    "sectionIncluded": "Dans la livraison · {count, plural, one {# photo} other {# photos}}",
+    "sectionIncludedHint": "Ce que reçoit votre client. Survolez une photo pour la déplacer.",
+    "sectionExtras": "Photos supplémentaires · {count}",
+    "sectionExtrasHint": "Proposées à votre client à 2,90 € pièce. Vous en recevez 2,00 €.",
+    "sectionExtrasEmpty": "Rien ici pour l'instant. Descendez une photo et votre client pourra l'acheter.",
+    "moveToExtras": "Passer en extra ↓",
+    "moveToDelivery": "↑ Ajouter à la livraison",
+    "soldBadge": "Vendue",
+    "giftTitle": "Faites plaisir à votre client",
+    "giftBody": "Laissez-le choisir gratuitement quelques photos supplémentaires. Cela ne vous coûte rien — elles sont déjà prises — et cela marque.",
+    "giftStateOn": "Votre client peut choisir {count, plural, one {# photo supplémentaire} other {# photos supplémentaires}} gratuitement.",
+    "giftStateOff": "Pas encore de photos offertes."
   },
   "availability": {
     "pageTitle": "Disponibilités",
@@ -3635,7 +3685,8 @@
     "promisedPhotosSet": "{count} photos promises au client",
     "promisedPhotosEdit": "modifier",
     "promisedPhotosInvalid": "Saisissez un nombre entre 5 et 1000",
-    "promisedPhotosClient": "Votre photographe livrera ~{count} photos"
+    "promisedPhotosClient": "Votre photographe livrera ~{count} photos",
+    "extrasLine": "{count, plural, one {# photo supplémentaire} other {# photos supplémentaires}}"
   },
   "bookingJourney": {
     "cancelled": "Annulée",
@@ -4237,6 +4288,8 @@
     "s7title": "Options Vérifié et Mis en avant",
     "s7body": "Le badge Vérifié (19 €/an) ajoute une coche bleue à côté de votre nom — les clients font 2 à 3 fois plus confiance aux photographes vérifiés. Mis en avant (19 €/mois) vous place en tête des recherches sur vos lieux. Les deux se rentabilisent vite si les réservations arrivent.",
     "s8title": "Installez l'application mobile",
-    "s8body": "Les notifications push arrivent en quelques secondes, bien avant un email. Vous pouvez répondre depuis la plage, la salle de sport, n'importe où. Cherchez \"{brand}\" sur l'App Store ou Play Store, ou touchez les badges ci-dessous."
+    "s8body": "Les notifications push arrivent en quelques secondes, bien avant un email. Vous pouvez répondre depuis la plage, la salle de sport, n'importe où. Cherchez \"{brand}\" sur l'App Store ou Play Store, ou touchez les badges ci-dessous.",
+    "s9title": "Vendez les photos que vous auriez supprimées",
+    "s9body": "Vous photographiez toujours plus que ce que le forfait promet. Sur l'écran de livraison, ces photos en trop forment un second groupe, **Photos supplémentaires**, et votre client peut en acheter n'importe laquelle à 2,90 € — vous en recevez 2,00 €, quel que soit votre plan, dès que le paiement passe et non à l'acceptation.\n\nOffrez-en d'abord quelques-unes. Indiquez sur le même écran combien vous voulez offrir et votre client choisit lesquelles — cela ne vous coûte rien, c'est ainsi qu'il découvre qu'il en existe d'autres, et c'est toute la différence entre une vente et un cadeau. Livrez exactement ce que vous avez promis et rien de tout cela n'apparaît."
   }
 }

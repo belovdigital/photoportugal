@@ -485,10 +485,18 @@ export async function POST(
 
       const deliveryUrl = `${BASE_URL}/delivery/${token}`;
 
-      const photoCount = await queryOne<{ count: string }>(
-        "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1", [id]
+      // What the CLIENT is being told they received — so it counts the
+      // delivery, not the upload. A photographer who uploads 60 frames for a
+      // 20-photo package is delivering 20; the other 40 are locked previews on
+      // offer. Announcing 60 sets up the exact dispute ("significantly fewer
+      // photos than promised") that the unfiltered count creates out of thin air.
+      const photoCount = await queryOne<{ count: string; extras: string }>(
+        `SELECT COUNT(*) FILTER (WHERE is_included IS NOT FALSE) AS count,
+                COUNT(*) FILTER (WHERE is_included = FALSE) AS extras
+           FROM delivery_photos WHERE booking_id = $1`, [id]
       );
       const count = photoCount?.count || "0";
+      const extrasCount = parseInt(photoCount?.extras || "0", 10);
 
       // Auto-send message in booking chat with link + password
       try {
@@ -521,6 +529,7 @@ export async function POST(
               <h2 style="color: #C94536;">Your Photo Previews Are Ready!</h2>
               <p>Hi ${firstName},</p>
               <p><strong>${details.photographer_name}</strong> has uploaded <strong>${count} photo previews</strong> from your session for you to review.</p>
+              ${extrasCount > 0 ? `<p>There ${extrasCount === 1 ? "is" : "are"} also <strong>${extrasCount} extra ${extrasCount === 1 ? "photo" : "photos"}</strong> in the gallery that ${extrasCount === 1 ? "was" : "were"} not part of your package. You can see ${extrasCount === 1 ? "it" : "them"} straight away, and add ${extrasCount === 1 ? "it" : "any of them"} to your download for &euro;2.90 each if you want to.</p>` : ""}
               <p>Please take a moment to browse through them. The previews include a watermark — this is normal and will be removed once you approve the delivery.</p>
 
               <div style="margin: 20px 0; padding: 16px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0;">

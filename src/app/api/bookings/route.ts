@@ -729,7 +729,12 @@ export async function GET(req: NextRequest) {
         `SELECT b.*, u.name as client_name, u.email as client_email, u.avatar_url as client_avatar,
                 p.name as package_name, p.duration_minutes, p.num_photos,
                 -- Photographer's tip share (90%), in cents. Photographer-safe.
-                (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents
+                (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents,
+                -- Photographer's share of extra photos sold on this delivery,
+                -- in cents. Photographer-safe: payout only, never the client's
+                -- €2.90 gross or the platform's cut.
+                (SELECT COALESCE(SUM(x.payout_cents), 0) FROM delivery_extra_purchases x
+                  WHERE x.booking_id = b.id AND x.status = 'paid') as extras_payout_cents
          FROM bookings b
          JOIN users u ON u.id = b.client_id
          LEFT JOIN packages p ON p.id = b.package_id

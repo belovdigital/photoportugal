@@ -112,8 +112,10 @@ function toolDefinitions() {
       name: "get_photoshoot_quote",
       title: "Get a photoshoot price",
       description:
-        "The exact all-in price for a photoshoot. The price is fixed and already includes " +
-        "everything — there is nothing added at checkout. Always quote before booking.",
+        "The exact all-in price for a photoshoot. The price is fixed and nothing is added " +
+        "at checkout. After the shoot the photographer may offer surplus photos beyond the " +
+        "promised count at €2.90 each — always optional, never deducted from what was booked. " +
+        "Always quote before booking.",
       inputSchema: {
         type: "object",
         properties: {
@@ -308,7 +310,9 @@ async function callTool(name: string, args: Record<string, unknown>) {
       `${parsed.party_size === 1 ? "person" : "people"}: €${quote.total_eur} all-in.` +
       (quote.savings_eur > 0 ? ` Normally €${quote.compare_at_eur} — saving €${quote.savings_eur}.` : "") +
       " Nothing is added at checkout. We hand-pick the photographer within 24 hours; the card is " +
-      "only charged once they are confirmed, and fully refunded if we cannot match.";
+      "only charged once they are confirmed, and fully refunded if we cannot match." +
+      " Every photo the package promises is included; afterwards the photographer may offer" +
+      " surplus frames at €2.90 each, which is entirely optional.";
 
     return toolOk(text, {
       destination: dest.name,
@@ -431,8 +435,10 @@ async function dispatch(msg: RpcRequest) {
         instructions:
           `${CHANNEL.name} books professional holiday photographers. Ask where and when the ` +
           "traveller wants to shoot, what the occasion is, how long and how many people, then " +
-          "quote before booking. The price is all-in and fixed. Booking creates a real " +
-          "reservation, so confirm the details with the traveller first.",
+          "quote before booking. The price is all-in and fixed, and nothing is added at " +
+          "checkout. After delivery the photographer may offer extra photos beyond the promised " +
+          "count at €2.90 each; that is optional and never reduces what was booked. Booking " +
+          "creates a real reservation, so confirm the details with the traveller first.",
       });
     }
 

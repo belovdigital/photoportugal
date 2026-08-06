@@ -30,6 +30,8 @@ const FAQ_KEYS = [
   "deliveryTime",
   "notHappy",
   "galleryAccess",
+  "extraPhotos",
+  "extraPhotosGift",
   "rain",
   "reviewsVerified",
   "locationsAvailable",

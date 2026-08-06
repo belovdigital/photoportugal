@@ -90,6 +90,7 @@ export async function GET() {
       how_it_works: `${country.baseUrl}/how-it-works`,
       blog: `${country.baseUrl}/blog`,
       faq: `${country.baseUrl}/faq`,
+      support: `${country.baseUrl}/support`,
     },
     languages: ["en", "pt", "de", "es", "fr"],
     country: country.areaServed,

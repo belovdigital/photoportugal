@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { EXTRA_PHOTO_PRICE_CENTS, EXTRA_PHOTO_PAYOUT_CENTS, EXTRA_PHOTO_PLATFORM_FEE_CENTS } from "@/lib/extras-pricing";
 import crypto from "crypto";
 import { query, queryOne, withTransaction } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
@@ -23,9 +24,9 @@ export const dynamic = "force-dynamic";
 // The rows are written pending BEFORE the redirect and only the webhook marks
 // them paid. Abandon the checkout, close the tab, have the card decline — no
 // row is ever flipped, nothing unlocks.
-const PRICE_CENTS = 290;
-const PAYOUT_CENTS = 200;
-const PLATFORM_FEE_CENTS = PRICE_CENTS - PAYOUT_CENTS;
+const PRICE_CENTS = EXTRA_PHOTO_PRICE_CENTS;
+const PAYOUT_CENTS = EXTRA_PHOTO_PAYOUT_CENTS;
+const PLATFORM_FEE_CENTS = EXTRA_PHOTO_PLATFORM_FEE_CENTS;
 const MAX_PHOTOS_PER_ORDER = 200;
 
 export async function POST(

@@ -151,6 +151,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
             <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.acceptance") }} />
             <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.autoRelease") }} />
             <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.galleryAccess") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.extras") }} />
           </ul>
         </section>
 

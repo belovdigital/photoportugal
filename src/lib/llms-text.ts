@@ -206,6 +206,7 @@ ${[
 3. Book instantly online — secure Stripe payment, money-back guarantee, free cancellation up to 48h before the shoot
 4. Meet the photographer at the chosen location; they guide you through poses and capture natural moments
 5. Receive professionally edited high-resolution photos in a private online gallery within 1-3 weeks
+6. Every photo the package promised is included. Photographers often shoot more; those surplus frames may be offered in the same gallery as optional extra photos at EUR2.90 each, all in — never deducted from the number booked, and some photographers give a few of them free
 
 ## Pricing
 - Sessions start from EUR${minPrice ?? 299}
@@ -252,6 +253,7 @@ ${locations.map((l) => `${l.name} (${l.slug})`).join(", ")}
 - Pricing (photographers): ${country.baseUrl}/for-photographers/pricing
 - Blog: ${country.baseUrl}/blog
 - FAQ: ${country.baseUrl}/faq
+- Help centre (clients and photographers): ${country.baseUrl}/support
 - Sitemap: ${country.baseUrl}/sitemap.xml
 - Contact: ${country.supportEmail}
 

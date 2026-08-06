@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { auth } from "@/lib/auth";
+import { EXTRA_PHOTO_PRICE_CENTS } from "@/lib/extras-pricing";
 
 // Admins (verified via the admin_token cookie) can pull any gallery
 // without a password — used by the Recent Visitors panel to inspect
@@ -244,7 +245,7 @@ export async function POST(
     // What the extras strip needs to price a basket without hardcoding the
     // number in the browser. The server charges from its own constant either
     // way; this is display only.
-    extras_price_cents: 290,
+    extras_price_cents: EXTRA_PHOTO_PRICE_CENTS,
     gift_remaining: Math.max(0, booking.gift_slots - booking.gift_used),
     extras_available: photos.filter((p) => p.locked).length,
     delivery_accepted: isAccepted,

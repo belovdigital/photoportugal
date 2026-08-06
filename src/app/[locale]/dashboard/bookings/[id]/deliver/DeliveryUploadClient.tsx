@@ -230,10 +230,111 @@ export function DeliveryUploadClient({
     lastClickedRef.current = id;
   }
 
-  // Include / exclude the current selection. Excluded photos stop being part
-  // of the delivery: the client does not see them, they are not in the
-  // archive, and they do not count toward the promise. Once paid extras are
-  // live this is also what puts them up for sale.
+  // Two piles, not a mode. Videos ride along with the delivery — they never
+  // counted toward a photo promise and are not sold.
+  const includedPhotos = photos.filter((p) => p.is_included !== false);
+  const extraPhotos = photos.filter((p) => p.is_included === false);
+  const showSplit = extraPhotos.length > 0 ||
+    (requiredPhotos > 0 && photos.filter((p) => p.media_type !== "video").length > requiredPhotos);
+
+  async function moveOne(id: string, toDelivery: boolean) {
+    const before = photos;
+    setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, is_included: toDelivery } : p)));
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_included", photo_ids: [id], included: toDelivery }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setPhotos(before);
+        alert(data?.error || t("includeFailed"));
+      }
+    } catch {
+      setPhotos(before);
+    }
+  }
+
+  function renderTile(photo: Photo) {
+    const isVideo = photo.media_type === "video";
+    // For videos use the ffmpeg-extracted poster; for photos the
+    // url IS already an image (presigned). Falling back to url for
+    // images preserves the existing behaviour.
+    // ALWAYS prefer the 1200px thumbnail in the grid. Using the
+    // presigned ORIGINAL (3-20MB each) meant a 500-photo delivery
+    // pulled gigabytes into the manage page and killed mobile.
+    const previewSrc = photo.thumbnail_url || photo.url;
+    return (
+    <div
+      key={photo.id}
+      className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
+      onClick={selectMode ? (e) => toggleSelect(photo.id, e.shiftKey) : undefined}
+    >
+      {showSplit && !selectMode && !clientAccepted && photo.media_type !== "video" && !photo.purchased_at && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); moveOne(photo.id, photo.is_included === false); }}
+          /* Always visible on touch — there is no hover on a phone, and a
+             control you cannot discover is the same as no control. */
+          className="absolute inset-x-1 bottom-1 z-20 rounded-md bg-white/95 py-1.5 text-[11px] font-semibold text-gray-800 shadow transition md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
+        >
+          {photo.is_included === false ? t("moveToDelivery") : t("moveToExtras")}
+        </button>
+      )}
+      {photo.purchased_at && (
+        <span className="absolute left-1 top-1 z-20 rounded bg-accent-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+          {t("soldBadge")}
+        </span>
+      )}
+      <img
+        src={previewSrc}
+        alt={photo.filename}
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-cover"
+      />
+      {isVideo && (
+        <>
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm">
+              <svg className="h-5 w-5 text-white translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
+          </div>
+          {photo.duration_seconds ? (
+            <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white tabular-nums">
+              {Math.floor((photo.duration_seconds || 0) / 60)}:{String((photo.duration_seconds || 0) % 60).padStart(2, "0")}
+            </span>
+          ) : null}
+        </>
+      )}
+      {selectMode ? (
+        <div className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border-2 ${selectedIds.has(photo.id) ? "border-primary-500 bg-primary-500" : "border-white bg-white/70"}`}>
+          {selectedIds.has(photo.id) && (
+            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+      ) : canEdit ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleDelete(photo.id); }}
+          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-500"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      ) : null}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-1.5 pt-4 opacity-0 transition group-hover:opacity-100">
+        <p className="truncate text-xs text-white">{photo.filename}</p>
+      </div>
+    </div>
+    );
+  }
+
   async function saveGiftSlots() {
     const n = parseInt(giftDraft, 10) || 0;
     if (n === giftSlots) return;
@@ -252,48 +353,7 @@ export function DeliveryUploadClient({
     }
   }
 
-  // Nothing to hold back when the photographer delivered exactly what was
-  // promised: no extras, so no include/exclude controls and no sale. The
-  // client side reaches the same conclusion on its own — with no excluded
-  // rows there is nothing locked to show.
-  const photoCount = photos.filter((p) => p.media_type !== "video").length;
-  const canHoldBack = requiredPhotos > 0 && photoCount > requiredPhotos;
 
-  // What the share-time default WILL do, shown before it does it. The flip
-  // keeps the first N non-video photos in display order and offers the rest
-  // as paid extras — but until Alex's test nothing on this screen said which
-  // ones, so the default was invisible. Only rendered while the photographer
-  // has not curated by hand (one manual exclusion disables the automatic
-  // pass) and the gallery is not yet shared.
-  const willFlipIds = (() => {
-    if (!canHoldBack || delivered) return new Set<string>();
-    if (photos.some((p) => p.is_included === false)) return new Set<string>();
-    const nonVideo = photos.filter((p) => p.media_type !== "video");
-    return new Set(nonVideo.slice(requiredPhotos).map((p) => p.id));
-  })();
-
-  async function setIncluded(included: boolean) {
-    if (selectedIds.size === 0) return;
-    const ids = Array.from(selectedIds);
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "set_included", photo_ids: ids, included }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert(data?.error || t("includeFailed"));
-        return;
-      }
-      const touched = new Set(ids);
-      setPhotos((prev) => prev.map((p) => (touched.has(p.id) && !p.purchased_at ? { ...p, is_included: included } : p)));
-      setSelectedIds(new Set());
-      setSelectMode(false);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
-    }
-  }
 
   async function deleteSelected() {
     if (selectedIds.size === 0) return;
@@ -613,14 +673,16 @@ export function DeliveryUploadClient({
       alert(t("setPassword"));
       return;
     }
-    const deliverablePhotos = photos.filter((p) => p.media_type !== "video").length;
+    // Held-back extras are on offer, not delivered — they must not count
+    // toward the promise, nor inflate the number quoted to the photographer.
+    const deliverablePhotos = photos.filter((p) => p.media_type !== "video" && p.is_included !== false).length;
     if (requiredPhotos > 0 && deliverablePhotos < requiredPhotos) {
       // Mirror the server guard so the photographer sees it before the
       // confirm dialog. Videos don't count toward the package photo minimum.
       setError(t("needMorePhotos", { required: requiredPhotos, count: deliverablePhotos }));
       return;
     }
-    const photoCnt = photos.filter((p) => p.media_type !== "video").length;
+    const photoCnt = deliverablePhotos;
     const videoCnt = photos.filter((p) => p.media_type === "video").length;
     const confirmText = videoCnt === 0
       ? t("confirmShare", { count: photoCnt })
@@ -932,12 +994,6 @@ export function DeliveryUploadClient({
               {selectMode ? (
                 <>
                   <button onClick={() => setSelectedIds(new Set(photos.map((p) => p.id)))} className="text-xs font-medium text-gray-600 hover:text-gray-800">{t("selectAll")}</button>
-                  {canHoldBack && (
-                    <>
-                      <button onClick={() => setIncluded(true)} disabled={selectedIds.size === 0} className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700 disabled:opacity-40">{t("includeInDelivery")}</button>
-                      <button onClick={() => setIncluded(false)} disabled={selectedIds.size === 0} className="rounded-lg border border-warm-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-warm-50 disabled:opacity-40">{t("excludeFromDelivery")}</button>
-                    </>
-                  )}
                   <button onClick={deleteSelected} disabled={selectedIds.size === 0} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40">{selectedIds.size > 0 && selectedIds.size === photos.length ? t("deleteAllCount", { count: photos.length }) : t("deleteCount", { count: selectedIds.size })}</button>
                   <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }} className="text-xs font-medium text-gray-500 hover:text-gray-700">{t("cancel")}</button>
                 </>
@@ -1057,12 +1113,12 @@ export function DeliveryUploadClient({
               </div>
               <button
                 onClick={handleShare}
-                disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4 || (requiredPhotos > 0 && photos.filter((p) => p.media_type !== "video").length < requiredPhotos)}
+                disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4 || (requiredPhotos > 0 && includedPhotos.filter((p) => p.media_type !== "video").length < requiredPhotos)}
                 className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
               >
                 {(() => {
                   if (sharing) return t("sharing");
-                  const photoCnt = photos.filter((p) => p.media_type !== "video").length;
+                  const photoCnt = includedPhotos.filter((p) => p.media_type !== "video").length;
                   const videoCnt = photos.filter((p) => p.media_type === "video").length;
                   if (videoCnt === 0) return t("sharePhotos", { count: photoCnt });
                   if (photoCnt === 0) return t("shareVideos", { count: videoCnt });
@@ -1070,127 +1126,86 @@ export function DeliveryUploadClient({
                 })()}
               </button>
               {requiredPhotos > 0 && (() => {
-                const dp = photos.filter((p) => p.media_type !== "video").length;
+                const dp = includedPhotos.filter((p) => p.media_type !== "video").length;
                 const short = dp < requiredPhotos;
                 return (
                   <p className={`w-full text-xs ${short ? "font-medium text-amber-700" : "text-gray-500"}`}>
                     {short
                       ? t("photoCounterShort", { count: dp, required: requiredPhotos, remaining: requiredPhotos - dp })
                       : t("photoCounterOk", { count: dp, required: requiredPhotos })}
-                    {willFlipIds.size > 0 && (
-                      <span className="block mt-0.5 text-amber-700">
-                        {t("extrasPreviewHint", { included: requiredPhotos, extras: willFlipIds.size })}
-                      </span>
-                    )}
                   </p>
                 );
               })()}
-              {/* The gift: rendered whenever extras exist or will exist. */}
-              {(canHoldBack || photos.some((p) => p.is_included === false)) && !clientAccepted && (
-                <div className="mt-2 flex w-full flex-wrap items-center gap-2 rounded-lg border border-warm-200 bg-warm-50 px-3 py-2">
-                  <span className="text-xs font-medium text-gray-700">🎁 {t("giftSlotsLabel")}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={500}
-                    step={1}
-                    value={giftDraft}
-                    onChange={(e) => setGiftDraft(e.target.value)}
-                    className="w-16 rounded-md border border-warm-200 bg-white px-2 py-1 text-sm"
-                  />
+            </div>
+            {(showSplit || giftSlots > 0) && !clientAccepted && (
+              <div className="mt-3 w-full rounded-xl border border-accent-200 bg-accent-50 p-4">
+                <p className="text-sm font-bold text-accent-900">🎁 {t("giftTitle")}</p>
+                <p className="mt-1 text-sm text-accent-800">{t("giftBody")}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   <button
+                    type="button"
+                    onClick={() => setGiftDraft(String(Math.max(0, (parseInt(giftDraft, 10) || 0) - 1)))}
+                    className="h-9 w-9 rounded-lg border border-accent-300 bg-white text-lg font-bold text-accent-700"
+                  >−</button>
+                  <span className="min-w-[2.5rem] text-center text-xl font-bold text-accent-900">{parseInt(giftDraft, 10) || 0}</span>
+                  <button
+                    type="button"
+                    onClick={() => setGiftDraft(String((parseInt(giftDraft, 10) || 0) + 1))}
+                    className="h-9 w-9 rounded-lg border border-accent-300 bg-white text-lg font-bold text-accent-700"
+                  >+</button>
+                  <button
+                    type="button"
                     onClick={saveGiftSlots}
                     disabled={giftSaving || (parseInt(giftDraft, 10) || 0) === giftSlots}
-                    className="rounded-md bg-primary-600 px-3 py-1 text-xs font-semibold text-white disabled:opacity-40"
+                    className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
                   >
                     {giftSaving ? "…" : t("save")}
                   </button>
-                  <span className="text-[11px] text-gray-500">{t("giftSlotsHint")}</span>
                 </div>
-              )}
-            </div>
+                <p className="mt-2 text-xs text-accent-700">
+                  {giftSlots > 0 ? t("giftStateOn", { count: giftSlots }) : t("giftStateOff")}
+                </p>
+              </div>
+            )}
             </>
           )}
         </div>
       )}
 
-      {/* Photo grid */}
-      {photos.length > 0 && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {photos.slice(0, visibleCount).map((photo) => {
-            const isVideo = photo.media_type === "video";
-            // For videos use the ffmpeg-extracted poster; for photos the
-            // url IS already an image (presigned). Falling back to url for
-            // images preserves the existing behaviour.
-            // ALWAYS prefer the 1200px thumbnail in the grid. Using the
-            // presigned ORIGINAL (3-20MB each) meant a 500-photo delivery
-            // pulled gigabytes into the manage page and killed mobile.
-            const previewSrc = photo.thumbnail_url || photo.url;
-            return (
-            <div
-              key={photo.id}
-              className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""} ${photo.is_included === false ? "opacity-60 ring-1 ring-warm-300" : ""}`}
-              onClick={selectMode ? (e) => toggleSelect(photo.id, e.shiftKey) : undefined}
-            >
-              {photo.is_included === false && (
-                <span className="absolute right-2 top-2 z-10 rounded-md bg-gray-900/75 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  {t("notIncludedBadge")}
-                </span>
-              )}
-              {willFlipIds.has(photo.id) && (
-                <span className="absolute right-2 top-2 z-10 rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  {t("willBecomeExtra")}
-                </span>
-              )}
-              <img
-                src={previewSrc}
-                alt={photo.filename}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover"
-              />
-              {isVideo && (
-                <>
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm">
-                      <svg className="h-5 w-5 text-white translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </div>
-                  {photo.duration_seconds ? (
-                    <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white tabular-nums">
-                      {Math.floor((photo.duration_seconds || 0) / 60)}:{String((photo.duration_seconds || 0) % 60).padStart(2, "0")}
-                    </span>
-                  ) : null}
-                </>
-              )}
-              {selectMode ? (
-                <div className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border-2 ${selectedIds.has(photo.id) ? "border-primary-500 bg-primary-500" : "border-white bg-white/70"}`}>
-                  {selectedIds.has(photo.id) && (
-                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-              ) : canEdit ? (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(photo.id); }}
-                  className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-500"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              ) : null}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-1.5 pt-4 opacity-0 transition group-hover:opacity-100">
-                <p className="truncate text-xs text-white">{photo.filename}</p>
-              </div>
+      {/* Two piles, tap to move. Nothing to read, nothing to switch on. */}
+      {photos.length > 0 && showSplit && (
+        <>
+          <div className="mt-6 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-accent-200 pb-2">
+            <h3 className="text-base font-bold text-gray-900">✓ {t("sectionIncluded", { count: includedPhotos.length })}</h3>
+            <p className="text-xs text-gray-500">{t("sectionIncludedHint")}</p>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {includedPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
+            <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
+            <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
+          </div>
+          {extraPhotos.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {extraPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
             </div>
-            );
-          })}
+          )}
+        </>
+      )}
+
+      {photos.length > 0 && !showSplit && (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {photos.slice(0, visibleCount).map((photo) => renderTile(photo))}
         </div>
       )}
+
+      {/* Infinite-scroll sentinel — both piles are batched, so this has to
+          live below them or a 500-photo delivery stops at the first 60. */}
+      {visibleCount < photos.length && <div ref={gridSentinelRef} className="h-4" />}
 
       {modal}
     </div>

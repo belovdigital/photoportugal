@@ -67,6 +67,8 @@ export default async function AdminPage() {
     blogCount,
     matchRequestsNewCount,
     reviewsPendingCount,
+    extrasAll,
+    extrasMonth,
   ] = await Promise.all([
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client' AND COALESCE(email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = TRUE AND COALESCE(u.email_verified, FALSE) = TRUE"),
@@ -91,6 +93,22 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM match_requests WHERE status = 'new'").catch(() => null),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews WHERE COALESCE(is_approved, FALSE) = FALSE AND rejected_at IS NULL"),
+    // Paid extra photos, all time and this month. .catch keeps the whole admin
+    // dashboard alive on a database that has not run the extras migration yet.
+    queryOne<{ gross: string; fee: string; payout: string; sold: string; gifted: string }>(
+      `SELECT COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
+              COALESCE(SUM(platform_fee_cents), 0) / 100.0 AS fee,
+              COALESCE(SUM(payout_cents), 0) / 100.0 AS payout,
+              COUNT(*) FILTER (WHERE amount_cents > 0)::text AS sold,
+              COUNT(*) FILTER (WHERE amount_cents = 0)::text AS gifted
+         FROM delivery_extra_purchases WHERE status = 'paid'`
+    ).catch(() => null),
+    queryOne<{ gross: string; fee: string }>(
+      `SELECT COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
+              COALESCE(SUM(platform_fee_cents), 0) / 100.0 AS fee
+         FROM delivery_extra_purchases
+        WHERE status = 'paid' AND paid_at >= date_trunc('month', CURRENT_DATE)`
+    ).catch(() => null),
   ]);
 
   // Platform settings
@@ -239,6 +257,8 @@ export default async function AdminPage() {
     first_referrer: string | null; first_landing_page: string | null;
     first_session_at: string | null;
     tip_amount_cents: number | null; tip_transferred: boolean | null;
+    extras_amount_cents: number | null; extras_payout_cents: number | null;
+    extras_sold: number | null; extras_gifted: number | null;
     concierge_first_msg: string | null; concierge_user_msgs: string | null; concierge_match_count: number | null;
     concierge_outcome: string | null; concierge_dialogue: string | null;
     visitor_landing_page: string | null; visitor_referrer: string | null;
@@ -270,6 +290,16 @@ export default async function AdminPage() {
             first_sess.landing_page as first_landing_page, first_sess.started_at::text as first_session_at,
             (SELECT t.amount_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_amount_cents,
             (SELECT t.transferred FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_transferred,
+            -- Extra photos sold on this delivery. Gifts (amount 0) are counted
+            -- separately so a €0.00 line never reads as a failed charge.
+            (SELECT COALESCE(SUM(x.amount_cents), 0) FROM delivery_extra_purchases x
+              WHERE x.booking_id = b.id AND x.status = 'paid') as extras_amount_cents,
+            (SELECT COALESCE(SUM(x.payout_cents), 0) FROM delivery_extra_purchases x
+              WHERE x.booking_id = b.id AND x.status = 'paid') as extras_payout_cents,
+            (SELECT COUNT(*) FROM delivery_extra_purchases x
+              WHERE x.booking_id = b.id AND x.status = 'paid' AND x.amount_cents > 0) as extras_sold,
+            (SELECT COUNT(*) FROM delivery_extra_purchases x
+              WHERE x.booking_id = b.id AND x.status = 'paid' AND x.amount_cents = 0) as extras_gifted,
             lens.first_msg as concierge_first_msg,
             lens.user_msgs as concierge_user_msgs,
             lens.full_dialogue as concierge_dialogue,
@@ -460,13 +490,23 @@ export default async function AdminPage() {
     bookingsCompleted: parseInt(bookingsCompleted?.count || "0"),
     bookingsPaid: parseInt(bookingsPaid?.count || "0"),
     bookingsPaidThisMonth: parseInt(bookingsPaidThisMonth?.count || "0"),
-    turnover: parseFloat(revenue?.total || "0"),
-    turnoverThisMonth: parseFloat(revenueThisMonth?.total || "0"),
+    // Extra photos sold after delivery are real money that never touches the
+    // bookings row: the client's €2.90 lands in our Stripe and €2.00 is
+    // transferred on to the photographer. Bucketed by paid_at (when the sale
+    // happened), NOT the booking's created_at — a shoot from March can sell
+    // extras in August. Gifts are amount_cents = 0 rows and add nothing.
+    turnover: parseFloat(revenue?.total || "0") + parseFloat(extrasAll?.gross || "0"),
+    turnoverThisMonth: parseFloat(revenueThisMonth?.total || "0") + parseFloat(extrasMonth?.gross || "0"),
+    extrasTurnover: parseFloat(extrasAll?.gross || "0"),
+    extrasRevenue: parseFloat(extrasAll?.fee || "0"),
+    extrasPayout: parseFloat(extrasAll?.payout || "0"),
+    extrasSold: parseInt(extrasAll?.sold || "0"),
+    extrasGifted: parseInt(extrasAll?.gifted || "0"),
     // Revenue = service_fee on every paid booking (locked at payment) +
     // platform_fee on delivered+accepted bookings (released at payout).
     // Same accounting as /api/admin/revenue-chart so the top KPI matches the chart total.
-    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0"),
-    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0"),
+    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
+    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),
@@ -513,6 +553,7 @@ export default async function AdminPage() {
     cancelled_bookings: number;
     total_revenue: number;
     total_payout: number;
+    extras_payout: number;
     last_booking_at: string | null;
     first_booking_at: string | null;
   }>(
@@ -522,6 +563,11 @@ export default async function AdminPage() {
             COUNT(*) FILTER (WHERE b.status = 'cancelled')::int as cancelled_bookings,
             COALESCE(SUM(b.total_price) FILTER (WHERE b.payment_status = 'paid'), 0)::float as total_revenue,
             COALESCE(SUM(b.payout_amount) FILTER (WHERE b.payment_status = 'paid'), 0)::float as total_payout,
+            -- Extras earned on these bookings. Scoped by booking, not by the
+            -- purchase's photographer_id, so a reassigned booking still rolls
+            -- up under whoever the booking belongs to now.
+            COALESCE(SUM((SELECT COALESCE(SUM(x.payout_cents), 0) FROM delivery_extra_purchases x
+                           WHERE x.booking_id = b.id AND x.status = 'paid')), 0)::float / 100 as extras_payout,
             MAX(b.created_at)::text as last_booking_at,
             MIN(b.created_at)::text as first_booking_at
        FROM bookings b

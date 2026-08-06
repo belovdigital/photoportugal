@@ -88,9 +88,24 @@ export async function GET(req: NextRequest) {
     [bucket, fromDate.toISOString(), toDate.toISOString()]
   );
 
+  // Extra photos sold after delivery. Bucketed by paid_at — the sale happened
+  // then, not when the booking was created — so this cannot be a JOIN onto the
+  // query above and is merged bucket-by-bucket below. Matches the admin KPI
+  // cards: gross adds to turnover, platform_fee_cents adds to revenue.
+  const extrasRows = await query<{ bucket: string; gross: string; fee: string }>(
+    `SELECT DATE_TRUNC($1, paid_at)::date::text AS bucket,
+            COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
+            COALESCE(SUM(platform_fee_cents), 0) / 100.0 AS fee
+       FROM delivery_extra_purchases
+      WHERE status = 'paid' AND paid_at >= $2 AND paid_at <= $3
+      GROUP BY DATE_TRUNC($1, paid_at)`,
+    [bucket, fromDate.toISOString(), toDate.toISOString()]
+  ).catch(() => []);
+  const extrasByBucket = new Map(extrasRows.map((r) => [r.bucket, r]));
+
   // Fill missing buckets so the chart has contiguous bars.
   const byBucket = new Map(rows.map((r) => [r.bucket, r]));
-  const filled: { day: string; turnover: number; service_fee: number; platform_fee: number; revenue: number; count: number }[] = [];
+  const filled: { day: string; turnover: number; service_fee: number; platform_fee: number; extras: number; revenue: number; count: number }[] = [];
   const cursor = new Date(fromDate);
   cursor.setUTCHours(0, 0, 0, 0);
   if (bucket === "week") {
@@ -104,12 +119,16 @@ export async function GET(req: NextRequest) {
   while (cursor <= toDate) {
     const key = ymd(cursor);
     const found = byBucket.get(key);
+    const ex = extrasByBucket.get(key);
+    const exGross = ex ? Number(ex.gross) : 0;
+    const exFee = ex ? Number(ex.fee) : 0;
     filled.push({
       day: key,
-      turnover: found ? Number(found.turnover) : 0,
+      turnover: (found ? Number(found.turnover) : 0) + exGross,
       service_fee: found ? Number(found.service_fee) : 0,
       platform_fee: found ? Number(found.platform_fee) : 0,
-      revenue: found ? Number(found.revenue) : 0,
+      extras: exFee,
+      revenue: (found ? Number(found.revenue) : 0) + exFee,
       count: found ? Number(found.count) : 0,
     });
     if (bucket === "day") cursor.setUTCDate(cursor.getUTCDate() + 1);

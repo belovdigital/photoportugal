@@ -28,6 +28,10 @@ export interface AdminBooking {
   service_fee: number | null;
   payout_amount: number | null;
   tip_amount_cents?: number | null;
+  extras_amount_cents?: number | null;
+  extras_payout_cents?: number | null;
+  extras_sold?: number | null;
+  extras_gifted?: number | null;
   tip_transferred?: boolean | null;
   stripe_amount_subtotal_cents: number | null;
   stripe_amount_paid_cents: number | null;
@@ -338,6 +342,11 @@ export function AdminBookingsList({
                     {Number(b.tip_amount_cents) > 0 && (
                       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">💛 Tip €{Math.round(Number(b.tip_amount_cents) / 100)}</span>
                     )}
+                    {(Number(b.extras_sold) > 0 || Number(b.extras_gifted) > 0) && (
+                      <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-semibold text-accent-800">
+                        🖼️ {Number(b.extras_sold) > 0 ? `+${b.extras_sold} €${(Number(b.extras_amount_cents) / 100).toFixed(2)}` : `${b.extras_gifted} gifted`}
+                      </span>
+                    )}
                     {b.total_price && <span className="text-base font-bold text-gray-900">&euro;{Math.round(Number(b.total_price))}</span>}
                     <svg
                       className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -551,6 +560,13 @@ export function AdminBookingsList({
                       ) : null}
                       {Number(b.tip_amount_cents) > 0 && (
                         <p className="text-[10px] font-medium text-amber-700">💛 Tip: €{(Number(b.tip_amount_cents) / 100).toFixed(2)} {b.tip_transferred ? "· sent ✓" : "· pending transfer"}</p>
+                      )}
+                      {(Number(b.extras_sold) > 0 || Number(b.extras_gifted) > 0) && (
+                        <p className="text-[10px] font-medium text-accent-700">
+                          🖼️ Extra photos: {Number(b.extras_sold) || 0} sold €{(Number(b.extras_amount_cents) / 100).toFixed(2)}
+                          {" · photographer €"}{(Number(b.extras_payout_cents) / 100).toFixed(2)}
+                          {Number(b.extras_gifted) > 0 && ` · ${b.extras_gifted} gifted free`}
+                        </p>
                       )}
                     </div>
                     {b.package_name && (

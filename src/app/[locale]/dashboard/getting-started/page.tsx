@@ -121,6 +121,16 @@ export default async function GettingStartedPage() {
           mockup={<MobileAppMockup />}
         />
         )}
+
+        {/* Numbered after the app step, which Spain does not show — so the list
+            never skips a number in either market. */}
+        <Section
+          n={country.hasMobileApp ? 9 : 8}
+          icon="🖼️"
+          title={t("s9title")}
+          body={t("s9body")}
+          mockup={<ExtraPhotosMockup />}
+        />
       </div>
 
       <div className="mt-16 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-warm-50 p-8 text-center">
@@ -390,6 +400,36 @@ function ReviewMockup() {
             ⭐ Leave a review
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// A shrunk-down copy of the two groups on the delivery screen, so the tip and
+// the screen it describes look like the same thing.
+function ExtraPhotosMockup() {
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="text-[11px] font-bold text-gray-900">&#10003; In the delivery &middot; 20 photos</p>
+        <div className="mt-1.5 grid grid-cols-5 gap-1.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="aspect-square rounded bg-gradient-to-br from-warm-200 to-warm-300" />
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-[11px] font-bold text-amber-800">&euro; Extra photos &middot; 15</p>
+        <div className="mt-1.5 grid grid-cols-5 gap-1.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="relative aspect-square rounded bg-gradient-to-br from-amber-100 to-amber-200">
+              {i === 0 && (
+                <span className="absolute inset-x-0 bottom-0 rounded-b bg-white/90 text-center text-[7px] font-bold text-gray-700">&euro;2.90</span>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-1.5 text-[10px] text-gray-500">You keep &euro;2.00 of every one sold</p>
       </div>
     </div>
   );

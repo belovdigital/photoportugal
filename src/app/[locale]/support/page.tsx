@@ -34,6 +34,9 @@ const CLIENT_ARTICLE_KEYS = [
   "cancelReschedule",
   "noShow",
   "receivePhotos",
+  "extraPhotos",
+  "extraPhotosBuy",
+  "extraPhotosGift",
   "notHappy",
   "paymentReleased",
 ] as const;
@@ -44,6 +47,12 @@ const PHOTOGRAPHER_ARTICLE_KEYS = [
   "getPaid",
   "clientCancels",
   "deliverPhotos",
+  "sellExtras",
+  "extrasEarnings",
+  "extrasWhenPaid",
+  "giftPhotos",
+  "extrasNoPressure",
+  "giveEverything",
   "photographerCancels",
   "externalLinks",
 ] as const;

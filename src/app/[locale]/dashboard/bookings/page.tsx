@@ -79,6 +79,8 @@ export default async function BookingsPage() {
     promised_photos: number | null;
     tip_amount_cents: number | null;
     tip_payout_cents: number | null;
+    extras_payout_cents: number | null;
+    extras_sold: number | null;
     peek_token?: string | null;
     peek_shared_at?: string | null;
     stripe_amount_paid_cents: number | null;
@@ -136,6 +138,13 @@ export default async function BookingsPage() {
                   FALSE as has_review, b.delivery_token,
                   (SELECT t.amount_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_amount_cents,
                   (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents,
+                  -- Extra photos the client bought after the delivery. A
+                  -- separate line, like tips: it is never folded into
+                  -- payout_amount, which is the agreed session payout.
+                  (SELECT COALESCE(SUM(x.payout_cents), 0) FROM delivery_extra_purchases x
+                    WHERE x.booking_id = b.id AND x.status = 'paid') as extras_payout_cents,
+                  (SELECT COUNT(*) FROM delivery_extra_purchases x
+                    WHERE x.booking_id = b.id AND x.status = 'paid' AND x.amount_cents > 0) as extras_sold,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                   b.delivery_expires_at,
                   COALESCE(b.is_gift, FALSE) as is_gift,
@@ -194,6 +203,13 @@ export default async function BookingsPage() {
                 b.peek_token, b.peek_shared_at::text as peek_shared_at,
                 (SELECT t.amount_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_amount_cents,
                 (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents,
+                  -- Extra photos the client bought after the delivery. A
+                  -- separate line, like tips: it is never folded into
+                  -- payout_amount, which is the agreed session payout.
+                  (SELECT COALESCE(SUM(x.payout_cents), 0) FROM delivery_extra_purchases x
+                    WHERE x.booking_id = b.id AND x.status = 'paid') as extras_payout_cents,
+                  (SELECT COUNT(*) FROM delivery_extra_purchases x
+                    WHERE x.booking_id = b.id AND x.status = 'paid' AND x.amount_cents > 0) as extras_sold,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                 b.delivery_expires_at,
                 COALESCE(b.is_gift, FALSE) as is_gift,
@@ -475,6 +491,11 @@ export default async function BookingsPage() {
                             folded into payout_amount. */}
                         {Number(booking.tip_payout_cents) > 0 && (
                           <p className="text-[11px] font-semibold text-amber-700">💛 {t("tipLine")}: &euro;{(Number(booking.tip_payout_cents) / 100).toFixed(2)}</p>
+                        )}
+                        {Number(booking.extras_payout_cents) > 0 && (
+                          <p className="text-[11px] font-semibold text-accent-700">
+                            🖼️ {t("extrasLine", { count: Number(booking.extras_sold) || 0 })}: &euro;{(Number(booking.extras_payout_cents) / 100).toFixed(2)}
+                          </p>
                         )}
                         <p className="text-[10px] font-medium text-gray-400">{t("sessionPrice") || "Session price"}: &euro;{Math.round(Number(booking.total_price))}</p>
                       </>
