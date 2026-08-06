@@ -3087,7 +3087,9 @@
     "extrasHowTo": "Es sind die mit Wasserzeichen. Tippen Sie bei jedem gewünschten Foto auf Dazu — sie sammeln sich unten auf der Seite, bezahlt wird erst mit Kaufen. Je {price} €.",
     "extrasFreeFirst": "Ihre {count} kostenlosen werden zuerst abgezogen — wählen Sie so viele und Sie zahlen nichts.",
     "confirmShareExtras": "{count, plural, one {# weiteres Foto wird für 2,90 € angeboten — Ihre Kundschaft kann es kaufen oder gratis nehmen, wenn Sie ein Geschenk festlegen.} other {# weitere Fotos werden für je 2,90 € angeboten — Ihre Kundschaft kann sie kaufen oder einige gratis nehmen, wenn Sie ein Geschenk festlegen.}}",
-    "extraPickFree": "Gratis dazu"
+    "extraPickFree": "Gratis dazu",
+    "sectionYours": "{count, plural, one {# Foto gehört Ihnen} other {# Fotos gehören Ihnen}}",
+    "sectionOnOffer": "{count, plural, one {# weiteres zur Auswahl} other {# weitere zur Auswahl}}"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

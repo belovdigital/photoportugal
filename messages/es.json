@@ -3334,7 +3334,9 @@
     "extrasHowTo": "Son las que llevan marca de agua. Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} € cada una.",
     "extrasFreeFirst": "Tus {count} gratuitas se descuentan primero — elige esa cantidad y no pagas nada.",
     "confirmShareExtras": "{count, plural, one {# foto más queda a la venta por 2,90 € — tu cliente puede comprarla, o llevársela gratis si defines un regalo.} other {# fotos más quedan a la venta por 2,90 € cada una — tu cliente puede comprarlas, o llevarse algunas gratis si defines un regalo.}}",
-    "extraPickFree": "Añadir gratis"
+    "extraPickFree": "Añadir gratis",
+    "sectionYours": "{count, plural, one {# foto es tuya} other {# fotos son tuyas}}",
+    "sectionOnOffer": "{count, plural, one {# más que puedes añadir} other {# más que puedes añadir}}"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

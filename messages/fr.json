@@ -3334,7 +3334,9 @@
     "extrasHowTo": "Ce sont celles avec un filigrane. Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} € pièce.",
     "extrasFreeFirst": "Vos {count} gratuites sont déduites en premier — choisissez-en autant et vous ne payez rien.",
     "confirmShareExtras": "{count, plural, one {# photo de plus est proposée à 2,90 € — votre client peut l'acheter, ou la recevoir gratuitement si vous définissez un cadeau.} other {# photos de plus sont proposées à 2,90 € pièce — votre client peut les acheter, ou en recevoir gratuitement si vous définissez un cadeau.}}",
-    "extraPickFree": "Ajouter gratuit"
+    "extraPickFree": "Ajouter gratuit",
+    "sectionYours": "{count, plural, one {# photo est à vous} other {# photos sont à vous}}",
+    "sectionOnOffer": "{count, plural, one {# de plus à ajouter} other {# de plus à ajouter}}"
   },
   "availability": {
     "pageTitle": "Disponibilités",

@@ -44,15 +44,25 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     // Two archives, never one rebuilt: the delivery archive is the promise
     // and is frozen once written; the extras archive is rebuilt after every
     // purchase. Separate files, separate flags, separate emails.
+    // The main archive holds everything the client owned at acceptance: the
+    // promised photos plus any extra already taken, free or paid. Sending a
+    // gifted photo to an "extras" file made a present feel like a receipt.
+    //
+    // The extras archive is therefore only what arrived AFTER that snapshot —
+    // otherwise a client who buys later downloads a second file containing the
+    // photos they already have in the first one. Before acceptance there is no
+    // snapshot yet, so nothing qualifies.
     const photos = await query<{ url: string; filename: string }>(
       set === "extras"
-        ? "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND purchased_at IS NOT NULL ORDER BY sort_order, created_at"
-        // Everything the client owns AT ACCEPTANCE goes in the main archive —
-    // the photos the package promised plus any extra they already took, free
-    // or paid. Splitting those into a second file made the gift feel like a
-    // purchase. Anything bought AFTER acceptance still lands in the extras
-    // archive, because this one is written once and frozen.
-    : "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at",
+        ? `SELECT dp.url, dp.filename FROM delivery_photos dp
+             JOIN bookings b ON b.id = dp.booking_id
+            WHERE dp.booking_id = $1 AND dp.purchased_at IS NOT NULL
+              AND b.delivery_accepted_at IS NOT NULL
+              AND dp.purchased_at > b.delivery_accepted_at
+            ORDER BY dp.sort_order, dp.created_at`
+        : `SELECT url, filename FROM delivery_photos
+            WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL)
+            ORDER BY sort_order, created_at`,
       [bookingId]
     );
     if (photos.length === 0) return null;

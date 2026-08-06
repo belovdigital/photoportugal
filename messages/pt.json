@@ -2861,7 +2861,9 @@
     "extrasHowTo": "São as que têm marca de água. Toque em Juntar nas que gostar — ficam reunidas no fundo da página e só paga quando carregar em Comprar. {price} € cada.",
     "extrasFreeFirst": "As suas {count} gratuitas são descontadas primeiro — escolha esse número e não paga nada.",
     "confirmShareExtras": "{count, plural, one {Mais # fotografia fica à venda por 2,90 € — o cliente pode comprá-la, ou recebê-la de graça se definir um presente.} other {Mais # fotografias ficam à venda por 2,90 € cada — o cliente pode comprá-las, ou receber algumas de graça se definir um presente.}}",
-    "extraPickFree": "Juntar grátis"
+    "extraPickFree": "Juntar grátis",
+    "sectionYours": "{count, plural, one {# fotografia é sua} other {# fotografias são suas}}",
+    "sectionOnOffer": "{count, plural, one {mais # que pode juntar} other {mais # que pode juntar}}"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

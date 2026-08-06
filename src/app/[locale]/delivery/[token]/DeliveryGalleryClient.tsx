@@ -138,9 +138,13 @@ export function DeliveryGalleryClient({
   // the lightbox at the right slot regardless of which column it lives
   // in. Distributed once per column-count.
   const indexed = useMemo(() => visiblePhotos.map((p, i) => ({ p, i })), [visiblePhotos]);
-  const cols2 = useMemo(() => distributeRowMajor(indexed, 2), [indexed]);
-  const cols3 = useMemo(() => distributeRowMajor(indexed, 3), [indexed]);
-  const cols4 = useMemo(() => distributeRowMajor(indexed, 4), [indexed]);
+
+  // Two groups, because "yours" and "for sale" are different things and mixing
+  // them made a client hunt for which tiles were which. Owned = in the package
+  // or already taken (gift or purchase); the rest are still on offer.
+  const ownedIndexed = useMemo(() => indexed.filter(({ p }) => !p.locked), [indexed]);
+  const lockedIndexed = useMemo(() => indexed.filter(({ p }) => p.locked), [indexed]);
+  const split = lockedIndexed.length > 0 && ownedIndexed.length > 0;
 
   function renderCell(photo: Photo, index: number) {
     const isVideo = photo.media_type === "video";
@@ -211,6 +215,25 @@ export function DeliveryGalleryClient({
     );
   }
 
+  function renderMasonry(items: { p: Photo; i: number }[]) {
+    const c2 = distributeRowMajor(items, 2);
+    const c3 = distributeRowMajor(items, 3);
+    const c4 = distributeRowMajor(items, 4);
+    return (
+      <>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:hidden">
+          {c2.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => renderCell(p, i))}</div>)}
+        </div>
+        <div className="mt-4 hidden grid-cols-3 gap-3 sm:grid md:hidden">
+          {c3.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => renderCell(p, i))}</div>)}
+        </div>
+        <div className="mt-4 hidden grid-cols-4 gap-3 md:grid">
+          {c4.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => renderCell(p, i))}</div>)}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {/* Masonry gallery built from JS-distributed flex columns. We render
@@ -218,27 +241,20 @@ export function DeliveryGalleryClient({
           per breakpoint. CSS `columns-N` was broken on Safari — it
           collapsed to 1 column whenever images lazy-loaded. Flex columns
           are rock solid. */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:hidden">
-        {cols2.map((col, ci) => (
-          <div key={ci} className="flex flex-col gap-3">
-            {col.map(({ p, i }) => renderCell(p, i))}
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 hidden grid-cols-3 gap-3 sm:grid md:hidden">
-        {cols3.map((col, ci) => (
-          <div key={ci} className="flex flex-col gap-3">
-            {col.map(({ p, i }) => renderCell(p, i))}
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 hidden grid-cols-4 gap-3 md:grid">
-        {cols4.map((col, ci) => (
-          <div key={ci} className="flex flex-col gap-3">
-            {col.map(({ p, i }) => renderCell(p, i))}
-          </div>
-        ))}
-      </div>
+      {split ? (
+        <>
+          <h3 className="mt-8 border-b-2 border-accent-200 pb-2 text-base font-bold text-gray-900">
+            ✓ {t("sectionYours", { count: ownedIndexed.length })}
+          </h3>
+          {renderMasonry(ownedIndexed)}
+          <h3 className="mt-10 border-b-2 border-amber-200 pb-2 text-base font-bold text-amber-800">
+            {giftLeft > 0 ? "🎁" : "＋"} {t("sectionOnOffer", { count: lockedIndexed.length })}
+          </h3>
+          {renderMasonry(lockedIndexed)}
+        </>
+      ) : (
+        renderMasonry(indexed)
+      )}
 
       {/* Batch-loading sentinel — grows the grid before the bottom is reached. */}
       {visibleCount < photos.length && <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />}

@@ -250,7 +250,8 @@ export function DeliveryPageClient({
 
   // Poll for ZIP readiness after accept
   useEffect(() => {
-    const extrasPending = (gallery?.extras_owned ?? 0) > 0 && !gallery?.extras_zip_ready;
+    // Only worth polling for once the archive can actually exist and be shown.
+    const extrasPending = accepted && (gallery?.extras_owned ?? 0) > 0 && !gallery?.extras_zip_ready;
     if (!gallery) return;
     if (!extrasPending && (!accepted || gallery.zip_ready)) return;
     const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
@@ -476,12 +477,15 @@ export function DeliveryPageClient({
             : `${(totalSize / 1024).toFixed(0)} KB`}
           <span className="ml-3 text-xs text-gray-400">{t("availableUntil", { date: expiresDate })}</span>
         </div>
-        {/* Bought photos get their own archive. The delivery archive is
-            written once at acceptance and never rebuilt, so purchases could
-            never reach it — rather than unfreeze it and overwrite the file
-            everyone already has, extras live in a second one that is rebuilt
-            after every purchase. */}
-        {(gallery?.extras_owned ?? 0) > 0 && (
+        {/* Only AFTER acceptance. The main archive is written once, at
+            acceptance, and now contains everything the client owns by then —
+            promised photos plus any extra already taken, free or paid. Before
+            that moment a second archive would split their photos into two
+            downloads for no reason, and offering "download your 10 extra
+            photos" while the other five are still locked reads as nonsense.
+            Anything bought later cannot reach the frozen main file, so from
+            acceptance onward the second archive earns its place. */}
+        {accepted && (gallery?.extras_owned ?? 0) > 0 && (
           <div className="mb-3">
             {gallery?.extras_zip_ready ? (
               <a

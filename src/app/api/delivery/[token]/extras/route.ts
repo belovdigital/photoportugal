@@ -29,6 +29,68 @@ const PAYOUT_CENTS = EXTRA_PHOTO_PAYOUT_CENTS;
 const PLATFORM_FEE_CENTS = EXTRA_PHOTO_PLATFORM_FEE_CENTS;
 const MAX_PHOTOS_PER_ORDER = 200;
 
+// One notification per burst of gift picks, not one per photo.
+//
+// The client taps through their free photos one at a time; each tap is its own
+// request. Every extra tap pushes the announcement out again, so the message
+// that finally goes is the one that knows the real total.
+const giftNoticeTimers = new Map<string, NodeJS.Timeout>();
+const GIFT_NOTICE_DEBOUNCE_MS = 45_000;
+
+function scheduleGiftNotice(bookingId: string) {
+  const existing = giftNoticeTimers.get(bookingId);
+  if (existing) clearTimeout(existing);
+  const timer = setTimeout(() => {
+    giftNoticeTimers.delete(bookingId);
+    void sendGiftNotice(bookingId);
+  }, GIFT_NOTICE_DEBOUNCE_MS);
+  // Do not hold the process open for a notification.
+  if (typeof timer.unref === "function") timer.unref();
+  giftNoticeTimers.set(bookingId, timer);
+}
+
+async function sendGiftNotice(bookingId: string) {
+  const row = await queryOne<{
+    taken: string; slots: number; photographer_user_id: string; email: string;
+    name: string; locale: string | null; client_name: string;
+  }>(
+    `SELECT (SELECT COUNT(*) FROM delivery_extra_purchases x
+              WHERE x.booking_id = b.id AND x.status = 'paid' AND x.amount_cents = 0) AS taken,
+            COALESCE(b.extras_gift_slots, 0) AS slots,
+            u.id AS photographer_user_id, u.email, u.name, u.locale,
+            cu.name AS client_name
+       FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       JOIN users cu ON cu.id = b.client_id
+      WHERE b.id = $1`,
+    [bookingId]
+  ).catch(() => null);
+  if (!row) return;
+
+  const taken = parseInt(row.taken || "0", 10);
+  if (taken === 0) return;
+  const left = Math.max(0, row.slots - taken);
+
+  import("@/lib/telegram").then(({ sendTelegram }) =>
+    sendTelegram(
+      `🎁 <b>Клиент забрал подарочные фото</b>\n\n${taken} шт бесплатно` +
+      (left > 0 ? ` · осталось в подарке: ${left}` : " · подарок исчерпан") +
+      `\nБронь <code>${bookingId.slice(0, 8)}</code>`,
+      "bookings")
+  ).catch(() => {});
+
+  const loc = (["en", "pt", "de", "es", "fr"].includes(row.locale || "") ? row.locale : "en") as "en" | "pt" | "de" | "es" | "fr";
+  import("@/lib/email").then(({ sendGiftRedeemedToPhotographer }) =>
+    sendGiftRedeemedToPhotographer(row.email, row.name, row.client_name, taken, loc)
+  ).catch(() => {});
+  import("@/lib/push").then(({ sendPushNotification }) =>
+    sendPushNotification(row.photographer_user_id, "🎁 Your gift was picked up",
+      `${row.client_name} chose ${taken} free photo${taken === 1 ? "" : "s"}.`,
+      { type: "gift_redeemed", bookingId, channelId: "default", categoryId: "BOOKING" })
+  ).catch(() => {});
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -179,45 +241,17 @@ export async function POST(
     import("@/lib/build-zip").then(({ buildDeliveryZip }) =>
       buildDeliveryZip(booking.id, "extras")
     ).catch(() => {});
-    import("@/lib/telegram").then(({ sendTelegram }) =>
-      // Says "бесплатно" out loud: this endpoint only ever redeems the gift.
-      // Anything the client also chose to BUY goes through checkout and is
-      // reported separately by the purchase alert — reading "10 шт" here after
-      // selecting 11 looked like the eleventh had silently vanished.
-      sendTelegram(
-        `🎁 <b>Клиент забрал подарочные фото</b>\n\n${gifted.count} шт бесплатно` +
-        (gifted.left > 0 ? ` · осталось в подарке: ${gifted.left}` : " · подарок исчерпан") +
-        `\nЕсли выбрал больше — платная часть придёт отдельным сообщением.` +
-        `\nБронь <code>${booking.id.slice(0, 8)}</code>`,
-        "bookings")
-    ).catch(() => {});
     import("@/lib/realtime").then((m) => {
       m.notifyUser(booking.client_id, "delivery_uploaded", { bookingId: booking.id });
     }).catch(() => {});
 
-    // Tell the photographer. No money moves on a gift, so nothing else in the
-    // system would ever mention it — their client just took them up on it.
-    (async () => {
-      const who = await queryOne<{ user_id: string; email: string; name: string; locale: string | null; client_name: string }>(
-        `SELECT u.id as user_id, u.email, u.name, u.locale, cu.name as client_name
-           FROM bookings b
-           JOIN photographer_profiles pp ON pp.id = b.photographer_id
-           JOIN users u ON u.id = pp.user_id
-           JOIN users cu ON cu.id = b.client_id
-          WHERE b.id = $1`,
-        [booking.id]
-      ).catch(() => null);
-      if (!who) return;
-      const loc = (["en", "pt", "de", "es", "fr"].includes(who.locale || "") ? who.locale : "en") as "en" | "pt" | "de" | "es" | "fr";
-      await import("@/lib/email").then(({ sendGiftRedeemedToPhotographer }) =>
-        sendGiftRedeemedToPhotographer(who.email, who.name, who.client_name, gifted.count, loc)
-      ).catch(() => {});
-      await import("@/lib/push").then(({ sendPushNotification }) =>
-        sendPushNotification(who.user_id, "🎁 Your gift was picked up",
-          `${who.client_name} chose ${gifted.count} free photo${gifted.count === 1 ? "" : "s"}.`,
-          { type: "gift_redeemed", bookingId: booking.id, channelId: "default", categoryId: "BOOKING" })
-      ).catch(() => {});
-    })().catch(() => {});
+    // Redemption is per photo now — a tap IS the gift — so notifying per photo
+    // fired ten Telegram messages, ten emails and ten pushes for one client
+    // picking ten photos. Coalesce: the last tap within the window wins and
+    // reports the total. In-memory is enough; the process is long-lived under
+    // pm2, and the worst case of a restart mid-pick is a lost notification,
+    // not a lost photo.
+    scheduleGiftNotice(booking.id);
 
     return NextResponse.json({ gifted: gifted.count });
   }
