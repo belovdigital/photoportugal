@@ -112,6 +112,15 @@ export function DeliveryGalleryClient({
   // photographer has been paid. Buying more still works — that is a purchase,
   // not a rearrangement.
   const canRearrange = !deliveryAccepted && !!onSwap;
+
+  // Breakpoint in JS rather than CSS, so exactly one node exists per photo.
+  const [columnCount, setColumnCount] = useState(4);
+  useEffect(() => {
+    const calc = () => setColumnCount(window.innerWidth >= 768 ? 4 : window.innerWidth >= 640 ? 3 : 2);
+    calc();
+    window.addEventListener("resize", calc);
+    return () => window.removeEventListener("resize", calc);
+  }, []);
   const dndSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
@@ -280,6 +289,19 @@ export function DeliveryGalleryClient({
           onLoad={() => { loadedCountRef.current += 1; tryGrow(); }}
           onError={() => { loadedCountRef.current += 1; tryGrow(); }}
         />
+        {/* Dragging is not obvious and is fiddly on a phone, so the exchange
+            also has a button you can see. Same picker as the lightbox. */}
+        {locked && canRearrange && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setSwapFor(photo.id); setLightboxIndex(index); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={t("swapInstead")}
+            className="absolute left-1.5 top-1.5 z-20 flex items-center gap-1 rounded-lg bg-gray-900/80 px-2 py-1.5 text-[11px] font-bold text-white shadow-lg backdrop-blur-sm transition hover:bg-gray-900"
+          >
+            ⇄ <span className="hidden sm:inline">{t("swapShort")}</span>
+          </button>
+        )}
         {locked && (
           /* A bare "+" in a 28px circle told nobody anything, and on a phone it
              was barely a tap target. A labelled pill across the bottom says what
@@ -331,29 +353,26 @@ export function DeliveryGalleryClient({
   }
 
   function renderMasonry(items: { p: Photo; i: number }[], draggable = false) {
-    const c2 = distributeRowMajor(items, 2);
-    const c3 = distributeRowMajor(items, 3);
-    const c4 = distributeRowMajor(items, 4);
+    // ONE grid, not three. This used to render the 2/3/4-column variants
+    // simultaneously and hide two with CSS — which put every photo in the DOM
+    // three times under the same id. dnd-kit keys draggables by id, so the
+    // registration that won was usually a display:none node with no bounding
+    // box, and collision detection could never resolve a drop. Dragging simply
+    // did nothing.
+    const cols = distributeRowMajor(items, columnCount);
     return (
-      <>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:hidden">
-          {c2.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => draggable
-            ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
-            : renderCell(p, i))}</div>)}
-        </div>
-        <div className="mt-4 hidden grid-cols-3 gap-3 sm:grid md:hidden">
-          {c3.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => draggable
-            ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
-            : renderCell(p, i))}</div>)}
-        </div>
-        <div className="mt-4 hidden grid-cols-4 gap-3 md:grid">
-          {c4.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => draggable
-            ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
-            : renderCell(p, i))}</div>)}
-        </div>
-      </>
+      <div className={`mt-4 grid gap-3 ${columnCount === 2 ? "grid-cols-2" : columnCount === 3 ? "grid-cols-3" : "grid-cols-4"}`}>
+        {cols.map((col, ci) => (
+          <div key={ci} className="flex flex-col gap-3">
+            {col.map(({ p, i }) => draggable
+              ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
+              : renderCell(p, i))}
+          </div>
+        ))}
+      </div>
     );
   }
+
 
   return (
     <>

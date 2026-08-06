@@ -65,6 +65,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // base rate), payout_amount (take-home), and platform_fee (our cut).
     if (b.client_id !== user.id) {
       delete b.service_fee;
+      // The client's price for an extra photo is the client's business.
+      // extra_photo_payout_cents stays — that one IS the photographer's rate.
+      delete b.extra_photo_price_cents;
       delete b.stripe_amount_subtotal_cents;
       delete b.stripe_amount_paid_cents;
       delete b.stripe_amount_discount_cents;

@@ -422,14 +422,10 @@ function ExtraPhotosMockup() {
         <p className="text-[11px] font-bold text-amber-800">&euro; Extra photos &middot; 15</p>
         <div className="mt-1.5 grid grid-cols-5 gap-1.5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="relative aspect-square rounded bg-gradient-to-br from-amber-100 to-amber-200">
-              {i === 0 && (
-                <span className="absolute inset-x-0 bottom-0 rounded-b bg-white/90 text-center text-[7px] font-bold text-gray-700">&euro;6.30</span>
-              )}
-            </div>
+            <div key={i} className="relative aspect-square rounded bg-gradient-to-br from-amber-100 to-amber-200" />
           ))}
         </div>
-        <p className="mt-1.5 text-[10px] text-gray-500">You keep &euro;2.00 of every one sold</p>
+        <p className="mt-1.5 text-[10px] text-gray-500">You keep your own price on every one sold</p>
       </div>
     </div>
   );

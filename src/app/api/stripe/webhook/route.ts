@@ -546,13 +546,13 @@ export async function POST(req: NextRequest) {
 
             // Anything skipped was paid for twice. Refunding needs a human, so
             // say so loudly rather than leaving it in a table nobody reads.
-            const skipped = await query<{ delivery_photo_id: string }>(
-              "SELECT delivery_photo_id FROM delivery_extra_purchases WHERE order_id = $1 AND status IN ('pending', 'superseded')",
+            const skipped = await query<{ delivery_photo_id: string; amount_cents: number }>(
+              "SELECT delivery_photo_id, amount_cents FROM delivery_extra_purchases WHERE order_id = $1 AND status IN ('pending', 'superseded')",
               [orderId]
             );
             if (skipped.length > 0) {
               import("@/lib/telegram").then(({ sendTelegram }) =>
-                sendTelegram(`⚠️ <b>Доп. фото оплачены дважды</b>\n\nЗаказ <code>${orderId.slice(0, 8)}</code>: ${skipped.length} шт. уже были куплены раньше.\nДеньги списаны — вернуть вручную €${((skipped.length * 290) / 100).toFixed(2)}.`, "alerts")
+                sendTelegram(`⚠️ <b>Доп. фото оплачены дважды</b>\n\nЗаказ <code>${orderId.slice(0, 8)}</code>: ${skipped.length} шт. уже были куплены раньше.\nДеньги списаны — вернуть вручную €${(skipped.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0) / 100).toFixed(2)}.`, "alerts")
               ).catch(() => {});
             }
 

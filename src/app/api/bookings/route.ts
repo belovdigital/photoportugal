@@ -750,6 +750,9 @@ export async function GET(req: NextRequest) {
       // these into the JSON even though the UI only rendered total_price.
       for (const b of bookings as Array<Record<string, unknown>>) {
         delete b.service_fee;
+      // The client's price for an extra photo is the client's business.
+      // extra_photo_payout_cents stays — that one IS the photographer's rate.
+      delete b.extra_photo_price_cents;
         delete b.stripe_amount_subtotal_cents;
         delete b.stripe_amount_paid_cents;
         delete b.stripe_amount_discount_cents;

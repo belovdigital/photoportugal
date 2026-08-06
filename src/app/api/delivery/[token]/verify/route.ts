@@ -129,12 +129,15 @@ export async function POST(
     id: string; url: string; preview_url: string | null; thumbnail_url: string | null;
     filename: string; file_size: number;
     media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
-    is_included: boolean; purchased_at: string | null;
+    is_included: boolean; purchased_at: string | null; paid_for: boolean;
   }>(
-    `SELECT id, url, preview_url, thumbnail_url, filename, file_size,
-            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height,
-            is_included, purchased_at
-     FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
+    `SELECT dp.id, dp.url, dp.preview_url, dp.thumbnail_url, dp.filename, dp.file_size,
+            COALESCE(dp.media_type, 'image') as media_type, dp.duration_seconds, dp.width, dp.height,
+            dp.is_included, dp.purchased_at,
+            EXISTS (SELECT 1 FROM delivery_extra_purchases x
+                     WHERE x.delivery_photo_id = dp.id AND x.status = 'paid'
+                       AND x.amount_cents > 0) AS paid_for
+     FROM delivery_photos dp WHERE dp.booking_id = $1 ORDER BY dp.sort_order, dp.created_at`,
     [booking.id]
   );
 
@@ -168,10 +171,15 @@ export async function POST(
       ? (photo.preview_url as string)
       : isVideo
         ? photo.url
-        // Bought photographs are the client's the moment they pay, whether or
-        // not the delivery has been accepted — the receipt email promises full
-        // resolution, and acceptance is a separate decision about the shoot.
-        : (isAccepted || photo.purchased_at ? photo.url : (photo.preview_url || photo.url));
+        // Bought photographs are the client's the moment they PAY — the receipt
+        // promises full resolution and acceptance is a separate decision.
+        //
+        // A GIFTED photo is not a purchase. Handing over its original before
+        // acceptance blows a hole through the acceptance gate: a photographer
+        // could gift a hundred frames, the client downloads them at full
+        // resolution and never accepts, and nobody is ever paid for the shoot.
+        // Gifts stay watermarked and unlock with the rest of the delivery.
+        : (isAccepted || photo.paid_for ? photo.url : (photo.preview_url || photo.url));
     let resolvedUrl = rawUrl;
     if (isS3Path(rawUrl)) resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
 
@@ -194,7 +202,9 @@ export async function POST(
     // a still, and withholding it would leave the grid blank.
     const thumbSource = isLocked
       ? photo.preview_url
-      : (isVideo || isAccepted || photo.purchased_at)
+      // Same rule for the grid: the clean 1200px copy is an original in every
+      // way that matters — it is what a screenshot would capture.
+      : (isVideo || isAccepted || photo.paid_for)
         ? photo.thumbnail_url
         : (photo.preview_url || photo.thumbnail_url);
 

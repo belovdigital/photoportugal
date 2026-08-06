@@ -2802,10 +2802,11 @@
     "uploadBusinessWork": "Sube trabajo corporativo para aparecer en la pestaña Empresas de tu perfil y en las búsquedas For Business.",
     "moveToMainPortfolio": "Mover al portafolio principal",
     "extrasPriceTitle": "Tu precio por foto extra",
-    "extrasPriceBody": "Las fotos que hagas por encima de lo que promete un paquete pueden venderse en la galería de entrega. Indica cuánto recibes por foto.",
+    "extrasPriceBody": "Las fotos que hagas por encima de lo que promete un paquete pueden venderse en la galería de entrega.",
     "extrasPriceYouGet": "Tú recibes",
     "extrasPriceHint": "Se aplica a todos los paquetes. Cada reserva conserva el precio vigente cuando se hizo, así que cambiarlo nunca afecta a una galería que tu cliente ya está viendo.",
-    "save": "Guardar"
+    "save": "Guardar",
+    "extrasPricePerPhoto": "por foto"
   },
   "subscriptions": {
     "title": "Suscripciones",
@@ -3306,7 +3307,7 @@
     "giftBanner": "Tu fotógrafo te regala {count} fotos extra — elígelas gratis",
     "giftGet": "Recibir {count} gratis",
     "giftAllFree": "{count} gratis — un regalo de tu fotógrafo",
-    "giftFreeLine": "{free} gratis · {paid} más por €{total}",
+    "giftFreeLine": "{free} gratis · {paid} más por {total}",
     "sectionIncluded": "En la entrega · {count, plural, one {# foto} other {# fotos}}",
     "sectionIncludedHint": "Lo que recibe tu cliente. Arrastra para reordenar, o arrastra una foto a las extra.",
     "sectionExtras": "Fotos extra · {count}",
@@ -3331,7 +3332,7 @@
     "extraPicked": "Añadida",
     "plusExtrasAvailable": "+ {count} extra para elegir",
     "extrasBannerTitle": "{count, plural, one {# foto extra de tu sesión} other {# fotos extra de tu sesión}}",
-    "extrasHowTo": "Son las que llevan marca de agua. Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} € cada una.",
+    "extrasHowTo": "Son las que llevan marca de agua. Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} cada una.",
     "extrasFreeFirst": "Tus {count} gratuitas se descuentan primero — elige esa cantidad y no pagas nada.",
     "confirmShareExtras": "{count, plural, one {# foto más queda a la venta — ganas {price} si tu cliente la compra, o puedes regalarla.} other {# fotos más quedan a la venta — ganas {price} por cada una comprada, o puedes regalar algunas.}}",
     "extraPickFree": "Añadir gratis",
@@ -3350,7 +3351,8 @@
     "takeAllFree": "Las {count} son gratis — pasan a ser tuyas de inmediato y no se puede deshacer.",
     "takeAllMixed": "{free} son gratis y pasan a ser tuyas ya. Las otras {paid} van a la cesta por {total} — comprarlas sigue siendo tu decisión.",
     "takeAllPaid": "Las {count} van a la cesta por {total}. No se cobra nada hasta que pulses Comprar.",
-    "takeAllConfirm": "Sí, quiero"
+    "takeAllConfirm": "Sí, quiero",
+    "swapShort": "Cambiar"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

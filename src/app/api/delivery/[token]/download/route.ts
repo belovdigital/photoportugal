@@ -57,8 +57,8 @@ export async function GET(
             b.zip_path, b.zip_size, COALESCE(b.zip_ready, FALSE) as zip_ready,
             ez.zip_path as extras_zip_path, ez.zip_size as extras_zip_size,
             COALESCE(ez.ready, FALSE) as extras_zip_ready,
-            (SELECT COUNT(*)::int FROM delivery_photos dp
-              WHERE dp.booking_id = b.id AND dp.purchased_at IS NOT NULL) as purchased_count
+            (SELECT COUNT(*)::int FROM delivery_extra_purchases x
+              WHERE x.booking_id = b.id AND x.status = 'paid' AND x.amount_cents > 0) as purchased_count
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id

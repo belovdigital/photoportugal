@@ -1494,7 +1494,7 @@ export function PhotographerDashboardClient({
                   <label htmlFor="extras-price" className="block text-xs font-semibold uppercase tracking-wide text-accent-700">
                     {t("extrasPriceYouGet")}
                   </label>
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-2xl font-bold text-accent-900">&euro;</span>
                     <input
                       id="extras-price"
@@ -1505,8 +1505,11 @@ export function PhotographerDashboardClient({
                       step={0.5}
                       value={extrasPriceDraft}
                       onChange={(e) => setExtrasPriceDraft(e.target.value)}
-                      className="w-28 rounded-lg border border-accent-300 bg-white px-3 py-2 text-2xl font-bold text-accent-900 focus:border-accent-500 focus:outline-none"
+                      className="w-24 rounded-lg border border-accent-300 bg-white px-3 py-2 text-2xl font-bold text-accent-900 focus:border-accent-500 focus:outline-none"
                     />
+                    {/* "per photo" buried in a sentence read as a flat fee.
+                        It belongs on the number. */}
+                    <span className="text-lg font-bold text-accent-800">{t("extrasPricePerPhoto")}</span>
                   </div>
                 </div>
                 <button

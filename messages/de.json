@@ -2555,10 +2555,11 @@
     "uploadBusinessWork": "Laden Sie Unternehmensarbeiten hoch, damit sie im Business-Tab Ihres Profils und in For-Business-Suchen erscheinen.",
     "moveToMainPortfolio": "In das Haupt-Portfolio verschieben",
     "extrasPriceTitle": "Ihr Preis für zusätzliche Fotos",
-    "extrasPriceBody": "Fotos über das hinaus, was ein Paket zusagt, können in der Liefergalerie verkauft werden. Legen Sie fest, was Sie pro Foto erhalten.",
+    "extrasPriceBody": "Fotos über das hinaus, was ein Paket zusagt, können in der Liefergalerie verkauft werden.",
     "extrasPriceYouGet": "Sie erhalten",
     "extrasPriceHint": "Gilt für alle Pakete. Jede Buchung behält den Preis, der bei ihrer Erstellung galt — eine Änderung betrifft nie eine Galerie, die Ihre Kundschaft bereits ansieht.",
-    "save": "Speichern"
+    "save": "Speichern",
+    "extrasPricePerPhoto": "pro Foto"
   },
   "subscriptions": {
     "title": "Abonnements",
@@ -3059,7 +3060,7 @@
     "giftBanner": "Ihre Fotografin/Ihr Fotograf schenkt Ihnen {count} zusätzliche Fotos — suchen Sie sie gratis aus",
     "giftGet": "{count} gratis erhalten",
     "giftAllFree": "{count} gratis — ein Geschenk",
-    "giftFreeLine": "{free} gratis · {paid} weitere für €{total}",
+    "giftFreeLine": "{free} gratis · {paid} weitere für {total}",
     "sectionIncluded": "In der Lieferung · {count, plural, one {# Foto} other {# Fotos}}",
     "sectionIncludedHint": "Was Ihre Kundschaft bekommt. Zum Umsortieren ziehen, oder ein Foto zu den zusätzlichen ziehen.",
     "sectionExtras": "Zusätzliche Fotos · {count}",
@@ -3084,7 +3085,7 @@
     "extraPicked": "Dabei",
     "plusExtrasAvailable": "+ {count} zusätzliche zur Auswahl",
     "extrasBannerTitle": "{count, plural, one {# zusätzliches Foto aus Ihrer Session} other {# zusätzliche Fotos aus Ihrer Session}}",
-    "extrasHowTo": "Es sind die mit Wasserzeichen. Tippen Sie bei jedem gewünschten Foto auf Dazu — sie sammeln sich unten auf der Seite, bezahlt wird erst mit Kaufen. Je {price} €.",
+    "extrasHowTo": "Es sind die mit Wasserzeichen. Tippen Sie bei jedem gewünschten Foto auf Dazu — sie sammeln sich unten auf der Seite, bezahlt wird erst mit Kaufen. Je {price}.",
     "extrasFreeFirst": "Ihre {count} kostenlosen werden zuerst abgezogen — wählen Sie so viele und Sie zahlen nichts.",
     "confirmShareExtras": "{count, plural, one {# weiteres Foto wird angeboten — Sie verdienen {price}, wenn Ihre Kundschaft es kauft, oder Sie verschenken es.} other {# weitere Fotos werden angeboten — Sie verdienen {price} pro Kauf, oder Sie verschenken einige.}}",
     "extraPickFree": "Gratis dazu",
@@ -3103,7 +3104,8 @@
     "takeAllFree": "Alle {count} sind gratis — sie gehören Ihnen dann sofort, und das lässt sich nicht rückgängig machen.",
     "takeAllMixed": "{free} sind gratis und gehören Ihnen sofort. Die anderen {paid} landen für {total} im Warenkorb — der Kauf bleibt Ihre Entscheidung.",
     "takeAllPaid": "Alle {count} landen für {total} im Warenkorb. Berechnet wird erst, wenn Sie auf Kaufen tippen.",
-    "takeAllConfirm": "Ja, nehmen"
+    "takeAllConfirm": "Ja, nehmen",
+    "swapShort": "Tauschen"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

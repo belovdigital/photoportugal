@@ -64,6 +64,14 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
              JOIN bookings b ON b.id = dp.booking_id
             WHERE dp.booking_id = $1 AND dp.purchased_at IS NOT NULL
               AND (b.delivery_accepted_at IS NULL OR dp.purchased_at > b.delivery_accepted_at)
+              -- Paid only. A gifted photo is not downloadable before the
+              -- delivery is accepted — otherwise the acceptance gate is just
+              -- a suggestion: gift a hundred frames, zip them, never accept.
+              -- At acceptance gifts land in the MAIN archive with everything
+              -- else, which is where they belong.
+              AND EXISTS (SELECT 1 FROM delivery_extra_purchases x
+                           WHERE x.delivery_photo_id = dp.id AND x.status = 'paid'
+                             AND x.amount_cents > 0)
             ORDER BY dp.sort_order, dp.created_at`
         : `SELECT url, filename FROM delivery_photos
             WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL)

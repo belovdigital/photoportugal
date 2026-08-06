@@ -2555,10 +2555,11 @@
     "uploadBusinessWork": "Upload corporate work to appear on the Business tab of your profile and in For Business searches.",
     "moveToMainPortfolio": "Move to main portfolio",
     "extrasPriceTitle": "Your price for extra photos",
-    "extrasPriceBody": "Photos you shoot beyond what a package promises can be sold in the delivery gallery. Set what you receive per photo.",
+    "extrasPriceBody": "Photos you shoot beyond what a package promises can be sold in the delivery gallery.",
     "extrasPriceYouGet": "You receive",
     "extrasPriceHint": "Applies to every package. Bookings keep the price that was set when they were made, so changing it never affects a gallery your client is already looking at.",
-    "save": "Save"
+    "save": "Save",
+    "extrasPricePerPhoto": "per photo"
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -3058,7 +3059,7 @@
     "giftBanner": "Your photographer gifted you {count} extra photos — pick them for free",
     "giftGet": "Get {count} free",
     "giftAllFree": "{count} free — a gift from your photographer",
-    "giftFreeLine": "{free} free · {paid} more at €{total}",
+    "giftFreeLine": "{free} free · {paid} more at {total}",
     "sectionIncluded": "In the delivery · {count, plural, one {# photo} other {# photos}}",
     "sectionIncludedHint": "What your client gets. Drag to reorder, or drag a photo down to the extras.",
     "sectionExtras": "Extra photos · {count}",
@@ -3083,7 +3084,7 @@
     "extraPicked": "Added",
     "plusExtrasAvailable": "+ {count} extra to choose from",
     "extrasBannerTitle": "{count, plural, one {# extra photo from your session} other {# extra photos from your session}}",
-    "extrasHowTo": "They are the ones with a watermark. Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. €{price} each.",
+    "extrasHowTo": "They are the ones with a watermark. Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. {price} each.",
     "extrasFreeFirst": "Your {count} free ones are taken off first — pick that many and you pay nothing.",
     "confirmShareExtras": "{count, plural, one {# more photo goes on offer — you earn {price} if your client buys it, or you can give it away with a gift.} other {# more photos go on offer — you earn {price} on each one your client buys, or you can give some away with a gift.}}",
     "extraPickFree": "Add free",
@@ -3102,7 +3103,8 @@
     "takeAllFree": "All {count} are free — they become yours straight away and this cannot be undone.",
     "takeAllMixed": "{free} are free and become yours now. The other {paid} go into your basket for {total} — you still choose whether to buy.",
     "takeAllPaid": "All {count} go into your basket for {total}. Nothing is charged until you press Buy.",
-    "takeAllConfirm": "Yes, take them"
+    "takeAllConfirm": "Yes, take them",
+    "swapShort": "Swap"
   },
   "availability": {
     "pageTitle": "Availability",

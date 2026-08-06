@@ -2802,10 +2802,11 @@
     "uploadBusinessWork": "Importez du travail corporate pour apparaître dans l onglet Entreprises de votre profil et dans les recherches For Business.",
     "moveToMainPortfolio": "Déplacer vers le portfolio principal",
     "extrasPriceTitle": "Votre prix par photo supplémentaire",
-    "extrasPriceBody": "Les photos prises au-delà de ce que promet un forfait peuvent être vendues dans la galerie de livraison. Indiquez ce que vous recevez par photo.",
+    "extrasPriceBody": "Les photos prises au-delà de ce que promet un forfait peuvent être vendues dans la galerie de livraison.",
     "extrasPriceYouGet": "Vous recevez",
     "extrasPriceHint": "S'applique à tous les forfaits. Chaque réservation conserve le prix en vigueur au moment où elle a été faite : le modifier n'affecte jamais une galerie que votre client consulte déjà.",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "extrasPricePerPhoto": "par photo"
   },
   "subscriptions": {
     "title": "Abonnements",
@@ -3306,7 +3307,7 @@
     "giftBanner": "Votre photographe vous offre {count} photos supplémentaires — choisissez-les gratuitement",
     "giftGet": "Recevoir {count} gratuites",
     "giftAllFree": "{count} gratuites — un cadeau de votre photographe",
-    "giftFreeLine": "{free} gratuites · {paid} de plus pour €{total}",
+    "giftFreeLine": "{free} gratuites · {paid} de plus pour {total}",
     "sectionIncluded": "Dans la livraison · {count, plural, one {# photo} other {# photos}}",
     "sectionIncludedHint": "Ce que reçoit votre client. Glissez pour réordonner, ou faites glisser une photo vers les supplémentaires.",
     "sectionExtras": "Photos supplémentaires · {count}",
@@ -3331,7 +3332,7 @@
     "extraPicked": "Ajoutée",
     "plusExtrasAvailable": "+ {count} supplémentaires au choix",
     "extrasBannerTitle": "{count, plural, one {# photo supplémentaire de votre séance} other {# photos supplémentaires de votre séance}}",
-    "extrasHowTo": "Ce sont celles avec un filigrane. Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} € pièce.",
+    "extrasHowTo": "Ce sont celles avec un filigrane. Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} pièce.",
     "extrasFreeFirst": "Vos {count} gratuites sont déduites en premier — choisissez-en autant et vous ne payez rien.",
     "confirmShareExtras": "{count, plural, one {# photo de plus est proposée — vous gagnez {price} si votre client l'achète, ou vous pouvez l'offrir.} other {# photos de plus sont proposées — vous gagnez {price} par achat, ou vous pouvez en offrir.}}",
     "extraPickFree": "Ajouter gratuit",
@@ -3350,7 +3351,8 @@
     "takeAllFree": "Les {count} sont gratuites — elles sont à vous immédiatement et c'est irréversible.",
     "takeAllMixed": "{free} sont gratuites et à vous tout de suite. Les {paid} autres vont dans le panier pour {total} — l'achat reste votre choix.",
     "takeAllPaid": "Les {count} vont dans le panier pour {total}. Rien n'est débité avant d'appuyer sur Acheter.",
-    "takeAllConfirm": "Oui, je les prends"
+    "takeAllConfirm": "Oui, je les prends",
+    "swapShort": "Échanger"
   },
   "availability": {
     "pageTitle": "Disponibilités",
