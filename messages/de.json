@@ -3012,7 +3012,9 @@
     "extrasError": "Der Kauf konnte nicht gestartet werden",
     "extrasLockedHint": "Zusätzliche Fotos aus Ihrem Shooting — zum Hinzufügen antippen",
     "extrasDownload": "Ihre {count} zusätzlichen Fotos herunterladen",
-    "extrasZipPreparing": "Ihre zusätzlichen Fotos werden vorbereitet…"
+    "extrasZipPreparing": "Ihre zusätzlichen Fotos werden vorbereitet…",
+    "willBecomeExtra": "Extra beim Senden",
+    "extrasPreviewHint": "Die ersten {included} bleiben in der Lieferung — {extras} werden als kostenpflichtige Extras angeboten. Mit Auswählen → Zurückhalten ändern Sie die Auswahl."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

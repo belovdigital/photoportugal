@@ -104,6 +104,35 @@ export async function POST(
     return NextResponse.json({ error: "This gallery has expired" }, { status: 410 });
   }
 
+  // A retry after a cancelled checkout must work — the basket survives
+  // cancellation on purpose, and "оплата не прошла, пробую ещё раз" is the
+  // normal path, not the edge. So a new order SUPERSEDES any previous pending
+  // one: its Stripe session is expired so the old payment page cannot be paid
+  // later, and its rows stop blocking the sellable query. This is also the
+  // stronger defence against the same photo sitting in two live checkouts —
+  // the 24h guard below then only catches truly concurrent clicks.
+  const prior = await query<{ order_id: string; stripe_session_id: string | null }>(
+    `SELECT DISTINCT order_id, stripe_session_id FROM delivery_extra_purchases
+      WHERE booking_id = $1 AND status = 'pending'`,
+    [booking.id]
+  );
+  for (const o of prior) {
+    if (o.stripe_session_id) {
+      try {
+        await requireStripe().checkout.sessions.expire(o.stripe_session_id);
+      } catch {
+        // Already expired or completed. If it completed in this same instant,
+        // the webhook honours superseded rows, so the payment is not lost.
+      }
+    }
+  }
+  if (prior.length > 0) {
+    await query(
+      "UPDATE delivery_extra_purchases SET status = 'superseded' WHERE booking_id = $1 AND status = 'pending'",
+      [booking.id]
+    );
+  }
+
   // What is actually for sale: rows of THIS booking, left out of the delivery,
   // not already bought. Anything else in the request is dropped rather than
   // silently charged for.

@@ -3006,7 +3006,9 @@
     "extrasError": "Could not start the purchase",
     "extrasLockedHint": "Extra photos from your session — tap to add",
     "extrasDownload": "Download your {count} extra photos",
-    "extrasZipPreparing": "Preparing your extra photos…"
+    "extrasZipPreparing": "Preparing your extra photos…",
+    "willBecomeExtra": "Extra on share",
+    "extrasPreviewHint": "The first {included} stay in the delivery — {extras} will be offered to the client as paid extras. Use Select → Hold back to choose different ones."
   },
   "availability": {
     "pageTitle": "Availability",

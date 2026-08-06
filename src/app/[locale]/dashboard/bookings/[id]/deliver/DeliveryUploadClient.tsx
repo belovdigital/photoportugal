@@ -236,6 +236,19 @@ export function DeliveryUploadClient({
   const photoCount = photos.filter((p) => p.media_type !== "video").length;
   const canHoldBack = requiredPhotos > 0 && photoCount > requiredPhotos;
 
+  // What the share-time default WILL do, shown before it does it. The flip
+  // keeps the first N non-video photos in display order and offers the rest
+  // as paid extras — but until Alex's test nothing on this screen said which
+  // ones, so the default was invisible. Only rendered while the photographer
+  // has not curated by hand (one manual exclusion disables the automatic
+  // pass) and the gallery is not yet shared.
+  const willFlipIds = (() => {
+    if (!canHoldBack || delivered) return new Set<string>();
+    if (photos.some((p) => p.is_included === false)) return new Set<string>();
+    const nonVideo = photos.filter((p) => p.media_type !== "video");
+    return new Set(nonVideo.slice(requiredPhotos).map((p) => p.id));
+  })();
+
   async function setIncluded(included: boolean) {
     if (selectedIds.size === 0) return;
     const ids = Array.from(selectedIds);
@@ -1041,6 +1054,11 @@ export function DeliveryUploadClient({
                     {short
                       ? t("photoCounterShort", { count: dp, required: requiredPhotos, remaining: requiredPhotos - dp })
                       : t("photoCounterOk", { count: dp, required: requiredPhotos })}
+                    {willFlipIds.size > 0 && (
+                      <span className="block mt-0.5 text-amber-700">
+                        {t("extrasPreviewHint", { included: requiredPhotos, extras: willFlipIds.size })}
+                      </span>
+                    )}
                   </p>
                 );
               })()}
@@ -1071,6 +1089,11 @@ export function DeliveryUploadClient({
               {photo.is_included === false && (
                 <span className="absolute right-2 top-2 z-10 rounded-md bg-gray-900/75 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                   {t("notIncludedBadge")}
+                </span>
+              )}
+              {willFlipIds.has(photo.id) && (
+                <span className="absolute right-2 top-2 z-10 rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {t("willBecomeExtra")}
                 </span>
               )}
               <img

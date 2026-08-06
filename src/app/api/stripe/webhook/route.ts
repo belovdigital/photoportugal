@@ -534,7 +534,7 @@ export async function POST(req: NextRequest) {
               `UPDATE delivery_extra_purchases dep
                   SET status = 'paid', paid_at = NOW(),
                       stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id)
-                WHERE dep.order_id = $1 AND dep.status = 'pending'
+                WHERE dep.order_id = $1 AND dep.status IN ('pending', 'superseded')
                   AND NOT EXISTS (
                     SELECT 1 FROM delivery_extra_purchases prev
                      WHERE prev.delivery_photo_id = dep.delivery_photo_id
@@ -547,7 +547,7 @@ export async function POST(req: NextRequest) {
             // Anything skipped was paid for twice. Refunding needs a human, so
             // say so loudly rather than leaving it in a table nobody reads.
             const skipped = await query<{ delivery_photo_id: string }>(
-              "SELECT delivery_photo_id FROM delivery_extra_purchases WHERE order_id = $1 AND status = 'pending'",
+              "SELECT delivery_photo_id FROM delivery_extra_purchases WHERE order_id = $1 AND status IN ('pending', 'superseded')",
               [orderId]
             );
             if (skipped.length > 0) {

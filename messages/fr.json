@@ -3259,7 +3259,9 @@
     "extrasError": "Impossible de démarrer l'achat",
     "extrasLockedHint": "Photos supplémentaires de votre séance — touchez pour ajouter",
     "extrasDownload": "Télécharger vos {count} photos supplémentaires",
-    "extrasZipPreparing": "Préparation de vos photos supplémentaires…"
+    "extrasZipPreparing": "Préparation de vos photos supplémentaires…",
+    "willBecomeExtra": "Extra à l'envoi",
+    "extrasPreviewHint": "Les {included} premières restent dans la livraison — {extras} seront proposées au client comme extras payants. Utilisez Sélectionner → Retenir pour en choisir d'autres."
   },
   "availability": {
     "pageTitle": "Disponibilités",

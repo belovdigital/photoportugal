@@ -2822,7 +2822,9 @@
     "extrasError": "Não foi possível iniciar a compra",
     "extrasLockedHint": "Fotografias extra da sua sessão — toque para adicionar",
     "extrasDownload": "Descarregar as suas {count} fotografias extra",
-    "extrasZipPreparing": "A preparar as suas fotografias extra…"
+    "extrasZipPreparing": "A preparar as suas fotografias extra…",
+    "willBecomeExtra": "Extra ao entregar",
+    "extrasPreviewHint": "As primeiras {included} ficam na entrega — {extras} serão propostas ao cliente como extras pagos. Use Selecionar → Reter para escolher outras."
   },
   "availability": {
     "pageTitle": "Disponibilidade",
