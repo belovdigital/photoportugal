@@ -3105,7 +3105,10 @@
     "takeAllPaid": "All {count} go into your basket for {total}. Nothing is charged until you press Buy.",
     "takeAllConfirm": "Yes, take them",
     "swapShort": "Swap",
-    "extrasSomeGone": "{count, plural, one {# photo is no longer available} other {# photos are no longer available}} — your gallery has been refreshed. Please choose again."
+    "extrasSomeGone": "{count, plural, one {# photo is no longer available} other {# photos are no longer available}} — your gallery has been refreshed. Please choose again.",
+    "swapNotOwned": "That photo is already yours — swap onto one from your package instead.",
+    "swapNotVideo": "Videos are always included and cannot be swapped.",
+    "yoursBadge": "Free gift"
   },
   "availability": {
     "pageTitle": "Availability",

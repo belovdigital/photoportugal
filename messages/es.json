@@ -3353,7 +3353,10 @@
     "takeAllPaid": "Las {count} van a la cesta por {total}. No se cobra nada hasta que pulses Comprar.",
     "takeAllConfirm": "Sí, quiero",
     "swapShort": "Cambiar",
-    "extrasSomeGone": "{count, plural, one {# foto ya no está disponible} other {# fotos ya no están disponibles}} — tu galería se ha actualizado. Elige de nuevo."
+    "extrasSomeGone": "{count, plural, one {# foto ya no está disponible} other {# fotos ya no están disponibles}} — tu galería se ha actualizado. Elige de nuevo.",
+    "swapNotOwned": "Esa foto ya es tuya — cámbiala por una de tu paquete.",
+    "swapNotVideo": "Los vídeos siempre están incluidos y no se pueden cambiar.",
+    "yoursBadge": "Regalo"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

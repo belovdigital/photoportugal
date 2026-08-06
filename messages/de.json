@@ -3106,7 +3106,10 @@
     "takeAllPaid": "Alle {count} landen für {total} im Warenkorb. Berechnet wird erst, wenn Sie auf Kaufen tippen.",
     "takeAllConfirm": "Ja, nehmen",
     "swapShort": "Tauschen",
-    "extrasSomeGone": "{count, plural, one {# Foto ist nicht mehr verfügbar} other {# Fotos sind nicht mehr verfügbar}} — Ihre Galerie wurde aktualisiert. Bitte erneut wählen."
+    "extrasSomeGone": "{count, plural, one {# Foto ist nicht mehr verfügbar} other {# Fotos sind nicht mehr verfügbar}} — Ihre Galerie wurde aktualisiert. Bitte erneut wählen.",
+    "swapNotOwned": "Dieses Foto gehört Ihnen bereits — tauschen Sie stattdessen gegen eines aus Ihrem Paket.",
+    "swapNotVideo": "Videos sind immer enthalten und lassen sich nicht tauschen.",
+    "yoursBadge": "Geschenk"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

@@ -107,6 +107,14 @@ export function DeliveryGalleryClient({
   const [swapFor, setSwapFor] = useState<string | null>(null);
   const [swapping, setSwapping] = useState(false);
   const [dragging, setDragging] = useState<Photo | null>(null);
+  // A refused drop has to say so. Silence reads as a broken feature.
+  const [flashMsg, setFlashMsg] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function flash(msg: string) {
+    setFlashMsg(msg);
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setFlashMsg(null), 3500);
+  }
 
   // Nothing moves once the delivery is accepted: the archive is written and the
   // photographer has been paid. Buying more still works — that is a purchase,
@@ -149,7 +157,11 @@ export function DeliveryGalleryClient({
       // Across the divide is an exchange, and the tile you drop ON is the one
       // that trades places. A photo already owned never moves: swapping one in
       // would free a slot that was paid for.
-      if (a.purchased || b.purchased || a.media_type === "video" || b.media_type === "video") return;
+      //
+      // This is most of the "yours" pile once a gift has been taken — 10 of 15
+      // on a live gallery — so refusing in silence made dragging look broken.
+      if (a.purchased || b.purchased) { flash(t("swapNotOwned")); return; }
+      if (a.media_type === "video" || b.media_type === "video") { flash(t("swapNotVideo")); return; }
       const inId = from === "offer" ? activeId : overId;
       const outId = from === "offer" ? overId : activeId;
       await onSwap?.(inId, outId);
@@ -291,6 +303,11 @@ export function DeliveryGalleryClient({
         />
         {/* Dragging is not obvious and is fiddly on a phone, so the exchange
             also has a button you can see. Same picker as the lightbox. */}
+        {!locked && photo.purchased && (
+          <span className="absolute right-1.5 top-1.5 z-20 rounded-md bg-green-600/90 px-2 py-1 text-[10px] font-bold text-white shadow">
+            {t("yoursBadge")}
+          </span>
+        )}
         {locked && canRearrange && (
           <button
             type="button"
@@ -381,6 +398,13 @@ export function DeliveryGalleryClient({
           per breakpoint. CSS `columns-N` was broken on Safari — it
           collapsed to 1 column whenever images lazy-loaded. Flex columns
           are rock solid. */}
+      {flashMsg && (
+        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
+          <p className="max-w-md rounded-xl bg-gray-900 px-4 py-3 text-center text-sm font-medium text-white shadow-2xl">
+            {flashMsg}
+          </p>
+        </div>
+      )}
       {split ? (
         <DndContext
           sensors={dndSensors}
