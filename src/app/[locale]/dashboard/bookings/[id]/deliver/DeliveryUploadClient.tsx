@@ -1207,6 +1207,14 @@ export function DeliveryUploadClient({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-accent-700 text-sm">{t("photosDelivered")}</p>
+                  {/* The card announced the send and said nothing about the
+                      other pile, which is where the photographer's next euro
+                      comes from. */}
+                  {extraPhotos.filter((p) => p.media_type !== "video").length > 0 && (
+                    <p className="mt-0.5 text-xs font-semibold text-amber-700">
+                      {t("deliveredExtrasOnSale", { count: extraPhotos.filter((p) => p.media_type !== "video").length })}
+                    </p>
+                  )}
                   {canEdit && (
                     <p className="mt-0.5 text-xs text-accent-700/80">{t("canStillEditUntilAccepted")}</p>
                   )}

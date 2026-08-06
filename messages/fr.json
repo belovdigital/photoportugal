@@ -3199,7 +3199,7 @@
     "removePhoto": "Retirer cette photo ?",
     "deletePhotos": "Supprimer {count} photo(s) ?",
     "photosDelivered": "Photos livrées !",
-    "canStillEditUntilAccepted": "Vous pouvez toujours ajouter, supprimer ou remplacer des photos jusqu'à ce que le client accepte la livraison.",
+    "canStillEditUntilAccepted": "Vous pouvez encore ajouter, retirer ou remplacer des photos jusqu'à l'acceptation. Votre client peut aussi échanger une photo de son forfait contre une des supplémentaires.",
     "clientNotified": "Votre client a été notifié par e-mail.",
     "deliveryLink": "Lien de livraison (à partager avec le client)",
     "copied": "Copié !",
@@ -3337,9 +3337,12 @@
     "extraPickFree": "Ajouter gratuit",
     "sectionYours": "{count, plural, one {# photo est à vous} other {# photos sont à vous}}",
     "sectionOnOffer": "{count, plural, one {# de plus à ajouter} other {# de plus à ajouter}}",
-    "sectionYoursHint": "Déjà dans votre galerie — rien à payer.",
-    "sectionOnOfferFree": "{count, plural, one {Votre photographe vous en offre #. Touchez Ajouter gratuit.} other {Votre photographe vous en offre #. Touchez Ajouter gratuit sur celles que vous voulez.}}",
-    "sectionOnOfferPaid": "2,90 € pièce. Touchez Ajouter sur celles que vous voulez, puis Acheter en bas."
+    "sectionYoursHint": "Déjà à vous — rien à payer. Vous préférez une autre ? Ouvrez une photo dans Supplémentaires et choisissez « Prendre celle-ci à la place ».",
+    "sectionOnOfferFree": "{count, plural, one {Votre photographe vous en offre #. Touchez Ajouter gratuit — ou échangez-la contre une autre de votre forfait.} other {Votre photographe vous en offre #. Touchez Ajouter gratuit sur celles que vous voulez — ou échangez-en une contre une autre de votre forfait.}}",
+    "sectionOnOfferPaid": "2,90 € pièce. Touchez Ajouter sur celles que vous voulez, puis Acheter en bas — ou ouvrez-en une et échangez-la gratuitement contre une de votre forfait qui vous plaît moins.",
+    "swapInstead": "Prendre celle-ci à la place",
+    "swapPickOut": "Laquelle remplace-t-elle ? Touchez-la.",
+    "deliveredExtrasOnSale": "{count, plural, one {# photo supplémentaire est proposée à 2,90 € — vous recevez 2,00 € si elle se vend.} other {# photos supplémentaires sont proposées à 2,90 € pièce — vous recevez 2,00 € par vente.}}"
   },
   "availability": {
     "pageTitle": "Disponibilités",

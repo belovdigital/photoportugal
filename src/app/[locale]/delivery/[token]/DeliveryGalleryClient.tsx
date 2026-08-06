@@ -28,6 +28,9 @@ interface Photo {
   /** Shot, but not part of this delivery and not bought — for sale. Carries
    *  the watermarked file only; the server never puts an original in it. */
   locked?: boolean;
+  /** Already the client's — bought or gifted. Never swappable in either
+   *  direction: it would free a slot they had paid to fill. */
+  purchased?: boolean;
 }
 
 function formatDuration(s: number | null | undefined): string {
@@ -42,18 +45,23 @@ export function DeliveryGalleryClient({
   deliveryAccepted,
   selectedExtras,
   onToggleExtra,
+  onSwap,
   giftLeft = 0,
 }: {
   photos: Photo[];
   deliveryAccepted: boolean;
   selectedExtras?: Set<string>;
   onToggleExtra?: (id: string) => void;
+  /** Exchange a locked photo for one currently in the package. */
+  onSwap?: (inId: string, outId: string) => Promise<void>;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
 }) {
   const t = useTranslations("delivery");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [swapFor, setSwapFor] = useState<string | null>(null);
+  const [swapping, setSwapping] = useState(false);
 
   function openLightbox(index: number) {
     setLightboxIndex(index);
@@ -296,20 +304,60 @@ export function DeliveryGalleryClient({
         >
           {/* Deciding happens at full size, so the choice lives here too. */}
           {photos[lightboxIndex].locked && onToggleExtra && (
-            <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center px-4" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => onToggleExtra(photos[lightboxIndex!].id)}
-                className={`rounded-2xl px-8 py-4 text-base font-bold shadow-2xl transition ${
-                  selectedExtras?.has(photos[lightboxIndex].id)
-                    ? "bg-green-600 text-white"
-                    : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white text-gray-900"
-                }`}
-              >
-                {selectedExtras?.has(photos[lightboxIndex].id)
-                  ? `✓ ${t("extraPicked")}`
-                  : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")} · €2.90`}
-              </button>
+            <div className="absolute inset-x-0 bottom-6 z-10 px-4" onClick={(e) => e.stopPropagation()}>
+              {swapFor === photos[lightboxIndex].id ? (
+                <div className="mx-auto max-w-3xl rounded-2xl bg-gray-900/95 p-4 shadow-2xl">
+                  <p className="mb-3 text-center text-sm font-semibold text-white">{t("swapPickOut")}</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {photos.filter((p) => !p.locked && !p.purchased && p.media_type !== "video").map((cand) => (
+                      <button
+                        key={cand.id}
+                        type="button"
+                        disabled={swapping}
+                        onClick={async () => {
+                          setSwapping(true);
+                          try { await onSwap?.(photos[lightboxIndex!].id, cand.id); setSwapFor(null); closeLightbox(); }
+                          finally { setSwapping(false); }
+                        }}
+                        className="h-20 w-20 shrink-0 overflow-hidden rounded-lg ring-2 ring-transparent transition hover:ring-white disabled:opacity-40"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cand.thumbnail_url || cand.preview_url || cand.url} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                  <button type="button" onClick={() => setSwapFor(null)} className="mt-3 w-full text-xs font-medium text-gray-300 hover:text-white">
+                    {t("cancel")}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onToggleExtra(photos[lightboxIndex!].id)}
+                    className={`rounded-2xl px-8 py-4 text-base font-bold shadow-2xl transition ${
+                      selectedExtras?.has(photos[lightboxIndex].id)
+                        ? "bg-green-600 text-white"
+                        : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white text-gray-900"
+                    }`}
+                  >
+                    {selectedExtras?.has(photos[lightboxIndex].id)
+                      ? `✓ ${t("extraPicked")}`
+                      : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")} · €2.90`}
+                  </button>
+                  {/* Free, and the reason the package count is the photographer's
+                      to set but the choice of frames is not. */}
+                  {onSwap && (
+                    <button
+                      type="button"
+                      onClick={() => setSwapFor(photos[lightboxIndex!].id)}
+                      className="rounded-2xl bg-gray-900/90 px-6 py-4 text-base font-bold text-white shadow-2xl ring-1 ring-white/20 transition hover:bg-gray-800"
+                    >
+                      ⇄ {t("swapInstead")}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

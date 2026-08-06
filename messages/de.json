@@ -2952,7 +2952,7 @@
     "removePhoto": "Dieses Foto entfernen?",
     "deletePhotos": "{count} Foto(s) löschen?",
     "photosDelivered": "Fotos übermittelt!",
-    "canStillEditUntilAccepted": "Sie können Fotos hinzufügen, entfernen oder ersetzen, bis der Kunde die Übermittlung akzeptiert.",
+    "canStillEditUntilAccepted": "Sie können Fotos hinzufügen, entfernen oder ersetzen, bis die Kundschaft abnimmt. Sie kann außerdem ein Foto im Paket gegen eines der zusätzlichen tauschen.",
     "clientNotified": "Ihr Kunde wurde per E-Mail benachrichtigt.",
     "deliveryLink": "Übermittlungslink (mit Kunde teilen)",
     "copied": "Kopiert!",
@@ -3090,9 +3090,12 @@
     "extraPickFree": "Gratis dazu",
     "sectionYours": "{count, plural, one {# Foto gehört Ihnen} other {# Fotos gehören Ihnen}}",
     "sectionOnOffer": "{count, plural, one {# weiteres zur Auswahl} other {# weitere zur Auswahl}}",
-    "sectionYoursHint": "Schon in Ihrer Galerie — nichts zu zahlen.",
-    "sectionOnOfferFree": "{count, plural, one {Ihr Fotograf schenkt Ihnen # davon. Auf Gratis dazu tippen.} other {Ihr Fotograf schenkt Ihnen # davon. Tippen Sie bei den gewünschten auf Gratis dazu.}}",
-    "sectionOnOfferPaid": "Je 2,90 €. Bei den gewünschten auf Dazu tippen, dann unten Kaufen."
+    "sectionYoursHint": "Gehören schon Ihnen — nichts zu zahlen. Lieber ein anderes Bild? Öffnen Sie ein Foto unter Zusätzliche und wählen Sie «Diese stattdessen nehmen».",
+    "sectionOnOfferFree": "{count, plural, one {Ihr Fotograf schenkt Ihnen # davon. Auf Gratis dazu tippen — oder eines gegen ein anderes aus Ihrem Paket tauschen.} other {Ihr Fotograf schenkt Ihnen # davon. Tippen Sie bei den gewünschten auf Gratis dazu — oder tauschen Sie eines gegen ein anderes aus Ihrem Paket.}}",
+    "sectionOnOfferPaid": "Je 2,90 €. Bei den gewünschten auf Dazu tippen, dann unten Kaufen — oder ein Foto öffnen und gratis gegen eines aus Ihrem Paket tauschen, das Ihnen weniger gefällt.",
+    "swapInstead": "Diese stattdessen nehmen",
+    "swapPickOut": "Welches soll sie ersetzen? Antippen.",
+    "deliveredExtrasOnSale": "{count, plural, one {# zusätzliches Foto steht für 2,90 € im Angebot — Sie erhalten 2,00 € bei Verkauf.} other {# zusätzliche Fotos stehen für je 2,90 € im Angebot — Sie erhalten 2,00 € pro Verkauf.}}"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

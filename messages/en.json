@@ -2958,7 +2958,7 @@
     "removePhoto": "Remove this photo?",
     "deletePhotos": "Delete {count} photo(s)?",
     "photosDelivered": "Photos delivered!",
-    "canStillEditUntilAccepted": "You can still add, remove or replace photos until the client accepts the delivery.",
+    "canStillEditUntilAccepted": "You can still add, remove or replace photos until the client accepts. Your client can also swap a photo in their package for one of the extras.",
     "clientNotified": "Your client has been notified by email.",
     "deliveryLink": "Delivery link (share with client)",
     "copied": "Copied!",
@@ -3084,9 +3084,12 @@
     "extraPickFree": "Add free",
     "sectionYours": "{count, plural, one {# photo is yours} other {# photos are yours}}",
     "sectionOnOffer": "{count, plural, one {# more you can add} other {# more you can add}}",
-    "sectionYoursHint": "Already in your gallery — nothing to pay.",
-    "sectionOnOfferFree": "{count, plural, one {Your photographer is giving you # of these, free. Tap Add free.} other {Your photographer is giving you # of these, free. Tap Add free on the ones you want.}}",
-    "sectionOnOfferPaid": "€2.90 each. Tap Add on the ones you want, then Buy at the bottom."
+    "sectionYoursHint": "Yours already — nothing to pay. Prefer a different shot? Open any photo below in Extra and choose «Take this one instead».",
+    "sectionOnOfferFree": "{count, plural, one {Your photographer is giving you # of these, free. Tap Add free — or swap one into your package in place of another.} other {Your photographer is giving you # of these, free. Tap Add free on the ones you want — or swap one into your package in place of another.}}",
+    "sectionOnOfferPaid": "€2.90 each. Tap Add on the ones you want, then Buy at the bottom — or open one and swap it into your package for free, in place of one you like less.",
+    "swapInstead": "Take this one instead",
+    "swapPickOut": "Which one should it replace? Tap it.",
+    "deliveredExtrasOnSale": "{count, plural, one {# extra photo is on offer at €2.90 — you get €2.00 if it sells.} other {# extra photos are on offer at €2.90 each — you get €2.00 on each one sold.}}"
   },
   "availability": {
     "pageTitle": "Availability",

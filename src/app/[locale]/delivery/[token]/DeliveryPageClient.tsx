@@ -165,6 +165,30 @@ export function DeliveryPageClient({
     }
   }
 
+  // The photographer sets HOW MANY photos the package holds; the client picks
+  // WHICH. The server does it as one count-preserving swap, so nothing here
+  // needs to reason about the promise — it just re-reads the result.
+  async function swapPhoto(inId: string, outId: string) {
+    const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+    try {
+      const res = await fetch(`/api/delivery/${token}/swap`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ in: inId, out: outId, password: pw }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(data?.error || t("extrasError")); return; }
+      const again = await fetch(`/api/delivery/${token}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (again.ok) setGallery(await again.json());
+    } catch {
+      alert(t("extrasError"));
+    }
+  }
+
   async function buyExtras() {
     if (selectedExtras.size === 0 || buyingExtras) return;
     setBuyingExtras(true);
@@ -633,20 +657,22 @@ export function DeliveryPageClient({
         deliveryAccepted={accepted}
         selectedExtras={selectedExtras}
         onToggleExtra={toggleExtra}
+        onSwap={swapPhoto}
         giftLeft={gallery?.gift_remaining ?? 0}
       />
 
       {/* Extras basket — only exists when the photographer held something back */}
       {selectedExtras.size > 0 && (
-        /* Over a wall of photographs a pale card with a soft shadow simply
-           disappeared. Heavier glass, a real border and a deep shadow so it
-           reads as a layer above the page rather than another tile. */
-        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-white/60 bg-white/80 px-5 py-4 shadow-[0_8px_40px_rgba(0,0,0,0.28)] ring-1 ring-black/10 backdrop-blur-xl backdrop-saturate-150">
+        /* Glass does not work here. The background is a wall of photographs in
+           every colour, so anything translucent and pale takes on whatever is
+           behind it and disappears. Solid near-black with light text is the
+           one treatment nothing in a photo grid can camouflage. */
+        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl bg-gray-900 px-5 py-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] ring-1 ring-white/10">
           <div>
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-bold text-white">
               {t("extrasSelected", { count: selectedExtras.size })}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-300">
               {(() => {
                 const free = Math.min(selectedExtras.size, gallery.gift_remaining ?? 0);
                 const paid = selectedExtras.size - free;
@@ -659,7 +685,7 @@ export function DeliveryPageClient({
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setSelectedExtras(new Set()); try { sessionStorage.removeItem(extrasKey); } catch {} }}
-              className="text-xs font-medium text-gray-500 hover:text-gray-700"
+              className="text-xs font-medium text-gray-300 hover:text-white"
             >
               {t("extrasClear")}
             </button>
