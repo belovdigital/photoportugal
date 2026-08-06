@@ -3,6 +3,46 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
+  DragOverlay, useDroppable, type DragStartEvent, type DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// Same library and the same sensors as the portfolio grid, so dragging feels
+// identical in both places — and TouchSensor is why this works on a phone at
+// all: HTML5 drag events never fire there.
+function SortableTile({ id, disabled, children }: {
+  id: string; disabled?: boolean;
+  children: (h: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 50 : undefined,
+      }}
+    >
+      {children({ listeners: (listeners || {}) as Record<string, unknown>, attributes: attributes as unknown as Record<string, unknown> })}
+    </div>
+  );
+}
+
+// A pile is a drop target in its own right, otherwise an empty Extra photos
+// section is impossible to drop into — exactly the state a photographer starts from.
+function PileDropZone({ id, children, className }: { id: string; children: React.ReactNode; className: string }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div ref={setNodeRef} className={`${className} ${isOver ? "rounded-xl ring-2 ring-accent-400" : ""}`}>
+      {children}
+    </div>
+  );
+}
 
 interface Photo {
   id: string;
@@ -72,6 +112,7 @@ export function DeliveryUploadClient({
   const GRID_BATCH = 60;
   const [visibleCount, setVisibleCount] = useState(GRID_BATCH);
   const gridSentinelRef = useRef<HTMLDivElement>(null);
+  const sendPanelRef = useRef<HTMLDivElement>(null);
   const prevPhotoCountRef = useRef(initialPhotos.length);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
@@ -79,8 +120,8 @@ export function DeliveryUploadClient({
   const [giftSlots, setGiftSlots] = useState(initialGiftSlots);
   const [giftDraft, setGiftDraft] = useState(String(initialGiftSlots ?? 0));
   const [giftSaving, setGiftSaving] = useState(false);
-  const [messageOpen, setMessageOpen] = useState(false);
   const [bulkMoving, setBulkMoving] = useState(false);
+  const [sendPanelVisible, setSendPanelVisible] = useState(true);
 
   // canEdit: photographer can edit the deliverable up until the client
   // formally accepts. Sharing the link doesn't lock anything — the client
@@ -95,6 +136,14 @@ export function DeliveryUploadClient({
     if (photos.length > prevPhotoCountRef.current) setVisibleCount(photos.length);
     prevPhotoCountRef.current = photos.length;
   }, [photos.length]);
+
+  useEffect(() => {
+    const el = sendPanelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setSendPanelVisible(e.isIntersecting), { rootMargin: "-40px 0px 0px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [photos.length, delivered]);
 
   useEffect(() => {
     if (visibleCount >= photos.length) return;
@@ -254,6 +303,121 @@ export function DeliveryUploadClient({
     ? includedPhotos.filter((p) => p.media_type !== "video" && !p.purchased_at).slice(requiredPhotos).map((p) => p.id)
     : [];
 
+  // Dragging: within a pile it reorders, across piles it also changes what the
+  // client gets. The global order IS the two piles concatenated, which keeps
+  // the server's first-N trim agreeing with what the photographer sees.
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+  );
+  const canDrag = canEdit && !selectMode;
+  const [dragging, setDragging] = useState<Photo | null>(null);
+
+  function pileOf(id: string): "delivery" | "extras" | null {
+    if (id === "delivery" || id === "extras") return id;
+    const ph = photos.find((p) => p.id === id);
+    if (!ph) return null;
+    return ph.is_included === false ? "extras" : "delivery";
+  }
+
+  async function persistOrder(ordered: Photo[], flipped?: { id: string; included: boolean }) {
+    const before = photos;
+    setPhotos(ordered);
+    try {
+      if (flipped) {
+        const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "set_included", photo_ids: [flipped.id], included: flipped.included }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setPhotos(before);
+          alert(data?.error || t("includeFailed"));
+          return;
+        }
+      }
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_order", photo_ids: ordered.map((p) => p.id) }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setPhotos(before);
+        alert(data?.error || t("includeFailed"));
+      }
+    } catch {
+      setPhotos(before);
+      alert(t("includeFailed"));
+    }
+  }
+
+  function handleDragStart(e: DragStartEvent) {
+    setDragging(photos.find((p) => p.id === String(e.active.id)) || null);
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    setDragging(null);
+    const activeId = String(e.active.id);
+    if (!e.over) return;
+    const overId = String(e.over.id);
+    if (activeId === overId) return;
+
+    const from = pileOf(activeId);
+    const to = pileOf(overId);
+    if (!from || !to) return;
+
+    const moved = photos.find((p) => p.id === activeId);
+    if (!moved) return;
+    // Videos ride with the delivery and are never sold; a sold photo is the
+    // client's and cannot be pulled back out.
+    if (from !== to && (moved.media_type === "video" || moved.purchased_at)) return;
+
+    let included = includedPhotos.slice();
+    let extras = extraPhotos.slice();
+
+    if (from === to) {
+      const list = from === "delivery" ? included : extras;
+      const oldIdx = list.findIndex((p) => p.id === activeId);
+      const newIdx = overId === from ? list.length - 1 : list.findIndex((p) => p.id === overId);
+      if (oldIdx < 0 || newIdx < 0 || oldIdx === newIdx) return;
+      const next = arrayMove(list, oldIdx, newIdx);
+      if (from === "delivery") included = next; else extras = next;
+      void persistOrder([...included, ...extras]);
+      return;
+    }
+
+    const src = from === "delivery" ? included : extras;
+    const dst = to === "delivery" ? included : extras;
+    const oldIdx = src.findIndex((p) => p.id === activeId);
+    if (oldIdx < 0) return;
+    const [taken] = src.splice(oldIdx, 1);
+    const flipped = { ...taken, is_included: to === "delivery" };
+    const at = overId === to ? dst.length : Math.max(0, dst.findIndex((p) => p.id === overId));
+    dst.splice(at, 0, flipped);
+    void persistOrder([...included, ...extras], { id: activeId, included: to === "delivery" });
+  }
+
+  const shareBlocked = sharing || photos.length === 0 || galleryPassword.trim().length < 4
+    || (requiredPhotos > 0 && (includedPhotoCount < requiredPhotos || overBy > 0));
+
+  const shareLabel = (() => {
+    if (sharing) return t("sharing");
+    const videoCnt = photos.filter((p) => p.media_type === "video").length;
+    if (videoCnt === 0) return t("sharePhotos", { count: includedPhotoCount });
+    if (includedPhotoCount === 0) return t("shareVideos", { count: videoCnt });
+    return t("sharePhotosAndVideos", { photos: includedPhotoCount, videos: videoCnt });
+  })();
+
+  const counterLine = requiredPhotos > 0 ? (
+    <p className={`text-xs ${overBy > 0 ? "font-semibold text-red-600" : includedPhotoCount < requiredPhotos ? "font-medium text-amber-700" : "text-gray-500"}`}>
+      {overBy > 0
+        ? t("photoCounterOver", { count: includedPhotoCount, required: requiredPhotos, over: overBy })
+        : includedPhotoCount < requiredPhotos
+          ? t("photoCounterShort", { count: includedPhotoCount, required: requiredPhotos, remaining: requiredPhotos - includedPhotoCount })
+          : t("photoCounterOk", { count: includedPhotoCount, required: requiredPhotos })}
+    </p>
+  ) : null;
+
   async function moveSurplusToExtras() {
     if (surplusIds.length === 0 || bulkMoving) return;
     setBulkMoving(true);
@@ -300,7 +464,7 @@ export function DeliveryUploadClient({
     }
   }
 
-  function renderTile(photo: Photo) {
+  function renderTile(photo: Photo, dragHandle?: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) {
     const isVideo = photo.media_type === "video";
     // For videos use the ffmpeg-extracted poster; for photos the
     // url IS already an image (presigned). Falling back to url for
@@ -312,13 +476,15 @@ export function DeliveryUploadClient({
     return (
     <div
       key={photo.id}
-      className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
+      className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : dragHandle ? "cursor-grab active:cursor-grabbing" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
       onClick={selectMode ? (e) => toggleSelect(photo.id, e.shiftKey) : undefined}
+      {...(dragHandle ? { ...dragHandle.attributes, ...dragHandle.listeners } : {})}
     >
       {showSplit && !selectMode && !clientAccepted && photo.media_type !== "video" && !photo.purchased_at && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); moveOne(photo.id, photo.is_included === false); }}
+          onPointerDown={(e) => e.stopPropagation()}
           /* Always visible on touch — there is no hover on a phone, and a
              control you cannot discover is the same as no control. */
           className="absolute inset-x-1 bottom-1 z-20 rounded-md bg-white/95 py-1.5 text-[11px] font-semibold text-gray-800 shadow transition md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
@@ -1024,9 +1190,10 @@ export function DeliveryUploadClient({
       )}
 
 
-      {/* Two piles, tap to move. Nothing to read, nothing to switch on. */}
+      {/* Two piles: drag to reorder, drag across to change what the client gets.
+          The tap-to-move button stays for anyone who would rather not drag. */}
       {photos.length > 0 && showSplit && (
-        <>
+        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className={`mt-6 flex flex-wrap items-baseline justify-between gap-2 border-b-2 pb-2 ${overBy > 0 ? "border-red-300" : "border-accent-200"}`}>
             <h3 className={`text-base font-bold ${overBy > 0 ? "text-red-700" : "text-gray-900"}`}>
               {overBy > 0 ? "⚠" : "✓"} {t("sectionIncluded", { count: includedPhotoCount })}
@@ -1051,22 +1218,43 @@ export function DeliveryUploadClient({
               </button>
             </div>
           )}
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {includedPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
-          </div>
+          <SortableContext items={includedPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
+            <PileDropZone id="delivery" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {includedPhotos.slice(0, visibleCount).map((photo) => (
+                <SortableTile key={photo.id} id={photo.id} disabled={!canDrag}>
+                  {(h) => renderTile(photo, canDrag ? h : undefined)}
+                </SortableTile>
+              ))}
+            </PileDropZone>
+          </SortableContext>
 
           <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
             <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
             <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
           </div>
-          {extraPhotos.length === 0 ? (
-            <p className="mt-3 rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
-          ) : (
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {extraPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
-            </div>
-          )}
-        </>
+          <SortableContext items={extraPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
+            <PileDropZone id="extras" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {extraPhotos.length === 0 ? (
+                <p className="col-span-full rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
+              ) : (
+                extraPhotos.slice(0, visibleCount).map((photo) => (
+                  <SortableTile key={photo.id} id={photo.id} disabled={!canDrag}>
+                    {(h) => renderTile(photo, canDrag ? h : undefined)}
+                  </SortableTile>
+                ))
+              )}
+            </PileDropZone>
+          </SortableContext>
+
+          <DragOverlay>
+            {dragging && (
+              <div className="aspect-square w-32 overflow-hidden rounded-lg border-2 border-accent-400 shadow-2xl ring-4 ring-accent-200/50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={dragging.thumbnail_url || dragging.url} alt="" className="h-full w-full object-cover" />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
       )}
 
       {photos.length > 0 && !showSplit && (
@@ -1075,7 +1263,7 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Peek, message and gift — the arranging tools. */}
+      {/* Peek and gift — the arranging tools. Sending lives in its own panel. */}
       {photos.length > 0 && (
         <div className="mt-4">
           {delivered ? (
@@ -1164,70 +1352,8 @@ export function DeliveryUploadClient({
                 </div>
               );
             })()}
-          {/* Optional, and it was sitting at the very top of the page — before
-              a single photo had been uploaded and a full screen away from the
-              button that sends it. Now it is one line next to Share. */}
-          <div className="mb-3 rounded-xl border border-warm-200 bg-white">
-            <button
-              type="button"
-              onClick={() => setMessageOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
-            >
-              <span className="min-w-0 truncate text-sm text-gray-700">
-                <span className="font-semibold text-gray-900">{t("messageHeading")}</span>
-                {deliveryTitle.trim() && <span className="ml-2 text-gray-500">{deliveryTitle}</span>}
-              </span>
-              <span className="shrink-0 text-xs text-gray-400">
-                {savingMessage ? t("messageSaving") : messageSaved ? t("messageSaved") : (messageOpen ? "▴" : "▾")}
-              </span>
-            </button>
-            {messageOpen && (
-              <div className="border-t border-warm-200 px-4 pb-4">
-            <input
-            type="text"
-            // This is a free-text gallery title, NOT a contact field — but the
-            // browser's email/name autofill kept dropping a saved address (e.g.
-            // "info@photoportugal.com") into it. Disable autofill + password
-            // managers so photographers only ever see what they typed.
-            autoComplete="off"
-            autoCorrect="off"
-            data-1p-ignore
-            data-lpignore="true"
-            name="delivery-gallery-title"
-            value={deliveryTitle}
-            onChange={(e) => {
-            setDeliveryTitle(e.target.value);
-            scheduleSaveMessage(e.target.value, deliveryMessage);
-            }}
-            placeholder={t("titlePlaceholder")}
-            maxLength={200}
-            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            />
-            <p className="mt-1.5 text-[11px] leading-snug text-gray-400">{t("titleHelp")}</p>
-            <textarea
-            autoComplete="off"
-            data-1p-ignore
-            data-lpignore="true"
-            name="delivery-gallery-message"
-            value={deliveryMessage}
-            onChange={(e) => {
-            setDeliveryMessage(e.target.value);
-            scheduleSaveMessage(deliveryTitle, e.target.value);
-            }}
-            placeholder={t("messagePlaceholder")}
-            maxLength={1500}
-            rows={4}
-            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            />
-            <div className="mt-1.5 flex items-start justify-between gap-3">
-            <p className="text-[11px] leading-snug text-gray-400">{t("messageHelp")}</p>
-            <p className="shrink-0 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
-            </div>
-              </div>
-            )}
-          </div>
             {(showSplit || giftSlots > 0) && !clientAccepted && (
-              <div className="mt-3 w-full rounded-xl border border-accent-200 bg-accent-50 p-4">
+              <div className="mt-6 w-full rounded-xl border border-accent-200 bg-accent-50 p-4">
                 <p className="text-sm font-bold text-accent-900">🎁 {t("giftTitle")}</p>
                 <p className="mt-1 text-sm text-accent-800">{t("giftBody")}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -1290,51 +1416,95 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Send — the last step, pinned to the bottom of the screen so a
-          500-photo delivery never puts it several screens below the fold. */}
+      {/* Send — one panel: what you say, the password, and the button. It used
+          to be three separate cards touching each other, and the note to the
+          client sat at the top of the page before a photo even existed. */}
       {photos.length > 0 && !delivered && (
-        <div className="sticky bottom-0 z-30 pb-2">
-          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-warm-300 bg-warm-50/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-warm-50/80">
-            <div className="flex-1 min-w-[200px]">
-              <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">
-                {t("galleryPassword")}
-              </label>
+        <div ref={sendPanelRef} className="mt-8 rounded-2xl border-2 border-accent-200 bg-white p-5 shadow-sm">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="text-base font-bold text-gray-900">{t("messageHeading")}</h3>
+            <span className="text-xs text-gray-400">
+              {savingMessage ? t("messageSaving") : messageSaved ? t("messageSaved") : ""}
+            </span>
+          </div>
+
+          <input
+            type="text"
+            // Free-text gallery title, NOT a contact field — browser autofill
+            // kept dropping a saved address into it.
+            autoComplete="off"
+            autoCorrect="off"
+            data-1p-ignore
+            data-lpignore="true"
+            name="delivery-gallery-title"
+            value={deliveryTitle}
+            onChange={(e) => { setDeliveryTitle(e.target.value); scheduleSaveMessage(e.target.value, deliveryMessage); }}
+            placeholder={t("titlePlaceholder")}
+            maxLength={200}
+            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          />
+          <p className="mt-1.5 text-[11px] leading-snug text-gray-400">{t("titleHelp")}</p>
+
+          <textarea
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
+            name="delivery-gallery-message"
+            value={deliveryMessage}
+            onChange={(e) => { setDeliveryMessage(e.target.value); scheduleSaveMessage(deliveryTitle, e.target.value); }}
+            placeholder={t("messagePlaceholder")}
+            maxLength={1500}
+            rows={3}
+            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          />
+          <div className="mt-1.5 flex items-start justify-between gap-3">
+            <p className="text-[11px] leading-snug text-gray-400">{t("messageHelp")}</p>
+            <p className="shrink-0 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-warm-200 pt-4">
+            <div className="min-w-[180px] flex-1">
+              <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">{t("galleryPassword")}</label>
               <input
                 id="gallery-password"
                 type="text"
                 value={galleryPassword}
                 onChange={(e) => setGalleryPassword(e.target.value)}
                 placeholder={t("galleryPasswordPlaceholder")}
-                className="mt-1.5 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:w-56"
+                className="mt-1.5 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:w-48"
               />
             </div>
             <button
               onClick={handleShare}
-              disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4 || (requiredPhotos > 0 && (includedPhotoCount < requiredPhotos || overBy > 0))}
+              disabled={shareBlocked}
+              className="shrink-0 rounded-xl bg-accent-600 px-6 py-3 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
+            >
+              {shareLabel}
+            </button>
+            {counterLine}
+          </div>
+          {/* The error used to render only at the top of the page, one full
+              scroll away from the button that caused it. */}
+          {error && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
+        </div>
+      )}
+
+      {/* Reachability, not decoration: with 500 photos the panel above is many
+          screens away, so a slim bar takes over the moment it scrolls off.
+          Fixed, not sticky — the dashboard's <main> sets overflow-x, which
+          turns it into a scrollport and leaves a sticky child with no travel.
+          bottom-16 clears the mobile nav. */}
+      {photos.length > 0 && !delivered && !sendPanelVisible && (
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-warm-300 bg-white/95 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] backdrop-blur md:bottom-0">
+          <div className="mx-auto flex max-w-screen-xl flex-wrap items-center justify-end gap-3">
+            {counterLine}
+            <button
+              onClick={handleShare}
+              disabled={shareBlocked}
               className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
             >
-              {(() => {
-                if (sharing) return t("sharing");
-                const photoCnt = includedPhotoCount;
-                const videoCnt = photos.filter((p) => p.media_type === "video").length;
-                if (videoCnt === 0) return t("sharePhotos", { count: photoCnt });
-                if (photoCnt === 0) return t("shareVideos", { count: videoCnt });
-                return t("sharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
-              })()}
+              {shareLabel}
             </button>
-            {requiredPhotos > 0 && (() => {
-              const dp = includedPhotoCount;
-              const short = dp < requiredPhotos;
-              return (
-                <p className={`w-full text-xs ${overBy > 0 ? "font-semibold text-red-600" : short ? "font-medium text-amber-700" : "text-gray-500"}`}>
-                  {overBy > 0
-                    ? t("photoCounterOver", { count: dp, required: requiredPhotos, over: overBy })
-                    : short
-                      ? t("photoCounterShort", { count: dp, required: requiredPhotos, remaining: requiredPhotos - dp })
-                      : t("photoCounterOk", { count: dp, required: requiredPhotos })}
-                </p>
-              );
-            })()}
           </div>
         </div>
       )}

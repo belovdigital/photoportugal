@@ -178,6 +178,36 @@ export async function POST(
       return NextResponse.json({ success: true, gift_slots: n });
     }
 
+    // ── The order the photographer arranged ─────────────────────────
+    // Order is not decoration here: the first-publication trim ranks by
+    // sort_order, so dragging a frame above the cut is what decides whether
+    // it ships with the delivery or goes up for sale. It also drives the
+    // client's gallery, the peek and the ZIP.
+    //
+    // Renumbers the WHOLE booking from one ordered list rather than patching
+    // the moved rows. On production 95% of rows share a sort_order with a
+    // sibling, so a partial write would leave the real order decided by
+    // created_at tie-breaks — visibly random to the person who just dragged
+    // it. One statement, no loop: unnest(...) WITH ORDINALITY.
+    if (body.action === "set_order") {
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const ids = Array.isArray(body.photo_ids)
+        ? [...new Set(body.photo_ids.filter((v: unknown): v is string => typeof v === "string" && UUID_RE.test(v)))]
+        : [];
+      if (ids.length === 0 || ids.length > MAX_DELIVERY_PHOTOS) {
+        return NextResponse.json({ error: "No photos to reorder" }, { status: 400 });
+      }
+      const updated = await query<{ id: string }>(
+        `UPDATE delivery_photos dp
+            SET sort_order = o.rn - 1
+           FROM unnest($2::uuid[]) WITH ORDINALITY AS o(id, rn)
+          WHERE dp.id = o.id AND dp.booking_id = $1
+          RETURNING dp.id`,
+        [id, ids]
+      );
+      return NextResponse.json({ success: true, updated: updated.length });
+    }
+
     // ── Which photos the client actually receives ───────────────────
     // Everything is included until someone says otherwise. Excluding a photo
     // is how a photographer holds it back — and, once paid extras are live,
