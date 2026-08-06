@@ -143,9 +143,17 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     }
     const zipUrl = `${R2_PUBLIC_URL}/${r2Key}`;
 
+    // The extras archive lives in its own table on purpose: writing it to the
+    // bookings row would stamp updated_at, and the 14-day auto-accept — the
+    // cron that releases the photographer's payout for the whole shoot — keys
+    // off exactly that column.
     await queryOne(
       set === "extras"
-        ? "UPDATE bookings SET extras_zip_path = $1, extras_zip_size = $2, extras_zip_ready = TRUE WHERE id = $3"
+        ? `INSERT INTO delivery_extras_zip (booking_id, zip_path, zip_size, ready, updated_at)
+           VALUES ($3, $1, $2, TRUE, NOW())
+           ON CONFLICT (booking_id) DO UPDATE
+             SET zip_path = EXCLUDED.zip_path, zip_size = EXCLUDED.zip_size,
+                 ready = TRUE, updated_at = NOW()`
         : "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
       [zipUrl, zipSize, bookingId]
     );

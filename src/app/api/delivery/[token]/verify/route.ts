@@ -70,11 +70,12 @@ export async function POST(
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.payment_status,
             COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size,
-            COALESCE(b.extras_zip_ready, FALSE) as extras_zip_ready, b.extras_zip_size
+            COALESCE(ez.ready, FALSE) as extras_zip_ready, ez.zip_size as extras_zip_size
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
      JOIN users cu ON cu.id = b.client_id
+     LEFT JOIN delivery_extras_zip ez ON ez.booking_id = b.id
      WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
     [token]
   );

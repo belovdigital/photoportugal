@@ -43,7 +43,15 @@ export async function GET(
   );
 
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (booking.client_id !== userId && booking.photographer_user_id !== userId) {
+  // Photographer only. This is the editing endpoint: it returns every row of
+  // the booking with `url` resolved to the permanent public link to the
+  // ORIGINAL file, with no watermark and no filtering. Clients were allowed in
+  // historically and nothing ever called it as one — web and app both reach
+  // their photos through /api/delivery/[token]/verify, which watermarks before
+  // acceptance and hands over only what is included or bought. Leaving the
+  // client in would have handed over every held-back photo for free the day
+  // paid extras went live, permanently, since those URLs never expire.
+  if (booking.photographer_user_id !== userId) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 

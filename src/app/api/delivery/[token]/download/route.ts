@@ -47,13 +47,22 @@ export async function GET(
     zip_path: string | null;
     zip_size: number | null;
     zip_ready: boolean;
+    extras_zip_path: string | null;
+    extras_zip_size: number | null;
+    extras_zip_ready: boolean;
+    purchased_count: number;
   }>(
     `SELECT b.id, u.name as photographer_name, b.delivery_password, b.delivery_expires_at,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
-            b.zip_path, b.zip_size, COALESCE(b.zip_ready, FALSE) as zip_ready
+            b.zip_path, b.zip_size, COALESCE(b.zip_ready, FALSE) as zip_ready,
+            ez.zip_path as extras_zip_path, ez.zip_size as extras_zip_size,
+            COALESCE(ez.ready, FALSE) as extras_zip_ready,
+            (SELECT COUNT(*)::int FROM delivery_photos dp
+              WHERE dp.booking_id = b.id AND dp.purchased_at IS NOT NULL) as purchased_count
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
+     LEFT JOIN delivery_extras_zip ez ON ez.booking_id = b.id
      WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
     [token]
   );
@@ -77,20 +86,35 @@ export async function GET(
     return NextResponse.json({ error: "Gallery expired" }, { status: 410 });
   }
 
-  if (!booking.delivery_accepted) {
+  // Bought photographs are not gated on acceptance — the client paid for them,
+  // and the delivery archive they would otherwise be redirected to was built
+  // from the promised set only and contains none of them.
+  if (wantsExtras) {
+    if (booking.purchased_count === 0) {
+      return NextResponse.json({ error: "Nothing purchased on this delivery" }, { status: 404 });
+    }
+    if (booking.extras_zip_ready && booking.extras_zip_path) {
+      const fetchableExtras = toFetchableUrl(booking.extras_zip_path);
+      if (fetchableExtras) return NextResponse.redirect(fetchableExtras);
+    }
+    // Not built yet: fall through and stream it on the fly, then kick off the
+    // build so the next click is a redirect.
+  } else if (!booking.delivery_accepted) {
     return NextResponse.json({ error: "Please accept the delivery first" }, { status: 403 });
   }
 
   const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
   const bookingShort = booking.id.replace(/-/g, "").slice(0, 8);
-  const zipDownloadName = `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
+  const zipDownloadName = wantsExtras
+    ? `PhotoPortugal_${sanitizedName}_${bookingShort}_extras.zip`
+    : `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
 
   // Serve pre-built ZIP if available. Three URL formats coexist:
   //  - https://files.photoportugal.com/... → 302 redirect, browser downloads
   //    straight from R2 (no Node bandwidth)
   //  - s3://bucket/key → same, after rewriting to the public R2 URL
   //  - /uploads/... → stream from local disk (legacy, going away)
-  if (booking.zip_ready && booking.zip_path) {
+  if (!wantsExtras && booking.zip_ready && booking.zip_path) {
     const fetchable = toFetchableUrl(booking.zip_path);
     if (fetchable) return NextResponse.redirect(fetchable);
     if (booking.zip_path.startsWith("/uploads/")) {
@@ -167,7 +191,7 @@ export async function GET(
 
   // Also save ZIP for next time (non-blocking)
   import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
-    buildDeliveryZip(booking.id).catch(() => {});
+    buildDeliveryZip(booking.id, wantsExtras ? "extras" : "delivery").catch(() => {});
   });
 
   const readable = new ReadableStream({

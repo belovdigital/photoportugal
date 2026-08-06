@@ -523,14 +523,38 @@ export async function POST(req: NextRequest) {
 
             // Atomic claim: only pending rows flip, so a replayed webhook
             // is a no-op and a second delivery cannot double-transfer.
+            // The NOT EXISTS is load-bearing. Two checkouts can hold the same
+            // photo — a cancelled session stays payable for about a day and the
+            // basket survives cancellation on purpose — and the partial unique
+            // index allows one paid row per photo. Without this guard the
+            // second payment aborts the whole statement on 23505, so NONE of
+            // that order unlocks, the webhook 500s, and Stripe redelivers the
+            // same failure for days while the money sits captured.
             const paidRows = await query<{ id: string; booking_id: string; delivery_photo_id: string; payout_cents: number }>(
-              `UPDATE delivery_extra_purchases
+              `UPDATE delivery_extra_purchases dep
                   SET status = 'paid', paid_at = NOW(),
                       stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id)
-                WHERE order_id = $1 AND status = 'pending'
+                WHERE dep.order_id = $1 AND dep.status = 'pending'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM delivery_extra_purchases prev
+                     WHERE prev.delivery_photo_id = dep.delivery_photo_id
+                       AND prev.status = 'paid'
+                  )
                 RETURNING id, booking_id, delivery_photo_id, payout_cents`,
               [orderId, extraPi]
             );
+
+            // Anything skipped was paid for twice. Refunding needs a human, so
+            // say so loudly rather than leaving it in a table nobody reads.
+            const skipped = await query<{ delivery_photo_id: string }>(
+              "SELECT delivery_photo_id FROM delivery_extra_purchases WHERE order_id = $1 AND status = 'pending'",
+              [orderId]
+            );
+            if (skipped.length > 0) {
+              import("@/lib/telegram").then(({ sendTelegram }) =>
+                sendTelegram(`⚠️ <b>Доп. фото оплачены дважды</b>\n\nЗаказ <code>${orderId.slice(0, 8)}</code>: ${skipped.length} шт. уже были куплены раньше.\nДеньги списаны — вернуть вручную €${((skipped.length * 290) / 100).toFixed(2)}.`, "alerts")
+              ).catch(() => {});
+            }
 
             if (paidRows.length > 0) {
               const bookingId = paidRows[0].booking_id;
@@ -608,7 +632,10 @@ export async function POST(req: NextRequest) {
               // Reset the flag first so the client sees "preparing" rather
               // than a stale download of yesterday's purchase.
               await queryOne(
-                "UPDATE bookings SET extras_zip_ready = FALSE WHERE id = $1 RETURNING id",
+                `INSERT INTO delivery_extras_zip (booking_id, ready, updated_at)
+                 VALUES ($1, FALSE, NOW())
+                 ON CONFLICT (booking_id) DO UPDATE SET ready = FALSE, updated_at = NOW()
+                 RETURNING booking_id`,
                 [bookingId]
               ).catch(() => null);
               import("@/lib/build-zip").then(({ buildDeliveryZip }) =>

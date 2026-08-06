@@ -114,7 +114,16 @@ export async function POST(
         AND dp.id = ANY($2::uuid[])
         AND dp.is_included = FALSE
         AND dp.purchased_at IS NULL
-        AND COALESCE(dp.media_type, 'image') <> 'video'`,
+        AND COALESCE(dp.media_type, 'image') <> 'video'
+        -- Not already sitting in a live checkout. A Stripe session stays
+        -- payable for about a day, and the basket deliberately survives a
+        -- cancellation, so the same photo could otherwise be bought twice.
+        AND NOT EXISTS (
+          SELECT 1 FROM delivery_extra_purchases pending
+           WHERE pending.delivery_photo_id = dp.id
+             AND pending.status = 'pending'
+             AND pending.created_at > NOW() - INTERVAL '24 hours'
+        )`,
     [booking.id, photoIds]
   );
   if (sellable.length === 0) {
