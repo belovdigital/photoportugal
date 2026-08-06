@@ -34,9 +34,11 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     extras_gift_slots: number;
     peek_shared_at: string | null;
     delivery_message: string | null;
+    extras_payout_cents: number | null;
   }>(
     `SELECT b.id, u.id as photographer_user_id, cu.name as client_name,
-            p.name as package_name, COALESCE(NULLIF(p.num_photos, 0), NULLIF(b.promised_photos, 0)) as required_photos, b.shoot_date, b.status, b.delivery_token,
+            p.name as package_name, COALESCE(NULLIF(p.num_photos, 0), NULLIF(b.promised_photos, 0)) as required_photos,
+            COALESCE(b.extra_photo_payout_cents, pp.extra_photo_payout_cents, 500) as extras_payout_cents, b.shoot_date, b.status, b.delivery_token,
             b.delivery_password, b.delivery_password_plain,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.delivery_title, b.delivery_message, b.peek_token, b.peek_shared_at::text as peek_shared_at,
@@ -127,6 +129,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
         initialTitle={booking.delivery_title}
         initialMessage={booking.delivery_message}
         requiredPhotos={booking.required_photos ?? 0}
+        extrasPayoutCents={booking.extras_payout_cents ?? 500}
         initialGiftSlots={booking.extras_gift_slots ?? 0}
         initialPeekToken={booking.peek_token}
         initialPeekSharedAt={booking.peek_shared_at}

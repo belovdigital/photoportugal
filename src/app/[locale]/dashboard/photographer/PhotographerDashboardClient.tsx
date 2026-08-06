@@ -1509,12 +1509,6 @@ export function PhotographerDashboardClient({
                     />
                   </div>
                 </div>
-                <div className="rounded-xl bg-white px-4 py-2.5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("extrasPriceClientPays")}</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    &euro;{(Math.ceil(Math.round((parseFloat(extrasPriceDraft) || 0) * 100 * 1.25) / 10) * 10 / 100).toFixed(2)}
-                  </p>
-                </div>
                 <button
                   onClick={saveExtrasPrice}
                   disabled={savingExtrasPrice || !parseFloat(extrasPriceDraft)}

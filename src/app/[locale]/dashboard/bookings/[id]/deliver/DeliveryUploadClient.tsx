@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
@@ -73,6 +73,7 @@ export function DeliveryUploadClient({
   initialTitle,
   initialMessage,
   requiredPhotos = 0,
+  extrasPayoutCents = 500,
   initialGiftSlots = 0,
   initialPeekToken = null,
   initialPeekSharedAt = null,
@@ -90,6 +91,9 @@ export function DeliveryUploadClient({
    *  least this many (videos don't count) before they can deliver. 0 = no
    *  package/expectation, so the check is skipped. */
   requiredPhotos?: number;
+  /** What THIS photographer earns per extra photo on THIS booking. Their own
+   *  rate — the client's price is never shown on their side of the house. */
+  extrasPayoutCents?: number;
   initialGiftSlots?: number;
   /** Sneak peek state — token + timestamp when already shared. */
   initialPeekToken?: string | null;
@@ -221,6 +225,9 @@ export function DeliveryUploadClient({
   const [deleting, setDeleting] = useState(false);
   const [deleteProgress, setDeleteProgress] = useState({ current: 0, total: 0 });
   const t = useTranslations("delivery");
+  const locale = useLocale();
+  const payout = (cents: number) =>
+    new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(cents / 100);
   const { modal, confirm } = useConfirmModal();
 
   // Hydrate deliveryUrl on the client once `window` is available. Runs
@@ -919,7 +926,7 @@ export function DeliveryUploadClient({
       : photoCnt === 0
         ? t("confirmShareVideos", { count: videoCnt })
         : t("confirmSharePhotosAndVideos", { photos: photoCnt, videos: videoCnt }))
-      + (extrasCnt > 0 ? `\n\n${t("confirmShareExtras", { count: extrasCnt })}` : "");
+      + (extrasCnt > 0 ? `\n\n${t("confirmShareExtras", { count: extrasCnt, price: payout(extrasPayoutCents) })}` : "");
     const okShare = await confirm("Share Delivery", confirmText, { confirmLabel: "Share" });
     if (!okShare) return;
 
@@ -1217,7 +1224,7 @@ export function DeliveryUploadClient({
                       comes from. */}
                   {extraPhotos.filter((p) => p.media_type !== "video").length > 0 && (
                     <p className="mt-0.5 text-xs font-semibold text-amber-700">
-                      {t("deliveredExtrasOnSale", { count: extraPhotos.filter((p) => p.media_type !== "video").length })}
+                      {t("deliveredExtrasOnSale", { count: extraPhotos.filter((p) => p.media_type !== "video").length, price: payout(extrasPayoutCents) })}
                     </p>
                   )}
                   {canEdit && (
@@ -1477,7 +1484,7 @@ export function DeliveryUploadClient({
 
           <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
             <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
-            <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
+            <p className="text-xs text-amber-700">{t("sectionExtrasHint", { price: payout(extrasPayoutCents) })}</p>
           </div>
           <SortableContext items={extraPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
             <PileDropZone id="extras" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
