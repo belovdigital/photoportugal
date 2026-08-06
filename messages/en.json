@@ -2995,7 +2995,11 @@
     "confirmResend": "Re-send the full gallery ({count} photos) to the client? They'll get a new email with a fresh link.",
     "deleteAllCount": "Delete all {count}",
     "deleteFailed": "Could not delete these photos. Nothing was removed.",
-    "deletePartial": "Removed {removed}, but {failed} could not be deleted. Try again for the rest."
+    "deletePartial": "Removed {removed}, but {failed} could not be deleted. Try again for the rest.",
+    "includeInDelivery": "Include",
+    "excludeFromDelivery": "Hold back",
+    "includeFailed": "Could not change these photos",
+    "notIncludedBadge": "Not in delivery"
   },
   "availability": {
     "pageTitle": "Availability",

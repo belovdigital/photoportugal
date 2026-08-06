@@ -14,6 +14,12 @@ interface Photo {
   duration_seconds?: number | null;
   width?: number | null;
   height?: number | null;
+  // Included = part of what the booking promised, and what the client
+  // receives. Excluded photos are held back — and, with paid extras live,
+  // offered for sale. purchased_at means the client already bought it, which
+  // makes the exclusion irreversible.
+  is_included?: boolean;
+  purchased_at?: string | null;
 }
 
 export function DeliveryUploadClient({
@@ -217,6 +223,33 @@ export function DeliveryUploadClient({
       return next;
     });
     lastClickedRef.current = id;
+  }
+
+  // Include / exclude the current selection. Excluded photos stop being part
+  // of the delivery: the client does not see them, they are not in the
+  // archive, and they do not count toward the promise. Once paid extras are
+  // live this is also what puts them up for sale.
+  async function setIncluded(included: boolean) {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_included", photo_ids: ids, included }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error || t("includeFailed"));
+        return;
+      }
+      const touched = new Set(ids);
+      setPhotos((prev) => prev.map((p) => (touched.has(p.id) && !p.purchased_at ? { ...p, is_included: included } : p)));
+      setSelectedIds(new Set());
+      setSelectMode(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
   }
 
   async function deleteSelected() {
@@ -856,6 +889,8 @@ export function DeliveryUploadClient({
               {selectMode ? (
                 <>
                   <button onClick={() => setSelectedIds(new Set(photos.map((p) => p.id)))} className="text-xs font-medium text-gray-600 hover:text-gray-800">{t("selectAll")}</button>
+                  <button onClick={() => setIncluded(true)} disabled={selectedIds.size === 0} className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700 disabled:opacity-40">{t("includeInDelivery")}</button>
+                  <button onClick={() => setIncluded(false)} disabled={selectedIds.size === 0} className="rounded-lg border border-warm-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-warm-50 disabled:opacity-40">{t("excludeFromDelivery")}</button>
                   <button onClick={deleteSelected} disabled={selectedIds.size === 0} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40">{selectedIds.size > 0 && selectedIds.size === photos.length ? t("deleteAllCount", { count: photos.length }) : t("deleteCount", { count: selectedIds.size })}</button>
                   <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }} className="text-xs font-medium text-gray-500 hover:text-gray-700">{t("cancel")}</button>
                 </>
@@ -1019,9 +1054,14 @@ export function DeliveryUploadClient({
             return (
             <div
               key={photo.id}
-              className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
+              className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""} ${photo.is_included === false ? "opacity-60 ring-1 ring-warm-300" : ""}`}
               onClick={selectMode ? (e) => toggleSelect(photo.id, e.shiftKey) : undefined}
             >
+              {photo.is_included === false && (
+                <span className="absolute right-2 top-2 z-10 rounded-md bg-gray-900/75 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                  {t("notIncludedBadge")}
+                </span>
+              )}
               <img
                 src={previewSrc}
                 alt={photo.filename}

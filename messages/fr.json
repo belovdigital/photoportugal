@@ -3248,7 +3248,11 @@
     "confirmResend": "Renvoyer la galerie complète ({count} photos) au client ? Il recevra un nouvel e-mail avec un lien à jour.",
     "deleteAllCount": "Tout supprimer ({count})",
     "deleteFailed": "Impossible de supprimer ces photos. Rien n'a été retiré.",
-    "deletePartial": "{removed} supprimées, mais {failed} n'ont pas pu l'être. Réessayez pour le reste."
+    "deletePartial": "{removed} supprimées, mais {failed} n'ont pas pu l'être. Réessayez pour le reste.",
+    "includeInDelivery": "Inclure",
+    "excludeFromDelivery": "Retenir",
+    "includeFailed": "Impossible de modifier ces photos",
+    "notIncludedBadge": "Hors livraison"
   },
   "availability": {
     "pageTitle": "Disponibilités",

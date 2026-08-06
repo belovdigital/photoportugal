@@ -3248,7 +3248,11 @@
     "confirmResend": "¿Reenviar la galería completa ({count} fotos) al cliente? Recibirá un nuevo correo con un enlace actualizado.",
     "deleteAllCount": "Eliminar las {count}",
     "deleteFailed": "No se pudieron eliminar estas fotos. No se ha quitado nada.",
-    "deletePartial": "Se eliminaron {removed}, pero {failed} no se pudieron borrar. Inténtalo de nuevo con el resto."
+    "deletePartial": "Se eliminaron {removed}, pero {failed} no se pudieron borrar. Inténtalo de nuevo con el resto.",
+    "includeInDelivery": "Incluir",
+    "excludeFromDelivery": "Reservar",
+    "includeFailed": "No se pudieron cambiar estas fotos",
+    "notIncludedBadge": "Fuera de la entrega"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

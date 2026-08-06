@@ -3001,7 +3001,11 @@
     "confirmResend": "Die komplette Galerie ({count} Fotos) erneut an den Kunden senden? Er erhält eine neue E-Mail mit einem frischen Link.",
     "deleteAllCount": "Alle {count} löschen",
     "deleteFailed": "Diese Fotos konnten nicht gelöscht werden. Es wurde nichts entfernt.",
-    "deletePartial": "{removed} entfernt, aber {failed} konnten nicht gelöscht werden. Versuchen Sie es für den Rest erneut."
+    "deletePartial": "{removed} entfernt, aber {failed} konnten nicht gelöscht werden. Versuchen Sie es für den Rest erneut.",
+    "includeInDelivery": "Aufnehmen",
+    "excludeFromDelivery": "Zurückhalten",
+    "includeFailed": "Diese Fotos konnten nicht geändert werden",
+    "notIncludedBadge": "Nicht in der Lieferung"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

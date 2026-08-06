@@ -61,9 +61,11 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
   const rawPhotos = await query<{
     id: string; url: string; thumbnail_url: string | null; filename: string; file_size: number;
     media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
+    is_included: boolean; purchased_at: string | null;
   }>(
     `SELECT id, url, thumbnail_url, filename, file_size,
-            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height
+            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height,
+            is_included, purchased_at::text as purchased_at
      FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
     [id]
   );

@@ -53,9 +53,11 @@ export async function GET(
     id: string; url: string; thumbnail_url: string | null; preview_url: string | null;
     filename: string; file_size: number; sort_order: number; created_at: string;
     media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
+    is_included: boolean; purchased_at: string | null;
   }>(
     `SELECT id, url, thumbnail_url, preview_url, filename, file_size, sort_order, created_at,
-            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height
+            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height,
+            is_included, purchased_at
      FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
     [id]
   );
@@ -140,6 +142,61 @@ export async function POST(
         [title, message, id]
       );
       return NextResponse.json({ success: true });
+    }
+
+    // ── Which photos the client actually receives ───────────────────
+    // Everything is included until someone says otherwise. Excluding a photo
+    // is how a photographer holds it back — and, once paid extras are live,
+    // how it goes up for sale. Two rules the client's side depends on:
+    // a promise cannot be cut below what was agreed, and a photo the client
+    // has already paid for can never be taken away again.
+    if (body.action === "set_included") {
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const ids = Array.isArray(body.photo_ids)
+        ? [...new Set(body.photo_ids.filter((v: unknown): v is string => typeof v === "string" && UUID_RE.test(v)))]
+        : [];
+      const included = body.included === true;
+      if (ids.length === 0) {
+        return NextResponse.json({ error: "No photos selected" }, { status: 400 });
+      }
+
+      if (!included) {
+        const pkg = await queryOne<{ num_photos: number | null; promised_photos: number | null }>(
+          `SELECT p.num_photos, b.promised_photos
+             FROM bookings b LEFT JOIN packages p ON p.id = b.package_id
+            WHERE b.id = $1`,
+          [id]
+        );
+        const required = pkg?.num_photos && Number(pkg.num_photos) > 0
+          ? Number(pkg.num_photos)
+          : (pkg?.promised_photos && Number(pkg.promised_photos) > 0 ? Number(pkg.promised_photos) : 0);
+        if (required > 0) {
+          const after = await queryOne<{ count: string }>(
+            `SELECT COUNT(*) AS count FROM delivery_photos
+              WHERE booking_id = $1 AND is_included = TRUE
+                AND COALESCE(media_type, 'image') <> 'video'
+                AND NOT (id = ANY($2::uuid[]))`,
+            [id, ids]
+          );
+          if (parseInt(after?.count || "0") < required) {
+            return NextResponse.json({
+              error: `This booking promises ${required} photos. Removing these would leave ${after?.count || 0} — include others first.`,
+              code: "below_promise",
+            }, { status: 400 });
+          }
+        }
+      }
+
+      const updated = await query<{ id: string }>(
+        `UPDATE delivery_photos
+            SET is_included = $3
+          WHERE booking_id = $1 AND id = ANY($2::uuid[])
+            AND COALESCE(media_type, 'image') <> 'video'
+            AND ($3 = TRUE OR purchased_at IS NULL)
+          RETURNING id`,
+        [id, ids, included]
+      );
+      return NextResponse.json({ success: true, updated: updated.length });
     }
 
     // ── Sneak peek — optional early preview, NOT a delivery ─────────
