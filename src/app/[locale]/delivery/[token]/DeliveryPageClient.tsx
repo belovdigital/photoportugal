@@ -189,6 +189,24 @@ export function DeliveryPageClient({
     }
   }
 
+  async function reorderPhotos(ids: string[]) {
+    const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+    try {
+      const res = await fetch(`/api/delivery/${token}/swap`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: ids, password: pw }),
+      });
+      if (!res.ok) return;
+      const again = await fetch(`/api/delivery/${token}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (again.ok) setGallery(await again.json());
+    } catch { /* order is cosmetic; a failed drag is not worth an alert */ }
+  }
+
   async function buyExtras() {
     if (selectedExtras.size === 0 || buyingExtras) return;
     setBuyingExtras(true);
@@ -658,6 +676,7 @@ export function DeliveryPageClient({
         selectedExtras={selectedExtras}
         onToggleExtra={toggleExtra}
         onSwap={swapPhoto}
+        onReorder={reorderPhotos}
         giftLeft={gallery?.gift_remaining ?? 0}
       />
 

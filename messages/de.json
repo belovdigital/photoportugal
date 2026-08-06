@@ -3090,9 +3090,9 @@
     "extraPickFree": "Gratis dazu",
     "sectionYours": "{count, plural, one {# Foto gehört Ihnen} other {# Fotos gehören Ihnen}}",
     "sectionOnOffer": "{count, plural, one {# weiteres zur Auswahl} other {# weitere zur Auswahl}}",
-    "sectionYoursHint": "Gehören schon Ihnen — nichts zu zahlen. Lieber ein anderes Bild? Öffnen Sie ein Foto unter Zusätzliche und wählen Sie «Diese stattdessen nehmen».",
+    "sectionYoursHint": "Gehören schon Ihnen — nichts zu zahlen. Ziehen Sie ein Foto aus Zusätzliche auf eines hier, um sie gratis zu tauschen.",
     "sectionOnOfferFree": "{count, plural, one {Ihr Fotograf schenkt Ihnen # davon. Auf Gratis dazu tippen — oder eines gegen ein anderes aus Ihrem Paket tauschen.} other {Ihr Fotograf schenkt Ihnen # davon. Tippen Sie bei den gewünschten auf Gratis dazu — oder tauschen Sie eines gegen ein anderes aus Ihrem Paket.}}",
-    "sectionOnOfferPaid": "Je 2,90 €. Bei den gewünschten auf Dazu tippen, dann unten Kaufen — oder ein Foto öffnen und gratis gegen eines aus Ihrem Paket tauschen, das Ihnen weniger gefällt.",
+    "sectionOnOfferPaid": "Je 2,90 €. Bei den gewünschten auf Dazu tippen, dann Kaufen — oder eines auf ein Foto ziehen, das Ihnen weniger gefällt, und gratis tauschen.",
     "swapInstead": "Diese stattdessen nehmen",
     "swapPickOut": "Welches soll sie ersetzen? Antippen.",
     "deliveredExtrasOnSale": "{count, plural, one {# zusätzliches Foto steht für 2,90 € im Angebot — Sie erhalten 2,00 € bei Verkauf.} other {# zusätzliche Fotos stehen für je 2,90 € im Angebot — Sie erhalten 2,00 € pro Verkauf.}}"

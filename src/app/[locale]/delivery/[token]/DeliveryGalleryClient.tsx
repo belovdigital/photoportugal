@@ -2,6 +2,37 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
+  DragOverlay, type DragStartEvent, type DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+// Same library and sensors as the photographer's screen and the portfolio grid.
+// TouchSensor is why this works on a phone at all — HTML5 drag never fires there.
+function DraggablePhoto({ id, disabled, children }: {
+  id: string; disabled?: boolean;
+  children: (h: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 50 : undefined,
+      }}
+    >
+      {children({
+        listeners: (listeners || {}) as Record<string, unknown>,
+        attributes: attributes as unknown as Record<string, unknown>,
+      })}
+    </div>
+  );
+}
 import { useSwipeNavigation } from "@/lib/use-swipe";
 
 /** Distribute items into N flex columns row-major (col k gets indexes
@@ -46,6 +77,7 @@ export function DeliveryGalleryClient({
   selectedExtras,
   onToggleExtra,
   onSwap,
+  onReorder,
   giftLeft = 0,
 }: {
   photos: Photo[];
@@ -54,6 +86,8 @@ export function DeliveryGalleryClient({
   onToggleExtra?: (id: string) => void;
   /** Exchange a locked photo for one currently in the package. */
   onSwap?: (inId: string, outId: string) => Promise<void>;
+  /** Full ordered id list after a within-pile drag. */
+  onReorder?: (ids: string[]) => Promise<void>;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
@@ -62,6 +96,56 @@ export function DeliveryGalleryClient({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [swapFor, setSwapFor] = useState<string | null>(null);
   const [swapping, setSwapping] = useState(false);
+  const [dragging, setDragging] = useState<Photo | null>(null);
+
+  // Nothing moves once the delivery is accepted: the archive is written and the
+  // photographer has been paid. Buying more still works — that is a purchase,
+  // not a rearrangement.
+  const canRearrange = !deliveryAccepted && !!onSwap;
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+  );
+
+  function pileOfPhoto(id: string): "yours" | "offer" | null {
+    const ph = photos.find((p) => p.id === id);
+    if (!ph) return null;
+    return ph.locked ? "offer" : "yours";
+  }
+
+  async function handleDragEnd(e: DragEndEvent) {
+    setDragging(null);
+    const activeId = String(e.active.id);
+    const overId = e.over ? String(e.over.id) : null;
+    if (!overId || overId === activeId) return;
+    const from = pileOfPhoto(activeId);
+    const to = pileOfPhoto(overId);
+    if (!from || !to) return;
+
+    const a = photos.find((p) => p.id === activeId);
+    const b = photos.find((p) => p.id === overId);
+    if (!a || !b) return;
+
+    if (from !== to) {
+      // Across the divide is an exchange, and the tile you drop ON is the one
+      // that trades places. A photo already owned never moves: swapping one in
+      // would free a slot that was paid for.
+      if (a.purchased || b.purchased || a.media_type === "video" || b.media_type === "video") return;
+      const inId = from === "offer" ? activeId : overId;
+      const outId = from === "offer" ? overId : activeId;
+      await onSwap?.(inId, outId);
+      return;
+    }
+
+    // Within a pile it is just the client putting their favourites first.
+    const list = photos.filter((p) => (from === "yours" ? !p.locked : p.locked));
+    const oldIdx = list.findIndex((p) => p.id === activeId);
+    const newIdx = list.findIndex((p) => p.id === overId);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const moved = arrayMove(list, oldIdx, newIdx);
+    const others = photos.filter((p) => !list.some((l) => l.id === p.id));
+    await onReorder?.(from === "yours" ? [...moved, ...others].map((p) => p.id) : [...others, ...moved].map((p) => p.id));
+  }
 
   function openLightbox(index: number) {
     setLightboxIndex(index);
@@ -154,7 +238,7 @@ export function DeliveryGalleryClient({
   const lockedIndexed = useMemo(() => indexed.filter(({ p }) => p.locked), [indexed]);
   const split = lockedIndexed.length > 0 && ownedIndexed.length > 0;
 
-  function renderCell(photo: Photo, index: number) {
+  function renderCell(photo: Photo, index: number, drag?: { listeners: Record<string, unknown>; attributes: Record<string, unknown> }) {
     const isVideo = photo.media_type === "video";
     const thumb = photo.thumbnail_url || photo.preview_url || photo.url;
     const locked = photo.locked === true;
@@ -164,6 +248,7 @@ export function DeliveryGalleryClient({
         key={photo.id}
         className={`cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative${picked ? " ring-2 ring-primary-500" : ""}`}
         onClick={() => openLightbox(index)}
+        {...(drag ? { ...drag.attributes, ...drag.listeners } : {})}
         onContextMenu={(e) => e.preventDefault()}
       >
         <img
@@ -186,6 +271,7 @@ export function DeliveryGalleryClient({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleExtra?.(photo.id); }}
+              onPointerDown={(e) => e.stopPropagation()}
               /* Translucent so the photograph underneath still reads — this is
                  the thing the client is deciding about. */
               className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold shadow-lg ring-1 ring-black/10 backdrop-blur-sm transition hover:brightness-105 ${
@@ -227,20 +313,26 @@ export function DeliveryGalleryClient({
     );
   }
 
-  function renderMasonry(items: { p: Photo; i: number }[]) {
+  function renderMasonry(items: { p: Photo; i: number }[], draggable = false) {
     const c2 = distributeRowMajor(items, 2);
     const c3 = distributeRowMajor(items, 3);
     const c4 = distributeRowMajor(items, 4);
     return (
       <>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:hidden">
-          {c2.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => renderCell(p, i))}</div>)}
+          {c2.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => draggable
+            ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
+            : renderCell(p, i))}</div>)}
         </div>
         <div className="mt-4 hidden grid-cols-3 gap-3 sm:grid md:hidden">
-          {c3.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => renderCell(p, i))}</div>)}
+          {c3.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => draggable
+            ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
+            : renderCell(p, i))}</div>)}
         </div>
         <div className="mt-4 hidden grid-cols-4 gap-3 md:grid">
-          {c4.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => renderCell(p, i))}</div>)}
+          {c4.map((col, ci) => <div key={ci} className="flex flex-col gap-3">{col.map(({ p, i }) => draggable
+            ? <DraggablePhoto key={p.id} id={p.id} disabled={!canRearrange}>{(h) => renderCell(p, i, canRearrange ? h : undefined)}</DraggablePhoto>
+            : renderCell(p, i))}</div>)}
         </div>
       </>
     );
@@ -254,7 +346,12 @@ export function DeliveryGalleryClient({
           collapsed to 1 column whenever images lazy-loaded. Flex columns
           are rock solid. */}
       {split ? (
-        <>
+        <DndContext
+          sensors={dndSensors}
+          collisionDetection={closestCenter}
+          onDragStart={(e: DragStartEvent) => setDragging(photos.find((p) => p.id === String(e.active.id)) || null)}
+          onDragEnd={handleDragEnd}
+        >
           {/* A hairline rule between two walls of thumbnails was invisible.
               Each group gets a real header — icon, size, and one line saying
               what the group IS — and the paid group sits inside a tinted
@@ -268,7 +365,9 @@ export function DeliveryGalleryClient({
               <p className="text-sm text-gray-500">{t("sectionYoursHint")}</p>
             </div>
           </div>
-          {renderMasonry(ownedIndexed)}
+          <SortableContext items={ownedIndexed.map(({ p }) => p.id)} strategy={rectSortingStrategy}>
+            {renderMasonry(ownedIndexed, canRearrange)}
+          </SortableContext>
 
           <div className="mt-12 rounded-3xl border-2 border-amber-200 bg-amber-50/60 p-4 sm:p-6">
             <div className="flex items-center gap-3">
@@ -284,9 +383,20 @@ export function DeliveryGalleryClient({
                 </p>
               </div>
             </div>
-            {renderMasonry(lockedIndexed)}
+            <SortableContext items={lockedIndexed.map(({ p }) => p.id)} strategy={rectSortingStrategy}>
+              {renderMasonry(lockedIndexed, canRearrange)}
+            </SortableContext>
           </div>
-        </>
+
+          <DragOverlay>
+            {dragging && (
+              <div className="w-28 overflow-hidden rounded-lg border-2 border-white shadow-2xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={dragging.thumbnail_url || dragging.preview_url || dragging.url} alt="" className="w-full" />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
       ) : (
         renderMasonry(indexed)
       )}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import crypto from "crypto";
-import { queryOne, withTransaction } from "@/lib/db";
+import { query, queryOne, withTransaction } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
 
@@ -44,7 +44,13 @@ export async function POST(
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const inId = typeof body?.in === "string" && UUID_RE.test(body.in) ? body.in : null;
   const outId = typeof body?.out === "string" && UUID_RE.test(body.out) ? body.out : null;
-  if (!inId || !outId || inId === outId) {
+  // Two modes behind one set of guards: exchange a photo, or just rearrange.
+  // Reordering is the client putting their own favourites first; it moves
+  // nothing between the free and paid sides, so it needs no count assertion.
+  const order: string[] | null = Array.isArray(body?.order)
+    ? [...new Set((body.order as unknown[]).filter((v): v is string => typeof v === "string" && UUID_RE.test(v)))]
+    : null;
+  if (!order && (!inId || !outId || inId === outId)) {
     return NextResponse.json({ error: "Pick one photo to add and one to remove" }, { status: 400 });
   }
 
@@ -91,6 +97,21 @@ export async function POST(
   if (booking.delivery_accepted) {
     return NextResponse.json({ error: "This delivery has been accepted and can no longer be changed" }, { status: 409 });
   }
+  if (order) {
+    if (order.length === 0 || order.length > 1000) {
+      return NextResponse.json({ error: "Nothing to reorder" }, { status: 400 });
+    }
+    const updated = await query<{ id: string }>(
+      `UPDATE delivery_photos dp
+          SET sort_order = o.rn - 1
+         FROM unnest($2::uuid[]) WITH ORDINALITY AS o(id, rn)
+        WHERE dp.id = o.id AND dp.booking_id = $1
+        RETURNING dp.id`,
+      [booking.id, order]
+    );
+    return NextResponse.json({ success: true, reordered: updated.length });
+  }
+
   const required = Number(booking.required_photos || 0);
   if (required <= 0) {
     return NextResponse.json({ error: "This delivery has no fixed photo count" }, { status: 409 });
