@@ -2844,7 +2844,7 @@
         },
         "sellExtras": {
           "question": "Ich habe mehr Fotos gemacht, als das Paket verspricht. Was mache ich damit?",
-          "answer": "Zeigen Sie sie Ihrem Kunden, statt sie zu löschen. Auf dem Lieferbildschirm liegen Ihre Fotos in zwei Gruppen: **In der Lieferung** — was Ihr Kunde bekommt, die im Paket versprochenen Fotos — und **Zusätzliche Fotos**, die Ihr Kunde für je 2,90 € kaufen kann.\n\nLaden Sie mehr hoch als versprochen, füllen die ersten Fotos die Lieferung, der Rest rutscht zu den zusätzlichen. Nichts davon ist endgültig: Fahren Sie über ein Foto und schieben Sie es hoch oder herunter, bis beide Gruppen stimmen. Dann senden.\n\nNur zwei Regeln. Mehr als versprochen dürfen Sie liefern, weniger nie: Stehen im Paket 20 Fotos, gehen mindestens 20 raus. Und ein gekauftes Foto gehört Ihrem Kunden — Sie können es weder löschen noch zurückholen.\n\nLaden Sie genau so viele hoch, wie Sie versprochen haben, taucht nichts davon auf. Keine Preise, keine Extras, nichts zu kaufen."
+          "answer": "Zeigen Sie sie Ihrem Kunden, statt sie zu löschen. Auf dem Lieferbildschirm liegen Ihre Fotos in zwei Gruppen: **In der Lieferung** — was Ihr Kunde bekommt, die im Paket versprochenen Fotos — und **Zusätzliche Fotos**, die Ihr Kunde für je 2,90 € kaufen kann.\n\nLaden Sie mehr hoch als versprochen, füllen die ersten Fotos die Lieferung, der Rest rutscht zu den zusätzlichen. Nichts davon ist endgültig: Fahren Sie über ein Foto und schieben Sie es hoch oder herunter, bis beide Gruppen stimmen. Die Senden-Schaltfläche wird frei, sobald die Lieferung genau das Zugesagte enthält.\n\nNur zwei Regeln. Die Lieferung ist genau die Zusage: Stehen im Paket 20 Fotos, gehen 20 raus — der Bildschirm sendet weder mehr noch weniger. Und ein gekauftes Foto gehört Ihrem Kunden — Sie können es weder löschen noch zurückholen.\n\nLaden Sie genau so viele hoch, wie Sie versprochen haben, taucht nichts davon auf. Keine Preise, keine Extras, nichts zu kaufen."
         },
         "extrasEarnings": {
           "question": "Was verdiene ich an einem zusätzlichen Foto?",
@@ -2864,7 +2864,7 @@
         },
         "giveEverything": {
           "question": "Was, wenn ich meinem Kunden einfach alles geben will?",
-          "answer": "Dann geben Sie alles. Schieben Sie jedes Foto in die Lieferung, dann bleibt nichts zum Verkaufen übrig — in der Galerie Ihres Kunden steht kein Wort über zusätzliche Fotos und nirgends ein Preis.\n\nDazwischen geht genauso: 25 von 35 Fotos liefern und 10 anbieten. Oder 10 anbieten und Ihren Kunden 3 davon gratis aussuchen lassen. Sie entscheiden das bei jeder Buchung neu."
+          "answer": "Dann verschenken Sie es — über das Geschenk, nicht indem Sie die Lieferung vollstopfen.\n\nDie Lieferung enthält immer genau das, was das Paket zugesagt hat. Verschieben Sie den Überschuss zu **Zusätzliche Fotos** und setzen Sie das Geschenk auf dieselbe Zahl: 5 zugesagt, 9 fotografiert, vier in den Extras, Geschenk 4. Ihre Kundschaft wählt alle vier gratis und zahlt nichts.\n\nSie können sich überall dazwischen bewegen. Neun Aufnahmen bei einer Zusage von fünf: Geschenk 2, und Ihre Kundschaft nimmt sieben gratis mit und kann die letzten zwei kaufen. Geschenk 0, und alle vier stehen zum Verkauf. Sie entscheiden bei jeder Buchung neu."
         }
       },
       "payments": {
@@ -3016,9 +3016,9 @@
     "confirmShareVideos": "Bereit, {count} {count, plural, one {Video} other {Videos}} mit dem Kunden zu teilen?",
     "confirmSharePhotosAndVideos": "Bereit, {photos} {photos, plural, one {Foto} other {Fotos}} und {videos} {videos, plural, one {Video} other {Videos}} mit dem Kunden zu teilen?",
     "accept": "Akzeptieren",
-    "needMorePhotos": "The paid package includes {required} photos — you have only added {count}. Add at least {required} before delivering to the client.",
-    "photoCounterShort": "{count} / {required} photos — add {remaining} more before delivering",
-    "photoCounterOk": "{count} / {required} photos ✓",
+    "needMorePhotos": "Das bezahlte Paket umfasst {required} Fotos — Sie haben erst {count} hinzugefügt. Fügen Sie mindestens {required} hinzu, bevor Sie an die Kundschaft liefern.",
+    "photoCounterShort": "{count} / {required} Fotos — {remaining} weitere hinzufügen, bevor Sie liefern",
+    "photoCounterOk": "{count} / {required} Fotos ✓",
     "photosInPackage": "{count, plural, one {# Foto} other {# Fotos}}",
     "titleHelp": "Erscheint als Überschrift über der Galerie. Kurz und persönlich — z. B. \"Ihr magischer Abend in Lissabon\".",
     "messageHelp": "Eine herzliche Notiz über den Fotos — bedanken Sie sich, erinnern Sie an einen Moment, geben Sie einen Tipp. 2–4 Sätze (etwa 200–400 Zeichen) sind ideal. Optional.",
@@ -3064,14 +3064,22 @@
     "sectionIncludedHint": "Was Ihre Kundschaft bekommt. Zum Verschieben über ein Foto fahren.",
     "sectionExtras": "Zusätzliche Fotos · {count}",
     "sectionExtrasHint": "Werden für je 2,90 € angeboten. Davon erhalten Sie 2,00 €.",
-    "sectionExtrasEmpty": "Noch nichts hier. Verschieben Sie ein Foto herunter, dann kann es gekauft werden.",
+    "sectionExtrasEmpty": "Noch nichts hier — Sie haben genau so viele Fotos hochgeladen, wie das Paket zusagt. Laden Sie mehr hoch, dann landet der Überschuss hier.",
     "moveToExtras": "Zu Extras ↓",
     "moveToDelivery": "↑ In die Lieferung",
     "soldBadge": "Verkauft",
     "giftTitle": "Machen Sie Ihrer Kundschaft eine Freude",
     "giftBody": "Lassen Sie sie ein paar der zusätzlichen Fotos gratis aussuchen. Es kostet Sie nichts — die Aufnahmen existieren bereits — und es bleibt in Erinnerung.",
     "giftStateOn": "Ihre Kundschaft darf sich {count, plural, one {# zusätzliches Foto} other {# zusätzliche Fotos}} gratis aussuchen.",
-    "giftStateOff": "Noch keine Gratisfotos."
+    "giftStateOff": "Noch keine Gratisfotos.",
+    "overCapBadge": "Zu viele — das Paket sagt {required} zu",
+    "overCapHint": "Verschieben Sie {over, plural, one {# Foto} other {# Fotos}} zu den zusätzlichen Fotos. Ihre Kundschaft soll sie trotzdem bekommen? Verschieben und unten verschenken.",
+    "photoCounterOver": "{count} Fotos in der Lieferung — das Paket sagt {required} zu. Verschieben Sie {over} zu den zusätzlichen Fotos, um zu senden.",
+    "tooManyPhotos": "Die Lieferung enthält {count} Fotos, dieses Paket sagt aber {required} zu. Verschieben Sie zuerst {over} zu den zusätzlichen Fotos — Ihre Kundschaft kann sie dann kaufen oder gratis erhalten, wenn Sie ein Geschenk festlegen.",
+    "giftUnsaved": "Auf Speichern drücken, damit Ihre Kundschaft {count, plural, one {# zusätzliches Foto} other {# zusätzliche Fotos}} gratis wählen kann.",
+    "giftMoreThanExtras": "Es {available, plural, one {gibt derzeit nur # zusätzliches Foto} other {gibt derzeit nur # zusätzliche Fotos}} zu verschenken.",
+    "giftAll": "Alle verschenken",
+    "moveSurplus": "Die letzten {over} verschieben"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",
@@ -3163,7 +3171,9 @@
     "keepBooking": "Buchung behalten",
     "cancelConfirm2": "Ja, stornieren",
     "declineConfirm": "Ja, ablehnen",
-    "deliveryAccepted": "Lieferung angenommen"
+    "deliveryAccepted": "Lieferung angenommen",
+    "sneakPeekButton": "Vorgeschmack senden",
+    "sneakPeekSent": "Vorgeschmack gesendet"
   },
   "clientDashboard": {
     "title": "Mein Dashboard"
@@ -3438,7 +3448,7 @@
     "promisedPhotosSet": "{count} Fotos dem Kunden zugesagt",
     "promisedPhotosEdit": "ändern",
     "promisedPhotosInvalid": "Geben Sie eine Zahl zwischen 5 und 1000 ein",
-    "promisedPhotosClient": "Ihr Fotograf liefert ~{count} Fotos",
+    "promisedPhotosClient": "Ihr Fotograf liefert {count} Fotos",
     "extrasLine": "{count, plural, one {# zusätzliches Foto} other {# zusätzliche Fotos}}"
   },
   "bookingJourney": {
@@ -4290,6 +4300,6 @@
     "s8title": "Mobile App installieren",
     "s8body": "Push-Nachrichten erreichen Sie in Sekunden, viel schneller als E-Mail. Antworten Sie vom Strand, aus dem Gym, von überall. Suchen Sie \"{brand}\" im App Store oder Play Store, oder tippen Sie unten auf die Badges.",
     "s9title": "Verkaufen Sie die Aufnahmen, die Sie sonst löschen",
-    "s9body": "Sie fotografieren immer mehr, als das Paket zusagt. Auf dem Lieferbildschirm liegen diese Aufnahmen in einer zweiten Gruppe, **Zusätzliche Fotos**, und Ihre Kundschaft kann jedes davon für 2,90 € kaufen — Sie erhalten 2,00 € pro Foto, in jedem Tarif, ausgezahlt sobald die Zahlung durch ist und nicht erst bei der Abnahme.\n\nVerschenken Sie zuerst ein paar. Legen Sie auf demselben Bildschirm eine Anzahl kostenloser Fotos fest, Ihre Kundschaft wählt selbst aus — es kostet Sie nichts, so erfährt sie überhaupt, dass es mehr gibt, und es ist der Unterschied zwischen Verkauf und Geschenk. Liefern Sie genau das Zugesagte, erscheint nichts davon."
+    "s9body": "Sie fotografieren immer mehr, als das Paket zusagt. Auf dem Lieferbildschirm liegen diese Aufnahmen in einer zweiten Gruppe, **Zusätzliche Fotos**, und Ihre Kundschaft kann jedes davon für 2,90 € kaufen — Sie erhalten 2,00 € pro Foto, in jedem Tarif, ausgezahlt sobald die Zahlung durch ist und nicht erst bei der Abnahme.\n\nVerschenken Sie zuerst ein paar. Legen Sie auf demselben Bildschirm eine Anzahl kostenloser Fotos fest, Ihre Kundschaft wählt selbst aus — es kostet Sie nichts, so erfährt sie überhaupt, dass es mehr gibt, und es ist der Unterschied zwischen Verkauf und Geschenk. Laden Sie genau das Zugesagte hoch, erscheint nichts davon."
   }
 }

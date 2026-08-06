@@ -109,11 +109,12 @@ export async function POST(
 
   const booking = await queryOne<{
     photographer_id: string; photographer_user_id: string; client_id: string;
-    status: string; delivery_accepted: boolean;
+    status: string; delivery_accepted: boolean; delivery_token: string | null;
     photographer_name: string; shoot_date: string | null;
   }>(
     `SELECT b.photographer_id, u.id as photographer_user_id, b.client_id, b.status,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
+            b.delivery_token,
             u.name as photographer_name, b.shoot_date::text as shoot_date
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -159,8 +160,8 @@ export async function POST(
     // updated_at bump postpones. The client's redemption path never does.
     if (body.action === "set_gift_slots") {
       const n = parseInt(body.gift_slots, 10);
-      if (!Number.isInteger(n) || n < 0 || n > 500) {
-        return NextResponse.json({ error: "gift_slots must be 0-500" }, { status: 400 });
+      if (!Number.isInteger(n) || n < 0 || n > 999) {
+        return NextResponse.json({ error: "gift_slots must be 0-999" }, { status: 400 });
       }
       const used = await queryOne<{ used: number }>(
         `SELECT COUNT(*)::int AS used FROM delivery_extra_purchases
@@ -203,7 +204,7 @@ export async function POST(
         const required = pkg?.num_photos && Number(pkg.num_photos) > 0
           ? Number(pkg.num_photos)
           : (pkg?.promised_photos && Number(pkg.promised_photos) > 0 ? Number(pkg.promised_photos) : 0);
-        if (required > 0) {
+        if (required > 0 && booking.delivery_token) {
           const after = await queryOne<{ count: string }>(
             `SELECT COUNT(*) AS count FROM delivery_photos
               WHERE booking_id = $1 AND is_included = TRUE
@@ -213,7 +214,7 @@ export async function POST(
           );
           if (parseInt(after?.count || "0") < required) {
             return NextResponse.json({
-              error: `This booking promises ${required} photos. Removing these would leave ${after?.count || 0} — include others first.`,
+              error: `The client has already seen this gallery. It promises ${required} photos and removing these would leave ${after?.count || 0} — include others first.`,
               code: "below_promise",
             }, { status: 400 });
           }
@@ -440,25 +441,45 @@ export async function POST(
       // lock photographs the client has already been looking at — and, on the
       // 5,308 rows that predate this feature, would put half of a finished
       // delivery up for sale behind their back.
+      // Clamps rather than skips. It used to bail out the moment ANY row had
+      // been curated by hand, which left a hole: split the piles on the web,
+      // where sharing over the promise is blocked, then hit Share from the
+      // phone — which has no split screen — and the surplus shipped for free.
+      // Ranking over the still-included rows leaves hand-made extras exactly
+      // where the photographer put them and trims only what is left over.
       if (requiredPhotos > 0 && booking.status !== "delivered") {
-        const alreadyCurated = await queryOne<{ count: string }>(
-          "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1 AND is_included = FALSE",
+        await queryOne(
+          `WITH ranked AS (
+             SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order, created_at) AS rn
+               FROM delivery_photos
+              WHERE booking_id = $1 AND is_included = TRUE
+                AND COALESCE(media_type, 'image') <> 'video'
+           )
+           UPDATE delivery_photos dp
+              SET is_included = FALSE
+             FROM ranked r
+            WHERE dp.id = r.id AND r.rn > $2 AND dp.purchased_at IS NULL
+            RETURNING dp.id`,
+          [id, requiredPhotos]
+        );
+      }
+
+      // Re-count after the clamp, immediately before the gallery becomes real.
+      // The count above was taken before a bcrypt hash and a flip; relaxing the
+      // pre-share floor means a photo can be moved to extras in another tab in
+      // that window, and the first read would not have seen it.
+      if (requiredPhotos > 0) {
+        const finalCnt = await queryOne<{ photos: string }>(
+          `SELECT COUNT(*) FILTER (WHERE COALESCE(media_type, 'image') <> 'video') AS photos
+             FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE`,
           [id]
         );
-        if (parseInt(alreadyCurated?.count || "0") === 0) {
-          await queryOne(
-            `WITH ranked AS (
-               SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order, created_at) AS rn
-                 FROM delivery_photos
-                WHERE booking_id = $1 AND COALESCE(media_type, 'image') <> 'video'
-             )
-             UPDATE delivery_photos dp
-                SET is_included = FALSE
-               FROM ranked r
-              WHERE dp.id = r.id AND r.rn > $2 AND dp.purchased_at IS NULL
-              RETURNING dp.id`,
-            [id, requiredPhotos]
-          );
+        const finalPhotos = parseInt(finalCnt?.photos || "0");
+        if (finalPhotos < requiredPhotos) {
+          return NextResponse.json({
+            error: `This booking promises ${requiredPhotos} photos and the delivery now holds ${finalPhotos}.`,
+            code: "insufficient_photos", required: requiredPhotos, uploaded: finalPhotos,
+          }, { status: 400 });
         }
       }
 

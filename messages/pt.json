@@ -2838,14 +2838,22 @@
     "sectionIncludedHint": "O que o seu cliente recebe. Passe o rato sobre uma foto para a mover.",
     "sectionExtras": "Fotografias extra · {count}",
     "sectionExtrasHint": "Propostas ao cliente a 2,90 € cada. Recebe 2,00 € de cada uma.",
-    "sectionExtrasEmpty": "Ainda não há nada aqui. Mova uma fotografia para baixo e o cliente poderá comprá-la.",
+    "sectionExtrasEmpty": "Ainda não há nada aqui — carregou exatamente o que o pacote prometia. Carregue mais e o excedente vem para cá.",
     "moveToExtras": "Passar a extra ↓",
     "moveToDelivery": "↑ Juntar à entrega",
     "soldBadge": "Vendida",
     "giftTitle": "Faça o dia do seu cliente",
     "giftBody": "Deixe-o escolher algumas das fotografias extra de graça. Não lhe custa nada — já as tirou — e os clientes não se esquecem.",
     "giftStateOn": "O seu cliente pode escolher {count, plural, one {# fotografia extra} other {# fotografias extra}} de graça.",
-    "giftStateOff": "Ainda sem fotografias grátis."
+    "giftStateOff": "Ainda sem fotografias grátis.",
+    "overCapBadge": "Demasiadas — o pacote promete {required}",
+    "overCapHint": "Mova {over, plural, one {# fotografia} other {# fotografias}} para as extra. Quer que o cliente as tenha na mesma? Mova-as e ofereça-as com o presente abaixo.",
+    "photoCounterOver": "{count} fotografias na entrega — o pacote promete {required}. Mova {over} para as extra para enviar.",
+    "tooManyPhotos": "A entrega tem {count} fotografias mas este pacote promete {required}. Mova {over} para as extra — o cliente poderá comprá-las, ou recebê-las de graça se definir um presente.",
+    "giftUnsaved": "Carregue em Guardar para o cliente poder escolher {count, plural, one {# fotografia extra} other {# fotografias extra}} de graça.",
+    "giftMoreThanExtras": "Só {available, plural, one {existe # fotografia extra} other {existem # fotografias extra}} para oferecer neste momento.",
+    "giftAll": "Oferecer todas",
+    "moveSurplus": "Mover as últimas {over} para baixo"
   },
   "availability": {
     "pageTitle": "Disponibilidade",
@@ -2937,7 +2945,9 @@
     "keepBooking": "Manter reserva",
     "cancelConfirm2": "Sim, cancelar",
     "declineConfirm": "Sim, recusar",
-    "deliveryAccepted": "Entrega aceite"
+    "deliveryAccepted": "Entrega aceite",
+    "sneakPeekButton": "Enviar uma antevisão",
+    "sneakPeekSent": "Antevisão enviada"
   },
   "clientDashboard": {
     "title": "O Meu Painel"
@@ -3212,7 +3222,7 @@
     "promisedPhotosSet": "{count} fotos prometidas ao cliente",
     "promisedPhotosEdit": "alterar",
     "promisedPhotosInvalid": "Introduza um número entre 5 e 1000",
-    "promisedPhotosClient": "O seu fotógrafo vai entregar ~{count} fotos",
+    "promisedPhotosClient": "O seu fotógrafo vai entregar {count} fotos",
     "extrasLine": "{count, plural, one {# fotografia extra} other {# fotografias extra}}"
   },
   "bookingJourney": {
@@ -3572,7 +3582,7 @@
         },
         "sellExtras": {
           "question": "Fiz mais fotografias do que o pacote prometia. O que faço com elas?",
-          "answer": "Mostre-as ao cliente em vez de as apagar. No ecrã de entrega as suas fotografias ficam em dois grupos: **Na entrega** — o que o cliente recebe, as fotografias prometidas pelo pacote — e **Fotografias extra**, que o cliente pode comprar a 2,90 € cada.\n\nSe carregar mais do que prometeu, as primeiras preenchem a entrega e as restantes descem para as extra. Nada fica decidido — passe o rato sobre uma fotografia e mova-a para cima ou para baixo até os dois grupos ficarem como quer. Depois envie.\n\nSó há duas regras. Pode entregar mais do que prometeu, nunca menos: se o pacote diz 20 fotografias, saem pelo menos 20. E uma fotografia já comprada passa a ser do cliente — não pode apagá-la nem trazê-la de volta.\n\nSe carregar exatamente o que prometeu, nada disto aparece. Sem preços, sem extra, sem nada para o cliente comprar."
+          "answer": "Mostre-as ao cliente em vez de as apagar. No ecrã de entrega as suas fotografias ficam em dois grupos: **Na entrega** — o que o cliente recebe, as fotografias prometidas pelo pacote — e **Fotografias extra**, que o cliente pode comprar a 2,90 € cada.\n\nSe carregar mais do que prometeu, as primeiras preenchem a entrega e as restantes descem para as extra. Nada fica decidido — passe o rato sobre uma fotografia e mova-a para cima ou para baixo até os dois grupos ficarem como quer. O botão de envio desbloqueia quando a entrega tiver exatamente o que prometeu.\n\nSó há duas regras. A entrega é exatamente a promessa: se o pacote diz 20 fotografias, saem 20 — o ecrã não envia nem mais nem menos. E uma fotografia já comprada passa a ser do cliente — não pode apagá-la nem trazê-la de volta.\n\nSe carregar exatamente o que prometeu, nada disto aparece. Sem preços, sem extra, sem nada para o cliente comprar."
         },
         "extrasEarnings": {
           "question": "Quanto recebo por cada fotografia extra?",
@@ -3592,7 +3602,7 @@
         },
         "giveEverything": {
           "question": "E se eu quiser dar tudo ao cliente?",
-          "answer": "Então dê. Passe todas as fotografias para a entrega e não fica nada para vender — a galeria do cliente não fala em fotografias extra e não mostra nenhum preço.\n\nTambém pode ficar no meio: entregar 25 das 35 que fez e propor 10, ou propor 10 e deixar o cliente escolher 3 de graça. A decisão é sua em cada reserva, e na próxima pode decidir de outra maneira."
+          "answer": "Então ofereça — através do presente, não enchendo a entrega.\n\nA entrega tem sempre exatamente o que o pacote prometeu. Passe o excedente para **Fotografias extra** e defina o presente com esse mesmo número: 5 prometidas, 9 fotografadas, quatro nas extra, presente 4. O cliente escolhe as quatro de graça e não paga nada.\n\nPode ficar em qualquer ponto intermédio. Nove fotografadas contra uma promessa de cinco: presente 2 e o cliente leva sete de graça e pode comprar as duas últimas. Presente 0 e as quatro ficam à venda. A decisão é sua em cada marcação, e pode decidir de outra forma na seguinte."
         }
       },
       "payments": {
@@ -4290,6 +4300,6 @@
     "s8title": "Instale a aplicação móvel",
     "s8body": "As notificações push chegam em segundos, muito antes de um email. Pode responder da praia, do ginásio ou de onde estiver. Procure \"{brand}\" na App Store ou Play Store, ou toque nos botões abaixo.",
     "s9title": "Venda as fotografias que ia apagar",
-    "s9body": "Fotografa sempre mais do que o pacote promete. No ecrã de entrega essas fotografias a mais ficam num segundo grupo, **Fotografias extra**, e o seu cliente pode comprar qualquer uma delas por 2,90 € — recebe 2,00 € por cada, em qualquer plano, assim que o pagamento é confirmado e não só na aceitação.\n\nOfereça algumas primeiro. Defina no mesmo ecrã quantas fotografias quer dar e o cliente escolhe quais — não lhe custa nada, é assim que ele descobre que existem mais, e é a diferença entre uma venda e um presente. Se entregar exatamente o que prometeu, nada disto aparece."
+    "s9body": "Fotografa sempre mais do que o pacote promete. No ecrã de entrega essas fotografias a mais ficam num segundo grupo, **Fotografias extra**, e o seu cliente pode comprar qualquer uma delas por 2,90 € — recebe 2,00 € por cada, em qualquer plano, assim que o pagamento é confirmado e não só na aceitação.\n\nOfereça algumas primeiro. Defina no mesmo ecrã quantas fotografias quer dar e o cliente escolhe quais — não lhe custa nada, é assim que ele descobre que existem mais, e é a diferença entre uma venda e um presente. Se carregar exatamente o que prometeu, nada disto aparece."
   }
 }

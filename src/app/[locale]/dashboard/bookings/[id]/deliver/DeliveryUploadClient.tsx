@@ -77,8 +77,10 @@ export function DeliveryUploadClient({
   const [resent, setResent] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
   const [giftSlots, setGiftSlots] = useState(initialGiftSlots);
-  const [giftDraft, setGiftDraft] = useState(String(initialGiftSlots || ""));
+  const [giftDraft, setGiftDraft] = useState(String(initialGiftSlots ?? 0));
   const [giftSaving, setGiftSaving] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [bulkMoving, setBulkMoving] = useState(false);
 
   // canEdit: photographer can edit the deliverable up until the client
   // formally accepts. Sharing the link doesn't lock anything — the client
@@ -234,6 +236,48 @@ export function DeliveryUploadClient({
   // counted toward a photo promise and are not sold.
   const includedPhotos = photos.filter((p) => p.is_included !== false);
   const extraPhotos = photos.filter((p) => p.is_included === false);
+  // The promise is counted in PHOTOS. Videos live in the delivery pile but are
+  // not part of any count, so every number that gates sharing derives from
+  // this one value instead of being recomputed inline four different ways.
+  const includedPhotoCount = includedPhotos.filter((p) => p.media_type !== "video").length;
+  // Only while the photographer can still act on it. An accepted delivery has
+  // no move buttons, no gift panel and a server that refuses every write, so
+  // the warning there would be a permanent alarm with no off switch — and on
+  // this platform 26 finished deliveries are legitimately over their promise.
+  const overBy = requiredPhotos > 0 && !delivered && !clientAccepted
+    ? Math.max(0, includedPhotoCount - requiredPhotos)
+    : 0;
+
+  // Moving 180 photos one at a time is not a workflow. The API already takes
+  // an array; this is the single call that does the whole split.
+  const surplusIds = overBy > 0
+    ? includedPhotos.filter((p) => p.media_type !== "video" && !p.purchased_at).slice(requiredPhotos).map((p) => p.id)
+    : [];
+
+  async function moveSurplusToExtras() {
+    if (surplusIds.length === 0 || bulkMoving) return;
+    setBulkMoving(true);
+    const before = photos;
+    const ids = new Set(surplusIds);
+    setPhotos((prev) => prev.map((p) => (ids.has(p.id) ? { ...p, is_included: false } : p)));
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_included", photo_ids: surplusIds, included: false }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setPhotos(before);
+        alert(data?.error || t("includeFailed"));
+      }
+    } catch {
+      setPhotos(before);
+      alert(t("includeFailed"));
+    } finally {
+      setBulkMoving(false);
+    }
+  }
   const showSplit = extraPhotos.length > 0 ||
     (requiredPhotos > 0 && photos.filter((p) => p.media_type !== "video").length > requiredPhotos);
 
@@ -675,7 +719,19 @@ export function DeliveryUploadClient({
     }
     // Held-back extras are on offer, not delivered — they must not count
     // toward the promise, nor inflate the number quoted to the photographer.
-    const deliverablePhotos = photos.filter((p) => p.media_type !== "video" && p.is_included !== false).length;
+    const deliverablePhotos = includedPhotoCount;
+    if (requiredPhotos > 0 && deliverablePhotos > requiredPhotos) {
+      // The delivery is the promise, exactly. Surplus frames belong in the
+      // extras pile, where the client can buy them — or receive them free if
+      // the photographer sets a gift. Sending them silently gives away work
+      // and leaves nothing to sell.
+      setError(t("tooManyPhotos", {
+        count: deliverablePhotos,
+        required: requiredPhotos,
+        over: deliverablePhotos - requiredPhotos,
+      }));
+      return;
+    }
     if (requiredPhotos > 0 && deliverablePhotos < requiredPhotos) {
       // Mirror the server guard so the photographer sees it before the
       // confirm dialog. Videos don't count toward the package photo minimum.
@@ -734,6 +790,7 @@ export function DeliveryUploadClient({
         setError(data?.code === "insufficient_photos"
           ? t("needMorePhotos", { required: data.required, count: data.uploaded })
           : (data?.error || "Failed to share delivery. Please try again."));
+        setSharing(false);
         return;
       }
       setDelivered(true);
@@ -758,7 +815,17 @@ export function DeliveryUploadClient({
       setError(t("setPassword"));
       return;
     }
-    const photoCnt = photos.filter((p) => p.media_type !== "video").length;
+    // Adding photos after the first share is exactly how a gallery goes over
+    // its promise, and this button used to ship every surplus frame for free.
+    if (requiredPhotos > 0 && includedPhotoCount > requiredPhotos) {
+      setError(t("tooManyPhotos", {
+        count: includedPhotoCount,
+        required: requiredPhotos,
+        over: includedPhotoCount - requiredPhotos,
+      }));
+      return;
+    }
+    const photoCnt = includedPhotoCount;
     const ok = await confirm(t("resendToClient"), t("confirmResend", { count: photoCnt }), { confirmLabel: t("resendToClient") });
     if (!ok) return;
     setResending(true);
@@ -818,58 +885,6 @@ export function DeliveryUploadClient({
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {/* Title + warm message — always editable, regardless of whether
-          photos are locked. This is just text, not part of the deliverable;
-          letting the photographer fix typos / add a thank-you note even
-          after the client accepted is harmless and useful. */}
-      <div className="mb-6 rounded-xl border border-warm-200 bg-white p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">{t("messageHeading")}</h3>
-          <span className="text-xs text-gray-400">
-            {savingMessage ? t("messageSaving") : messageSaved ? t("messageSaved") : ""}
-          </span>
-        </div>
-        <input
-          type="text"
-          // This is a free-text gallery title, NOT a contact field — but the
-          // browser's email/name autofill kept dropping a saved address (e.g.
-          // "info@photoportugal.com") into it. Disable autofill + password
-          // managers so photographers only ever see what they typed.
-          autoComplete="off"
-          autoCorrect="off"
-          data-1p-ignore
-          data-lpignore="true"
-          name="delivery-gallery-title"
-          value={deliveryTitle}
-          onChange={(e) => {
-            setDeliveryTitle(e.target.value);
-            scheduleSaveMessage(e.target.value, deliveryMessage);
-          }}
-          placeholder={t("titlePlaceholder")}
-          maxLength={200}
-          className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-        />
-        <p className="mt-1.5 text-[11px] leading-snug text-gray-400">{t("titleHelp")}</p>
-        <textarea
-          autoComplete="off"
-          data-1p-ignore
-          data-lpignore="true"
-          name="delivery-gallery-message"
-          value={deliveryMessage}
-          onChange={(e) => {
-            setDeliveryMessage(e.target.value);
-            scheduleSaveMessage(deliveryTitle, e.target.value);
-          }}
-          placeholder={t("messagePlaceholder")}
-          maxLength={1500}
-          rows={4}
-          className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-        />
-        <div className="mt-1.5 flex items-start justify-between gap-3">
-          <p className="text-[11px] leading-snug text-gray-400">{t("messageHelp")}</p>
-          <p className="shrink-0 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
-        </div>
-      </div>
 
       {/* Upload area — shown until the client has accepted (pre-share + post-share edit window). */}
       {canEdit && (
@@ -1008,7 +1023,59 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Share / Deliver section — between stats and grid */}
+
+      {/* Two piles, tap to move. Nothing to read, nothing to switch on. */}
+      {photos.length > 0 && showSplit && (
+        <>
+          <div className={`mt-6 flex flex-wrap items-baseline justify-between gap-2 border-b-2 pb-2 ${overBy > 0 ? "border-red-300" : "border-accent-200"}`}>
+            <h3 className={`text-base font-bold ${overBy > 0 ? "text-red-700" : "text-gray-900"}`}>
+              {overBy > 0 ? "⚠" : "✓"} {t("sectionIncluded", { count: includedPhotoCount })}
+              {overBy > 0 && (
+                <span className="ml-2 rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
+                  {t("overCapBadge", { required: requiredPhotos })}
+                </span>
+              )}
+            </h3>
+            <p className="text-xs text-gray-500">{t("sectionIncludedHint")}</p>
+          </div>
+          {overBy > 0 && (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2">
+              <p className="text-sm font-medium text-red-800">{t("overCapHint", { over: overBy })}</p>
+              <button
+                type="button"
+                onClick={moveSurplusToExtras}
+                disabled={bulkMoving}
+                className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {bulkMoving ? "…" : t("moveSurplus", { over: overBy })}
+              </button>
+            </div>
+          )}
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {includedPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
+            <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
+            <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
+          </div>
+          {extraPhotos.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {extraPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+            </div>
+          )}
+        </>
+      )}
+
+      {photos.length > 0 && !showSplit && (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {photos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+        </div>
+      )}
+
+      {/* Peek, message and gift — the arranging tools. */}
       {photos.length > 0 && (
         <div className="mt-4">
           {delivered ? (
@@ -1097,46 +1164,68 @@ export function DeliveryUploadClient({
                 </div>
               );
             })()}
-            <div className="flex flex-wrap items-end gap-3 rounded-xl border border-warm-200 bg-warm-50 p-4">
-              <div className="flex-1 min-w-[200px]">
-                <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">
-                  {t("galleryPassword")}
-                </label>
-                <input
-                  id="gallery-password"
-                  type="text"
-                  value={galleryPassword}
-                  onChange={(e) => setGalleryPassword(e.target.value)}
-                  placeholder={t("galleryPasswordPlaceholder")}
-                  className="mt-1.5 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:w-56"
-                />
-              </div>
-              <button
-                onClick={handleShare}
-                disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4 || (requiredPhotos > 0 && includedPhotos.filter((p) => p.media_type !== "video").length < requiredPhotos)}
-                className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
-              >
-                {(() => {
-                  if (sharing) return t("sharing");
-                  const photoCnt = includedPhotos.filter((p) => p.media_type !== "video").length;
-                  const videoCnt = photos.filter((p) => p.media_type === "video").length;
-                  if (videoCnt === 0) return t("sharePhotos", { count: photoCnt });
-                  if (photoCnt === 0) return t("shareVideos", { count: videoCnt });
-                  return t("sharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
-                })()}
-              </button>
-              {requiredPhotos > 0 && (() => {
-                const dp = includedPhotos.filter((p) => p.media_type !== "video").length;
-                const short = dp < requiredPhotos;
-                return (
-                  <p className={`w-full text-xs ${short ? "font-medium text-amber-700" : "text-gray-500"}`}>
-                    {short
-                      ? t("photoCounterShort", { count: dp, required: requiredPhotos, remaining: requiredPhotos - dp })
-                      : t("photoCounterOk", { count: dp, required: requiredPhotos })}
-                  </p>
-                );
-              })()}
+          {/* Optional, and it was sitting at the very top of the page — before
+              a single photo had been uploaded and a full screen away from the
+              button that sends it. Now it is one line next to Share. */}
+          <div className="mb-3 rounded-xl border border-warm-200 bg-white">
+            <button
+              type="button"
+              onClick={() => setMessageOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
+            >
+              <span className="min-w-0 truncate text-sm text-gray-700">
+                <span className="font-semibold text-gray-900">{t("messageHeading")}</span>
+                {deliveryTitle.trim() && <span className="ml-2 text-gray-500">{deliveryTitle}</span>}
+              </span>
+              <span className="shrink-0 text-xs text-gray-400">
+                {savingMessage ? t("messageSaving") : messageSaved ? t("messageSaved") : (messageOpen ? "▴" : "▾")}
+              </span>
+            </button>
+            {messageOpen && (
+              <div className="border-t border-warm-200 px-4 pb-4">
+            <input
+            type="text"
+            // This is a free-text gallery title, NOT a contact field — but the
+            // browser's email/name autofill kept dropping a saved address (e.g.
+            // "info@photoportugal.com") into it. Disable autofill + password
+            // managers so photographers only ever see what they typed.
+            autoComplete="off"
+            autoCorrect="off"
+            data-1p-ignore
+            data-lpignore="true"
+            name="delivery-gallery-title"
+            value={deliveryTitle}
+            onChange={(e) => {
+            setDeliveryTitle(e.target.value);
+            scheduleSaveMessage(e.target.value, deliveryMessage);
+            }}
+            placeholder={t("titlePlaceholder")}
+            maxLength={200}
+            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            />
+            <p className="mt-1.5 text-[11px] leading-snug text-gray-400">{t("titleHelp")}</p>
+            <textarea
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
+            name="delivery-gallery-message"
+            value={deliveryMessage}
+            onChange={(e) => {
+            setDeliveryMessage(e.target.value);
+            scheduleSaveMessage(deliveryTitle, e.target.value);
+            }}
+            placeholder={t("messagePlaceholder")}
+            maxLength={1500}
+            rows={4}
+            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            />
+            <div className="mt-1.5 flex items-start justify-between gap-3">
+            <p className="text-[11px] leading-snug text-gray-400">{t("messageHelp")}</p>
+            <p className="shrink-0 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
             </div>
+              </div>
+            )}
+          </div>
             {(showSplit || giftSlots > 0) && !clientAccepted && (
               <div className="mt-3 w-full rounded-xl border border-accent-200 bg-accent-50 p-4">
                 <p className="text-sm font-bold text-accent-900">🎁 {t("giftTitle")}</p>
@@ -1147,10 +1236,24 @@ export function DeliveryUploadClient({
                     onClick={() => setGiftDraft(String(Math.max(0, (parseInt(giftDraft, 10) || 0) - 1)))}
                     className="h-9 w-9 rounded-lg border border-accent-300 bg-white text-lg font-bold text-accent-700"
                   >−</button>
-                  <span className="min-w-[2.5rem] text-center text-xl font-bold text-accent-900">{parseInt(giftDraft, 10) || 0}</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={999}
+                    value={giftDraft}
+                    onChange={(e) => {
+                      // Keep it a free-text field while typing — clamping on every
+                      // keystroke makes "1" impossible to turn into "12".
+                      const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 3);
+                      setGiftDraft(raw);
+                    }}
+                    onBlur={() => setGiftDraft(String(Math.min(999, parseInt(giftDraft, 10) || 0)))}
+                    className="h-9 w-16 rounded-lg border border-accent-300 bg-white text-center text-xl font-bold text-accent-900 focus:border-accent-500 focus:outline-none"
+                  />
                   <button
                     type="button"
-                    onClick={() => setGiftDraft(String((parseInt(giftDraft, 10) || 0) + 1))}
+                    onClick={() => setGiftDraft(String(Math.min(999, (parseInt(giftDraft, 10) || 0) + 1)))}
                     className="h-9 w-9 rounded-lg border border-accent-300 bg-white text-lg font-bold text-accent-700"
                   >+</button>
                   <button
@@ -1162,9 +1265,24 @@ export function DeliveryUploadClient({
                     {giftSaving ? "…" : t("save")}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-accent-700">
-                  {giftSlots > 0 ? t("giftStateOn", { count: giftSlots }) : t("giftStateOff")}
-                </p>
+                {(() => {
+                  const draft = parseInt(giftDraft, 10) || 0;
+                  // The counter shows the draft; showing the SAVED number
+                  // underneath it read as a bug ("11" above, "2" below).
+                  if (draft !== giftSlots) {
+                    return <p className="mt-2 text-xs font-semibold text-accent-800">{t("giftUnsaved", { count: draft })}</p>;
+                  }
+                  return (
+                    <>
+                      <p className="mt-2 text-xs text-accent-700">
+                        {giftSlots > 0 ? t("giftStateOn", { count: giftSlots }) : t("giftStateOff")}
+                      </p>
+                      {giftSlots > extraPhotos.length && (
+                        <p className="mt-1 text-xs text-amber-700">{t("giftMoreThanExtras", { available: extraPhotos.length })}</p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
             </>
@@ -1172,34 +1290,52 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Two piles, tap to move. Nothing to read, nothing to switch on. */}
-      {photos.length > 0 && showSplit && (
-        <>
-          <div className="mt-6 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-accent-200 pb-2">
-            <h3 className="text-base font-bold text-gray-900">✓ {t("sectionIncluded", { count: includedPhotos.length })}</h3>
-            <p className="text-xs text-gray-500">{t("sectionIncludedHint")}</p>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {includedPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
-            <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
-            <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
-          </div>
-          {extraPhotos.length === 0 ? (
-            <p className="mt-3 rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
-          ) : (
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {extraPhotos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+      {/* Send — the last step, pinned to the bottom of the screen so a
+          500-photo delivery never puts it several screens below the fold. */}
+      {photos.length > 0 && !delivered && (
+        <div className="sticky bottom-0 z-30 pb-2">
+          <div className="flex flex-wrap items-end gap-3 rounded-xl border border-warm-300 bg-warm-50/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-warm-50/80">
+            <div className="flex-1 min-w-[200px]">
+              <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">
+                {t("galleryPassword")}
+              </label>
+              <input
+                id="gallery-password"
+                type="text"
+                value={galleryPassword}
+                onChange={(e) => setGalleryPassword(e.target.value)}
+                placeholder={t("galleryPasswordPlaceholder")}
+                className="mt-1.5 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:w-56"
+              />
             </div>
-          )}
-        </>
-      )}
-
-      {photos.length > 0 && !showSplit && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {photos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+            <button
+              onClick={handleShare}
+              disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4 || (requiredPhotos > 0 && (includedPhotoCount < requiredPhotos || overBy > 0))}
+              className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
+            >
+              {(() => {
+                if (sharing) return t("sharing");
+                const photoCnt = includedPhotoCount;
+                const videoCnt = photos.filter((p) => p.media_type === "video").length;
+                if (videoCnt === 0) return t("sharePhotos", { count: photoCnt });
+                if (photoCnt === 0) return t("shareVideos", { count: videoCnt });
+                return t("sharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
+              })()}
+            </button>
+            {requiredPhotos > 0 && (() => {
+              const dp = includedPhotoCount;
+              const short = dp < requiredPhotos;
+              return (
+                <p className={`w-full text-xs ${overBy > 0 ? "font-semibold text-red-600" : short ? "font-medium text-amber-700" : "text-gray-500"}`}>
+                  {overBy > 0
+                    ? t("photoCounterOver", { count: dp, required: requiredPhotos, over: overBy })
+                    : short
+                      ? t("photoCounterShort", { count: dp, required: requiredPhotos, remaining: requiredPhotos - dp })
+                      : t("photoCounterOk", { count: dp, required: requiredPhotos })}
+                </p>
+              );
+            })()}
+          </div>
         </div>
       )}
 

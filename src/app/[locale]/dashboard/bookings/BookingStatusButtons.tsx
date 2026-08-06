@@ -132,6 +132,7 @@ export function BookingStatusButtons({
   if (currentStatus === "completed" && !deliveryAccepted) {
     return (
       <div>
+        <div className="flex flex-wrap items-center gap-2">
         <Link
           href={`/dashboard/bookings/${bookingId}/deliver`}
           className="inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700"
@@ -141,6 +142,17 @@ export function BookingStatusButtons({
           </svg>
           {t("uploadDeliverPhotos")}
         </Link>
+        {/* The peek itself lives on the deliver screen — it needs 1-10 photos
+            already uploaded, and this card has no uploader. So this is a
+            signpost, not a second way to send: photographers were not finding
+            the option at all. */}
+        <Link
+          href={`/dashboard/bookings/${bookingId}/deliver`}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-violet-300 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-100"
+        >
+          ✨ {t("sneakPeekButton")}
+        </Link>
+        </div>
         <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">{t("uploadDeliverHint")}</p>
       </div>
     );

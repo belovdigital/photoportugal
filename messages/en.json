@@ -2838,7 +2838,7 @@
         },
         "sellExtras": {
           "question": "I shot more photos than the package promised. What do I do with them?",
-          "answer": "Show them to your client instead of deleting them. On the delivery screen your photos sit in two groups: **In the delivery** — what your client gets, the photos the package promised — and **Extra photos**, which your client can buy for €2.90 each.\n\nUpload more than you promised and the first ones fill the delivery; the rest drop into the extras. Nothing is fixed — hover a photo and move it up or down until both groups look right, then send.\n\nTwo rules, that is all. You can deliver more than you promised, never fewer: if the package says 20 photos, at least 20 go out. And a photo your client has bought is theirs — you cannot delete it or take it back.\n\nUpload exactly what you promised and none of this appears. No prices, no extras, nothing for your client to buy."
+          "answer": "Show them to your client instead of deleting them. On the delivery screen your photos sit in two groups: **In the delivery** — what your client gets, the photos the package promised — and **Extra photos**, which your client can buy for €2.90 each.\n\nUpload more than you promised and the first ones fill the delivery; the rest drop into the extras. Nothing is fixed — hover a photo and move it up or down until both groups look right. The Share button unlocks once the delivery holds exactly what you promised.\n\nTwo rules, that is all. The delivery is the promise, exactly: if the package says 20 photos, 20 go out — the screen will not send more or fewer. And a photo your client has bought is theirs — you cannot delete it or take it back.\n\nUpload exactly what you promised and none of this appears. No prices, no extras, nothing for your client to buy."
         },
         "extrasEarnings": {
           "question": "What do I earn on an extra photo?",
@@ -2858,7 +2858,7 @@
         },
         "giveEverything": {
           "question": "What if I want to give my client everything?",
-          "answer": "Then give it. Move every photo into the delivery and nothing is left to sell — your client's gallery says nothing about extra photos and shows no price anywhere.\n\nYou can also sit anywhere in between: deliver 25 of the 35 you shot and offer 10, or offer 10 and let your client choose 3 of them for free. It is your call on every booking, and you can decide differently on the next one."
+          "answer": "Then give it — through the gift, not by stuffing the delivery.\n\nThe delivery always holds exactly what the package promised. So move the surplus down to **Extra photos** and set the gift to that same number: promised 5, shot 9, four in extras, gift 4. Your client picks all four for free and pays nothing.\n\nYou can sit anywhere in between. Nine shot against a promise of five: gift 2 and your client takes seven free and can buy the last two. Gift 0 and all four are for sale. It is your call on every booking, and you can decide differently on the next one."
         }
       },
       "payments": {
@@ -3058,14 +3058,22 @@
     "sectionIncludedHint": "What your client gets. Hover a photo to move it.",
     "sectionExtras": "Extra photos · {count}",
     "sectionExtrasHint": "Offered to your client at €2.90 each. You get €2.00 of that.",
-    "sectionExtrasEmpty": "Nothing here yet. Move a photo down and your client can buy it.",
+    "sectionExtrasEmpty": "Nothing here yet — you uploaded exactly what the package promised. Upload more and the surplus lands here.",
     "moveToExtras": "Move to extras ↓",
     "moveToDelivery": "↑ Add to delivery",
     "soldBadge": "Sold",
     "giftTitle": "Make your client's day",
     "giftBody": "Let them choose a few of the extra photos for free. It costs you nothing — you have already taken them — and clients remember it.",
     "giftStateOn": "Your client can pick {count, plural, one {# extra photo} other {# extra photos}} for free.",
-    "giftStateOff": "No free photos yet."
+    "giftStateOff": "No free photos yet.",
+    "overCapBadge": "Too many — the package promises {required}",
+    "overCapHint": "Move {over, plural, one {# photo} other {# photos}} down to Extra photos. Want your client to have them anyway? Move them down and give them away with the gift below.",
+    "photoCounterOver": "{count} photos in the delivery — the package promises {required}. Move {over} to Extra photos to share.",
+    "tooManyPhotos": "The delivery holds {count} photos but this package promises {required}. Move {over} to Extra photos first — your client can then buy them, or receive them free if you set a gift.",
+    "giftUnsaved": "Press Save to let your client pick {count, plural, one {# extra photo} other {# extra photos}} for free.",
+    "giftMoreThanExtras": "There {available, plural, one {is only # extra photo} other {are only # extra photos}} to give right now.",
+    "giftAll": "Give them all",
+    "moveSurplus": "Move the last {over} down"
   },
   "availability": {
     "pageTitle": "Availability",
@@ -3157,7 +3165,9 @@
     "keepBooking": "Keep booking",
     "cancelConfirm2": "Yes, cancel",
     "declineConfirm": "Yes, decline",
-    "deliveryAccepted": "Delivery accepted"
+    "deliveryAccepted": "Delivery accepted",
+    "sneakPeekButton": "Send a sneak peek",
+    "sneakPeekSent": "Sneak peek sent"
   },
   "clientDashboard": {
     "title": "My Dashboard"
@@ -3432,7 +3442,7 @@
     "promisedPhotosSet": "{count} photos promised to the client",
     "promisedPhotosEdit": "change",
     "promisedPhotosInvalid": "Enter a number between 5 and 1000",
-    "promisedPhotosClient": "Your photographer will deliver ~{count} photos",
+    "promisedPhotosClient": "Your photographer will deliver {count} photos",
     "extrasLine": "{count, plural, one {# extra photo} other {# extra photos}}"
   },
   "bookingJourney": {
@@ -4284,6 +4294,6 @@
     "s8title": "Install the mobile app",
     "s8body": "Push notifications hit you within seconds — way faster than email. You can reply from a beach, the gym, anywhere. Search \"{brand}\" on App Store or Play Store, or tap the badges below.",
     "s9title": "Sell the frames you'd have deleted",
-    "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for €2.90 — you get €2.00 of that on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Deliver exactly what you promised and none of this appears to anyone."
+    "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for €2.90 — you get €2.00 of that on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Upload exactly what you promised and none of this appears to anyone."
   }
 }

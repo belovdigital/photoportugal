@@ -3091,7 +3091,7 @@
         },
         "sellExtras": {
           "question": "J'ai pris plus de photos que le forfait n'en promet. Qu'est-ce que j'en fais ?",
-          "answer": "Montrez-les à votre client plutôt que de les supprimer. Sur l'écran de livraison, vos photos sont réparties en deux groupes : **Dans la livraison** — ce que votre client reçoit, les photos promises par le forfait — et **Photos supplémentaires**, que votre client peut acheter 2,90 € pièce.\n\nSi vous en téléversez plus que promis, les premières remplissent la livraison et les autres descendent dans les supplémentaires. Rien n'est figé : survolez une photo et faites-la monter ou descendre jusqu'à ce que les deux groupes vous conviennent. Puis envoyez.\n\nDeux règles, pas plus. Vous pouvez livrer plus que promis, jamais moins : si le forfait annonce 20 photos, il en part au moins 20. Et une photo déjà achetée appartient à votre client — impossible de la supprimer ou de la reprendre.\n\nSi vous téléversez exactement ce que vous avez promis, rien de tout cela n'apparaît. Aucun prix, aucune photo supplémentaire, rien à acheter."
+          "answer": "Montrez-les à votre client plutôt que de les supprimer. Sur l'écran de livraison, vos photos sont réparties en deux groupes : **Dans la livraison** — ce que votre client reçoit, les photos promises par le forfait — et **Photos supplémentaires**, que votre client peut acheter 2,90 € pièce.\n\nSi vous en téléversez plus que promis, les premières remplissent la livraison et les autres descendent dans les supplémentaires. Rien n'est figé : survolez une photo et faites-la monter ou descendre jusqu'à ce que les deux groupes vous conviennent. Le bouton d'envoi se débloque lorsque la livraison contient exactement ce que vous avez promis.\n\nDeux règles, pas plus. La livraison correspond exactement à la promesse : si le forfait annonce 20 photos, il en part 20 — l'écran n'en envoie ni plus ni moins. Et une photo déjà achetée appartient à votre client — impossible de la supprimer ou de la reprendre.\n\nSi vous téléversez exactement ce que vous avez promis, rien de tout cela n'apparaît. Aucun prix, aucune photo supplémentaire, rien à acheter."
         },
         "extrasEarnings": {
           "question": "Combien me rapporte une photo supplémentaire ?",
@@ -3111,7 +3111,7 @@
         },
         "giveEverything": {
           "question": "Et si je veux tout donner à mon client ?",
-          "answer": "Alors donnez tout. Faites passer chaque photo dans la livraison et il ne reste rien à vendre : la galerie de votre client ne parle pas de photos supplémentaires et n'affiche aucun prix.\n\nVous pouvez aussi rester entre les deux : livrer 25 des 35 photos prises et en proposer 10, ou en proposer 10 et laisser votre client en choisir 3 gratuitement. C'est votre décision à chaque réservation, et vous pouvez décider autrement la fois suivante."
+          "answer": "Alors offrez-les — par le cadeau, pas en bourrant la livraison.\n\nLa livraison contient toujours exactement ce que le forfait promettait. Descendez le surplus vers **Photos supplémentaires** et réglez le cadeau sur ce même nombre : 5 promises, 9 prises, quatre en supplément, cadeau 4. Votre client choisit les quatre gratuitement et ne paie rien.\n\nVous pouvez vous placer n'importe où entre les deux. Neuf prises pour une promesse de cinq : cadeau 2, et votre client repart avec sept gratuites et peut acheter les deux dernières. Cadeau 0, et les quatre sont en vente. C'est votre choix à chaque réservation."
         }
       },
       "payments": {
@@ -3263,8 +3263,8 @@
     "confirmShareVideos": "Prêt à partager {count} {count, plural, one {vidéo} other {vidéos}} avec le client ?",
     "confirmSharePhotosAndVideos": "Prêt à partager {photos} {photos, plural, one {photo} other {photos}} et {videos} {videos, plural, one {vidéo} other {vidéos}} avec le client ?",
     "accept": "Accepter",
-    "needMorePhotos": "The paid package includes {required} photos — you have only added {count}. Add at least {required} before delivering to the client.",
-    "photoCounterShort": "{count} / {required} photos — add {remaining} more before delivering",
+    "needMorePhotos": "Le forfait payé comprend {required} photos — vous n'en avez ajouté que {count}. Ajoutez-en au moins {required} avant de livrer au client.",
+    "photoCounterShort": "{count} / {required} photos — ajoutez-en {remaining} de plus avant de livrer",
     "photoCounterOk": "{count} / {required} photos ✓",
     "photosInPackage": "{count, plural, one {# photo} other {# photos}}",
     "titleHelp": "Affiché comme titre en haut de la galerie. Court et personnel — ex. : « Votre soirée magique à Lisbonne ».",
@@ -3311,14 +3311,22 @@
     "sectionIncludedHint": "Ce que reçoit votre client. Survolez une photo pour la déplacer.",
     "sectionExtras": "Photos supplémentaires · {count}",
     "sectionExtrasHint": "Proposées à votre client à 2,90 € pièce. Vous en recevez 2,00 €.",
-    "sectionExtrasEmpty": "Rien ici pour l'instant. Descendez une photo et votre client pourra l'acheter.",
+    "sectionExtrasEmpty": "Rien ici pour l'instant — vous avez téléversé exactement ce que le forfait promettait. Téléversez-en plus et le surplus arrivera ici.",
     "moveToExtras": "Passer en extra ↓",
     "moveToDelivery": "↑ Ajouter à la livraison",
     "soldBadge": "Vendue",
     "giftTitle": "Faites plaisir à votre client",
     "giftBody": "Laissez-le choisir gratuitement quelques photos supplémentaires. Cela ne vous coûte rien — elles sont déjà prises — et cela marque.",
     "giftStateOn": "Votre client peut choisir {count, plural, one {# photo supplémentaire} other {# photos supplémentaires}} gratuitement.",
-    "giftStateOff": "Pas encore de photos offertes."
+    "giftStateOff": "Pas encore de photos offertes.",
+    "overCapBadge": "Trop — le forfait en promet {required}",
+    "overCapHint": "Déplacez {over, plural, one {# photo} other {# photos}} vers les photos supplémentaires. Vous voulez quand même les offrir ? Déplacez-les et offrez-les avec le cadeau ci-dessous.",
+    "photoCounterOver": "{count} photos dans la livraison — le forfait en promet {required}. Déplacez {over} vers les photos supplémentaires pour envoyer.",
+    "tooManyPhotos": "La livraison contient {count} photos alors que ce forfait en promet {required}. Déplacez d'abord {over} vers les photos supplémentaires — votre client pourra les acheter, ou les recevoir gratuitement si vous définissez un cadeau.",
+    "giftUnsaved": "Appuyez sur Enregistrer pour que votre client puisse choisir {count, plural, one {# photo supplémentaire} other {# photos supplémentaires}} gratuitement.",
+    "giftMoreThanExtras": "Il n'y a pour l'instant que {available, plural, one {# photo supplémentaire} other {# photos supplémentaires}} à offrir.",
+    "giftAll": "Toutes offrir",
+    "moveSurplus": "Descendre les {over} dernières"
   },
   "availability": {
     "pageTitle": "Disponibilités",
@@ -3410,7 +3418,9 @@
     "keepBooking": "Garder la réservation",
     "cancelConfirm2": "Oui, annuler",
     "declineConfirm": "Oui, refuser",
-    "deliveryAccepted": "Livraison acceptée"
+    "deliveryAccepted": "Livraison acceptée",
+    "sneakPeekButton": "Envoyer un aperçu",
+    "sneakPeekSent": "Aperçu envoyé"
   },
   "clientDashboard": {
     "title": "Mon tableau de bord"
@@ -3685,7 +3695,7 @@
     "promisedPhotosSet": "{count} photos promises au client",
     "promisedPhotosEdit": "modifier",
     "promisedPhotosInvalid": "Saisissez un nombre entre 5 et 1000",
-    "promisedPhotosClient": "Votre photographe livrera ~{count} photos",
+    "promisedPhotosClient": "Votre photographe livrera {count} photos",
     "extrasLine": "{count, plural, one {# photo supplémentaire} other {# photos supplémentaires}}"
   },
   "bookingJourney": {
@@ -4290,6 +4300,6 @@
     "s8title": "Installez l'application mobile",
     "s8body": "Les notifications push arrivent en quelques secondes, bien avant un email. Vous pouvez répondre depuis la plage, la salle de sport, n'importe où. Cherchez \"{brand}\" sur l'App Store ou Play Store, ou touchez les badges ci-dessous.",
     "s9title": "Vendez les photos que vous auriez supprimées",
-    "s9body": "Vous photographiez toujours plus que ce que le forfait promet. Sur l'écran de livraison, ces photos en trop forment un second groupe, **Photos supplémentaires**, et votre client peut en acheter n'importe laquelle à 2,90 € — vous en recevez 2,00 €, quel que soit votre plan, dès que le paiement passe et non à l'acceptation.\n\nOffrez-en d'abord quelques-unes. Indiquez sur le même écran combien vous voulez offrir et votre client choisit lesquelles — cela ne vous coûte rien, c'est ainsi qu'il découvre qu'il en existe d'autres, et c'est toute la différence entre une vente et un cadeau. Livrez exactement ce que vous avez promis et rien de tout cela n'apparaît."
+    "s9body": "Vous photographiez toujours plus que ce que le forfait promet. Sur l'écran de livraison, ces photos en trop forment un second groupe, **Photos supplémentaires**, et votre client peut en acheter n'importe laquelle à 2,90 € — vous en recevez 2,00 €, quel que soit votre plan, dès que le paiement passe et non à l'acceptation.\n\nOffrez-en d'abord quelques-unes. Indiquez sur le même écran combien vous voulez offrir et votre client choisit lesquelles — cela ne vous coûte rien, c'est ainsi qu'il découvre qu'il en existe d'autres, et c'est toute la différence entre une vente et un cadeau. Téléversez exactement ce que vous avez promis et rien de tout cela n'apparaît."
   }
 }

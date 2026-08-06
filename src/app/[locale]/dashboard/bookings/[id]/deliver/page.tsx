@@ -36,7 +36,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     delivery_message: string | null;
   }>(
     `SELECT b.id, u.id as photographer_user_id, cu.name as client_name,
-            p.name as package_name, COALESCE(p.num_photos, b.promised_photos) as required_photos, b.shoot_date, b.status, b.delivery_token,
+            p.name as package_name, COALESCE(NULLIF(p.num_photos, 0), NULLIF(b.promised_photos, 0)) as required_photos, b.shoot_date, b.status, b.delivery_token,
             b.delivery_password, b.delivery_password_plain,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.delivery_title, b.delivery_message, b.peek_token, b.peek_shared_at::text as peek_shared_at,
