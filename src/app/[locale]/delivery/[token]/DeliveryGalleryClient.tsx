@@ -500,9 +500,11 @@ export function DeliveryGalleryClient({
           {photos[lightboxIndex].locked && onToggleExtra && (
             <div className="absolute inset-x-0 bottom-6 z-10 px-4" onClick={(e) => e.stopPropagation()}>
               {swapFor === photos[lightboxIndex].id ? (
-                <div className="mx-auto max-w-3xl rounded-2xl bg-gray-900/95 p-4 shadow-2xl">
-                  <p className="mb-3 text-center text-sm font-semibold text-white">{t("swapPickOut")}</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
+                <div className="mx-auto max-w-5xl rounded-3xl bg-gray-900/95 p-6 shadow-2xl">
+                  <p className="mb-4 text-center text-lg font-bold text-white sm:text-xl">{t("swapPickOut")}</p>
+                  {/* Big enough to actually recognise a face. The client is
+                      choosing which of their photographs to give up. */}
+                  <div className="flex gap-3 overflow-x-auto pb-2">
                     {photos.filter((p) => !p.locked && !p.paid && p.media_type !== "video").map((cand) => (
                       <button
                         key={cand.id}
@@ -516,14 +518,14 @@ export function DeliveryGalleryClient({
                           }
                           finally { setSwapping(false); }
                         }}
-                        className="h-20 w-20 shrink-0 overflow-hidden rounded-lg ring-2 ring-transparent transition hover:ring-white disabled:opacity-40"
+                        className="h-28 w-28 shrink-0 overflow-hidden rounded-xl ring-2 ring-transparent transition hover:ring-4 hover:ring-white disabled:opacity-40 sm:h-40 sm:w-40"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={cand.thumbnail_url || cand.preview_url || cand.url} alt="" className="h-full w-full object-cover" />
                       </button>
                     ))}
                   </div>
-                  <button type="button" onClick={() => setSwapFor(null)} className="mt-3 w-full text-xs font-medium text-gray-300 hover:text-white">
+                  <button type="button" onClick={() => setSwapFor(null)} className="mt-4 w-full py-2 text-sm font-semibold text-gray-300 hover:text-white">
                     {t("cancel")}
                   </button>
                 </div>
