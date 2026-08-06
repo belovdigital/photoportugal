@@ -39,6 +39,9 @@ interface GalleryData {
   payment_status: string;
   zip_ready?: boolean;
   zip_size?: number | null;
+  extras_zip_ready?: boolean;
+  extras_zip_size?: number | null;
+  extras_owned?: number;
   extras_price_cents?: number;
   extras_available?: number;
   /** A paid tip already exists for this booking — hide the tip card. */
@@ -176,7 +179,9 @@ export function DeliveryPageClient({
 
   // Poll for ZIP readiness after accept
   useEffect(() => {
-    if (!accepted || !gallery || gallery.zip_ready) return;
+    const extrasPending = (gallery?.extras_owned ?? 0) > 0 && !gallery?.extras_zip_ready;
+    if (!gallery) return;
+    if (!extrasPending && (!accepted || gallery.zip_ready)) return;
     const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
     if (!pw) return;
 
@@ -393,6 +398,32 @@ export function DeliveryPageClient({
             : `${(totalSize / 1024).toFixed(0)} KB`}
           <span className="ml-3 text-xs text-gray-400">{t("availableUntil", { date: expiresDate })}</span>
         </div>
+        {/* Bought photos get their own archive. The delivery archive is
+            written once at acceptance and never rebuilt, so purchases could
+            never reach it — rather than unfreeze it and overwrite the file
+            everyone already has, extras live in a second one that is rebuilt
+            after every purchase. */}
+        {(gallery?.extras_owned ?? 0) > 0 && (
+          <div className="mb-3">
+            {gallery?.extras_zip_ready ? (
+              <a
+                href={`/api/delivery/${token}/download?set=extras&password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
+                className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-2.5 text-sm font-semibold text-primary-700 hover:bg-primary-100"
+              >
+                {t("extrasDownload", { count: gallery.extras_owned ?? 0 })}
+                {gallery.extras_zip_size ? <span className="text-xs opacity-75">({(gallery.extras_zip_size / (1024 * 1024)).toFixed(0)} MB)</span> : null}
+              </a>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-medium text-gray-500">
+                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                {t("extrasZipPreparing")}
+              </span>
+            )}
+          </div>
+        )}
         {accepted ? (
           gallery?.zip_ready ? (
             <a

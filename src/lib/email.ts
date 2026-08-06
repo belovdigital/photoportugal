@@ -2279,6 +2279,129 @@ export async function sendAdminApprovalRequestNotification(
   );
 }
 
+/**
+ * Extra photographs bought. Two audiences, two different facts.
+ *
+ * The client is told what they now own and where it is; the archive is built
+ * in the background, so the copy points at the gallery rather than promising
+ * a file that may still be zipping.
+ *
+ * The photographer is told the payout, never the client's gross — the same
+ * rule the rest of the product follows.
+ */
+export async function sendExtrasBoughtToClient(
+  to: string,
+  clientName: string,
+  count: number,
+  galleryUrl: string,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (clientName || "").split(" ")[0] || clientName;
+  const C = {
+    en: {
+      subject: `Your ${count} extra photo${count === 1 ? "" : "s"} ${count === 1 ? "is" : "are"} yours`,
+      greet: `Hi ${firstName},`,
+      body: `Thank you — ${count} extra photograph${count === 1 ? "" : "s"} from your session ${count === 1 ? "is" : "are"} now unlocked in your gallery, in full resolution.`,
+      zip: "They are also being packed into their own download, which takes a few minutes for larger sets.",
+      cta: "Open my gallery",
+    },
+    pt: {
+      subject: `${count} fotografia${count === 1 ? "" : "s"} extra já ${count === 1 ? "é sua" : "são suas"}`,
+      greet: `Olá ${firstName},`,
+      body: `Obrigado — ${count} fotografia${count === 1 ? "" : "s"} extra da sua sessão ${count === 1 ? "está desbloqueada" : "estão desbloqueadas"} na sua galeria, em alta resolução.`,
+      zip: "Estamos também a prepará-las num download próprio; em conjuntos maiores demora alguns minutos.",
+      cta: "Abrir a minha galeria",
+    },
+    de: {
+      subject: `Ihre ${count} zusätzlichen Fotos gehören Ihnen`,
+      greet: `Hallo ${firstName},`,
+      body: `Danke — ${count} zusätzliche Aufnahme${count === 1 ? "" : "n"} aus Ihrem Shooting ${count === 1 ? "ist" : "sind"} jetzt in voller Auflösung in Ihrer Galerie freigeschaltet.`,
+      zip: "Sie werden außerdem in einen eigenen Download gepackt — bei größeren Mengen dauert das ein paar Minuten.",
+      cta: "Meine Galerie öffnen",
+    },
+    es: {
+      subject: `Tus ${count} foto${count === 1 ? "" : "s"} extra ya ${count === 1 ? "es tuya" : "son tuyas"}`,
+      greet: `Hola ${firstName},`,
+      body: `Gracias — ${count} fotografía${count === 1 ? "" : "s"} extra de tu sesión ${count === 1 ? "está desbloqueada" : "están desbloqueadas"} en tu galería, en alta resolución.`,
+      zip: "También las estamos preparando en una descarga aparte; con conjuntos grandes tarda unos minutos.",
+      cta: "Abrir mi galería",
+    },
+    fr: {
+      subject: `Vos ${count} photo${count === 1 ? "" : "s"} supplémentaire${count === 1 ? "" : "s"} sont à vous`,
+      greet: `Bonjour ${firstName},`,
+      body: `Merci — ${count} photographie${count === 1 ? "" : "s"} supplémentaire${count === 1 ? "" : "s"} de votre séance ${count === 1 ? "est débloquée" : "sont débloquées"} dans votre galerie, en pleine résolution.`,
+      zip: "Elles sont aussi rassemblées dans un téléchargement à part ; pour les grandes sélections cela prend quelques minutes.",
+      cta: "Ouvrir ma galerie",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.subject}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${C.body}</p>
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#6B7280;">${C.zip}</p>
+      ${emailButton(galleryUrl, C.cta)}
+    `, locale)
+  );
+}
+
+export async function sendExtrasBoughtToPhotographer(
+  to: string,
+  photographerName: string,
+  clientName: string,
+  count: number,
+  payoutEur: string,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const C = {
+    en: {
+      subject: `${clientName} bought ${count} extra photo${count === 1 ? "" : "s"} — €${payoutEur} to you`,
+      greet: `Hi ${firstName},`,
+      body: `${clientName} bought ${count} of the photograph${count === 1 ? "" : "s"} you held back. €${payoutEur} is on its way to your payout account — nothing for you to do.`,
+      tail: "Photographs you keep out of a delivery stay on offer while the gallery is live.",
+    },
+    pt: {
+      subject: `${clientName} comprou ${count} fotografia${count === 1 ? "" : "s"} extra — €${payoutEur} para si`,
+      greet: `Olá ${firstName},`,
+      body: `${clientName} comprou ${count} das fotografias que reteve. €${payoutEur} seguem para a sua conta de pagamentos — não tem de fazer nada.`,
+      tail: "As fotografias que deixa fora de uma entrega continuam à venda enquanto a galeria estiver ativa.",
+    },
+    de: {
+      subject: `${clientName} hat ${count} zusätzliche Fotos gekauft — €${payoutEur} für Sie`,
+      greet: `Hallo ${firstName},`,
+      body: `${clientName} hat ${count} der zurückgehaltenen Aufnahmen gekauft. €${payoutEur} sind auf dem Weg zu Ihrem Auszahlungskonto — Sie müssen nichts tun.`,
+      tail: "Aufnahmen, die Sie aus einer Lieferung heraushalten, bleiben im Angebot, solange die Galerie online ist.",
+    },
+    es: {
+      subject: `${clientName} compró ${count} foto${count === 1 ? "" : "s"} extra — €${payoutEur} para ti`,
+      greet: `Hola ${firstName},`,
+      body: `${clientName} ha comprado ${count} de las fotografías que reservaste. €${payoutEur} van de camino a tu cuenta de cobros — no tienes que hacer nada.`,
+      tail: "Las fotos que dejas fuera de una entrega siguen a la venta mientras la galería esté activa.",
+    },
+    fr: {
+      subject: `${clientName} a acheté ${count} photo${count === 1 ? "" : "s"} supplémentaire${count === 1 ? "" : "s"} — €${payoutEur} pour vous`,
+      greet: `Bonjour ${firstName},`,
+      body: `${clientName} a acheté ${count} des photographies que vous aviez retenues. €${payoutEur} partent vers votre compte de paiement — rien à faire de votre côté.`,
+      tail: "Les photos que vous laissez hors d'une livraison restent proposées tant que la galerie est en ligne.",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.subject}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${C.body}</p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#9CA3AF;">${C.tail}</p>
+    `, locale)
+  );
+}
+
 export async function sendApprovedConnectStripeEmail(
   to: string,
   photographerName: string,

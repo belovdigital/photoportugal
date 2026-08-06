@@ -3010,7 +3010,9 @@
     "extrasBuy": "Kaufen",
     "extrasClear": "Leeren",
     "extrasError": "Der Kauf konnte nicht gestartet werden",
-    "extrasLockedHint": "Zusätzliche Fotos aus Ihrem Shooting — zum Hinzufügen antippen"
+    "extrasLockedHint": "Zusätzliche Fotos aus Ihrem Shooting — zum Hinzufügen antippen",
+    "extrasDownload": "Ihre {count} zusätzlichen Fotos herunterladen",
+    "extrasZipPreparing": "Ihre zusätzlichen Fotos werden vorbereitet…"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

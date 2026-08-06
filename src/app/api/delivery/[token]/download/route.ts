@@ -30,6 +30,9 @@ export async function GET(
   const { token } = await params;
   const { searchParams } = new URL(req.url);
   const password = searchParams.get("password");
+  // ?set=extras streams only what was bought after the fact. The main archive
+  // is frozen at acceptance by design, so purchases live in their own file.
+  const wantsExtras = searchParams.get("set") === "extras";
 
   if (!password) {
     return NextResponse.json({ error: "Password required" }, { status: 401 });
@@ -120,7 +123,9 @@ export async function GET(
   const { PassThrough } = await import("stream");
 
   const photos = await query<{ url: string; filename: string }>(
-    "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at",
+    wantsExtras
+      ? "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND purchased_at IS NOT NULL ORDER BY sort_order, created_at"
+      : "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at",
     [booking.id]
   );
 

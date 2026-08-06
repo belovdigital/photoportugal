@@ -3004,7 +3004,9 @@
     "extrasBuy": "Buy",
     "extrasClear": "Clear",
     "extrasError": "Could not start the purchase",
-    "extrasLockedHint": "Extra photos from your session — tap to add"
+    "extrasLockedHint": "Extra photos from your session — tap to add",
+    "extrasDownload": "Download your {count} extra photos",
+    "extrasZipPreparing": "Preparing your extra photos…"
   },
   "availability": {
     "pageTitle": "Availability",

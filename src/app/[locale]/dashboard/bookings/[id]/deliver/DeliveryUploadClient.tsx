@@ -229,6 +229,13 @@ export function DeliveryUploadClient({
   // of the delivery: the client does not see them, they are not in the
   // archive, and they do not count toward the promise. Once paid extras are
   // live this is also what puts them up for sale.
+  // Nothing to hold back when the photographer delivered exactly what was
+  // promised: no extras, so no include/exclude controls and no sale. The
+  // client side reaches the same conclusion on its own — with no excluded
+  // rows there is nothing locked to show.
+  const photoCount = photos.filter((p) => p.media_type !== "video").length;
+  const canHoldBack = requiredPhotos > 0 && photoCount > requiredPhotos;
+
   async function setIncluded(included: boolean) {
     if (selectedIds.size === 0) return;
     const ids = Array.from(selectedIds);
@@ -889,8 +896,12 @@ export function DeliveryUploadClient({
               {selectMode ? (
                 <>
                   <button onClick={() => setSelectedIds(new Set(photos.map((p) => p.id)))} className="text-xs font-medium text-gray-600 hover:text-gray-800">{t("selectAll")}</button>
-                  <button onClick={() => setIncluded(true)} disabled={selectedIds.size === 0} className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700 disabled:opacity-40">{t("includeInDelivery")}</button>
-                  <button onClick={() => setIncluded(false)} disabled={selectedIds.size === 0} className="rounded-lg border border-warm-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-warm-50 disabled:opacity-40">{t("excludeFromDelivery")}</button>
+                  {canHoldBack && (
+                    <>
+                      <button onClick={() => setIncluded(true)} disabled={selectedIds.size === 0} className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700 disabled:opacity-40">{t("includeInDelivery")}</button>
+                      <button onClick={() => setIncluded(false)} disabled={selectedIds.size === 0} className="rounded-lg border border-warm-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-warm-50 disabled:opacity-40">{t("excludeFromDelivery")}</button>
+                    </>
+                  )}
                   <button onClick={deleteSelected} disabled={selectedIds.size === 0} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40">{selectedIds.size > 0 && selectedIds.size === photos.length ? t("deleteAllCount", { count: photos.length }) : t("deleteCount", { count: selectedIds.size })}</button>
                   <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }} className="text-xs font-medium text-gray-500 hover:text-gray-700">{t("cancel")}</button>
                 </>

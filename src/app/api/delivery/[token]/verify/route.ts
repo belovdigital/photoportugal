@@ -59,6 +59,8 @@ export async function POST(
     delivery_accepted: boolean;
     payment_status: string;
     zip_ready: boolean;
+    extras_zip_ready: boolean;
+    extras_zip_size: number | null;
     zip_size: number | null;
   }>(
     `SELECT b.id, b.client_id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
@@ -67,7 +69,8 @@ export async function POST(
             b.shoot_date, b.location_slug,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.payment_status,
-            COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size
+            COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size,
+            COALESCE(b.extras_zip_ready, FALSE) as extras_zip_ready, b.extras_zip_size
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -182,6 +185,7 @@ export async function POST(
     return {
       id: photo.id,
       locked: isLocked,
+      purchased: !!photo.purchased_at,
       url: resolvedUrl,
       preview_url: resolvedPreview,
       thumbnail_url: resolvedThumb,
@@ -226,6 +230,11 @@ export async function POST(
     delivery_accepted: isAccepted,
     payment_status: booking.payment_status,
     zip_ready: isAccepted && booking.zip_ready,
+    // Bought photos are downloadable whether or not the delivery was
+    // accepted — the client already paid for them.
+    extras_zip_ready: booking.extras_zip_ready,
+    extras_zip_size: booking.extras_zip_size,
+    extras_owned: photos.filter((p) => !p.locked && p.purchased).length,
     zip_size: booking.zip_size ? Number(booking.zip_size) : null,
   });
 }

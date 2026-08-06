@@ -543,10 +543,19 @@ export async function POST(req: NextRequest) {
                 [paidRows.map((r) => r.delivery_photo_id)]
               );
 
-              const ctx = await queryOne<{ photographer_stripe_id: string | null; stripe_ready: boolean; photographer_name: string; client_name: string }>(
+              const ctx = await queryOne<{
+                photographer_stripe_id: string | null; stripe_ready: boolean;
+                photographer_name: string; client_name: string;
+                photographer_email: string; photographer_user_id: string; photographer_locale: string | null;
+                client_email: string; client_user_id: string; client_locale: string | null;
+                delivery_token: string | null;
+              }>(
                 `SELECT pp.stripe_account_id as photographer_stripe_id,
                         COALESCE(pp.stripe_onboarding_complete, FALSE) as stripe_ready,
-                        pu.name as photographer_name, cu.name as client_name
+                        pu.name as photographer_name, cu.name as client_name,
+                        pu.email as photographer_email, pu.id as photographer_user_id, pu.locale as photographer_locale,
+                        cu.email as client_email, cu.id as client_user_id, cu.locale as client_locale,
+                        b.delivery_token
                    FROM bookings b
                    JOIN photographer_profiles pp ON pp.id = b.photographer_id
                    JOIN users pu ON pu.id = pp.user_id
@@ -593,6 +602,53 @@ export async function POST(req: NextRequest) {
               import("@/lib/telegram").then(({ sendTelegram }) =>
                 sendTelegram(`🖼 <b>Куплены доп. фото</b>\n\n${paidRows.length} шт · €${grossEur} (фотографу €${payoutEur})\n${ctx?.client_name || "Клиент"} → ${ctx?.photographer_name || "фотограф"}\nБронь: <code>${bookingId.slice(0, 8)}</code>`, "bookings")
               ).catch(() => {});
+
+              // Rebuild the extras archive from scratch — it now contains
+              // everything ever bought on this booking, not just this order.
+              // Reset the flag first so the client sees "preparing" rather
+              // than a stale download of yesterday's purchase.
+              await queryOne(
+                "UPDATE bookings SET extras_zip_ready = FALSE WHERE id = $1 RETURNING id",
+                [bookingId]
+              ).catch(() => null);
+              import("@/lib/build-zip").then(({ buildDeliveryZip }) =>
+                buildDeliveryZip(bookingId, "extras")
+              ).catch((zipErr) => console.error("[webhook] extras zip build error:", zipErr));
+
+              // Everyone who needs to know, told once. The client learns what
+              // they now own, the photographer learns their payout (never the
+              // client's gross — same rule as everywhere else), and the admin
+              // channel already got its ping above.
+              if (ctx) {
+                const { normalizeLocale } = await import("@/lib/email-locale");
+                const galleryUrl = `${country.baseUrl}/delivery/${ctx.delivery_token || ""}`;
+                import("@/lib/email").then(({ sendExtrasBoughtToClient, sendExtrasBoughtToPhotographer }) => {
+                  sendExtrasBoughtToClient(
+                    ctx.client_email, ctx.client_name, paidRows.length, galleryUrl,
+                    normalizeLocale(ctx.client_locale)
+                  ).catch((e) => console.error("[webhook] extras client email:", e));
+                  sendExtrasBoughtToPhotographer(
+                    ctx.photographer_email, ctx.photographer_name, ctx.client_name,
+                    paidRows.length, payoutEur, normalizeLocale(ctx.photographer_locale)
+                  ).catch((e) => console.error("[webhook] extras photographer email:", e));
+                }).catch(() => {});
+
+                import("@/lib/push").then((m) =>
+                  m.sendPushNotification(
+                    ctx.photographer_user_id,
+                    "💶 Extra photos sold",
+                    `${ctx.client_name} bought ${paidRows.length} extra photo${paidRows.length === 1 ? "" : "s"} — €${payoutEur} to you.`,
+                    { type: "extras_sold", bookingId, channelId: "default", categoryId: "BOOKING" }
+                  )
+                ).catch((e) => console.error("[webhook] extras push:", e));
+
+                // Both dashboards refresh without a reload: the client's
+                // gallery unlocks the photos, the photographer's earnings move.
+                import("@/lib/realtime").then((m) => {
+                  m.notifyUser(ctx.client_user_id, "delivery_uploaded", { bookingId });
+                  m.notifyUser(ctx.photographer_user_id, "payment_received", { bookingId });
+                }).catch(() => {});
+              }
 
               console.log(`[webhook] extras paid: order ${orderId}, ${paidRows.length} photos`);
             }

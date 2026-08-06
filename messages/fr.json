@@ -3257,7 +3257,9 @@
     "extrasBuy": "Acheter",
     "extrasClear": "Vider",
     "extrasError": "Impossible de démarrer l'achat",
-    "extrasLockedHint": "Photos supplémentaires de votre séance — touchez pour ajouter"
+    "extrasLockedHint": "Photos supplémentaires de votre séance — touchez pour ajouter",
+    "extrasDownload": "Télécharger vos {count} photos supplémentaires",
+    "extrasZipPreparing": "Préparation de vos photos supplémentaires…"
   },
   "availability": {
     "pageTitle": "Disponibilités",

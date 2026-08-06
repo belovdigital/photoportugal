@@ -3257,7 +3257,9 @@
     "extrasBuy": "Comprar",
     "extrasClear": "Vaciar",
     "extrasError": "No se pudo iniciar la compra",
-    "extrasLockedHint": "Fotos extra de tu sesión — toca para añadir"
+    "extrasLockedHint": "Fotos extra de tu sesión — toca para añadir",
+    "extrasDownload": "Descargar tus {count} fotos extra",
+    "extrasZipPreparing": "Preparando tus fotos extra…"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

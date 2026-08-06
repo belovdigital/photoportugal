@@ -1877,10 +1877,18 @@ async function runReminders(): Promise<NextResponse> {
   // === 5. Expired delivery file cleanup ===
   let expiredDeliveriesCleaned = 0;
   try {
+    // Bought photographs are not ours to delete on a schedule — the client
+    // paid for them, and losing the file also loses the thing the money was
+    // for. A booking with purchases keeps everything until someone decides
+    // otherwise by hand.
     const expiredDeliveries = await query<{ id: string }>(
       `SELECT b.id FROM bookings b
        WHERE b.delivery_expires_at < NOW() - INTERVAL '90 days'
-         AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)`
+         AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)
+         AND NOT EXISTS (
+           SELECT 1 FROM delivery_photos dp2
+            WHERE dp2.booking_id = b.id AND dp2.purchased_at IS NOT NULL
+         )`
     );
 
     for (const booking of expiredDeliveries) {
@@ -1891,8 +1899,8 @@ async function runReminders(): Promise<NextResponse> {
           "SELECT url, preview_url FROM delivery_photos WHERE booking_id = $1",
           [booking.id]
         );
-        const zipRow = await queryOne<{ zip_path: string | null }>(
-          "SELECT zip_path FROM bookings WHERE id = $1", [booking.id]
+        const zipRow = await queryOne<{ zip_path: string | null; extras_zip_path: string | null }>(
+          "SELECT zip_path, extras_zip_path FROM bookings WHERE id = $1", [booking.id]
         );
 
         // Delete delivery_photos records from DB
@@ -1907,6 +1915,7 @@ async function runReminders(): Promise<NextResponse> {
         const allUrls = [
           ...blobs.flatMap((b) => [b.url, b.preview_url].filter((u): u is string => !!u)),
           zipRow?.zip_path || null,
+          zipRow?.extras_zip_path || null,
         ].filter((u): u is string => !!u);
 
         for (const url of allUrls) {

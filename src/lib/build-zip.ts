@@ -24,7 +24,7 @@ const R2_PUBLIC_PREFIX = R2_PUBLIC_URL + "/";
  * migration; once the local /uploads dir is removed it will simply 404 with a
  * "skipped" warning, the rest of the zip still completes.
  */
-export async function buildDeliveryZip(bookingId: string): Promise<{ path: string; size: number } | null> {
+export async function buildDeliveryZip(bookingId: string, set: "delivery" | "extras" = "delivery"): Promise<{ path: string; size: number } | null> {
   try {
     const booking = await queryOne<{
       photographer_name: string;
@@ -41,15 +41,22 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     );
     if (!booking) return null;
 
+    // Two archives, never one rebuilt: the delivery archive is the promise
+    // and is frozen once written; the extras archive is rebuilt after every
+    // purchase. Separate files, separate flags, separate emails.
     const photos = await query<{ url: string; filename: string }>(
-      "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE ORDER BY sort_order, created_at",
+      set === "extras"
+        ? "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND purchased_at IS NOT NULL ORDER BY sort_order, created_at"
+        : "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE ORDER BY sort_order, created_at",
       [bookingId]
     );
     if (photos.length === 0) return null;
 
     const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
     const bookingShort = bookingId.replace(/-/g, "").slice(0, 8);
-    const zipFilename = `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
+    const zipFilename = set === "extras"
+      ? `PhotoPortugal_${sanitizedName}_${bookingShort}_extras.zip`
+      : `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
 
     console.log(`[build-zip] Building zip for booking ${bookingId} with ${photos.length} photos`);
 
@@ -137,13 +144,15 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     const zipUrl = `${R2_PUBLIC_URL}/${r2Key}`;
 
     await queryOne(
-      "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
+      set === "extras"
+        ? "UPDATE bookings SET extras_zip_path = $1, extras_zip_size = $2, extras_zip_ready = TRUE WHERE id = $3"
+        : "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
       [zipUrl, zipSize, bookingId]
     );
 
     console.log(`[build-zip] DONE for booking ${bookingId}: ${(zipSize / 1024 / 1024).toFixed(1)} MB`);
 
-    if (booking.delivery_token && booking.client_email) {
+    if (set === "delivery" && booking.delivery_token && booking.client_email) {
       try {
         const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
         const galleryUrl = `${country.baseUrl}/delivery/${booking.delivery_token}`;
