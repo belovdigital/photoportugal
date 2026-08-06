@@ -2884,7 +2884,9 @@
     "swapNotOwned": "Essa fotografia já é sua — troque por uma do seu pacote.",
     "swapNotVideo": "Os vídeos estão sempre incluídos e não podem ser trocados.",
     "swapNotPaid": "As fotografias que comprou continuam suas — troque por uma do seu pacote ou por uma oferecida.",
-    "sectionYoursSwapHint": "Prefere outra? Arraste uma fotografia de Extra para cima de uma destas — trocam de lugar, de graça."
+    "sectionYoursSwapHint": "Prefere outra? Arraste uma fotografia de Extra para cima de uma destas — trocam de lugar, de graça.",
+    "giftedBadge": "Oferecida",
+    "deliveredGiftState": "Ofereceu {count, plural, one {# fotografia grátis} other {# fotografias grátis}} — {taken} já escolhidas."
   },
   "availability": {
     "pageTitle": "Disponibilidade",

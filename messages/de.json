@@ -3110,7 +3110,9 @@
     "swapNotOwned": "Dieses Foto gehört Ihnen bereits — tauschen Sie stattdessen gegen eines aus Ihrem Paket.",
     "swapNotVideo": "Videos sind immer enthalten und lassen sich nicht tauschen.",
     "swapNotPaid": "Bezahlte Fotos bleiben Ihnen — tauschen Sie stattdessen gegen eines aus Ihrem Paket oder ein geschenktes.",
-    "sectionYoursSwapHint": "Lieber ein anderes Bild? Ziehen Sie ein Foto aus Zusätzliche auf eines hier — sie tauschen, gratis."
+    "sectionYoursSwapHint": "Lieber ein anderes Bild? Ziehen Sie ein Foto aus Zusätzliche auf eines hier — sie tauschen, gratis.",
+    "giftedBadge": "Geschenkt",
+    "deliveredGiftState": "Sie haben {count, plural, one {# Gratisfoto} other {# Gratisfotos}} verschenkt — {taken} bisher genommen."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

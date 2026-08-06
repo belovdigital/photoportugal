@@ -3357,7 +3357,9 @@
     "swapNotOwned": "Cette photo est déjà à vous — échangez plutôt contre une de votre forfait.",
     "swapNotVideo": "Les vidéos sont toujours incluses et ne peuvent pas être échangées.",
     "swapNotPaid": "Les photos achetées restent à vous — échangez plutôt contre une de votre forfait ou une offerte.",
-    "sectionYoursSwapHint": "Vous préférez une autre ? Faites glisser une photo de Supplémentaires sur l'une d'elles — elles s'échangent, gratuitement."
+    "sectionYoursSwapHint": "Vous préférez une autre ? Faites glisser une photo de Supplémentaires sur l'une d'elles — elles s'échangent, gratuitement.",
+    "giftedBadge": "Offerte",
+    "deliveredGiftState": "Vous avez offert {count, plural, one {# photo gratuite} other {# photos gratuites}} — {taken} déjà prises."
   },
   "availability": {
     "pageTitle": "Disponibilités",

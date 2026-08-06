@@ -60,6 +60,8 @@ interface Photo {
   // makes the exclusion irreversible.
   is_included?: boolean;
   purchased_at?: string | null;
+  /** Bought with money, as opposed to taken from the gift. */
+  paid_for?: boolean;
 }
 
 export function DeliveryUploadClient({
@@ -74,6 +76,7 @@ export function DeliveryUploadClient({
   initialMessage,
   requiredPhotos = 0,
   extrasPayoutCents = 500,
+  giftTaken = "0",
   initialGiftSlots = 0,
   initialPeekToken = null,
   initialPeekSharedAt = null,
@@ -94,6 +97,8 @@ export function DeliveryUploadClient({
   /** What THIS photographer earns per extra photo on THIS booking. Their own
    *  rate — the client's price is never shown on their side of the house. */
   extrasPayoutCents?: number;
+  /** How many of the gift the client has actually taken so far. */
+  giftTaken?: string;
   initialGiftSlots?: number;
   /** Sneak peek state — token + timestamp when already shared. */
   initialPeekToken?: string | null;
@@ -505,8 +510,8 @@ export function DeliveryUploadClient({
         </button>
       )}
       {photo.purchased_at && (
-        <span className="absolute left-1 top-1 z-20 rounded bg-accent-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-          {t("soldBadge")}
+        <span className={`absolute left-1 top-1 z-20 rounded px-1.5 py-0.5 text-[10px] font-bold text-white ${photo.paid_for ? "bg-accent-600" : "bg-green-600"}`}>
+          {photo.paid_for ? t("soldBadge") : t("giftedBadge")}
         </span>
       )}
       <img
@@ -1225,6 +1230,11 @@ export function DeliveryUploadClient({
                   {extraPhotos.filter((p) => p.media_type !== "video").length > 0 && (
                     <p className="mt-0.5 text-xs font-semibold text-amber-700">
                       {t("deliveredExtrasOnSale", { count: extraPhotos.filter((p) => p.media_type !== "video").length, price: payout(extrasPayoutCents) })}
+                    </p>
+                  )}
+                  {giftSlots > 0 && (
+                    <p className="mt-0.5 text-xs font-semibold text-green-700">
+                      🎁 {t("deliveredGiftState", { count: giftSlots, taken: parseInt(giftTaken, 10) || 0 })}
                     </p>
                   )}
                   {canEdit && (

@@ -3109,7 +3109,9 @@
     "swapNotOwned": "That photo is already yours — swap onto one from your package instead.",
     "swapNotVideo": "Videos are always included and cannot be swapped.",
     "swapNotPaid": "Photos you paid for stay yours — swap onto one from your package or a gifted one instead.",
-    "sectionYoursSwapHint": "Prefer a different shot? Drag any photo from Extra onto one here — they swap, free."
+    "sectionYoursSwapHint": "Prefer a different shot? Drag any photo from Extra onto one here — they swap, free.",
+    "giftedBadge": "Gifted",
+    "deliveredGiftState": "You gave {count, plural, one {# free photo} other {# free photos}} — {taken} taken so far."
   },
   "availability": {
     "pageTitle": "Availability",

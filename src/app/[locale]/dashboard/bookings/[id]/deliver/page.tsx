@@ -65,11 +65,14 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
   const rawPhotos = await query<{
     id: string; url: string; thumbnail_url: string | null; filename: string; file_size: number;
     media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
-    is_included: boolean; purchased_at: string | null;
+    is_included: boolean; purchased_at: string | null; paid_for: boolean;
   }>(
     `SELECT id, url, thumbnail_url, filename, file_size,
             COALESCE(media_type, 'image') as media_type, duration_seconds, width, height,
-            is_included, purchased_at::text as purchased_at
+            is_included, purchased_at::text as purchased_at,
+            EXISTS (SELECT 1 FROM delivery_extra_purchases x
+                     WHERE x.delivery_photo_id = delivery_photos.id AND x.status = 'paid'
+                       AND x.amount_cents > 0) AS paid_for
      FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
     [id]
   );
@@ -85,6 +88,12 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     if (thumb && isS3Path(thumb)) thumb = await getPresignedUrl(s3KeyFromPath(thumb), 3600);
     return { ...p, url, thumbnail_url: thumb };
   }));
+
+  const giftTaken = (await queryOne<{ n: string }>(
+    `SELECT COUNT(*) AS n FROM delivery_extra_purchases
+      WHERE booking_id = $1 AND status = 'paid' AND amount_cents = 0`,
+    [booking.id]
+  ).catch(() => null))?.n;
 
   return (
     <div className="p-6 sm:p-8">
@@ -131,6 +140,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
         requiredPhotos={booking.required_photos ?? 0}
         extrasPayoutCents={booking.extras_payout_cents ?? 500}
         initialGiftSlots={booking.extras_gift_slots ?? 0}
+        giftTaken={giftTaken}
         initialPeekToken={booking.peek_token}
         initialPeekSharedAt={booking.peek_shared_at}
       />
