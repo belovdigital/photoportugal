@@ -3332,7 +3332,8 @@
     "plusExtrasAvailable": "+ {count} extra para elegir",
     "extrasBannerTitle": "{count, plural, one {# foto extra de tu sesión} other {# fotos extra de tu sesión}}",
     "extrasHowTo": "Son las que llevan marca de agua. Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} € cada una.",
-    "extrasFreeFirst": "Tus {count} gratuitas se descuentan primero — elige esa cantidad y no pagas nada."
+    "extrasFreeFirst": "Tus {count} gratuitas se descuentan primero — elige esa cantidad y no pagas nada.",
+    "confirmShareExtras": "{count, plural, one {# foto más queda a la venta por 2,90 € — tu cliente puede comprarla, o llevársela gratis si defines un regalo.} other {# fotos más quedan a la venta por 2,90 € cada una — tu cliente puede comprarlas, o llevarse algunas gratis si defines un regalo.}}"
   },
   "availability": {
     "pageTitle": "Disponibilidad",
@@ -3534,7 +3535,8 @@
     "inclServiceFee": "con tarifa de servicio incluida",
     "offerWithdrawn": "Oferta retirada",
     "withdrawOffer": "Retirar oferta",
-    "withdrawOfferConfirm": "¿Retirar esta oferta? El cliente ya no podrá reservarla."
+    "withdrawOfferConfirm": "¿Retirar esta oferta? El cliente ya no podrá reservarla.",
+    "deliveryExtrasLine": "{count, plural, one {# foto extra que puedes añadir por 2,90 €} other {# fotos extra que puedes añadir por 2,90 € cada una}}"
   },
   "settings": {
     "title": "Configuración",

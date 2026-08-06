@@ -3332,7 +3332,8 @@
     "plusExtrasAvailable": "+ {count} supplémentaires au choix",
     "extrasBannerTitle": "{count, plural, one {# photo supplémentaire de votre séance} other {# photos supplémentaires de votre séance}}",
     "extrasHowTo": "Ce sont celles avec un filigrane. Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} € pièce.",
-    "extrasFreeFirst": "Vos {count} gratuites sont déduites en premier — choisissez-en autant et vous ne payez rien."
+    "extrasFreeFirst": "Vos {count} gratuites sont déduites en premier — choisissez-en autant et vous ne payez rien.",
+    "confirmShareExtras": "{count, plural, one {# photo de plus est proposée à 2,90 € — votre client peut l'acheter, ou la recevoir gratuitement si vous définissez un cadeau.} other {# photos de plus sont proposées à 2,90 € pièce — votre client peut les acheter, ou en recevoir gratuitement si vous définissez un cadeau.}}"
   },
   "availability": {
     "pageTitle": "Disponibilités",
@@ -3534,7 +3535,8 @@
     "inclServiceFee": "frais de service inclus",
     "offerWithdrawn": "Offre retirée",
     "withdrawOffer": "Retirer l'offre",
-    "withdrawOfferConfirm": "Retirer cette offre ? Le client ne pourra plus la réserver."
+    "withdrawOfferConfirm": "Retirer cette offre ? Le client ne pourra plus la réserver.",
+    "deliveryExtrasLine": "{count, plural, one {# photo supplémentaire à 2,90 €} other {# photos supplémentaires à 2,90 € pièce}}"
   },
   "settings": {
     "title": "Paramètres",

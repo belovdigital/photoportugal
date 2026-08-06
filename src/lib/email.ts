@@ -707,7 +707,10 @@ export async function sendDeliveryAcceptedToPhotographer(
   photographerEmail: string,
   photographerName: string,
   clientName: string,
-  payoutAmount: number
+  payoutAmount: number,
+  /** Extras still unsold. Acceptance is not the end of the money on this
+   *  booking — the gallery lives another 90 days and they can still sell. */
+  extrasOnOffer = 0,
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
@@ -730,6 +733,13 @@ export async function sendDeliveryAcceptedToPhotographer(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      ${extrasOnOffer > 0 ? `<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#6b7280;">${pickT({
+        en: `${extrasOnOffer} extra photo${extrasOnOffer === 1 ? "" : "s"} you held back ${extrasOnOffer === 1 ? "is" : "are"} still on offer in this gallery for another 90 days. You earn &euro;2.00 on each one sold.`,
+        pt: `${extrasOnOffer} fotografia${extrasOnOffer === 1 ? "" : "s"} extra que guardou continua${extrasOnOffer === 1 ? "" : "m"} à venda nesta galeria durante mais 90 dias. Recebe 2,00 &euro; por cada uma vendida.`,
+        de: `${extrasOnOffer} zurückgehaltene Zusatzfoto${extrasOnOffer === 1 ? "" : "s"} ${extrasOnOffer === 1 ? "bleibt" : "bleiben"} in dieser Galerie noch 90 Tage im Angebot. Pro Verkauf erhalten Sie 2,00 &euro;.`,
+        es: `${extrasOnOffer} foto${extrasOnOffer === 1 ? "" : "s"} extra que guardaste sigue${extrasOnOffer === 1 ? "" : "n"} a la venta en esta galería durante 90 días más. Ganas 2,00 &euro; por cada una vendida.`,
+        fr: `${extrasOnOffer} photo${extrasOnOffer === 1 ? "" : "s"} supplémentaire${extrasOnOffer === 1 ? "" : "s"} que vous avez gardée${extrasOnOffer === 1 ? "" : "s"} reste${extrasOnOffer === 1 ? "" : "nt"} proposée${extrasOnOffer === 1 ? "" : "s"} pendant encore 90 jours. Vous gagnez 2,00 &euro; par vente.`,
+      }, locale)}</p>` : ""}
       ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.cta)}
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.reviewPrompt}</p>
       ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.reviewCta, "#3B82F6")}
@@ -2346,6 +2356,60 @@ export async function sendExtrasBoughtToClient(
       ${emailButton(galleryUrl, C.cta)}
     `, locale)
   );
+}
+
+/**
+ * A gift the photographer set up was actually taken up. No money moves, so
+ * nothing else in the system would ever tell them it happened.
+ */
+export async function sendGiftRedeemedToPhotographer(
+  to: string,
+  photographerName: string,
+  clientName: string,
+  count: number,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const plural = count === 1;
+  const C = {
+    en: {
+      subject: `${clientName} picked ${count} free photo${plural ? "" : "s"} you gifted`,
+      greet: `Hi ${firstName},`,
+      body: `${clientName} chose ${count} of the extra photograph${plural ? "" : "s"} you offered for free. They already have ${plural ? "it" : "them"} in full resolution.`,
+      tail: "Anything else you held back is still on offer while the gallery is live.",
+    },
+    pt: {
+      subject: `${clientName} escolheu ${count} fotografia${plural ? "" : "s"} grátis que ofereceu`,
+      greet: `Olá ${firstName},`,
+      body: `${clientName} escolheu ${count} das fotografias extra que ofereceu de graça. Já ${plural ? "a tem" : "as tem"} em alta resolução.`,
+      tail: "As restantes que guardou continuam à venda enquanto a galeria estiver ativa.",
+    },
+    de: {
+      subject: `${clientName} hat ${count} Gratisfoto${plural ? "" : "s"} von Ihnen ausgewählt`,
+      greet: `Hallo ${firstName},`,
+      body: `${clientName} hat ${count} der zusätzlichen Fotos gewählt, die Sie gratis angeboten haben — bereits in voller Auflösung.`,
+      tail: "Alles Weitere, das Sie zurückgehalten haben, bleibt im Angebot, solange die Galerie lebt.",
+    },
+    es: {
+      subject: `${clientName} eligió ${count} foto${plural ? "" : "s"} gratis que regalaste`,
+      greet: `Hola ${firstName},`,
+      body: `${clientName} eligió ${count} de las fotos extra que ofreciste gratis. Ya ${plural ? "la tiene" : "las tiene"} en alta resolución.`,
+      tail: "El resto de lo que guardaste sigue a la venta mientras la galería esté activa.",
+    },
+    fr: {
+      subject: `${clientName} a choisi ${count} photo${plural ? "" : "s"} offerte${plural ? "" : "s"}`,
+      greet: `Bonjour ${firstName},`,
+      body: `${clientName} a choisi ${count} des photos supplémentaires que vous avez offertes. Elle${plural ? "" : "s"} ${plural ? "est" : "sont"} déjà en haute résolution.`,
+      tail: "Le reste de ce que vous avez gardé reste proposé tant que la galerie est active.",
+    },
+  }[locale];
+  await sendEmail(to, C.subject,
+    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">\u{1F381} ${C.subject}</h2>
+      <p>${C.greet}</p>
+      <p>${C.body}</p>
+      <p style="color:#6b7280;font-size:14px;">${C.tail}</p>
+    </div>`);
 }
 
 export async function sendExtrasBoughtToPhotographer(

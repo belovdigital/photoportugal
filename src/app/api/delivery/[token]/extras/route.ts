@@ -195,6 +195,30 @@ export async function POST(
       m.notifyUser(booking.client_id, "delivery_uploaded", { bookingId: booking.id });
     }).catch(() => {});
 
+    // Tell the photographer. No money moves on a gift, so nothing else in the
+    // system would ever mention it — their client just took them up on it.
+    (async () => {
+      const who = await queryOne<{ user_id: string; email: string; name: string; locale: string | null; client_name: string }>(
+        `SELECT u.id as user_id, u.email, u.name, u.locale, cu.name as client_name
+           FROM bookings b
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users u ON u.id = pp.user_id
+           JOIN users cu ON cu.id = b.client_id
+          WHERE b.id = $1`,
+        [booking.id]
+      ).catch(() => null);
+      if (!who) return;
+      const loc = (["en", "pt", "de", "es", "fr"].includes(who.locale || "") ? who.locale : "en") as "en" | "pt" | "de" | "es" | "fr";
+      await import("@/lib/email").then(({ sendGiftRedeemedToPhotographer }) =>
+        sendGiftRedeemedToPhotographer(who.email, who.name, who.client_name, gifted.count, loc)
+      ).catch(() => {});
+      await import("@/lib/push").then(({ sendPushNotification }) =>
+        sendPushNotification(who.user_id, "🎁 Your gift was picked up",
+          `${who.client_name} chose ${gifted.count} free photo${gifted.count === 1 ? "" : "s"}.`,
+          { type: "gift_redeemed", bookingId: booking.id, channelId: "default", categoryId: "BOOKING" })
+      ).catch(() => {});
+    })().catch(() => {});
+
     return NextResponse.json({ gifted: gifted.count });
   }
 

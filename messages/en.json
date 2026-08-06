@@ -3079,7 +3079,8 @@
     "plusExtrasAvailable": "+ {count} extra to choose from",
     "extrasBannerTitle": "{count, plural, one {# extra photo from your session} other {# extra photos from your session}}",
     "extrasHowTo": "They are the ones with a watermark. Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. €{price} each.",
-    "extrasFreeFirst": "Your {count} free ones are taken off first — pick that many and you pay nothing."
+    "extrasFreeFirst": "Your {count} free ones are taken off first — pick that many and you pay nothing.",
+    "confirmShareExtras": "{count, plural, one {# more photo goes on offer at €2.90 — your client can buy it, or take it free if you set a gift.} other {# more photos go on offer at €2.90 each — your client can buy them, or take some free if you set a gift.}}"
   },
   "availability": {
     "pageTitle": "Availability",
@@ -3281,7 +3282,8 @@
     "inclServiceFee": "incl. service fee",
     "offerWithdrawn": "Offer withdrawn",
     "withdrawOffer": "Withdraw offer",
-    "withdrawOfferConfirm": "Withdraw this offer? The client will no longer be able to book it."
+    "withdrawOfferConfirm": "Withdraw this offer? The client will no longer be able to book it.",
+    "deliveryExtrasLine": "{count, plural, one {# extra photo you can add for €2.90} other {# extra photos you can add for €2.90 each}}"
   },
   "settings": {
     "title": "Settings",

@@ -556,7 +556,11 @@ export async function POST(
 
         await queryOne(
           `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
-          [id, userId, `DELIVERY:${count}:${deliveryUrl}:${password}`]
+          // The extras ride inside the count field as "5|54". The payload is
+          // positional and 5.3k rows already exist, so a new segment would
+          // shift the password every old parser reads from the end —
+          // parseInt("5|54") is 5, so untouched clients keep working.
+          [id, userId, `DELIVERY:${count}${extrasCount > 0 ? `|${extrasCount}` : ""}:${deliveryUrl}:${password}`]
         );
       } catch (e) {
         console.error("[delivery] chat message error:", e);

@@ -906,11 +906,15 @@ export function DeliveryUploadClient({
     }
     const photoCnt = deliverablePhotos;
     const videoCnt = photos.filter((p) => p.media_type === "video").length;
-    const confirmText = videoCnt === 0
+    // The dialog never mentioned the other pile, so the last thing a
+    // photographer saw before sending said nothing about what goes on sale.
+    const extrasCnt = extraPhotos.filter((p) => p.media_type !== "video").length;
+    const confirmText = (videoCnt === 0
       ? t("confirmShare", { count: photoCnt })
       : photoCnt === 0
         ? t("confirmShareVideos", { count: videoCnt })
-        : t("confirmSharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
+        : t("confirmSharePhotosAndVideos", { photos: photoCnt, videos: videoCnt }))
+      + (extrasCnt > 0 ? `\n\n${t("confirmShareExtras", { count: extrasCnt })}` : "");
     const okShare = await confirm("Share Delivery", confirmText, { confirmLabel: "Share" });
     if (!okShare) return;
 

@@ -3085,7 +3085,8 @@
     "plusExtrasAvailable": "+ {count} zusätzliche zur Auswahl",
     "extrasBannerTitle": "{count, plural, one {# zusätzliches Foto aus Ihrer Session} other {# zusätzliche Fotos aus Ihrer Session}}",
     "extrasHowTo": "Es sind die mit Wasserzeichen. Tippen Sie bei jedem gewünschten Foto auf Dazu — sie sammeln sich unten auf der Seite, bezahlt wird erst mit Kaufen. Je {price} €.",
-    "extrasFreeFirst": "Ihre {count} kostenlosen werden zuerst abgezogen — wählen Sie so viele und Sie zahlen nichts."
+    "extrasFreeFirst": "Ihre {count} kostenlosen werden zuerst abgezogen — wählen Sie so viele und Sie zahlen nichts.",
+    "confirmShareExtras": "{count, plural, one {# weiteres Foto wird für 2,90 € angeboten — Ihre Kundschaft kann es kaufen oder gratis nehmen, wenn Sie ein Geschenk festlegen.} other {# weitere Fotos werden für je 2,90 € angeboten — Ihre Kundschaft kann sie kaufen oder einige gratis nehmen, wenn Sie ein Geschenk festlegen.}}"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",
@@ -3287,7 +3288,8 @@
     "inclServiceFee": "inkl. Servicegebühr",
     "offerWithdrawn": "Angebot zurückgezogen",
     "withdrawOffer": "Angebot zurückziehen",
-    "withdrawOfferConfirm": "Dieses Angebot zurückziehen? Der Kunde kann es dann nicht mehr buchen."
+    "withdrawOfferConfirm": "Dieses Angebot zurückziehen? Der Kunde kann es dann nicht mehr buchen.",
+    "deliveryExtrasLine": "{count, plural, one {# zusätzliches Foto für 2,90 €} other {# zusätzliche Fotos für je 2,90 €}}"
   },
   "settings": {
     "title": "Einstellungen",

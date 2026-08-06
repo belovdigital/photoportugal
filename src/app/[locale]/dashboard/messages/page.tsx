@@ -92,8 +92,8 @@ function formatLastMessagePreview(text: string | null, deleted = false): string 
   }
   if (text.startsWith("DELIVERY:")) {
     const parts = text.split(":");
-    const count = parts[1];
-    return `📸 Gallery delivered${count ? ` (${count} photos)` : ""}`;
+    const [count, extras] = (parts[1] || "").split("|");
+    return `📸 Gallery delivered${count ? ` (${count} photos${extras ? ` + ${extras} extra` : ""})` : ""}`;
   }
   if (text.startsWith("REVIEW_REQUEST:")) {
     return "⭐ How was your photoshoot?";
@@ -1606,7 +1606,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                         // Delivery card
                         if (msg.text?.startsWith("DELIVERY:")) {
                           const parts = msg.text!.split(":");
-                          const photoCount = parts[1];
+                          const [photoCount, extrasCount] = (parts[1] || "").split("|");
                           const url = parts.slice(2, -1).join(":");
                           const pw = parts[parts.length - 1];
                           return (
@@ -1614,6 +1614,9 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                               <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50 to-white p-5 text-center shadow-sm">
                                 <div className="text-3xl">📸</div>
                                 <p className="mt-2 text-base font-bold text-gray-900">{t("photoPreviewsReady", { count: photoCount })}</p>
+                                {extrasCount && Number(extrasCount) > 0 && (
+                                  <p className="mt-1 text-sm font-medium text-accent-800">{t("deliveryExtrasLine", { count: Number(extrasCount) })}</p>
+                                )}
                                 <p className="mt-1 text-xs text-gray-500">{t("deliveryReviewHint")}</p>
                                 <a href={`${url}?pw=${encodeURIComponent(pw)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-xl bg-accent-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-700 transition">
                                   {t("viewGallery")}

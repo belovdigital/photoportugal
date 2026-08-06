@@ -250,12 +250,23 @@ export async function POST(
               );
             }).catch(() => {});
 
+            // Unsold extras: acceptance releases the session payout, but the
+            // gallery lives another 90 days and these can still sell.
+            const extrasLeft = await queryOne<{ n: string }>(
+              `SELECT COUNT(*) AS n FROM delivery_photos
+                WHERE booking_id = $1 AND is_included = FALSE AND purchased_at IS NULL
+                  AND COALESCE(media_type, 'image') <> 'video'`,
+              [booking.id]
+            ).catch(() => null);
+            const extrasStillOnOffer = parseInt(extrasLeft?.n || "0", 10);
+
             // Send payout email to photographer
             sendDeliveryAcceptedToPhotographer(
               booking.photographer_email,
               booking.photographer_name,
               booking.client_name,
-              payoutAmount
+              payoutAmount,
+              extrasStillOnOffer
             );
           } catch (transferErr) {
             // Transfer failed (network, Stripe error). Roll back the
