@@ -120,7 +120,7 @@ export async function GET(
   const { PassThrough } = await import("stream");
 
   const photos = await query<{ url: string; filename: string }>(
-    "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE ORDER BY sort_order, created_at",
+    "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at",
     [booking.id]
   );
 

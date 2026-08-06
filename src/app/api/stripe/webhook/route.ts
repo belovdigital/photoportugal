@@ -506,6 +506,97 @@ export async function POST(req: NextRequest) {
             );
             console.log(`[webhook] Verified badge activated for photographer ${photographerId}`);
           }
+        } else if (checkoutType === "extra_photos") {
+          // ── Extra photos bought ───────────────────────────────────
+          // Sits ABOVE the `(checkoutType === "booking" || bookingId)`
+          // branch further down on purpose: that one catches any session
+          // carrying booking_id and would mark the shoot itself paid.
+          //
+          // Nothing about the booking row is touched here. A BEFORE UPDATE
+          // trigger stamps bookings.updated_at, and the 14-day auto-accept
+          // keys off it — a purchase must not quietly postpone acceptance.
+          const orderId = checkoutSession.metadata?.order_id;
+          if (orderId) {
+            const extraPi = typeof checkoutSession.payment_intent === "string"
+              ? checkoutSession.payment_intent
+              : checkoutSession.payment_intent?.id || null;
+
+            // Atomic claim: only pending rows flip, so a replayed webhook
+            // is a no-op and a second delivery cannot double-transfer.
+            const paidRows = await query<{ id: string; booking_id: string; delivery_photo_id: string; payout_cents: number }>(
+              `UPDATE delivery_extra_purchases
+                  SET status = 'paid', paid_at = NOW(),
+                      stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id)
+                WHERE order_id = $1 AND status = 'pending'
+                RETURNING id, booking_id, delivery_photo_id, payout_cents`,
+              [orderId, extraPi]
+            );
+
+            if (paidRows.length > 0) {
+              const bookingId = paidRows[0].booking_id;
+              // Hand the photos over. purchased_at, NOT is_included: that
+              // column means "part of what the booking promised" and is what
+              // the delivery guard counts and what the frozen main archive
+              // was built from. A purchase must not rewrite the promise.
+              await query(
+                "UPDATE delivery_photos SET purchased_at = NOW() WHERE id = ANY($1::uuid[]) AND purchased_at IS NULL",
+                [paidRows.map((r) => r.delivery_photo_id)]
+              );
+
+              const ctx = await queryOne<{ photographer_stripe_id: string | null; stripe_ready: boolean; photographer_name: string; client_name: string }>(
+                `SELECT pp.stripe_account_id as photographer_stripe_id,
+                        COALESCE(pp.stripe_onboarding_complete, FALSE) as stripe_ready,
+                        pu.name as photographer_name, cu.name as client_name
+                   FROM bookings b
+                   JOIN photographer_profiles pp ON pp.id = b.photographer_id
+                   JOIN users pu ON pu.id = pp.user_id
+                   JOIN users cu ON cu.id = b.client_id
+                  WHERE b.id = $1`,
+                [bookingId]
+              );
+
+              const payoutTotal = paidRows.reduce((sum, r) => sum + r.payout_cents, 0);
+              const grossEur = ((paidRows.length * 290) / 100).toFixed(2);
+              const payoutEur = (payoutTotal / 100).toFixed(2);
+
+              if (ctx?.photographer_stripe_id && ctx.stripe_ready) {
+                // Its own idempotency key. `payout_${bookingId}` is already
+                // spent by delivery acceptance and reused by two crons —
+                // reusing it returns THAT transfer and moves no money at all.
+                const claimed = await query<{ id: string }>(
+                  "UPDATE delivery_extra_purchases SET transferred = TRUE WHERE order_id = $1 AND status = 'paid' AND transferred = FALSE RETURNING id",
+                  [orderId]
+                );
+                if (claimed.length > 0) {
+                  try {
+                    await requireStripe().transfers.create({
+                      amount: payoutTotal,
+                      currency: "eur",
+                      destination: ctx.photographer_stripe_id,
+                      ...(extraPi ? { transfer_group: extraPi } : {}),
+                      metadata: { order_id: orderId, booking_id: bookingId, type: "extra_photos_payout" },
+                    }, { idempotencyKey: `extras_transfer_${orderId}` });
+                  } catch (trErr) {
+                    await query(
+                      "UPDATE delivery_extra_purchases SET transferred = FALSE WHERE order_id = $1 RETURNING id",
+                      [orderId]
+                    ).catch(() => {});
+                    console.error("[webhook] extras transfer error:", trErr);
+                  }
+                }
+              } else {
+                import("@/lib/telegram").then(({ sendTelegram }) =>
+                  sendTelegram(`⚠️ <b>Доп. фото оплачены, но Stripe у фотографа не готов</b>\n€${grossEur} (фотографу €${payoutEur})\nБронь: <code>${bookingId.slice(0, 8)}</code>\nПеревести вручную после онбординга.`, "stripe")
+                ).catch(() => {});
+              }
+
+              import("@/lib/telegram").then(({ sendTelegram }) =>
+                sendTelegram(`🖼 <b>Куплены доп. фото</b>\n\n${paidRows.length} шт · €${grossEur} (фотографу €${payoutEur})\n${ctx?.client_name || "Клиент"} → ${ctx?.photographer_name || "фотограф"}\nБронь: <code>${bookingId.slice(0, 8)}</code>`, "bookings")
+              ).catch(() => {});
+
+              console.log(`[webhook] extras paid: order ${orderId}, ${paidRows.length} photos`);
+            }
+          }
         } else if (checkoutType === "tip") {
           // ── Tip payment completed ─────────────────────────────────
           // Client tipped the photographer post-delivery. Mark the tip

@@ -117,7 +117,7 @@ export async function POST(
   }>(
     `SELECT id, url, preview_url, thumbnail_url, filename, file_size,
             COALESCE(media_type, 'image') as media_type, duration_seconds, width, height
-     FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE ORDER BY sort_order, created_at`,
+     FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at`,
     [booking.id]
   );
 
