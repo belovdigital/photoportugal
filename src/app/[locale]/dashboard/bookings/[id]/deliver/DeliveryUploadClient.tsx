@@ -1190,79 +1190,6 @@ export function DeliveryUploadClient({
       )}
 
 
-      {/* Two piles: drag to reorder, drag across to change what the client gets.
-          The tap-to-move button stays for anyone who would rather not drag. */}
-      {photos.length > 0 && showSplit && (
-        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className={`mt-6 flex flex-wrap items-baseline justify-between gap-2 border-b-2 pb-2 ${overBy > 0 ? "border-red-300" : "border-accent-200"}`}>
-            <h3 className={`text-base font-bold ${overBy > 0 ? "text-red-700" : "text-gray-900"}`}>
-              {overBy > 0 ? "⚠" : "✓"} {t("sectionIncluded", { count: includedPhotoCount })}
-              {overBy > 0 && (
-                <span className="ml-2 rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
-                  {t("overCapBadge", { required: requiredPhotos })}
-                </span>
-              )}
-            </h3>
-            <p className="text-xs text-gray-500">{t("sectionIncludedHint")}</p>
-          </div>
-          {overBy > 0 && (
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2">
-              <p className="text-sm font-medium text-red-800">{t("overCapHint", { over: overBy })}</p>
-              <button
-                type="button"
-                onClick={moveSurplusToExtras}
-                disabled={bulkMoving}
-                className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                {bulkMoving ? "…" : t("moveSurplus", { over: overBy })}
-              </button>
-            </div>
-          )}
-          <SortableContext items={includedPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
-            <PileDropZone id="delivery" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {includedPhotos.slice(0, visibleCount).map((photo) => (
-                <SortableTile key={photo.id} id={photo.id} disabled={!canDrag}>
-                  {(h) => renderTile(photo, canDrag ? h : undefined)}
-                </SortableTile>
-              ))}
-            </PileDropZone>
-          </SortableContext>
-
-          <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
-            <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
-            <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
-          </div>
-          <SortableContext items={extraPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
-            <PileDropZone id="extras" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {extraPhotos.length === 0 ? (
-                <p className="col-span-full rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
-              ) : (
-                extraPhotos.slice(0, visibleCount).map((photo) => (
-                  <SortableTile key={photo.id} id={photo.id} disabled={!canDrag}>
-                    {(h) => renderTile(photo, canDrag ? h : undefined)}
-                  </SortableTile>
-                ))
-              )}
-            </PileDropZone>
-          </SortableContext>
-
-          <DragOverlay>
-            {dragging && (
-              <div className="aspect-square w-32 overflow-hidden rounded-lg border-2 border-accent-400 shadow-2xl ring-4 ring-accent-200/50">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={dragging.thumbnail_url || dragging.url} alt="" className="h-full w-full object-cover" />
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
-      )}
-
-      {photos.length > 0 && !showSplit && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {photos.slice(0, visibleCount).map((photo) => renderTile(photo))}
-        </div>
-      )}
-
       {/* Peek and gift — the arranging tools. Sending lives in its own panel. */}
       {photos.length > 0 && (
         <div className="mt-4">
@@ -1393,17 +1320,21 @@ export function DeliveryUploadClient({
                 </div>
                 {(() => {
                   const draft = parseInt(giftDraft, 10) || 0;
-                  // The counter shows the draft; showing the SAVED number
-                  // underneath it read as a bug ("11" above, "2" below).
-                  if (draft !== giftSlots) {
-                    return <p className="mt-2 text-xs font-semibold text-accent-800">{t("giftUnsaved", { count: draft })}</p>;
-                  }
                   return (
                     <>
-                      <p className="mt-2 text-xs text-accent-700">
-                        {giftSlots > 0 ? t("giftStateOn", { count: giftSlots }) : t("giftStateOff")}
-                      </p>
-                      {giftSlots > extraPhotos.length && (
+                      {/* The counter shows the draft; echoing the SAVED number
+                          underneath it read as a bug ("11" above, "2" below). */}
+                      {draft !== giftSlots ? (
+                        <p className="mt-2 text-xs font-semibold text-accent-800">{t("giftUnsaved", { count: draft })}</p>
+                      ) : (
+                        <p className="mt-2 text-xs text-accent-700">
+                          {giftSlots > 0 ? t("giftStateOn", { count: giftSlots }) : t("giftStateOff")}
+                        </p>
+                      )}
+                      {/* Warns on the number in the box, not the saved one —
+                          typing 993 against 4 available should say so now,
+                          not after you commit it. */}
+                      {draft > extraPhotos.length && (
                         <p className="mt-1 text-xs text-amber-700">{t("giftMoreThanExtras", { available: extraPhotos.length })}</p>
                       )}
                     </>
@@ -1489,8 +1420,84 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Reachability, not decoration: with 500 photos the panel above is many
-          screens away, so a slim bar takes over the moment it scrolls off.
+      {/* Two piles: drag to reorder, drag across to change what the client gets.
+          The tap-to-move button stays for anyone who would rather not drag. */}
+      {photos.length > 0 && showSplit && (
+        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className={`mt-6 flex flex-wrap items-baseline justify-between gap-2 border-b-2 pb-2 ${overBy > 0 ? "border-red-300" : "border-accent-200"}`}>
+            <h3 className={`text-base font-bold ${overBy > 0 ? "text-red-700" : "text-gray-900"}`}>
+              {overBy > 0 ? "⚠" : "✓"} {t("sectionIncluded", { count: includedPhotoCount })}
+              {overBy > 0 && (
+                <span className="ml-2 rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
+                  {t("overCapBadge", { required: requiredPhotos })}
+                </span>
+              )}
+            </h3>
+            <p className="text-xs text-gray-500">{t("sectionIncludedHint")}</p>
+          </div>
+          {overBy > 0 && (
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2">
+              <p className="text-sm font-medium text-red-800">{t("overCapHint", { over: overBy })}</p>
+              <button
+                type="button"
+                onClick={moveSurplusToExtras}
+                disabled={bulkMoving}
+                className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {bulkMoving ? "…" : t("moveSurplus", { over: overBy })}
+              </button>
+            </div>
+          )}
+          <SortableContext items={includedPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
+            <PileDropZone id="delivery" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {includedPhotos.slice(0, visibleCount).map((photo) => (
+                <SortableTile key={photo.id} id={photo.id} disabled={!canDrag}>
+                  {(h) => renderTile(photo, canDrag ? h : undefined)}
+                </SortableTile>
+              ))}
+            </PileDropZone>
+          </SortableContext>
+
+          <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-amber-200 pb-2">
+            <h3 className="text-base font-bold text-amber-800">€ {t("sectionExtras", { count: extraPhotos.length })}</h3>
+            <p className="text-xs text-amber-700">{t("sectionExtrasHint")}</p>
+          </div>
+          <SortableContext items={extraPhotos.slice(0, visibleCount).map((p) => p.id)} strategy={rectSortingStrategy}>
+            <PileDropZone id="extras" className="mt-3 grid min-h-[6rem] grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {extraPhotos.length === 0 ? (
+                <p className="col-span-full rounded-xl border border-dashed border-warm-300 px-4 py-6 text-center text-sm text-gray-500">{t("sectionExtrasEmpty")}</p>
+              ) : (
+                extraPhotos.slice(0, visibleCount).map((photo) => (
+                  <SortableTile key={photo.id} id={photo.id} disabled={!canDrag}>
+                    {(h) => renderTile(photo, canDrag ? h : undefined)}
+                  </SortableTile>
+                ))
+              )}
+            </PileDropZone>
+          </SortableContext>
+
+          <DragOverlay>
+            {dragging && (
+              <div className="aspect-square w-32 overflow-hidden rounded-lg border-2 border-accent-400 shadow-2xl ring-4 ring-accent-200/50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={dragging.thumbnail_url || dragging.url} alt="" className="h-full w-full object-cover" />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
+      )}
+
+      {photos.length > 0 && !showSplit && (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {photos.slice(0, visibleCount).map((photo) => renderTile(photo))}
+        </div>
+      )}
+
+
+
+      {/* Reachability, not decoration: the panel sits above the gallery so the
+          note actually gets written, which means 500 photos later it is far
+          off the top — a slim bar takes over the moment it scrolls away.
           Fixed, not sticky — the dashboard's <main> sets overflow-x, which
           turns it into a scrollport and leaves a sticky child with no travel.
           bottom-16 clears the mobile nav. */}
