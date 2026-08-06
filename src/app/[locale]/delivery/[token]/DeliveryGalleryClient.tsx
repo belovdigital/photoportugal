@@ -42,11 +42,15 @@ export function DeliveryGalleryClient({
   deliveryAccepted,
   selectedExtras,
   onToggleExtra,
+  giftLeft = 0,
 }: {
   photos: Photo[];
   deliveryAccepted: boolean;
   selectedExtras?: Set<string>;
   onToggleExtra?: (id: string) => void;
+  /** Free picks the photographer granted and the client has not spent yet.
+   *  While this is above zero a tap redeems immediately instead of basketing. */
+  giftLeft?: number;
 }) {
   const t = useTranslations("delivery");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -169,10 +173,10 @@ export function DeliveryGalleryClient({
           <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
             <span
               className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-bold shadow-lg ${
-                picked ? "bg-primary-600 text-white" : "bg-white/95 text-gray-900"
+                picked ? "bg-primary-600 text-white" : giftLeft > 0 ? "bg-accent-600 text-white" : "bg-white/95 text-gray-900"
               }`}
             >
-              {picked ? `✓ ${t("extraPicked")}` : `＋ ${t("extraPick")}`}
+              {picked ? `✓ ${t("extraPicked")}` : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")}`}
             </span>
           </div>
         )}

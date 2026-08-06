@@ -124,6 +124,12 @@ export function DeliveryPageClient({
   }, [extrasKey, gallery]);
 
   function toggleExtra(id: string) {
+    // While the photographer's gift has slots left, a tap IS the redemption:
+    // one photo, immediately, no basket and no ambiguity about which ones.
+    if ((gallery?.gift_remaining ?? 0) > 0) {
+      void redeemGift(id);
+      return;
+    }
     setSelectedExtras((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -132,49 +138,40 @@ export function DeliveryPageClient({
     });
   }
 
+  const [redeeming, setRedeeming] = useState<string | null>(null);
+
+  async function redeemGift(id: string) {
+    if (redeeming) return;
+    setRedeeming(id);
+    try {
+      const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+      const res = await fetch(`/api/delivery/${token}/extras`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gift: true, photo_ids: [id], password: pw }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(data?.error || t("extrasError")); return; }
+      const again = await fetch(`/api/delivery/${token}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (again.ok) setGallery(await again.json());
+    } catch {
+      alert(t("extrasError"));
+    } finally {
+      setRedeeming(null);
+    }
+  }
+
   async function buyExtras() {
     if (selectedExtras.size === 0 || buyingExtras) return;
     setBuyingExtras(true);
     try {
       const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
-      const giftLeft = gallery?.gift_remaining ?? 0;
-      let ids = [...selectedExtras];
+      const ids = [...selectedExtras];
 
-      // Gift slots are spent first, on the photos in the order they were
-      // ticked. If everything fits inside the gift there is no checkout at
-      // all — the photos are simply theirs.
-      if (giftLeft > 0) {
-        const freeIds = ids.slice(0, giftLeft);
-        const res = await fetch(`/api/delivery/${token}/extras`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gift: true, photo_ids: freeIds, password: pw }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          alert(data?.error || t("extrasError"));
-          setBuyingExtras(false);
-          return;
-        }
-        ids = ids.slice(giftLeft);
-        if (ids.length === 0) {
-          setSelectedExtras(new Set());
-          try { sessionStorage.removeItem(extrasKey); } catch {}
-          // No Stripe round-trip to refresh the page for us — re-read here.
-          const again = await fetch(`/api/delivery/${token}/verify`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password: pw }),
-          });
-          if (again.ok) setGallery(await again.json());
-          setBuyingExtras(false);
-          return;
-        }
-        // The paid remainder continues below; keep only it in the basket so a
-        // cancelled checkout does not re-offer the already-redeemed gifts.
-        setSelectedExtras(new Set(ids));
-        try { sessionStorage.setItem(extrasKey, JSON.stringify(ids)); } catch {}
-      }
 
       const res = await fetch(`/api/delivery/${token}/extras`, {
         method: "POST",
@@ -629,6 +626,7 @@ export function DeliveryPageClient({
         deliveryAccepted={accepted}
         selectedExtras={selectedExtras}
         onToggleExtra={toggleExtra}
+        giftLeft={gallery?.gift_remaining ?? 0}
       />
 
       {/* Extras basket — only exists when the photographer held something back */}

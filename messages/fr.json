@@ -3333,7 +3333,8 @@
     "extrasBannerTitle": "{count, plural, one {# photo supplémentaire de votre séance} other {# photos supplémentaires de votre séance}}",
     "extrasHowTo": "Ce sont celles avec un filigrane. Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} € pièce.",
     "extrasFreeFirst": "Vos {count} gratuites sont déduites en premier — choisissez-en autant et vous ne payez rien.",
-    "confirmShareExtras": "{count, plural, one {# photo de plus est proposée à 2,90 € — votre client peut l'acheter, ou la recevoir gratuitement si vous définissez un cadeau.} other {# photos de plus sont proposées à 2,90 € pièce — votre client peut les acheter, ou en recevoir gratuitement si vous définissez un cadeau.}}"
+    "confirmShareExtras": "{count, plural, one {# photo de plus est proposée à 2,90 € — votre client peut l'acheter, ou la recevoir gratuitement si vous définissez un cadeau.} other {# photos de plus sont proposées à 2,90 € pièce — votre client peut les acheter, ou en recevoir gratuitement si vous définissez un cadeau.}}",
+    "extraPickFree": "Ajouter gratuit"
   },
   "availability": {
     "pageTitle": "Disponibilités",

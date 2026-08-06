@@ -47,7 +47,12 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     const photos = await query<{ url: string; filename: string }>(
       set === "extras"
         ? "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND purchased_at IS NOT NULL ORDER BY sort_order, created_at"
-        : "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE ORDER BY sort_order, created_at",
+        // Everything the client owns AT ACCEPTANCE goes in the main archive —
+    // the photos the package promised plus any extra they already took, free
+    // or paid. Splitting those into a second file made the gift feel like a
+    // purchase. Anything bought AFTER acceptance still lands in the extras
+    // archive, because this one is written once and frozen.
+    : "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at",
       [bookingId]
     );
     if (photos.length === 0) return null;
