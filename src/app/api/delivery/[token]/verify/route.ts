@@ -114,10 +114,12 @@ export async function POST(
     id: string; url: string; preview_url: string | null; thumbnail_url: string | null;
     filename: string; file_size: number;
     media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
+    is_included: boolean; purchased_at: string | null;
   }>(
     `SELECT id, url, preview_url, thumbnail_url, filename, file_size,
-            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height
-     FROM delivery_photos WHERE booking_id = $1 AND (is_included = TRUE OR purchased_at IS NOT NULL) ORDER BY sort_order, created_at`,
+            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height,
+            is_included, purchased_at
+     FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
     [booking.id]
   );
 
@@ -132,9 +134,19 @@ export async function POST(
   // Videos: thumbnail_url is the poster frame, url is the playable mp4.
   const photos = await Promise.all(rawPhotos.map(async (photo) => {
     const isVideo = photo.media_type === "video";
-    const rawUrl = isVideo
-      ? photo.url
-      : (isAccepted ? photo.url : (photo.preview_url || photo.url));
+    // Locked = shot but not part of this delivery and not bought. It is sent
+    // to the browser so the client can see what is on offer, but it carries
+    // ONLY the watermarked preview — in every URL field, including the
+    // thumbnail and the one the lightbox opens. This matters more than it
+    // looks: getPresignedUrl does not actually presign (src/lib/s3.ts), it
+    // returns a permanent public link, so whatever string ends up in this
+    // payload is the access control. There is no second gate behind it.
+    const isLocked = !photo.is_included && !photo.purchased_at && !isVideo;
+    const rawUrl = isLocked
+      ? (photo.preview_url || photo.thumbnail_url || photo.url)
+      : isVideo
+        ? photo.url
+        : (isAccepted ? photo.url : (photo.preview_url || photo.url));
     let resolvedUrl = rawUrl;
     if (isS3Path(rawUrl)) resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
 
@@ -155,9 +167,11 @@ export async function POST(
     // watermarked preview; the clean one is only handed over once the
     // delivery is accepted. Videos keep their poster frame either way: it is
     // a still, and withholding it would leave the grid blank.
-    const thumbSource = (isVideo || isAccepted)
-      ? photo.thumbnail_url
-      : (photo.preview_url || photo.thumbnail_url);
+    const thumbSource = isLocked
+      ? (photo.preview_url || photo.thumbnail_url)
+      : (isVideo || isAccepted)
+        ? photo.thumbnail_url
+        : (photo.preview_url || photo.thumbnail_url);
 
     let resolvedThumb: string | null = null;
     if (thumbSource) {
@@ -167,6 +181,7 @@ export async function POST(
     }
     return {
       id: photo.id,
+      locked: isLocked,
       url: resolvedUrl,
       preview_url: resolvedPreview,
       thumbnail_url: resolvedThumb,
@@ -203,6 +218,11 @@ export async function POST(
     expires_at: booking.delivery_expires_at,
     photos,
     photo_count: photos.length,
+    // What the extras strip needs to price a basket without hardcoding the
+    // number in the browser. The server charges from its own constant either
+    // way; this is display only.
+    extras_price_cents: 290,
+    extras_available: photos.filter((p) => p.locked).length,
     delivery_accepted: isAccepted,
     payment_status: booking.payment_status,
     zip_ready: isAccepted && booking.zip_ready,

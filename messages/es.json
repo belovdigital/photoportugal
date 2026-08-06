@@ -3252,7 +3252,12 @@
     "includeInDelivery": "Incluir",
     "excludeFromDelivery": "Reservar",
     "includeFailed": "No se pudieron cambiar estas fotos",
-    "notIncludedBadge": "Fuera de la entrega"
+    "notIncludedBadge": "Fuera de la entrega",
+    "extrasSelected": "{count} fotos extra seleccionadas",
+    "extrasBuy": "Comprar",
+    "extrasClear": "Vaciar",
+    "extrasError": "No se pudo iniciar la compra",
+    "extrasLockedHint": "Fotos extra de tu sesión — toca para añadir"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

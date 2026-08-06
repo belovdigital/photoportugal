@@ -2999,7 +2999,12 @@
     "includeInDelivery": "Include",
     "excludeFromDelivery": "Hold back",
     "includeFailed": "Could not change these photos",
-    "notIncludedBadge": "Not in delivery"
+    "notIncludedBadge": "Not in delivery",
+    "extrasSelected": "{count} extra photos selected",
+    "extrasBuy": "Buy",
+    "extrasClear": "Clear",
+    "extrasError": "Could not start the purchase",
+    "extrasLockedHint": "Extra photos from your session — tap to add"
   },
   "availability": {
     "pageTitle": "Availability",

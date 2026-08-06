@@ -2815,7 +2815,12 @@
     "includeInDelivery": "Incluir",
     "excludeFromDelivery": "Reter",
     "includeFailed": "Não foi possível alterar estas fotografias",
-    "notIncludedBadge": "Fora da entrega"
+    "notIncludedBadge": "Fora da entrega",
+    "extrasSelected": "{count} fotografias extra selecionadas",
+    "extrasBuy": "Comprar",
+    "extrasClear": "Limpar",
+    "extrasError": "Não foi possível iniciar a compra",
+    "extrasLockedHint": "Fotografias extra da sua sessão — toque para adicionar"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

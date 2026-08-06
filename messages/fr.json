@@ -3252,7 +3252,12 @@
     "includeInDelivery": "Inclure",
     "excludeFromDelivery": "Retenir",
     "includeFailed": "Impossible de modifier ces photos",
-    "notIncludedBadge": "Hors livraison"
+    "notIncludedBadge": "Hors livraison",
+    "extrasSelected": "{count} photos supplémentaires sélectionnées",
+    "extrasBuy": "Acheter",
+    "extrasClear": "Vider",
+    "extrasError": "Impossible de démarrer l'achat",
+    "extrasLockedHint": "Photos supplémentaires de votre séance — touchez pour ajouter"
   },
   "availability": {
     "pageTitle": "Disponibilités",

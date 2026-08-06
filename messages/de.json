@@ -3005,7 +3005,12 @@
     "includeInDelivery": "Aufnehmen",
     "excludeFromDelivery": "Zurückhalten",
     "includeFailed": "Diese Fotos konnten nicht geändert werden",
-    "notIncludedBadge": "Nicht in der Lieferung"
+    "notIncludedBadge": "Nicht in der Lieferung",
+    "extrasSelected": "{count} zusätzliche Fotos ausgewählt",
+    "extrasBuy": "Kaufen",
+    "extrasClear": "Leeren",
+    "extrasError": "Der Kauf konnte nicht gestartet werden",
+    "extrasLockedHint": "Zusätzliche Fotos aus Ihrem Shooting — zum Hinzufügen antippen"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

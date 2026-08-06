@@ -25,6 +25,9 @@ interface Photo {
   duration_seconds?: number | null;
   width?: number | null;
   height?: number | null;
+  /** Shot, but not part of this delivery and not bought — for sale. Carries
+   *  the watermarked file only; the server never puts an original in it. */
+  locked?: boolean;
 }
 
 function formatDuration(s: number | null | undefined): string {
@@ -34,7 +37,17 @@ function formatDuration(s: number | null | undefined): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Photo[]; deliveryAccepted: boolean }) {
+export function DeliveryGalleryClient({
+  photos,
+  deliveryAccepted,
+  selectedExtras,
+  onToggleExtra,
+}: {
+  photos: Photo[];
+  deliveryAccepted: boolean;
+  selectedExtras?: Set<string>;
+  onToggleExtra?: (id: string) => void;
+}) {
   const t = useTranslations("delivery");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -128,11 +141,13 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
   function renderCell(photo: Photo, index: number) {
     const isVideo = photo.media_type === "video";
     const thumb = photo.thumbnail_url || photo.preview_url || photo.url;
+    const locked = photo.locked === true;
+    const picked = locked && !!selectedExtras?.has(photo.id);
     return (
       <div
         key={photo.id}
-        className="cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative"
-        onClick={() => openLightbox(index)}
+        className={`cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative${picked ? " ring-2 ring-primary-500" : ""}`}
+        onClick={() => (locked && onToggleExtra ? onToggleExtra(photo.id) : openLightbox(index))}
         onContextMenu={(e) => e.preventDefault()}
       >
         <img
@@ -147,6 +162,17 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
           onLoad={() => { loadedCountRef.current += 1; tryGrow(); }}
           onError={() => { loadedCountRef.current += 1; tryGrow(); }}
         />
+        {locked && (
+          <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-2">
+            <span
+              className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-[13px] font-bold ${
+                picked ? "border-primary-500 bg-primary-500 text-white" : "border-white bg-black/40 text-white"
+              }`}
+            >
+              {picked ? "✓" : "+"}
+            </span>
+          </div>
+        )}
         {isVideo && (
           <>
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20">

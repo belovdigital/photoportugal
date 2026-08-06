@@ -22,6 +22,7 @@ interface Photo {
   duration_seconds?: number | null;
   width?: number | null;
   height?: number | null;
+  locked?: boolean;
 }
 
 interface GalleryData {
@@ -38,6 +39,8 @@ interface GalleryData {
   payment_status: string;
   zip_ready?: boolean;
   zip_size?: number | null;
+  extras_price_cents?: number;
+  extras_available?: number;
   /** A paid tip already exists for this booking — hide the tip card. */
   tipped?: boolean;
   /** Paid booking with no open dispute — the tip card may render. */
@@ -92,6 +95,52 @@ export function DeliveryPageClient({
   // never see a password — they got here from /dashboard/bookings, and
   // the verify endpoint accepts an empty body when the session user
   // matches gift_recipient_user_id.
+  // Photos the client has ticked to buy. Kept in sessionStorage because a
+  // cancelled Checkout comes back as a full page load: without this the
+  // basket is silently emptied and they have to find every photo again.
+  const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
+  const [buyingExtras, setBuyingExtras] = useState(false);
+  const extrasKey = `delivery_extras_${token}`;
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(extrasKey);
+      if (raw) setSelectedExtras(new Set(JSON.parse(raw) as string[]));
+    } catch { /* a corrupt basket is not worth an error screen */ }
+  }, [extrasKey]);
+
+  function toggleExtra(id: string) {
+    setSelectedExtras((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { sessionStorage.setItem(extrasKey, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }
+
+  async function buyExtras() {
+    if (selectedExtras.size === 0 || buyingExtras) return;
+    setBuyingExtras(true);
+    try {
+      const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+      const res = await fetch(`/api/delivery/${token}/extras`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photo_ids: [...selectedExtras], password: pw }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.url) {
+        alert(data?.error || t("extrasError"));
+        setBuyingExtras(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+      setBuyingExtras(false);
+    }
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlPw = params.get("pw");
@@ -111,6 +160,13 @@ export function DeliveryPageClient({
         if (data) {
           setGallery(data);
           if (data.delivery_accepted) setAccepted(true);
+          // Back from Stripe: the photos just bought are no longer locked in
+          // this payload, so the basket is spent. On a cancelled checkout the
+          // selection is deliberately left alone.
+          if (params.get("extras") === "success") {
+            setSelectedExtras(new Set());
+            try { sessionStorage.removeItem(extrasKey); } catch {}
+          }
         }
         setAutoLoading(false);
       })
@@ -441,7 +497,41 @@ export function DeliveryPageClient({
       )}
 
       {/* Gallery */}
-      <DeliveryGalleryClient photos={gallery.photos} deliveryAccepted={accepted} />
+      <DeliveryGalleryClient
+        photos={gallery.photos}
+        deliveryAccepted={accepted}
+        selectedExtras={selectedExtras}
+        onToggleExtra={toggleExtra}
+      />
+
+      {/* Extras basket — only exists when the photographer held something back */}
+      {selectedExtras.size > 0 && (
+        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-warm-200 bg-white/95 px-5 py-4 shadow-lg backdrop-blur">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">
+              {t("extrasSelected", { count: selectedExtras.size })}
+            </p>
+            <p className="text-xs text-gray-500">
+              €{((selectedExtras.size * (gallery.extras_price_cents ?? 290)) / 100).toFixed(2)}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setSelectedExtras(new Set()); try { sessionStorage.removeItem(extrasKey); } catch {} }}
+              className="text-xs font-medium text-gray-500 hover:text-gray-700"
+            >
+              {t("extrasClear")}
+            </button>
+            <button
+              onClick={buyExtras}
+              disabled={buyingExtras}
+              className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+            >
+              {buyingExtras ? "…" : t("extrasBuy")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="mt-12 text-center">
