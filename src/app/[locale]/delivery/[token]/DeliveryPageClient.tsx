@@ -194,16 +194,21 @@ export function DeliveryPageClient({
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.zip_ready) {
-            setGallery(data);
-            clearInterval(interval);
-          }
+          // Stop when whatever we were waiting for has arrived. Before this
+          // the only exit was the delivery archive, so a client who bought
+          // extras without accepting polled every five seconds for as long as
+          // the tab stayed open — the delivery archive is not built until
+          // acceptance and would never have become ready.
+          const deliveryDone = !accepted || data.zip_ready;
+          const extrasDone = (data.extras_owned ?? 0) === 0 || data.extras_zip_ready;
+          if (data.zip_ready || data.extras_zip_ready) setGallery(data);
+          if (deliveryDone && extrasDone) clearInterval(interval);
         }
       } catch {}
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [accepted, gallery?.zip_ready, token, password]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [accepted, gallery?.zip_ready, gallery?.extras_zip_ready, gallery?.extras_owned, token, password]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

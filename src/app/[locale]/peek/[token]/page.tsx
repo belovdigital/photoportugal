@@ -53,8 +53,8 @@ async function getPeek(token: string): Promise<{ booking: PeekBooking; photos: {
   if (booking.delivery_accepted || ageMs > PEEK_TTL_DAYS * 86400000 || booking.status === "cancelled") {
     return { expired: true };
   }
-  const raw = await query<{ id: string; thumbnail_url: string | null; preview_url: string | null }>(
-    `SELECT id, thumbnail_url, preview_url FROM delivery_photos
+  const raw = await query<{ id: string; thumbnail_url: string | null; preview_url: string | null; is_included: boolean }>(
+    `SELECT id, thumbnail_url, preview_url, is_included FROM delivery_photos
       WHERE booking_id = $1 AND is_peek = TRUE AND COALESCE(media_type, 'image') <> 'video'
       ORDER BY sort_order, created_at LIMIT 10`,
     [booking.id]
@@ -62,7 +62,9 @@ async function getPeek(token: string): Promise<{ booking: PeekBooking; photos: {
   const photos = (await Promise.all(raw.map(async (p) => {
     // Clean 1200px thumbnail only — never the original. Watermarked
     // preview is the legacy fallback for rows without a thumbnail.
-    let src = p.thumbnail_url || p.preview_url;
+    // A held-back photo is merchandise: the peek link is public and
+    // passwordless, so it may only ever show the watermarked version of one.
+    let src = p.is_included === false ? p.preview_url : (p.thumbnail_url || p.preview_url);
     if (!src) return null;
     if (isS3Path(src)) src = await getPresignedUrl(s3KeyFromPath(src), 3600);
     return { id: p.id, src };

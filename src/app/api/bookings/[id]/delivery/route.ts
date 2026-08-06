@@ -410,7 +410,12 @@ export async function POST(
       //
       // Videos are never touched: they were never part of a photo count and
       // they are not sold.
-      if (requiredPhotos > 0) {
+      // First publication only. "Resend to client" reuses this same action,
+      // and re-running the flip on a delivered gallery would retroactively
+      // lock photographs the client has already been looking at — and, on the
+      // 5,308 rows that predate this feature, would put half of a finished
+      // delivery up for sale behind their back.
+      if (requiredPhotos > 0 && booking.status !== "delivered") {
         const alreadyCurated = await queryOne<{ count: string }>(
           "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1 AND is_included = FALSE",
           [id]
@@ -984,7 +989,11 @@ export async function DELETE(
   // One statement for the whole batch, scoped to this booking so an id from
   // someone else's delivery simply does not match.
   const rows = await query<{ id: string; url: string; preview_url: string | null }>(
-    "DELETE FROM delivery_photos WHERE id = ANY($1::uuid[]) AND booking_id = $2 RETURNING id, url, preview_url",
+    // purchased_at guard: buying happens while the delivery is still
+    // unaccepted, which is exactly the window the photographer can still edit
+    // in — and a sold photo looks identical to an unsold one on their grid.
+    // Deleting it would destroy the file the client paid for.
+    "DELETE FROM delivery_photos WHERE id = ANY($1::uuid[]) AND booking_id = $2 AND purchased_at IS NULL RETURNING id, url, preview_url",
     [requestedIds, id]
   );
 

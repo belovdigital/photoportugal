@@ -2015,6 +2015,84 @@ async function runReminders(): Promise<NextResponse> {
     results.errors.push(`Checklist deadline query: ${err}`);
   }
 
+  // === Paid extra photos: finish anything the webhook left half-done ===
+  // The webhook flips rows to 'paid' first and does the rest after; if that
+  // rest fails, a Stripe retry finds nothing pending and the work is lost.
+  // Two things can be left behind: photographs paid for but still locked, and
+  // payouts claimed but never transferred.
+  let extrasUnlocked = 0, extrasTransferred = 0;
+  try {
+    const stranded = await query<{ delivery_photo_id: string; booking_id: string }>(
+      `SELECT dep.delivery_photo_id, dep.booking_id
+         FROM delivery_extra_purchases dep
+         JOIN delivery_photos dp ON dp.id = dep.delivery_photo_id
+        WHERE dep.status = 'paid' AND dp.purchased_at IS NULL`
+    );
+    if (stranded.length > 0) {
+      await query(
+        "UPDATE delivery_photos SET purchased_at = NOW() WHERE id = ANY($1::uuid[]) AND purchased_at IS NULL",
+        [stranded.map((r) => r.delivery_photo_id)]
+      );
+      extrasUnlocked = stranded.length;
+      const bookings = [...new Set(stranded.map((r) => r.booking_id))];
+      for (const bId of bookings) {
+        await queryOne(
+          `INSERT INTO delivery_extras_zip (booking_id, ready, updated_at) VALUES ($1, FALSE, NOW())
+           ON CONFLICT (booking_id) DO UPDATE SET ready = FALSE, updated_at = NOW() RETURNING booking_id`,
+          [bId]
+        ).catch(() => null);
+        const { buildDeliveryZip } = await import("@/lib/build-zip");
+        buildDeliveryZip(bId, "extras").catch(() => {});
+      }
+      import("@/lib/telegram").then(({ sendTelegram }) =>
+        sendTelegram(`🔧 <b>Доп. фото: доразблокировано кроном</b>\n${extrasUnlocked} шт. по ${bookings.length} броням — вебхук не довёл до конца.`, "alerts")
+      ).catch(() => {});
+    }
+
+    // Payouts still owed. Grouped per order so one transfer covers an order,
+    // exactly as the webhook does, and under the same idempotency key.
+    const owed = await query<{ order_id: string; booking_id: string; payout_total: string; photographer_stripe_id: string | null; stripe_ready: boolean }>(
+      `SELECT dep.order_id, dep.booking_id, SUM(dep.payout_cents)::text AS payout_total,
+              pp.stripe_account_id AS photographer_stripe_id,
+              COALESCE(pp.stripe_onboarding_complete, FALSE) AS stripe_ready
+         FROM delivery_extra_purchases dep
+         JOIN bookings b ON b.id = dep.booking_id
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+        WHERE dep.status = 'paid' AND dep.transferred = FALSE
+          AND dep.paid_at < NOW() - INTERVAL '10 minutes'
+        GROUP BY dep.order_id, dep.booking_id, pp.stripe_account_id, pp.stripe_onboarding_complete`
+    );
+    for (const o of owed) {
+      if (!o.photographer_stripe_id || !o.stripe_ready) continue;
+      const claimed = await query<{ id: string }>(
+        "UPDATE delivery_extra_purchases SET transferred = TRUE WHERE order_id = $1 AND status = 'paid' AND transferred = FALSE RETURNING id",
+        [o.order_id]
+      );
+      if (claimed.length === 0) continue;
+      try {
+        const { requireStripe } = await import("@/lib/stripe");
+        await requireStripe().transfers.create({
+          amount: parseInt(o.payout_total, 10),
+          currency: "eur",
+          destination: o.photographer_stripe_id,
+          metadata: { order_id: o.order_id, booking_id: o.booking_id, type: "extra_photos_payout_retry" },
+        }, { idempotencyKey: `extras_transfer_${o.order_id}` });
+        extrasTransferred += claimed.length;
+      } catch (err) {
+        await query(
+          "UPDATE delivery_extra_purchases SET transferred = FALSE WHERE order_id = $1 RETURNING id",
+          [o.order_id]
+        ).catch(() => {});
+        console.error("[cron] extras transfer retry failed:", o.order_id, err);
+      }
+    }
+    if (extrasUnlocked || extrasTransferred) {
+      console.log(`[cron] extras sweep: ${extrasUnlocked} unlocked, ${extrasTransferred} transferred`);
+    }
+  } catch (err) {
+    console.error("[cron] extras sweep failed:", err);
+  }
+
   // === Two-stage onboarding: the Stripe grace week ===
   //
   // Approval makes a photographer live; connecting a payout account is the

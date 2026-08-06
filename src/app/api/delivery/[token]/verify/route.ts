@@ -136,7 +136,7 @@ export async function POST(
   //                  grid thumbs and mobile Safari ran out of memory
   //                  and silently failed to render any of them.
   // Videos: thumbnail_url is the poster frame, url is the playable mp4.
-  const photos = await Promise.all(rawPhotos.map(async (photo) => {
+  const photosRaw = await Promise.all(rawPhotos.map(async (photo) => {
     const isVideo = photo.media_type === "video";
     // Locked = shot but not part of this delivery and not bought. It is sent
     // to the browser so the client can see what is on offer, but it carries
@@ -146,11 +146,21 @@ export async function POST(
     // returns a permanent public link, so whatever string ends up in this
     // payload is the access control. There is no second gate behind it.
     const isLocked = !photo.is_included && !photo.purchased_at && !isVideo;
-    const rawUrl = isLocked
-      ? (photo.preview_url || photo.thumbnail_url || photo.url)
+    // Without a watermarked file there is nothing to show a non-buyer, and the
+    // original must never stand in for it. Preview generation is best-effort
+    // (a HEIC that sharp refuses still gets a row), so this really happens.
+    if (isLocked && !photo.preview_url) return null;
+    // A photo with no watermarked file has nothing safe to show, so it is
+    // never offered for sale (see the sellable query in /extras) and never
+    // falls back to the original here.
+    const rawUrl: string = isLocked
+      ? (photo.preview_url as string)
       : isVideo
         ? photo.url
-        : (isAccepted ? photo.url : (photo.preview_url || photo.url));
+        // Bought photographs are the client's the moment they pay, whether or
+        // not the delivery has been accepted — the receipt email promises full
+        // resolution, and acceptance is a separate decision about the shoot.
+        : (isAccepted || photo.purchased_at ? photo.url : (photo.preview_url || photo.url));
     let resolvedUrl = rawUrl;
     if (isS3Path(rawUrl)) resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
 
@@ -172,8 +182,8 @@ export async function POST(
     // delivery is accepted. Videos keep their poster frame either way: it is
     // a still, and withholding it would leave the grid blank.
     const thumbSource = isLocked
-      ? (photo.preview_url || photo.thumbnail_url)
-      : (isVideo || isAccepted)
+      ? photo.preview_url
+      : (isVideo || isAccepted || photo.purchased_at)
         ? photo.thumbnail_url
         : (photo.preview_url || photo.thumbnail_url);
 
@@ -198,6 +208,9 @@ export async function POST(
       height: photo.height,
     };
   }));
+  // A locked photo with no watermarked file is dropped above; it is not for
+  // sale and there is nothing safe to show.
+  const photos = photosRaw.filter((p): p is NonNullable<typeof p> => p !== null);
 
   // Tip card state: hide once a tip is PAID for this booking, and never
   // ask for a tip while a dispute is open (tone-deaf).

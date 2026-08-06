@@ -558,6 +558,13 @@ export async function POST(req: NextRequest) {
 
             if (paidRows.length > 0) {
               const bookingId = paidRows[0].booking_id;
+              // Everything below runs AFTER the money is recorded as paid.
+              // If any of it throws, the rows stay 'paid' and a Stripe retry
+              // finds nothing pending to flip — so the unlock, the transfer
+              // and the emails would be lost for good. Hence the try: the
+              // webhook must not fail after this point, and the sweep in
+              // api/cron/reminders picks up anything left half-done.
+              try {
               // Hand the photos over. purchased_at, NOT is_included: that
               // column means "part of what the booking promised" and is what
               // the delivery guard counts and what the frozen main archive
@@ -610,11 +617,17 @@ export async function POST(req: NextRequest) {
                       metadata: { order_id: orderId, booking_id: bookingId, type: "extra_photos_payout" },
                     }, { idempotencyKey: `extras_transfer_${orderId}` });
                   } catch (trErr) {
+                    // Release the claim so the sweep can retry, and say so —
+                    // silently rolling back left the photographer's money on
+                    // the platform balance with nobody aware.
                     await query(
                       "UPDATE delivery_extra_purchases SET transferred = FALSE WHERE order_id = $1 RETURNING id",
                       [orderId]
                     ).catch(() => {});
                     console.error("[webhook] extras transfer error:", trErr);
+                    import("@/lib/telegram").then(({ sendTelegram }) =>
+                      sendTelegram(`🔴 <b>Перевод за доп. фото не прошёл</b>\n\nЗаказ <code>${orderId.slice(0, 8)}</code>, фотографу €${payoutEur}.\nДеньги у нас, крон повторит попытку.`, "stripe")
+                    ).catch(() => {});
                   }
                 }
               } else {
@@ -678,6 +691,12 @@ export async function POST(req: NextRequest) {
               }
 
               console.log(`[webhook] extras paid: order ${orderId}, ${paidRows.length} photos`);
+              } catch (postErr) {
+                console.error("[webhook] extras post-payment step failed:", postErr);
+                import("@/lib/telegram").then(({ sendTelegram }) =>
+                  sendTelegram(`🔴 <b>Доп. фото: оплата прошла, обработка упала</b>\n\nЗаказ <code>${orderId.slice(0, 8)}</code>, ${paidRows.length} шт.\nДеньги списаны. Крон дочистит в течение 15 минут — если нет, разбирать руками.`, "alerts")
+                ).catch(() => {});
+              }
             }
           }
         } else if (checkoutType === "tip") {
