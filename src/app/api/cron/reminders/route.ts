@@ -2729,14 +2729,9 @@ async function runReminders(): Promise<NextResponse> {
         const firstName = o.photographer_name.split(" ")[0];
 
         if (!o.offer_nudge_sent) {
-          if (o.photographer_phone) {
-            await queueNotification({
-              channel: "sms",
-              recipient: o.photographer_phone,
-              body: `Hi ${firstName}! You've been chatting with ${o.client_name} on ${country.brand} but haven't sent them a package yet — they can only book once you do: ${BASE_URL}/dashboard/messages`,
-              dedupKey: `offer_nudge_sms:${o.booking_id}`,
-            }).catch(console.error);
-          }
+          // Email only — the SMS said the same thing and doubled the noise
+          // for a non-urgent nudge. photographer_phone stays in the query:
+          // queueNotification uses it below for quiet-hours timezone lookup.
           await queueNotification({
             channel: "email",
             recipient: o.photographer_email,
