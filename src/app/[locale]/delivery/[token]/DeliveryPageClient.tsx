@@ -662,32 +662,7 @@ export function DeliveryPageClient({
           beside it is photographs and nothing else. Sticky, so the basket and
           the primary action are on screen at photo 400 exactly as at photo 1. */}
       <div className="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-
-          {/* The title is the one line on this page the photographer wrote
-              themselves, so it gets the full width of the rail and as many
-              lines as it needs. Beside a 48px avatar it had about eighteen
-              characters and ended in an ellipsis on every real delivery.
-              The attribution underneath is secondary and may still clip. */}
-          <div>
-            <h1 className="text-balance font-display text-lg font-bold leading-snug text-gray-900">
-              {deliveryTitle?.trim() || t("photosReady")}
-            </h1>
-            <div className="mt-2.5 flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
-                {photographerAvatar ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-sm font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
-                )}
-              </div>
-              <p className="min-w-0 truncate text-xs text-gray-500">
-                {normalizeName(gallery.photographer_name)}
-                {gallery.shoot_date ? ` · ${new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}` : ""}
-              </p>
-            </div>
-          </div>
+        <aside className="mt-6 space-y-4 lg:sticky lg:top-6 lg:self-start">
 
           {/* The counts, given the room to be read as numbers rather than as a
               sentence squeezed between two buttons. */}
@@ -954,8 +929,28 @@ export function DeliveryPageClient({
 
         <main className="min-w-0">
 
+          <header className="mt-6 flex items-start gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
+              {photographerAvatar ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-balance font-display text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
+                {deliveryTitle?.trim() || t("photosReady")}
+              </h1>
+              <p className="mt-1 text-sm text-gray-500">
+                {normalizeName(gallery.photographer_name)}
+                {gallery.shoot_date ? ` · ${new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}` : ""}
+              </p>
+            </div>
+          </header>
+
           {deliveryMessage?.trim() && (
-          <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-warm-200 bg-warm-50 px-5 py-4 text-left">
+          <div className="mt-5 max-w-2xl rounded-2xl border border-warm-200 bg-warm-50 px-5 py-4 text-left">
           <p className="whitespace-pre-line text-sm text-gray-700 leading-relaxed sm:text-base">
           {deliveryMessage.trim()}
           </p>
