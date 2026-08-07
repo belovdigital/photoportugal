@@ -954,7 +954,6 @@ export function DeliveryPageClient({
           <p className="whitespace-pre-line text-sm text-gray-700 leading-relaxed sm:text-base">
           {deliveryMessage.trim()}
           </p>
-          <p className="mt-3 text-xs text-gray-400">— {normalizeName(gallery.photographer_name)}</p>
           </div>
           )}
           {/* Gallery */}
