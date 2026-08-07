@@ -56,8 +56,9 @@ access_key_id = ${R2_KEY}
 secret_access_key = ${R2_SECRET}
 endpoint = https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
 region = auto
+no_check_bucket = true
 EOF
-R2C=(rclone --config "$RCLONE_CONF")
+R2C=(rclone --config "$RCLONE_CONF" --s3-disable-checksum)
 
 # Every market this account backs up. A bucket that has never been created is
 # itself the finding — that is the state Spain was in.
@@ -120,5 +121,17 @@ if [ -n "$problems" ]; then
   exit 1
 fi
 
-echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] all backups fresh:$(printf '%s' "$report" | sed 's/
-/ | /g')"
+if [ -z "$report" ]; then
+  # An all-clear from a check that found nothing is worse than no check at all.
+  echo "[check-backups] found no backups at all — that is a finding, not an all-clear" >&2
+  if [ -n "$TG_TOKEN" ] && [ -n "$TG_CHAT" ]; then
+    curl -sS --max-time 20 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+      -d "chat_id=${TG_CHAT}" -d "parse_mode=HTML" \
+      --data-urlencode "text=🛑 <b>Бэкапы баз: не найдено НИ ОДНОГО</b>
+
+Проверено с $(hostname), бакет ${BUCKET}" >/dev/null || true
+  fi
+  exit 1
+fi
+
+printf '[%s] all backups fresh:%s\n' "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" "$report"

@@ -163,6 +163,9 @@ access_key_id = ${R2_KEY}
 secret_access_key = ${R2_SECRET}
 endpoint = https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
 region = auto
+# The backup key is scoped to this one bucket, so rclone's habit of checking
+# (and trying to create) the bucket before writing gets a 403. Skip it.
+no_check_bucket = true
 EOF
 # Google Drive: prefer credentials from .env so a fresh box needs no setup,
 # and fall back to whatever the machine already has configured (Portugal has
@@ -185,7 +188,7 @@ elif rclone listremotes 2>/dev/null | grep -q '^gdrive:'; then
   GDC=(rclone)
 fi
 
-R2C=(rclone --config "$RCLONE_CONF")
+R2C=(rclone --config "$RCLONE_CONF" --s3-disable-checksum)
 
 # Two independent destinations. The rule is not "R2 must work" but "at least
 # one off-box copy must exist AND read back as a real dump" — a backup you have
@@ -202,16 +205,17 @@ verify_r2() {
 
 REMOTE_NAME="$(basename "$FILE")"
 
-if "${R2C[@]}" mkdir "r2:${R2_PATH}" 2>/dev/null && \
-   "${R2C[@]}" copy "$FILE" "r2:${R2_PATH}/" --log-level ERROR 2>/dev/null && \
-   verify_r2; then
+# Streamed with rcat rather than copied. Every R2 upload path here ends in a
+# 501 on a trailing call rclone makes and R2 does not implement — but `copy`
+# treats that as a failed transfer and REMOVES the object it just wrote, while
+# `rcat` leaves it in place. The bytes were always arriving intact; only copy's
+# own cleanup was taking them away again. The read-back below is what decides.
+cat "$FILE" | "${R2C[@]}" rcat "r2:${R2_PATH}/${REMOTE_NAME}" >/dev/null 2>&1 || true
+if verify_r2; then
   UPLOADED="${UPLOADED} r2:${R2_PATH}/"
 else
-  # The R2 token is scoped to the delivery bucket, so it cannot create this one
-  # until somebody issues a token with write access. Say so every single night
-  # rather than quietly running on one leg.
   DEGRADED="${DEGRADED}
-• R2 недоступен: токену не хватает прав на ${R2_PATH}"
+• R2: файл не читается обратно из ${R2_PATH}"
 fi
 
 # One folder per market. Everything used to land in the Drive root, which is
@@ -250,7 +254,21 @@ fi
 
 # --- retention -------------------------------------------------------------
 find "$LOCAL_DIR" -name '*.sql.gz' -mtime +14 -delete 2>/dev/null || true
-"${R2C[@]}" delete "r2:${R2_PATH}" --min-age 90d --include '*.sql.gz' --log-level ERROR 2>/dev/null || true
+# NOT --min-age. R2 answers 501 to the call rclone uses to stamp an object's
+# modification time, so objects arrive with no modtime and --min-age reads them
+# as older than any threshold — it deleted each backup seconds after uploading
+# it, which is how this bucket sat at 0 B. The timestamp in the filename is the
+# only date here that is actually trustworthy.
+CUTOFF="$(date -u -d '90 days ago' +%Y%m%d 2>/dev/null || true)"
+if [ -n "$CUTOFF" ]; then
+  "${R2C[@]}" lsf "r2:${R2_PATH}" --include '*.sql.gz' 2>/dev/null | while read -r old_name; do
+    old_date="$(printf '%s' "$old_name" | sed -nE 's/.*_([0-9]{8})_[0-9]{6}\.sql\.gz/\1/p')"
+    [ -z "$old_date" ] && continue
+    if [ "$old_date" -lt "$CUTOFF" ]; then
+      "${R2C[@]}" deletefile "r2:${R2_PATH}/${old_name}" --log-level ERROR 2>/dev/null || true
+    fi
+  done
+fi
 if [ -n "$GD_REMOTE" ]; then
   "${GDC[@]}" delete "gdrive:${MARKET}" --min-age 90d --include '*.sql.gz' --log-level ERROR 2>/dev/null || true
 fi
