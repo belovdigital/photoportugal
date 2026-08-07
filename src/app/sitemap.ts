@@ -5,6 +5,7 @@ import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
 import { query } from "@/lib/db";
 import { localizedUrl } from "@/lib/seo";
 import { country } from "@/lib/country";
+import { HREFLANGS, type Locale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -12,14 +13,7 @@ export const revalidate = 3600;
 // Locales this market actually serves. Hardcoding all five made the Spanish
 // sitemap advertise /pt/ URLs that 404 — submitting known-dead links to Google
 // is worse than omitting them.
-const LOCALES = country.locales as readonly ["en", "pt", "de", "es", "fr"][number][];
-const HREFLANGS: Record<(typeof LOCALES)[number], string[]> = {
-  en: ["en-GB", "en-US"],
-  pt: ["pt-PT"],
-  de: ["de-DE"],
-  es: ["es-ES"],
-  fr: ["fr-FR"],
-};
+const LOCALES = country.locales as readonly Locale[];
 // Default lastModified for static SEO pages whose source is hand-edited
 // (homepage, about, how-it-works, for-photographers/*). Bump this when
 // you do a meaningful content refresh; Google uses it to decide whether
@@ -28,8 +22,8 @@ const HREFLANGS: Record<(typeof LOCALES)[number], string[]> = {
 const STATIC_CONTENT_LAST_MODIFIED = new Date("2026-05-13T00:00:00.000Z");
 
 function urlFor(path: string, locale: string): string {
-  const safeLocale = LOCALES.includes(locale as (typeof LOCALES)[number])
-    ? locale as (typeof LOCALES)[number]
+  const safeLocale = LOCALES.includes(locale as Locale)
+    ? locale as Locale
     : "en";
   return localizedUrl(path || "/", safeLocale);
 }

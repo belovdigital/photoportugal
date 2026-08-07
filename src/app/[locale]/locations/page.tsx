@@ -15,11 +15,12 @@ import { localizeShootType } from "@/lib/shoot-type-labels";
 import { LocationExplorer, type LocationExplorerPhotographer } from "@/components/locations/LocationExplorer";
 import { LOCATION_EXPLORER_REGIONS } from "@/lib/location-explorer-data";
 import { getCompatibleCoverageNodeSlugs } from "@/lib/location-hierarchy";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { regionLabel } from "@/lib/region-labels";
 
 /** Market name in Spanish, for the hardcoded copy dictionary below. */
-const ES_NAME = country.code === "es" ? "España" : "Portugal";
+/** Market name in the local language, for copy blocks written inline here. */
+const ES_NAME = byCountry({ pt: "Portugal", es: "España", it: "Italia" });
 
 
 // Force-dynamic so per-location photographer counts and min prices are
@@ -160,7 +161,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   // share card for "Spain Photo Map". Until Spanish photography exists, the
   // generated OG card is the honest option.
   const image =
-    country.code === "es" ? `${country.baseUrl}${country.ogImage}` : locationImage("lisbon", "hero");
+    byCountry({
+    pt: locationImage("lisbon", "hero"),
+    es: `${country.baseUrl}${country.ogImage}`,
+    it: `${country.baseUrl}${country.ogImage}`,
+  });
 
   return {
     title,

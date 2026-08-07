@@ -1,4 +1,5 @@
 import { LOCATION_TREE_ES } from "./location-hierarchy-es";
+import { LOCATION_TREE_IT } from "./location-hierarchy-it";
 import { locations } from "@/lib/locations-data";
 
 export type LocationNodeType = "region" | "group" | "island" | "city" | "spot";
@@ -151,7 +152,11 @@ const LOCATION_TREEPT: LocationNode[] = [
  * Portugal stays the default: absent or unrecognised value → the PT dataset.
  */
 export const LOCATION_TREE: LocationNode[] =
-  process.env.NEXT_PUBLIC_COUNTRY === "es" ? LOCATION_TREE_ES : LOCATION_TREEPT;
+  process.env.NEXT_PUBLIC_COUNTRY === "es"
+    ? LOCATION_TREE_ES
+    : process.env.NEXT_PUBLIC_COUNTRY === "it"
+      ? LOCATION_TREE_IT
+      : LOCATION_TREEPT;
 
 
 export function flattenLocationNodes(nodes: LocationNode[] = LOCATION_TREE): LocationNode[] {

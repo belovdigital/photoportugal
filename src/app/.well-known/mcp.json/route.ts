@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { MARKETS, bookableDestinations, enabledMarkets, CHANNEL } from "@/lib/norteira/catalogue";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export function GET() {
   // Spain is switched off in the catalogue until it has a roster, and a card
   // on photospain.co offering Portuguese destinations would be worse than no
   // card. Flipping that flag publishes this too.
-  const thisMarket = MARKETS[country.code === "es" ? "spain" : "portugal"];
+  const thisMarket = MARKETS[byCountry({ pt: "portugal", es: "spain", it: "italy" } as const)];
   if (!thisMarket.enabled) {
     return new NextResponse("Not found", {
       status: 404,

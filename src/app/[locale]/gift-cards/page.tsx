@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const description = locale === "pt" ? `Ofereça uma sessão fotográfica de 1 ou 2 horas em ${cn}. O destinatário escolhe o fotógrafo; você prepara a surpresa.`
     : locale === "de" ? `Verschenken Sie eine 1- oder 2-stündige Fotoshooting-Session in ${cn}. Die Empfänger:in wählt den Fotografen; Sie sorgen für die Überraschung.`
     : locale === "es" ? `Regale una sesión fotográfica de 1 o 2 horas en ${cn}. La persona elige al fotógrafo; usted prepara la sorpresa.`
-    : locale === "fr" ? `Offrez une séance photo d'1 ou 2 heures ${country.code === "es" ? "en" : "au"} ${cn}. Le destinataire choisit le photographe ; vous préparez la surprise.`
+    : locale === "fr" ? `Offrez une séance photo d'1 ou 2 heures ${country.countryIn.fr}. Le destinataire choisit le photographe ; vous préparez la surprise.`
     : `Gift a 1-hour or 2-hour photo session in ${cn}. Recipient picks the photographer; you handle the surprise.`;
   return {
     title,

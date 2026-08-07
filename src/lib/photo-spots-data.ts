@@ -1,3 +1,4 @@
+import { byCountry } from "@/lib/country";
 import { country } from "./country";
 import { photoSpotsES } from "./photo-spots-data-es";
 /** A single curated image of the spot (Wikimedia / Unsplash / photographer
@@ -671,6 +672,13 @@ const photoSpotsPT: Record<string, PhotoSpot[]> = {
  * cities without an entry simply have no spot pages, which is correct — better
  * than sitemap URLs about another country.
  */
-export const photoSpots: Record<string, PhotoSpot[]> =
-  country.code === "es" ? photoSpotsES : photoSpotsPT;
+/** Italy has no spot pages yet — an empty map is the honest state: no sitemap
+ *  URLs, no concierge cards pointing at pages that do not exist. */
+const photoSpotsIT: Record<string, PhotoSpot[]> = {};
+
+export const photoSpots: Record<string, PhotoSpot[]> = byCountry({
+  pt: photoSpotsPT,
+  es: photoSpotsES,
+  it: photoSpotsIT,
+});
 

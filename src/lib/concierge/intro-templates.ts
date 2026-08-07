@@ -10,7 +10,7 @@
 // → AI calls show_matches with peers).
 
 import type { PageContext } from "@/lib/concierge/page-context";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
 export interface IntroTemplate {
   /** Markdown-light first message body. */
@@ -83,19 +83,31 @@ export function getIntroTemplate(ctx: PageContext): IntroTemplate | null {
       if (slug === "proposal") {
         return {
           message: `Hi! I'm Lens 👋 — proposals are my favorite 💍. Is it a surprise, planned together, or already set? And where in ${country.areaServed}?`,
-          chips: country.code === "es" ? ["Surprise!", "Planned together", "Barcelona", "Ronda", "Granada"] : ["Surprise!", "Planned together", "Lisbon", "Algarve", "Sintra"],
+          chips: byCountry({
+            pt: ["Surprise!", "Planned together", "Lisbon", "Algarve", "Sintra"],
+            es: ["Surprise!", "Planned together", "Barcelona", "Ronda", "Granada"],
+            it: ["Surprise!", "Planned together", "Rome", "Ravello", "Venice"],
+          }),
         };
       }
       if (slug === "wedding") {
         return {
           message: `Hi! I'm Lens 👋 — wedding shoots in ${country.areaServed}, beautiful. Where are you tying the knot?`,
-          chips: country.code === "es" ? ["Barcelona", "Seville", "Mallorca", "Ronda", "Help me decide"] : ["Lisbon", "Sintra", "Douro Valley", "Algarve", "Help me decide"],
+          chips: byCountry({
+            pt: ["Lisbon", "Sintra", "Douro Valley", "Algarve", "Help me decide"],
+            es: ["Barcelona", "Seville", "Mallorca", "Ronda", "Help me decide"],
+            it: ["Rome", "Florence", "Venice", "Amalfi Coast", "Help me decide"],
+          }),
         };
       }
       if (slug === "elopement") {
         return {
           message: `Hi! I'm Lens 👋 — elopements are intimate magic. Where in ${country.areaServed} calls to you?`,
-          chips: country.code === "es" ? ["Ronda", "Mallorca", "Tenerife", "Costa Brava", "Help me choose"] : ["Sintra", "Douro Valley", "Madeira", "Algarve cliffs", "Help me choose"],
+          chips: byCountry({
+            pt: ["Sintra", "Douro Valley", "Madeira", "Algarve cliffs", "Help me choose"],
+            es: ["Ronda", "Mallorca", "Tenerife", "Costa Brava", "Help me choose"],
+            it: ["Val d'Orcia", "Lake Como", "Capri", "Cinque Terre", "Help me choose"],
+          }),
         };
       }
       if (slug === "honeymoon") {

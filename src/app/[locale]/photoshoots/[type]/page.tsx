@@ -20,7 +20,7 @@ import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationCont
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { formatDuration } from "@/lib/package-pricing";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { lowestBookablePrice } from "@/lib/entry-price";
 import { formatLocationList } from "@/lib/location-priority";
 
@@ -44,18 +44,16 @@ const COMBO_OCCASIONS = new Set([
 // The French connector depends on the country's gender, not just the locale:
 // "à Portugal" was already loose, but Spain needs "en Espagne", so the
 // preposition is picked per market rather than assumed.
-const IN_PREP: Record<string, string> =
-  country.code === "es"
-    ? { en: "in", pt: "em", de: "in", es: "en", fr: "en" }
-    : { en: "in", pt: "em", de: "in", es: "en", fr: "à" };
+const IN_PREP: Record<string, string> = byCountry({
+  pt: { en: "in", pt: "em", de: "in", es: "en", fr: "à", it: "in" },
+  es: { en: "in", pt: "em", de: "in", es: "en", fr: "en", it: "in" },
+  it: { en: "in", pt: "em", de: "in", es: "en", fr: "en", it: "in" },
+});
 
 // The country name as written in each locale. It happened to be identical in
 // all five for Portugal, which is why every consumer could treat it as a
 // constant — Spain is the first market where it actually differs.
-const PORTUGAL_LABEL: Record<string, string> =
-  country.code === "es"
-    ? { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne" }
-    : { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal" };
+const PORTUGAL_LABEL: Record<string, string> = country.countryName;
 
 export function generateStaticParams() {
   return shootTypes.map((t) => ({ type: t.slug }));

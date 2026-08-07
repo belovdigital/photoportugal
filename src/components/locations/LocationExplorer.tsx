@@ -14,15 +14,16 @@ import {
   type LocationExplorerChild,
   type LocationExplorerRegion,
 } from "@/lib/location-explorer-data";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
 // The country name declined per language. This component carries its own copy
 // block (it predates the messages catalogue), so the market name has to be
 // substituted here rather than through the override layer.
-const ES_COUNTRY = country.code === "es" ? "España" : "Portugal";
-const PT_COUNTRY = country.code === "es" ? "Espanha" : "Portugal";
-const DE_COUNTRY = country.code === "es" ? "Spanien" : "Portugal";
-const FR_COUNTRY = country.code === "es" ? "l'Espagne" : "le Portugal";
+const ES_COUNTRY = country.countryName.es;
+const PT_COUNTRY = country.countryName.pt;
+const DE_COUNTRY = country.countryName.de;
+// French needs the article, which the bare name does not carry.
+const FR_COUNTRY = byCountry({ pt: "le Portugal", es: "l'Espagne", it: "l'Italie" });
 
 
 
@@ -46,34 +47,44 @@ export type LocationExplorerPhotographer = {
 // regions were listed, so every Spanish region card asked for an image that
 // does not exist — `locationImage` returns "" for an unknown slug, and the
 // cards rendered as broken images with the alt text showing through.
-const REGION_IMAGE_SLUGS: Record<string, string> =
-  country.code === "es"
-    ? {
-        catalonia: "barcelona",
-        "madrid-region": "madrid",
-        andalusia: "seville",
-        "balearic-islands": "mallorca",
-        "canary-islands": "tenerife",
-        "valencia-region": "valencia",
-        "basque-country": "san-sebastian",
-        galicia: "santiago-de-compostela",
-      }
-    : {
-        "lisbon-region": "lisbon",
-        "porto-north": "porto",
-        "central-portugal": "nazare",
-        alentejo: "evora",
-        algarve: "algarve",
-        madeira: "madeira",
-        azores: "azores",
-      };
+const REGION_IMAGE_SLUGS: Record<string, string> = byCountry<Record<string, string>>({
+  pt: {
+    "lisbon-region": "lisbon",
+    "porto-north": "porto",
+    "central-portugal": "nazare",
+    alentejo: "evora",
+    algarve: "algarve",
+    madeira: "madeira",
+    azores: "azores",
+  },
+  es: {
+    catalonia: "barcelona",
+    "madrid-region": "madrid",
+    andalusia: "seville",
+    "balearic-islands": "mallorca",
+    "canary-islands": "tenerife",
+    "valencia-region": "valencia",
+    "basque-country": "san-sebastian",
+    galicia: "santiago-de-compostela",
+  },
+  it: {
+    lazio: "rome",
+    tuscany: "florence",
+    veneto: "venice",
+    lombardy: "milan",
+    campania: "amalfi-coast",
+    sicily: "taormina",
+    liguria: "cinque-terre",
+    puglia: "alberobello",
+  },
+});
 
 const COPY = {
   en: {
     eyebrow: `${country.areaServed} photo map`,
     title: "Choose the place by feeling",
     subtitle: `Swipe through ${country.areaServed}'s regions, tap the map, then open photographers where the trip actually happens.`,
-    search: country.code === "es" ? "Search Barcelona, Madrid, Mallorca..." : "Search Lisbon, Azores, Algarve...",
+    search: byCountry({ pt: "Search Lisbon, Azores, Algarve...", es: "Search Barcelona, Madrid, Mallorca...", it: "Search Rome, Amalfi, Tuscany..." }),
     all: "All",
     mainland: "Mainland",
     islands: "Islands",
@@ -94,7 +105,7 @@ const COPY = {
     eyebrow: `Mapa fotográfico de ${PT_COUNTRY}`,
     title: "Escolha o lugar pela sensação",
     subtitle: "Explore as regiões, toque no mapa e veja fotógrafos onde a viagem acontece.",
-    search: country.code === "es" ? "Pesquisar Barcelona, Madrid, Maiorca..." : "Pesquisar Lisboa, Açores, Algarve...",
+    search: byCountry({ pt: "Pesquisar Lisboa, Açores, Algarve...", es: "Pesquisar Barcelona, Madrid, Maiorca...", it: "Pesquisar Roma, Amalfi, Toscana..." }),
     all: "Tudo",
     mainland: "Continente",
     islands: "Ilhas",
@@ -115,7 +126,7 @@ const COPY = {
     eyebrow: `${DE_COUNTRY}-Fotokarte`,
     title: "Waehlen Sie den Ort nach Gefuehl",
     subtitle: "Durch Regionen swipen, Karte antippen und Fotografen dort oeffnen, wo die Reise passiert.",
-    search: country.code === "es" ? "Barcelona, Madrid, Mallorca suchen..." : "Lissabon, Azoren, Algarve suchen...",
+    search: byCountry({ pt: "Lissabon, Azoren, Algarve suchen...", es: "Barcelona, Madrid, Mallorca suchen...", it: "Rom, Amalfi, Toskana suchen..." }),
     all: "Alle",
     mainland: "Festland",
     islands: "Inseln",
@@ -136,7 +147,7 @@ const COPY = {
     eyebrow: `Mapa fotográfico de ${ES_COUNTRY}`,
     title: "Elija el lugar por su ambiente",
     subtitle: "Deslice regiones, toque el mapa y vea fotógrafos donde sucede el viaje.",
-    search: country.code === "es" ? "Buscar Barcelona, Madrid, Mallorca..." : "Buscar Lisboa, Azores, Algarve...",
+    search: byCountry({ pt: "Buscar Lisboa, Azores, Algarve...", es: "Buscar Barcelona, Madrid, Mallorca...", it: "Buscar Roma, Amalfi, Toscana..." }),
     all: "Todo",
     mainland: "Continente",
     islands: "Islas",
@@ -150,7 +161,7 @@ const COPY = {
     mapUnavailable: "El mapa no está disponible porque falta el token de Mapbox.",
     // "Portugal" is masculine, "España" feminine — a shared `Todo ${country}`
     // template produced "Todo España" on every region card.
-    portugalWide: country.code === "es" ? "Toda España" : "Todo Portugal",
+    portugalWide: byCountry({ pt: "Todo Portugal", es: "Toda España", it: "Tutta Italia" }),
     reviewed: "Perfiles revisados",
     filters: "Filtros",
     swipe: "Destinos",
@@ -159,7 +170,7 @@ const COPY = {
     eyebrow: `Carte photo de ${FR_COUNTRY}`,
     title: "Choisissez le lieu par l'ambiance",
     subtitle: "Faites défiler les régions, touchez la carte et ouvrez les photographes là où le voyage se passe.",
-    search: country.code === "es" ? "Rechercher Barcelone, Madrid, Majorque..." : "Rechercher Lisbonne, Açores, Algarve...",
+    search: byCountry({ pt: "Rechercher Lisbonne, Açores, Algarve...", es: "Rechercher Barcelone, Madrid, Majorque...", it: "Rechercher Rome, Amalfi, Toscane..." }),
     all: "Tout",
     mainland: "Continent",
     islands: "Îles",
@@ -173,7 +184,7 @@ const COPY = {
     mapUnavailable: "La carte est indisponible car le token Mapbox manque.",
     // Same gender problem as the Spanish block: "tout le Portugal" but
     // "toute l'Espagne".
-    portugalWide: country.code === "es" ? "Toute l'Espagne" : "Tout le Portugal",
+    portugalWide: byCountry({ pt: "Tout le Portugal", es: "Toute l'Espagne", it: "Toute l'Italie" }),
     reviewed: "Profils vérifiés",
     filters: "Filtres",
     swipe: "Destinations",
@@ -264,7 +275,7 @@ function availableNowLabel(count: number, copy: Copy): string {
 
 // Last-resort photo so an unmapped slug degrades to a real picture instead of a
 // broken <img> showing its alt text. Points at the market's flagship city.
-const FALLBACK_IMAGE_SLUG = country.code === "es" ? "barcelona" : "lisbon";
+const FALLBACK_IMAGE_SLUG = byCountry({ pt: "lisbon", es: "barcelona", it: "rome" });
 
 /**
  * Resolve per-locale display names once, at the point the data enters the

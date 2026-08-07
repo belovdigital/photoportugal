@@ -242,7 +242,8 @@
     "soon": "Em breve",
     "appStoreAlt": "Descarregar na App Store",
     "googlePlayAlt": "Obter no Google Play",
-    "forBusiness": "Para Empresas"
+    "forBusiness": "Para Empresas",
+    "alsoIn": "Também em"
   },
   "giftCardsPage": {
     "h1": "Ofereça uma sessão Photo Portugal",
@@ -2062,7 +2063,7 @@
     "sections": {
       "overview": {
         "title": "1. Visão Geral",
-        "content": "A Photo Portugal (\"nós\", \"nos\", \"nosso/a\") opera uma plataforma de marketplace em photoportugal.com que liga turistas (\"clientes\") a fotógrafos profissionais (\"fotógrafos\") em Portugal. Ao utilizar a nossa plataforma, concorda com estes termos."
+        "content": "A {brand} (\"nós\", \"nos\", \"nosso/a\") opera uma plataforma de marketplace em {domain} que liga turistas (\"clientes\") a fotógrafos profissionais (\"fotógrafos\") {countryIn}. Ao utilizar a nossa plataforma, concorda com estes termos."
       },
       "accounts": {
         "title": "2. Contas",
@@ -2699,7 +2700,7 @@
     "title": "Suporte",
     "subtitle": "Tem alguma questão ou problema? Envie-nos uma mensagem e entraremos em contacto consigo.",
     "successMessage": "A sua mensagem foi enviada! Entraremos em contacto consigo o mais brevemente possível.",
-    "errorMessage": "Algo correu mal. Por favor tente novamente ou envie-nos um email para info@photoportugal.com.",
+    "errorMessage": "Algo correu mal. Por favor tente novamente ou envie-nos um email para {email}.",
     "subject": "Assunto",
     "subjectPlaceholder": "Com o que precisa de ajuda?",
     "message": "Mensagem",
@@ -2752,7 +2753,7 @@
     "galleryPasswordInputPlaceholder": "Palavra-passe da galeria",
     "verifying": "A verificar...",
     "viewPhotos": "Ver Fotos",
-    "brandFooter": "Photo Portugal — photoportugal.com",
+    "brandFooter": "{brand} — {domain}",
     "photosReady": "As suas fotos estão prontas!",
     "photoSingular": "foto",
     "photoPlural": "fotos",
@@ -3685,7 +3686,7 @@
         },
         "contactSupport": {
           "question": "Como posso contactar o suporte?",
-          "answer": "Estamos aqui para ajudar! Pode contactar-nos de várias formas: envie um email para info@photoportugal.com e responderemos no prazo de 24 horas; se for fotógrafo, utilize o sistema de mensagens integrado no seu painel de controlo para assistência mais rápida; visite a nossa página de contacto para enviar um formulário detalhado. Para questões urgentes, recomendamos o email com o assunto marcado como urgente. A nossa equipa de suporte fala português, inglês, espanhol e francês."
+          "answer": "Estamos aqui para ajudar! Pode contactar-nos de várias formas: envie um email para {email} e responderemos no prazo de 24 horas; se for fotógrafo, utilize o sistema de mensagens integrado no seu painel de controlo para assistência mais rápida; visite a nossa página de contacto para enviar um formulário detalhado. Para questões urgentes, recomendamos o email com o assunto marcado como urgente. A nossa equipa de suporte fala português, inglês, espanhol e francês."
         }
       },
       "gifts": {
@@ -4113,7 +4114,7 @@
       "submit": "Enviar pedido",
       "sending": "A enviar…",
       "sla": "Sem spam, sem compromissos — uma pessoa real responde num dia útil.",
-      "submitFailed": "Não foi possível enviar o pedido. Tente novamente ou escreva para info@photoportugal.com.",
+      "submitFailed": "Não foi possível enviar o pedido. Tente novamente ou escreva para {email}.",
       "thanksTitle": "Pedido recebido!",
       "thanksText": "Obrigado — a nossa equipa responde num dia útil. Verifique a caixa de entrada (e o spam, por precaução).",
       "types": {

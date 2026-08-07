@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { CHANNEL, MARKETS } from "@/lib/norteira/catalogue";
 
 export const dynamic = "force-static";
@@ -12,7 +12,7 @@ export const dynamic = "force-static";
 // and — where the market is live in the channel — the Norteira MCP endpoint
 // that can transact, not just read.
 const BASE = country.baseUrl;
-const CHANNEL_LIVE = MARKETS[country.code === "es" ? "spain" : "portugal"].enabled;
+const CHANNEL_LIVE = MARKETS[byCountry({ pt: "portugal", es: "spain", it: "italy" } as const)].enabled;
 
 const catalog = {
   linkset: [

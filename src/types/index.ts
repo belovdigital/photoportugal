@@ -1,4 +1,4 @@
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 export interface User {
   id: string;
   email: string;
@@ -35,7 +35,11 @@ export type ShootType = (typeof SHOOT_TYPES)[number];
 // Order is presentation only — the stored values are unchanged, so a profile
 // created on either market reads the same.
 const MARKET_LANGUAGES =
-  country.code === "es" ? ["Spanish", "Portuguese"] : ["Portuguese", "Spanish"];
+  byCountry({
+    pt: ["Portuguese", "Spanish"],
+    es: ["Spanish", "Portuguese"],
+    it: ["Italian", "English"],
+  });
 
 export const LANGUAGES = [
   "English",
@@ -169,6 +173,12 @@ export interface Location {
   long_description_fr?: string;
   seo_title_fr?: string;
   seo_description_fr?: string;
+  /** Italian (it-IT) translations */
+  name_it?: string;
+  description_it?: string;
+  long_description_it?: string;
+  seo_title_it?: string;
+  seo_description_it?: string;
 }
 
 export interface Booking {

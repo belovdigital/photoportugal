@@ -11,15 +11,11 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { locationImage, unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 import { WeddingMatchPanel } from "@/components/ui/WeddingMatchPanel";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
 /** Market name, declined per language for the hardcoded copy blocks below. */
 const CN = {
-  en: country.code === "es" ? "Spain" : "Portugal",
-  pt: country.code === "es" ? "Espanha" : "Portugal",
-  es: country.code === "es" ? "España" : "Portugal",
-  de: country.code === "es" ? "Spanien" : "Portugal",
-  fr: country.code === "es" ? "Espagne" : "Portugal",
+  ...country.countryName,
 } as const;
 
 
@@ -58,7 +54,9 @@ const IN_PREP: Record<string, string> = {
 };
 
 // ─── Wedding destinations → /locations/[slug]/wedding ──────────────────
-type DestinationReason = { en: string; pt: string; de: string; es: string; fr: string };
+// `it` is optional: the Portuguese and Spanish lists never render on the
+// Italian site, so there is nothing to translate there.
+type DestinationReason = { en: string; pt: string; de: string; es: string; fr: string; it?: string };
 const WEDDING_DESTINATIONS_PT: { slug: string; reason: DestinationReason }[] = [
   {
     slug: "sintra",
@@ -247,8 +245,91 @@ const WEDDING_DESTINATIONS_ES: { slug: string; reason: DestinationReason }[] = [
   },
 ];
 
-const WEDDING_DESTINATIONS: { slug: string; reason: DestinationReason }[] =
-  country.code === "es" ? WEDDING_DESTINATIONS_ES : WEDDING_DESTINATIONS_PT;
+const WEDDING_DESTINATIONS_IT: { slug: string; reason: DestinationReason }[] = [
+  {
+    slug: "val-dorcia",
+    reason: {
+      en: "Cypress avenues, stone farmhouses, mist in the valley at first light",
+      it: "Viali di cipressi, casali in pietra, la nebbia nella valle alla prima luce",
+      de: "Zypressenalleen, steinerne Landhäuser, Morgennebel im Tal",
+      fr: "Allées de cyprès, fermes en pierre, brume matinale dans la vallée",
+      es: "Avenidas de cipreses, casales de piedra, niebla en el valle al amanecer",
+      pt: "Alamedas de ciprestes, casais de pedra, névoa no vale ao amanhecer",
+    },
+  },
+  {
+    slug: "amalfi-coast",
+    reason: {
+      en: "Cliffside terraces, lemon groves, the sea in every frame",
+      it: "Terrazze a picco sul mare, limonaie, il blu in ogni inquadratura",
+      de: "Terrassen über der Steilküste, Zitronenhaine, das Meer in jedem Bild",
+      fr: "Terrasses en surplomb, citronneraies, la mer dans chaque cadre",
+      es: "Terrazas sobre el acantilado, limoneros, el mar en cada plano",
+      pt: "Terraços sobre a falésia, limoeiros, o mar em cada enquadramento",
+    },
+  },
+  {
+    slug: "lake-como",
+    reason: {
+      en: "Villa gardens, ferry arrivals, mountains straight out of the water",
+      it: "Giardini di ville, arrivi in traghetto, montagne che escono dall'acqua",
+      de: "Villengärten, Ankunft mit der Fähre, Berge direkt aus dem Wasser",
+      fr: "Jardins de villas, arrivées en ferry, montagnes sortant de l'eau",
+      es: "Jardines de villas, llegadas en ferry, montañas que salen del agua",
+      pt: "Jardins de vilas, chegadas de ferry, montanhas a sair da água",
+    },
+  },
+  {
+    slug: "florence",
+    reason: {
+      en: "Renaissance courtyards, rooftop terraces, the Duomo behind you",
+      it: "Cortili rinascimentali, terrazze sui tetti, il Duomo alle spalle",
+      de: "Renaissance-Innenhöfe, Dachterrassen, der Dom im Rücken",
+      fr: "Cours Renaissance, terrasses sur les toits, le Duomo derrière vous",
+      es: "Patios renacentistas, azoteas, la cúpula del Duomo detrás",
+      pt: "Pátios renascentistas, terraços sobre os telhados, a cúpula atrás",
+    },
+  },
+  {
+    slug: "ravello",
+    reason: {
+      en: "Garden terraces a thousand feet up, quiet after the day boats leave",
+      it: "Terrazze di giardini a trecento metri, silenzio quando i battelli ripartono",
+      de: "Gartenterrassen in dreihundert Metern Höhe, still nach den Tagesbooten",
+      fr: "Terrasses de jardins à trois cents mètres, calme après les bateaux",
+      es: "Terrazas de jardín a trescientos metros, calma cuando se van los barcos",
+      pt: "Terraços de jardim a trezentos metros, calma depois dos barcos do dia",
+    },
+  },
+  {
+    slug: "venice",
+    reason: {
+      en: "Empty canals at dawn, marble and water, mist in the shoulder seasons",
+      it: "Rii deserti all'alba, marmo e acqua, la nebbia nelle mezze stagioni",
+      de: "Leere Kanäle im Morgengrauen, Marmor und Wasser, Nebel in der Nebensaison",
+      fr: "Canaux déserts à l'aube, marbre et eau, brume à la mi-saison",
+      es: "Canales vacíos al alba, mármol y agua, niebla en temporada media",
+      pt: "Canais vazios ao amanhecer, mármore e água, névoa na meia-estação",
+    },
+  },
+  {
+    slug: "siena",
+    reason: {
+      en: "Brick that glows at any hour, no traffic, the piazza as one big studio",
+      it: "Mattone che accende ogni ora, niente traffico, la piazza come uno studio",
+      de: "Backstein, der zu jeder Stunde leuchtet, kein Verkehr, der Platz als Studio",
+      fr: "Une brique qui rougeoie à toute heure, sans circulation, la place comme studio",
+      es: "Ladrillo que brilla a cualquier hora, sin tráfico, la plaza como estudio",
+      pt: "Tijolo que brilha a qualquer hora, sem trânsito, a praça como estúdio",
+    },
+  },
+];
+
+const WEDDING_DESTINATIONS: { slug: string; reason: DestinationReason }[] = byCountry({
+  pt: WEDDING_DESTINATIONS_PT,
+  es: WEDDING_DESTINATIONS_ES,
+  it: WEDDING_DESTINATIONS_IT,
+});
 
 
 // ─── Page copy — inline per locale (nothing reads messages/*.json) ─────

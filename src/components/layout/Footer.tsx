@@ -4,17 +4,18 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { locations, locField } from "@/lib/locations-data";
-import { country } from "@/lib/country";
+import { country, byCountry, siblingMarkets } from "@/lib/country";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { NorteiraLogo } from "./NorteiraLogo";
 
 // Footer shortcut list, per market. These are slugs, so a Portuguese list on
 // the Spanish site matches nothing and the column renders empty.
-const TOP_LOCATIONS =
-  country.code === "es"
-    ? ["barcelona", "madrid", "seville", "granada", "malaga", "mallorca", "ibiza", "valencia"]
-    : ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
+const TOP_LOCATIONS = byCountry({
+  pt: ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"],
+  es: ["barcelona", "madrid", "seville", "granada", "malaga", "mallorca", "ibiza", "valencia"],
+  it: ["rome", "florence", "venice", "amalfi-coast", "milan", "lake-como", "capri", "cinque-terre"],
+});
 
 // Shoot types that have polished /photoshoots/[type] pages AND combo
 // /locations/[slug]/[occasion] sub-pages. Used in the footer column +
@@ -37,36 +38,50 @@ const TOP_SHOOT_TYPES: { slug: string; key: string }[] = [
 // Spanish site too, where `locations.find()` matched none of them, every pill
 // returned null, and the footer of every page carried a "Popular Searches"
 // heading above an empty box.
-const FEATURED_COMBOS: { city: string; occ: string }[] =
-  country.code === "es"
-    ? [
-        { city: "barcelona", occ: "couples" },
-        { city: "barcelona", occ: "proposal" },
-        { city: "barcelona", occ: "family" },
-        { city: "madrid", occ: "couples" },
-        { city: "madrid", occ: "engagement" },
-        { city: "seville", occ: "proposal" },
-        { city: "seville", occ: "couples" },
-        { city: "granada", occ: "proposal" },
-        { city: "granada", occ: "honeymoon" },
-        { city: "mallorca", occ: "honeymoon" },
-        { city: "mallorca", occ: "family" },
-        { city: "ronda", occ: "proposal" },
-      ]
-    : [
-        { city: "lisbon", occ: "couples" },
-        { city: "lisbon", occ: "proposal" },
-        { city: "lisbon", occ: "family" },
-        { city: "porto", occ: "couples" },
-        { city: "porto", occ: "engagement" },
-        { city: "sintra", occ: "proposal" },
-        { city: "sintra", occ: "engagement" },
-        { city: "algarve", occ: "couples" },
-        { city: "algarve", occ: "proposal" },
-        { city: "algarve", occ: "honeymoon" },
-        { city: "cascais", occ: "family" },
-        { city: "madeira", occ: "honeymoon" },
-      ];
+const FEATURED_COMBOS: { city: string; occ: string }[] = byCountry({
+  pt: [
+    { city: "lisbon", occ: "couples" },
+    { city: "lisbon", occ: "proposal" },
+    { city: "lisbon", occ: "family" },
+    { city: "porto", occ: "couples" },
+    { city: "porto", occ: "engagement" },
+    { city: "sintra", occ: "proposal" },
+    { city: "sintra", occ: "engagement" },
+    { city: "algarve", occ: "couples" },
+    { city: "algarve", occ: "proposal" },
+    { city: "algarve", occ: "honeymoon" },
+    { city: "cascais", occ: "family" },
+    { city: "madeira", occ: "honeymoon" },
+  ],
+  es: [
+    { city: "barcelona", occ: "couples" },
+    { city: "barcelona", occ: "proposal" },
+    { city: "barcelona", occ: "family" },
+    { city: "madrid", occ: "couples" },
+    { city: "madrid", occ: "engagement" },
+    { city: "seville", occ: "proposal" },
+    { city: "seville", occ: "couples" },
+    { city: "granada", occ: "proposal" },
+    { city: "granada", occ: "honeymoon" },
+    { city: "mallorca", occ: "honeymoon" },
+    { city: "mallorca", occ: "family" },
+    { city: "ronda", occ: "proposal" },
+  ],
+  it: [
+    { city: "rome", occ: "couples" },
+    { city: "rome", occ: "proposal" },
+    { city: "rome", occ: "family" },
+    { city: "florence", occ: "couples" },
+    { city: "florence", occ: "engagement" },
+    { city: "venice", occ: "proposal" },
+    { city: "venice", occ: "honeymoon" },
+    { city: "amalfi-coast", occ: "honeymoon" },
+    { city: "positano", occ: "couples" },
+    { city: "lake-como", occ: "proposal" },
+    { city: "val-dorcia", occ: "engagement" },
+    { city: "sorrento", occ: "family" },
+  ],
+});
 
 export function Footer() {
   const t = useTranslations("footer");
@@ -145,21 +160,43 @@ export function Footer() {
                 translation key: "by" plus a wordmark is the same in all five
                 locales, and an unmatched key would render "footer.byNorteira"
                 on screen. */}
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+            <p className="mt-2.5 flex items-center gap-2 text-sm text-gray-500">
               by
               <a
                 href="https://norteira.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Norteira"
-                className="inline-flex py-1 transition hover:text-gray-700"
+                className="inline-flex py-1 transition hover:text-gray-900"
               >
-                <NorteiraLogo className="h-4 w-auto" />
+                <NorteiraLogo className="h-5 w-auto" />
               </a>
             </p>
             <p className="mt-3 text-sm text-gray-500">
               {t("tagline")}
             </p>
+            {/* Sibling markets. A visitor who lands on the wrong country site
+                is a booking we would otherwise lose — the concierge already
+                redirects them by name, and the footer should too. Plain <a>:
+                these are different origins, so next/link routing does not
+                apply. */}
+            {siblingMarkets.length > 0 && (
+              <div className="mt-4 text-sm text-gray-500">
+                <p className="text-xs uppercase tracking-widest text-gray-400">{t("alsoIn")}</p>
+                <ul className="mt-1.5 space-y-1">
+                  {siblingMarkets.map((m) => (
+                    <li key={m.code}>
+                      <a
+                        href={m.baseUrl}
+                        className="transition hover:text-primary-600"
+                      >
+                        {m.brand}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Locations */}

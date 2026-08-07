@@ -21,7 +21,16 @@ export type Region =
   | "canary-islands"
   | "valencia-region"
   | "basque-country"
-  | "galicia";
+  | "galicia"
+  // Italy
+  | "lazio"
+  | "tuscany"
+  | "veneto"
+  | "lombardy"
+  | "campania"
+  | "sicily"
+  | "liguria"
+  | "puglia";
 
 // Single source of truth — every slug (canonical region, tree-region,
 // city, island, group, legacy alias) maps to one of the 7 canonical
@@ -137,6 +146,62 @@ const ES_SLUG_TO_REGION: Record<string, Region> = {
   "santiago-de-compostela": "galicia",
 };
 
+// Italy. Same shape again: every city, coast and island a visitor can pick
+// resolves to one billable region, so Quick Booking can quote from the day the
+// market opens instead of answering 404 the way Spain did.
+const IT_SLUG_TO_REGION: Record<string, Region> = {
+  lazio: "lazio",
+  rome: "lazio",
+  vatican: "lazio",
+  tivoli: "lazio",
+
+  tuscany: "tuscany",
+  florence: "tuscany",
+  siena: "tuscany",
+  pisa: "tuscany",
+  "val-dorcia": "tuscany",
+  lucca: "tuscany",
+  "san-gimignano": "tuscany",
+
+  veneto: "veneto",
+  venice: "veneto",
+  verona: "veneto",
+  "lake-garda": "veneto",
+  padua: "veneto",
+
+  lombardy: "lombardy",
+  milan: "lombardy",
+  "lake-como": "lombardy",
+  bergamo: "lombardy",
+
+  campania: "campania",
+  naples: "campania",
+  "amalfi-coast": "campania",
+  amalfi: "campania",
+  positano: "campania",
+  ravello: "campania",
+  sorrento: "campania",
+  capri: "campania",
+  pompeii: "campania",
+
+  sicily: "sicily",
+  palermo: "sicily",
+  taormina: "sicily",
+  catania: "sicily",
+  syracuse: "sicily",
+
+  liguria: "liguria",
+  "cinque-terre": "liguria",
+  portofino: "liguria",
+  genoa: "liguria",
+
+  puglia: "puglia",
+  bari: "puglia",
+  lecce: "puglia",
+  alberobello: "puglia",
+  polignano: "puglia",
+};
+
 /** Canonical billable regions per market. The nightly seed cron walks these —
  *  it used to carry its own hardcoded Portuguese list, so on the Spanish
  *  instance no Spanish region ever got a price row and Quick Booking answered
@@ -153,13 +218,22 @@ export const ES_REGIONS: Region[] = [
   "canary-islands", "valencia-region", "basque-country", "galicia",
 ];
 
+export const IT_REGIONS: Region[] = [
+  "lazio", "tuscany", "veneto", "lombardy",
+  "campania", "sicily", "liguria", "puglia",
+];
+
 export function regionsForCountry(code: string): Region[] {
-  return code === "es" ? ES_REGIONS : PT_REGIONS;
+  if (code === "es") return ES_REGIONS;
+  if (code === "it") return IT_REGIONS;
+  return PT_REGIONS;
 }
 
 export function slugToRegion(slug: string): Region | null {
   const es = ES_SLUG_TO_REGION[slug];
   if (es) return es;
+  const it = IT_SLUG_TO_REGION[slug];
+  if (it) return it;
   const norm = String(slug || "").trim().toLowerCase();
   if (!norm) return null;
   return SLUG_TO_REGION[norm] ?? null;

@@ -3,16 +3,12 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { TrackedCTALink } from "@/components/ui/TrackedCTALink";
 import { unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 import { locations } from "@/lib/locations-data";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
-/** Market name, declined per language for the hardcoded copy blocks below. */
-const CN = {
-  en: country.code === "es" ? "Spain" : "Portugal",
-  pt: country.code === "es" ? "Espanha" : "Portugal",
-  es: country.code === "es" ? "España" : "Portugal",
-  de: country.code === "es" ? "Spanien" : "Portugal",
-  fr: country.code === "es" ? "Espagne" : "Portugal",
-} as const;
+/** Market name, declined per language for the hardcoded copy blocks below.
+ *  Comes from the country pack so a new market cannot inherit the last one's
+ *  name — this block used to read "Portugal" on any site that was not Spain. */
+const CN = country.countryName;
 
 
 // Homepage band for the wedding funnel → /weddings landing. Dark and
@@ -26,7 +22,13 @@ const WEDDING_DB_NAMES = ["Wedding"];
 // wedding tile) for when too few tagged photos exist yet.
 const FALLBACK_IMG = "photo-1606216794079-73f85bbd57d5";
 
-const QUICK_DESTINATIONS = ["sintra", "algarve", "douro-valley", "lisbon"];
+// Wedding-friendly destinations per market. Slugs must exist in that market's
+// locations dataset, or the chip renders and links nowhere.
+const QUICK_DESTINATIONS = byCountry({
+  pt: ["sintra", "algarve", "douro-valley", "lisbon"],
+  es: ["mallorca", "seville", "ronda", "barcelona"],
+  it: ["val-dorcia", "amalfi-coast", "lake-como", "florence"],
+});
 
 const L: Record<string, {
   badge: string;
@@ -37,9 +39,18 @@ const L: Record<string, {
   fromLabel: (p: number) => string;
   popularLabel: string;
 }> = {
+  it: {
+    badge: "Matrimoni",
+    title: `Vi sposate ${country.countryIn.it}?`,
+    subtitle: "Fotografi di matrimonio del posto, che conoscono ogni location, ogni scorcio e ogni ora d'oro — dagli elopement più intimi alle celebrazioni di un giorno intero.",
+    cta: "Scopri la fotografia di matrimonio",
+    photographersLabel: (n) => `${n} fotografi di matrimonio`,
+    fromLabel: (p) => `da €${p}`,
+    popularLabel: "Popolari:",
+  },
   en: {
     badge: "Weddings",
-    title: `Getting married in ${CN.en}?`,
+    title: `Getting married ${country.countryIn.en}?`,
     subtitle: "Local wedding photographers who know every venue, viewpoint, and golden-hour spot — from intimate elopements to full-day celebrations.",
     cta: "Explore wedding photography",
     photographersLabel: (n) => `${n} wedding photographers`,
@@ -75,7 +86,9 @@ const L: Record<string, {
   },
   fr: {
     badge: "Mariages",
-    title: country.code === "es" ? `Vous vous mariez en ${CN.fr} ?` : `Vous vous mariez au ${CN.fr} ?`,
+    // French takes "au Portugal" but "en Espagne"/"en Italie" — the country
+    // pack already carries the right preposition per language.
+    title: `Vous vous mariez ${country.countryIn.fr} ?`,
     subtitle: "Des photographes de mariage locaux qui connaissent chaque lieu, point de vue et lumière dorée — des elopements intimes aux célébrations d'une journée complète.",
     cta: "Découvrir la photographie de mariage",
     photographersLabel: (n) => `${n} photographes de mariage`,

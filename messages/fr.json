@@ -242,7 +242,8 @@
     "soon": "Bientôt",
     "appStoreAlt": "Télécharger sur l'App Store",
     "googlePlayAlt": "Disponible sur Google Play",
-    "forBusiness": "Pour les Entreprises"
+    "forBusiness": "Pour les Entreprises",
+    "alsoIn": "Aussi en"
   },
   "giftCardsPage": {
     "h1": "Offrez une séance Photo Portugal",
@@ -2309,7 +2310,7 @@
     "sections": {
       "overview": {
         "title": "1. Aperçu",
-        "content": "Photo Portugal (\"nous\", \"notre\") exploite une plateforme marketplace sur photoportugal.com qui connecte les touristes (\"clients\") avec des photographes professionnels (\"photographes\") au Portugal. En utilisant notre plateforme, vous acceptez ces conditions."
+        "content": "{brand} (\"nous\", \"notre\") exploite une plateforme marketplace sur {domain} qui connecte les touristes (\"clients\") avec des photographes professionnels (\"photographes\") {countryIn}. En utilisant notre plateforme, vous acceptez ces conditions."
       },
       "accounts": {
         "title": "2. Comptes",
@@ -2946,7 +2947,7 @@
     "title": "Support",
     "subtitle": "Une question ou un problème ? Envoyez-nous un message et nous vous répondrons.",
     "successMessage": "Votre message a été envoyé ! Nous vous répondrons dès que possible.",
-    "errorMessage": "Une erreur s'est produite. Veuillez réessayer ou nous écrire à info@photoportugal.com.",
+    "errorMessage": "Une erreur s'est produite. Veuillez réessayer ou nous écrire à {email}.",
     "subject": "Sujet",
     "subjectPlaceholder": "Avec quoi avez-vous besoin d'aide ?",
     "message": "Message",
@@ -3144,7 +3145,7 @@
         },
         "contactSupport": {
           "question": "Comment contacter le support ?",
-          "answer": "Vous pouvez joindre notre équipe support via :\n\n• **E-mail :** info@photoportugal.com\n• **Tableau de bord :** Les photographes peuvent soumettre des tickets de support directement depuis leur tableau de bord\n• **Page contact :** Visitez notre page contact pour nous envoyer un message\n\nNous visons à répondre à toutes les demandes sous 24 heures les jours ouvrés."
+          "answer": "Vous pouvez joindre notre équipe support via :\n\n• **E-mail :** {email}\n• **Tableau de bord :** Les photographes peuvent soumettre des tickets de support directement depuis leur tableau de bord\n• **Page contact :** Visitez notre page contact pour nous envoyer un message\n\nNous visons à répondre à toutes les demandes sous 24 heures les jours ouvrés."
         }
       },
       "gifts": {
@@ -3225,7 +3226,7 @@
     "galleryPasswordInputPlaceholder": "Mot de passe de la galerie",
     "verifying": "Vérification...",
     "viewPhotos": "Voir les photos",
-    "brandFooter": "Photo Portugal — photoportugal.com",
+    "brandFooter": "{brand} — {domain}",
     "photosReady": "Vos photos sont prêtes !",
     "photoSingular": "photo",
     "photoPlural": "photos",
@@ -4113,7 +4114,7 @@
       "submit": "Envoyer la demande",
       "sending": "Envoi…",
       "sla": "Pas de spam, pas d'engagement — une vraie personne répondra sous un jour ouvré.",
-      "submitFailed": "Impossible d'envoyer la demande. Réessayez ou écrivez à info@photoportugal.com.",
+      "submitFailed": "Impossible d'envoyer la demande. Réessayez ou écrivez à {email}.",
       "thanksTitle": "Demande reçue !",
       "thanksText": "Merci — notre équipe vous répondra sous un jour ouvré. Vérifiez votre boîte de réception (et les spams, au cas où).",
       "types": {

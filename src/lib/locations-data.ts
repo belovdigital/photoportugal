@@ -1,5 +1,6 @@
 import { Location } from "@/types";
 import { locationsES } from "./locations-data-es";
+import { locationsIT } from "./locations-data-it";
 
 const locationsPT: Location[] = [
   // Greater Lisbon
@@ -1627,7 +1628,11 @@ const locationsPT: Location[] = [
  * i.e. today's behaviour, unchanged.
  */
 export const locations: Location[] =
-  process.env.NEXT_PUBLIC_COUNTRY === "es" ? locationsES : locationsPT;
+  process.env.NEXT_PUBLIC_COUNTRY === "es"
+    ? locationsES
+    : process.env.NEXT_PUBLIC_COUNTRY === "it"
+      ? locationsIT
+      : locationsPT;
 
 export const regions = [...new Set(locations.map((l) => l.region))];
 

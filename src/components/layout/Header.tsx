@@ -43,6 +43,21 @@ const DESTINATIONS_BY_COUNTRY: Record<string, Array<{ slug: string; name: string
     { slug: "valencia", name: "Valencia", img: "photo-1748792753424-38cbb745508a" },
     { slug: "tenerife", name: "Tenerife", img: "photo-1542575749037-7ef4545e897d" },
   ],
+  // ⚠️ Italian photography is not licensed yet, so these reuse the existing
+  // photo ids, matched by character (capital to capital, coast to coast,
+  // island to island) exactly as Spain does. They are placeholders: no caption
+  // or alt text over them may name an Italian landmark until real photos land.
+  it: [
+    { slug: "rome", name: "Rome", img: "photo-1536663060084-a0d9eeeaf44b" },
+    { slug: "florence", name: "Florence", img: "photo-1756765786971-384a44daf35d" },
+    { slug: "venice", name: "Venice", img: "photo-1748792753424-38cbb745508a" },
+    { slug: "amalfi-coast", name: "Amalfi Coast", img: "photo-1560242374-7befcc667b39" },
+    { slug: "milan", name: "Milan", img: "photo-1697984431654-d234e3ca432b" },
+    { slug: "lake-como", name: "Lake Como", img: "photo-1693825208005-02563f6a95ce" },
+    { slug: "capri", name: "Capri", img: "photo-1721241843813-c54b77496005" },
+    { slug: "cinque-terre", name: "Cinque Terre", img: "photo-1593897810048-0195fd308ee6" },
+    { slug: "taormina", name: "Taormina", img: "photo-1542575749037-7ef4545e897d" },
+  ],
 };
 
 const TOP_DESTINATIONS = DESTINATIONS_BY_COUNTRY[country.code] || DESTINATIONS_BY_COUNTRY.pt;

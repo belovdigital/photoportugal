@@ -16,8 +16,8 @@ import { WeddingBand } from "@/components/ui/WeddingBand";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews, getSiteReviewStats } from "@/lib/reviews-data";
-import { heroImages, heroImagesES } from "@/lib/hero-images";
-import { isSpain, country } from "@/lib/country";
+import { heroImages, heroImagesNeutral } from "@/lib/hero-images";
+import { country, isPortugal } from "@/lib/country";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { BrandHero } from "@/components/ui/BrandHero";
@@ -316,10 +316,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // those photographers have no profile in the Spanish database, so every link
   // would 404, and naming them implies they shoot in Spain, which they don't.
   // Photos stay, attribution goes, until Spanish work replaces them.
-  const heroCovers = heroImages.map((h) => ({
+  const heroCovers = (isPortugal ? heroImages : heroImagesNeutral).map((h) => ({
     cover_url: h.url,
-    slug: isSpain ? "" : h.photographerSlug,
-    name: isSpain ? "" : h.photographerName,
+    slug: isPortugal ? h.photographerSlug : "",
+    name: isPortugal ? h.photographerName : "",
     alt: h.alt,
   }));
 
@@ -523,7 +523,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           A market with no approved roster falls back to BrandHero: same weight,
           same offer, but it names no photographer and repeats no copy from the
           value-prop section below (which owns the page H1). */}
-      {!heroPhotographer && <BrandHero photos={(isSpain ? heroImagesES : heroImages).map((h) => h.url)} />}
+      {!heroPhotographer && <BrandHero photos={(isPortugal ? heroImages : heroImagesNeutral).map((h) => h.url)} />}
       {heroPhotographer && (
         <HeroSingleVariant
           photographer={heroPhotographer}

@@ -12,7 +12,7 @@
 // recognisable the name is to someone who has never been. Anything not on the
 // list keeps its relative order after the anchors, alphabetically, so the
 // result stays deterministic.
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { locations, locField } from "@/lib/locations-data";
 
 const ANCHORS_PT = [
@@ -27,7 +27,13 @@ const ANCHORS_ES = [
   "cordoba", "santiago-de-compostela", "girona", "costa-brava", "segovia",
 ];
 
-const ANCHORS = country.code === "es" ? ANCHORS_ES : ANCHORS_PT;
+const ANCHORS_IT = [
+  "rome", "florence", "venice", "amalfi-coast", "milan", "lake-como", "positano",
+  "capri", "cinque-terre", "taormina", "siena", "val-dorcia", "sorrento",
+  "verona", "lake-garda", "naples", "portofino", "ravello", "palermo", "lecce",
+];
+
+const ANCHORS = byCountry({ pt: ANCHORS_PT, es: ANCHORS_ES, it: ANCHORS_IT });
 
 /** Lower is more prominent. Non-anchor slugs all share one rank and then
  *  settle alphabetically. */

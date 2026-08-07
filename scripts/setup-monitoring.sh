@@ -6,6 +6,7 @@
 # The market is auto-detected from which /var/www/<app>/.env exists:
 #   photoportugal -> prefix pp, domain from .env, db photoportugal
 #   photospain    -> prefix ps, domain from .env, db photospain
+#   photoitaly    -> prefix pi, domain from .env, db photoitaly
 #
 # Installs:
 #   /etc/default/<prefix>-monitor       — per-market settings (the ONLY per-box difference)
@@ -72,8 +73,13 @@ elif [ -f /var/www/photospain/.env ]; then
   DEFAULT_DOMAIN=photospain.co; DEFAULT_DB=photospain
   ALERT_THREAD_FALLBACK=""
   PEER_LABEL=PT; PEER_DOMAIN=photoportugal.com
+elif [ -f /var/www/photoitaly/.env ]; then
+  APP=photoitaly; PREFIX=pi; LABEL=IT
+  DEFAULT_DOMAIN=photoitaly.co; DEFAULT_DB=photoitaly
+  ALERT_THREAD_FALLBACK=""
+  PEER_LABEL=PT; PEER_DOMAIN=photoportugal.com
 else
-  echo "Neither /var/www/photoportugal/.env nor /var/www/photospain/.env found." >&2
+  echo "No production .env found under /var/www (photoportugal, photospain, photoitaly)." >&2
   echo "Run only on a production VPS." >&2
   exit 1
 fi

@@ -1,3 +1,4 @@
+import { country } from "./country";
 /**
  * Curated hero collage — 5 hand-picked portfolio photos.
  * Replace by swapping the url + alt. Slot shape hints:
@@ -61,23 +62,45 @@ export const heroImages: HeroImage[] = [
  * identifiable Portuguese landmark. Porto's Dom Luís bridge, the Sé cathedral
  * and any azulejo wall were rejected on the second rule.
  */
-export const heroImagesES: HeroImage[] = [
+/**
+ * Credit-free hero set for every market that is not Portugal.
+ *
+ * The pictures are Portuguese work and stay that way until each market has its
+ * own, but they carry no photographer name and no landmark in the alt text:
+ * those photographers have no profile in another market's database, so every
+ * credit link would 404, and naming them implies they shoot there, which they
+ * do not. Was `heroImagesES` until Italy became the second market to need it.
+ */
+
+/**
+ * Neutral hero photo URL.
+ *
+ * The pictures are Portuguese work. Italy has its own copies in its own R2
+ * bucket, so its homepage does not have to reference photoportugal.com in
+ * every page of HTML or depend on a bucket another market controls. Markets
+ * without a copy fall back to the original until their files are seeded.
+ */
+function neutralHero(file: string, fallback: string): string {
+  return country.code === "it" ? `https://${country.filesHost}/hero/${file}` : fallback;
+}
+
+export const heroImagesNeutral: HeroImage[] = [
   {
     // Lead / background: couple silhouetted at sunset, no landmark, dark on the
     // left where the offer card sits.
-    url: "https://files.photoportugal.com/portfolio/4498c496-0b00-438b-a9cd-52dc37fb3792/4bb6595f-04b8-4989-af65-8cf2e0dadb78.jpg",
+    url: neutralHero("4bb6595f-04b8-4989-af65-8cf2e0dadb78.jpg", "https://files.photoportugal.com/portfolio/4498c496-0b00-438b-a9cd-52dc37fb3792/4bb6595f-04b8-4989-af65-8cf2e0dadb78.jpg"),
     alt: "Couple photoshoot at sunset on the coast",
     photographerSlug: "",
     photographerName: "",
   },
   {
-    url: "https://files.photoportugal.com/portfolio/48741d30-a7b2-401e-bdee-a88eae7e5eff/e2b61b6b-71a8-43c8-ae21-df281f7b5d9c.jpg",
+    url: neutralHero("e2b61b6b-71a8-43c8-ae21-df281f7b5d9c.jpg", "https://files.photoportugal.com/portfolio/48741d30-a7b2-401e-bdee-a88eae7e5eff/e2b61b6b-71a8-43c8-ae21-df281f7b5d9c.jpg"),
     alt: "Father and daughter playing during a family photoshoot by the sea",
     photographerSlug: "",
     photographerName: "",
   },
   {
-    url: "https://files.photoportugal.com/portfolio/5d7d110d-ee1a-464d-9a74-fb3bf1eb0381/19baf116-a7ae-43f9-b0a7-0631aba64141.jpg",
+    url: neutralHero("19baf116-a7ae-43f9-b0a7-0631aba64141.jpg", "https://files.photoportugal.com/portfolio/5d7d110d-ee1a-464d-9a74-fb3bf1eb0381/19baf116-a7ae-43f9-b0a7-0631aba64141.jpg"),
     alt: "Expecting couple on the sand during a maternity photoshoot",
     photographerSlug: "",
     photographerName: "",

@@ -47,7 +47,7 @@ export function BusinessInquiryForm({ source = "business_page" }: { source?: str
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("submitFailed"));
+      setError(err instanceof Error ? err.message : t("submitFailed", { email: country.supportEmail }));
     } finally {
       setSending(false);
     }

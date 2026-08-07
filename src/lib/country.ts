@@ -16,7 +16,10 @@
 
 import { portugalCoverageStats } from "./location-coverage-stats";
 
-export type CountryCode = "pt" | "es";
+export type CountryCode = "pt" | "es" | "it";
+
+/** Locales any market can ship. Each pack picks its own subset in `locales`. */
+type LocaleKey = "en" | "pt" | "de" | "es" | "fr" | "it";
 
 export interface CountryPack {
   code: CountryCode;
@@ -38,13 +41,13 @@ export interface CountryPack {
    * `areaServed` is the schema.org value and is always English, which reads
    * as a bug inside Spanish or French sentences ("cuenta bancaria en Spain").
    */
-  countryName: Record<"en" | "pt" | "de" | "es" | "fr", string>;
+  countryName: Record<LocaleKey, string>;
   /**
    * "in <country>", with the preposition already correct for each language.
    * A template cannot do this: French takes "au Portugal" but "en Espagne",
    * and naive substitution is exactly how "au Espagne" shipped once already.
    */
-  countryIn: Record<"en" | "pt" | "de" | "es" | "fr", string>;
+  countryIn: Record<LocaleKey, string>;
   /**
    * Root-level SEO copy. Full strings rather than a template, because the
    * Portuguese version interpolates a Portugal-only coverage statistic and
@@ -125,8 +128,8 @@ const PACKS: Record<CountryCode, CountryPack> = {
     emailFrom: "Photo Portugal <info@photoportugal.com>",
     supportEmail: "info@photoportugal.com",
     areaServed: "Portugal",
-    countryName: { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal" },
-    countryIn: { en: "in Portugal", pt: "em Portugal", de: "in Portugal", es: "en Portugal", fr: "au Portugal" },
+    countryName: { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal", it: "Portogallo" },
+    countryIn: { en: "in Portugal", pt: "em Portugal", de: "in Portugal", es: "en Portugal", fr: "au Portugal", it: "in Portogallo" },
     ogImage: "/og-image.png",
     defaultRegionSlug: "greater-lisbon",
     dpaName: "www.cnpd.pt",
@@ -175,8 +178,8 @@ const PACKS: Record<CountryCode, CountryPack> = {
     emailFrom: "Photo Spain <info@photospain.co>",
     supportEmail: "info@photospain.co",
     areaServed: "Spain",
-    countryName: { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne" },
-    countryIn: { en: "in Spain", pt: "em Espanha", de: "in Spanien", es: "en España", fr: "en Espagne" },
+    countryName: { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne", it: "Spagna" },
+    countryIn: { en: "in Spain", pt: "em Espanha", de: "in Spanien", es: "en España", fr: "en Espagne", it: "in Spagna" },
     // No Spanish phone line and no social profiles yet — emitting Portugal's
     // would be a false signal to both Google and visitors.
     ogImage: "/og",
@@ -215,6 +218,59 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "es", "de", "fr"],
     timezone: "Europe/Madrid",
     foundedYear: 2026,
+  },
+  it: {
+    code: "it",
+    brand: "Photo Italy",
+    baseUrl: "https://photoitaly.co",
+    host: "photoitaly.co",
+    filesHost: "files.photoitaly.co",
+    emailFrom: "Photo Italy <info@photoitaly.co>",
+    supportEmail: "info@photoitaly.co",
+    areaServed: "Italy",
+    countryName: { en: "Italy", pt: "Itália", de: "Italien", es: "Italia", fr: "Italie", it: "Italia" },
+    countryIn: { en: "in Italy", pt: "em Itália", de: "in Italien", es: "en Italia", fr: "en Italie", it: "in Italia" },
+    // No Italian phone line, social profiles or Google Business Profile yet.
+    // Emitting Portugal's would be a false signal to Google and to visitors.
+    ogImage: "/og",
+    defaultRegionSlug: "lazio",
+    dpaName: "Garante per la protezione dei dati personali",
+    dpaUrl: "https://www.garanteprivacy.it",
+    googleProfileUrl: null,
+    hasMobileApp: false,
+    intercomAppId: null,
+    city: "Rome",
+    geo: { lat: 41.9028, lng: 12.4964 },
+    phone: null,
+    dialCode: "+39",
+    phonePlaceholder: "+39 312 345 6789",
+    flag: "🇮🇹",
+    socialLinks: [],
+    contactLanguages: ["English", "Italian"],
+    seo: {
+      title: "Vacation Photographer Italy — Book Professional Photoshoots | Photo Italy",
+      description:
+        "Book a hand-picked vacation photographer in Italy. Rome, Florence, Venice, the Amalfi Coast, Milan and beyond. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery.",
+      ogDescription:
+        "Book a professional vacation photographer in Italy. Rome, Florence, Venice, the Amalfi Coast and beyond.",
+      keywords: [
+        "photographer italy",
+        "vacation photographer rome",
+        "photoshoot italy",
+        "couples photographer venice",
+        "family photographer florence",
+        "professional photographer italy",
+      ],
+    },
+    logoPath: "/logo-it.png",
+    logoIconPath: "/favicon.svg",
+    // Portuguese is deliberately absent — the flow from Portugal to Italy is
+    // too small to be worth a locale nobody keeps honest. Spanish stays: Spain
+    // is one of Italy's largest inbound markets and the catalogue already
+    // exists, so it costs a country override and nothing else.
+    locales: ["en", "it", "de", "fr", "es"],
+    timezone: "Europe/Rome",
+    foundedYear: 2026,
     // The operating company is Portuguese and is not registered in Spain, so
     // Stripe Connect onboarding is not available to Spanish photographers.
     // They are paid by bank transfer after the money clears. See docs/SPAIN.md §6.2.
@@ -222,7 +278,9 @@ const PACKS: Record<CountryCode, CountryPack> = {
 };
 
 function resolve(raw: string | undefined): CountryPack {
-  return raw === "es" ? PACKS.es : PACKS.pt;
+  if (raw === "es") return PACKS.es;
+  if (raw === "it") return PACKS.it;
+  return PACKS.pt;
 }
 
 /**
@@ -238,6 +296,37 @@ export const country: CountryPack = resolve(
 
 export const isSpain = country.code === "es";
 export const isPortugal = country.code === "pt";
+export const isItaly = country.code === "it";
+
+/**
+ * Pick a value for the active market.
+ *
+ * Use this instead of `country.code === "es" ? spanish : portuguese`. That
+ * ternary silently resolves to Portugal for every market that is not Spain, so
+ * adding Italy put "Getting married in Portugal?" on the Italian homepage, sent
+ * the concierge out introducing itself as Photo Portugal, and pointed a dozen
+ * other copy blocks at Lisbon — none of which any compiler could see.
+ *
+ * Here the argument is a full `Record<CountryCode, T>`, so a new country fails
+ * the build in every place that needs copy for it.
+ */
+export function byCountry<T>(choices: Record<CountryCode, T>): T {
+  return choices[country.code];
+}
+
+/**
+ * The other markets in the portfolio, in launch order, never including this
+ * one.
+ *
+ * Two places need it: the footer, so a visitor on the wrong country site can
+ * find the right one, and the concierge, which must send an out-of-country
+ * request to the sister site by name instead of turning a real booking away.
+ * Both used to hardcode "the other one", which only works while there are
+ * exactly two.
+ */
+export const siblingMarkets: CountryPack[] = (["pt", "es", "it"] as const)
+  .filter((code) => code !== country.code)
+  .map((code) => PACKS[code]);
 
 /**
  * Every market pays photographers through Stripe Connect.

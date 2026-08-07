@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     // Stripe checkout — single line item at the buyer-facing tier price.
     // metadata.gift_card_id is the webhook hook that triggers the
     // recipient email/SMS once payment_intent.succeeded fires.
-    const localeNorm = ["pt","de","es","fr"].includes(locale) ? locale : "auto";
+    const localeNorm = (country.locales as readonly string[]).includes(locale) && locale !== "en" ? locale : "auto";
     const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     const stripe = requireStripe();

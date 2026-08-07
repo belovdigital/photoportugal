@@ -1,7 +1,7 @@
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { lowestBookablePrice } from "@/lib/entry-price";
 import { CHANNEL, MARKETS } from "@/lib/norteira/catalogue";
 
@@ -149,7 +149,7 @@ export async function buildLlmsText(): Promise<string> {
   // a page about the address. Omitted entirely while this market is off in
   // the channel — advertising a booking tool that will refuse every
   // destination here is worse than staying quiet.
-  const channelLive = MARKETS[country.code === "es" ? "spain" : "portugal"].enabled;
+  const channelLive = MARKETS[byCountry({ pt: "portugal", es: "spain", it: "italy" } as const)].enabled;
   const agentChannelSection = channelLive
     ? `
 ## Booking API for AI agents (MCP)

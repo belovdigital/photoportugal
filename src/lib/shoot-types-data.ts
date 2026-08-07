@@ -1,4 +1,5 @@
 import { shootTypesES } from "./shoot-types-data-es";
+import { shootTypesIT } from "./shoot-types-data-it";
 export interface ShootType {
   slug: string;
   name: string;
@@ -838,7 +839,11 @@ const shootTypesPT: ShootType[] = [
  * Portugal stays the default: absent or unrecognised value → the PT dataset.
  */
 export const shootTypes: ShootType[] =
-  process.env.NEXT_PUBLIC_COUNTRY === "es" ? shootTypesES : shootTypesPT;
+  process.env.NEXT_PUBLIC_COUNTRY === "es"
+    ? shootTypesES
+    : process.env.NEXT_PUBLIC_COUNTRY === "it"
+      ? shootTypesIT
+      : shootTypesPT;
 
 
 export function getShootTypeBySlug(slug: string): ShootType | undefined {

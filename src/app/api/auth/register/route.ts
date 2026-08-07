@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { country } from "@/lib/country";
 import { hash } from "bcryptjs";
 import crypto from "crypto";
 import { queryOne } from "@/lib/db";
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     // Capture locale: body > Accept-Language > 'en'
     const accept = req.headers.get("accept-language") || "";
     const acceptLocale = accept.match(/^([a-z]{2})/)?.[1];
-    const SUPPORTED_LOCALES = ["en", "pt", "de", "es", "fr"];
+    const SUPPORTED_LOCALES = country.locales as readonly string[];
     const locale = SUPPORTED_LOCALES.includes(bodyLocale) ? bodyLocale : SUPPORTED_LOCALES.includes(acceptLocale || "") ? acceptLocale : "en";
     const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
     const lastName = (last_name || legacyName?.split(" ").slice(1).join(" ") || "").trim();

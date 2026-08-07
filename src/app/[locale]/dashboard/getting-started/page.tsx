@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -222,7 +222,7 @@ function FastReplyMockup() {
       <div className="flex items-start gap-2">
         <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-pink-200 to-amber-200" />
         <div className="max-w-[70%] rounded-2xl rounded-tl-sm bg-white border border-warm-200 px-3 py-2 text-sm text-gray-800">
-          Hi! Are you free for a couples shoot Aug 15 in {country.code === "es" ? "Sitges" : "Comporta"}?
+          Hi! Are you free for a couples shoot Aug 15 in {byCountry({ pt: "Comporta", es: "Sitges", it: "Positano" })}?
           <div className="mt-1 text-[10px] text-gray-400">just now</div>
         </div>
       </div>
@@ -306,7 +306,11 @@ function ToneTipBlock() {
       <ol className="mt-2 ml-4 list-decimal space-y-1 text-[13px] leading-relaxed text-amber-900/90">
         <li><strong>Greet</strong> by name.</li>
         <li><strong>Congratulate</strong> the occasion if there is one (engagement 🎉, honeymoon 💛, family vacation, milestone birthday).</li>
-        <li><strong>Compliment</strong> their location choice ({country.code === "es" ? "Ronda's gorge at golden hour, the Albaicín lanes in the morning" : "Comporta dunes at sunset, Sintra palaces in the mist"}).</li>
+        <li><strong>Compliment</strong> their location choice ({byCountry({
+            pt: "Comporta dunes at sunset, Sintra palaces in the mist",
+            es: "Ronda's gorge at golden hour, the Albaicín lanes in the morning",
+            it: "the Amalfi terraces at golden hour, Val d'Orcia in the morning mist",
+          })}).</li>
         <li><strong>Pitch</strong> the package.</li>
         <li><strong>End with a question</strong> — &ldquo;how many of you will be there?&rdquo;, &ldquo;any specific vibe in mind?&rdquo;, &ldquo;morning or sunset?&rdquo;. Giving them something to reply to is the difference between a conversation and a quote that goes cold.</li>
       </ol>

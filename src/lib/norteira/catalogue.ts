@@ -38,7 +38,7 @@ export const CHANNEL = {
   utmSource: "norteira",
 } as const;
 
-export type MarketKey = "portugal" | "spain";
+export type MarketKey = "portugal" | "spain" | "italy";
 
 export interface Market {
   key: MarketKey;
@@ -68,6 +68,14 @@ export const MARKETS: Record<MarketKey, Market> = {
     baseUrl: "https://photospain.co",
     brand: "Photo Spain",
     country: "Spain",
+    enabled: false,
+  },
+  italy: {
+    key: "italy",
+    baseUrl: "https://photoitaly.co",
+    brand: "Photo Italy",
+    country: "Italy",
+    // Off until Italy has an approved roster, same rule as Spain.
     enabled: false,
   },
 };

@@ -7,7 +7,7 @@ import { RequestApprovalButton } from "@/components/dashboard/RequestApprovalBut
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { isPayoutReady } from "@/lib/payout";
 import { onboardingStage, daysUntilStripeDeadline } from "@/lib/onboarding-stage";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
 import { ActionNeededWidget } from "@/components/dashboard/ActionNeededWidget";
 import { PhotographerCalendarWidget } from "@/components/dashboard/PhotographerCalendarWidget";
@@ -20,24 +20,32 @@ import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
 
 // Popular-destination chips, per market. These are links to /locations/<slug>,
 // so a Portuguese list on the Spanish dashboard sent photographers to 404s.
-const POPULAR_CITIES =
-  country.code === "es"
-    ? [
-        { slug: "barcelona", name: "Barcelona" },
-        { slug: "madrid", name: "Madrid" },
-        { slug: "seville", name: "Seville" },
-        { slug: "granada", name: "Granada" },
-        { slug: "mallorca", name: "Mallorca" },
-        { slug: "tenerife", name: "Tenerife" },
-      ]
-    : [
-        { slug: "lisbon", name: "Lisbon" },
-        { slug: "porto", name: "Porto" },
-        { slug: "algarve", name: "Algarve" },
-        { slug: "sintra", name: "Sintra" },
-        { slug: "madeira", name: "Madeira" },
-        { slug: "azores", name: "Azores" },
-      ];
+const POPULAR_CITIES = byCountry({
+  pt: [
+    { slug: "lisbon", name: "Lisbon" },
+    { slug: "porto", name: "Porto" },
+    { slug: "algarve", name: "Algarve" },
+    { slug: "sintra", name: "Sintra" },
+    { slug: "madeira", name: "Madeira" },
+    { slug: "azores", name: "Azores" },
+  ],
+  es: [
+    { slug: "barcelona", name: "Barcelona" },
+    { slug: "madrid", name: "Madrid" },
+    { slug: "seville", name: "Seville" },
+    { slug: "granada", name: "Granada" },
+    { slug: "mallorca", name: "Mallorca" },
+    { slug: "tenerife", name: "Tenerife" },
+  ],
+  it: [
+    { slug: "rome", name: "Rome" },
+    { slug: "florence", name: "Florence" },
+    { slug: "venice", name: "Venice" },
+    { slug: "milan", name: "Milan" },
+    { slug: "amalfi-coast", name: "Amalfi Coast" },
+    { slug: "lake-como", name: "Lake Como" },
+  ],
+});
 
 export const dynamic = "force-dynamic";
 

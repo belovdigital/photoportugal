@@ -4,14 +4,14 @@ import { shootTypes } from "@/lib/shoot-types-data";
 import { queryOne } from "@/lib/db";
 import { PLAN_PRICES } from "@/lib/stripe";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { CHANNEL, MARKETS } from "@/lib/norteira/catalogue";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export async function GET() {
-  const channelLive = MARKETS[country.code === "es" ? "spain" : "portugal"].enabled;
+  const channelLive = MARKETS[byCountry({ pt: "portugal", es: "spain", it: "italy" } as const)].enabled;
   let photographerCount = 0;
   const locationCount = portugalCoverageStats.places;
   let reviewCount = 0;
@@ -92,7 +92,7 @@ export async function GET() {
       faq: `${country.baseUrl}/faq`,
       support: `${country.baseUrl}/support`,
     },
-    languages: ["en", "pt", "de", "es", "fr"],
+    languages: [...country.locales],
     country: country.areaServed,
     contact_email: country.supportEmail,
     ...(channelLive

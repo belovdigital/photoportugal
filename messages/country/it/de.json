@@ -1,0 +1,637 @@
+{
+  "about": {
+    "ctaTitle": "Bereit, Ihre Italien-Geschichte festzuhalten?",
+    "founder": {
+      "alt": "Kate Belova, Gründerin von Photo Italy",
+      "bio1": "<strong>Kate Belova</strong> ist eine professionelle Porträt- und Lifestyle-Fotografin mit über 10 Jahren Erfahrung mit Sitz in Rom, Italien. Bekannt für ihren \"Soul-Portrait\"-Stil hat Kate die seltene Fähigkeit, Menschen vor der Kamera vollkommen entspannt fühlen zu lassen — und enthüllt in jedem Bild authentische Emotionen und echte Persönlichkeit.",
+      "bio2": "Nach Jahren des Fotografierens von Familien- und Lifestyle-Sessions in Rom, der Toskana und Portofino erkannte Kate, dass Touristen, die Italien besuchen, schöne Fotos wollten, aber einen vertrauenswürdigen lokalen Fotografen zu finden überraschend schwer war. Sie schuf Photo Italy, um dies zu lösen — einen kuratierten Marktplatz, auf dem jeder Fotograf persönlich geprüft wird und jede Session ein außergewöhnliches Erlebnis bietet."
+    },
+    "heroTitleHighlight": "Photo Italy",
+    "metaDescription": "Photo Italy verbindet Touristen mit talentierten lokalen Fotografen in ganz Italien. Erfahren Sie mehr über unsere Mission und warum Reisende uns vertrauen.",
+    "metaTitle": "Über uns — Geschichte und Mission",
+    "ourMission": {
+      "text1": "Wir glauben, dass jede Reise nach Italien verdient, schön festgehalten zu werden. Deshalb haben wir Photo Italy geschaffen — eine Plattform, auf der Reisende sofort talentierte lokale Fotografen finden und buchen können, die die besten Plätze, den perfekten Zeitpunkt und die Kunst kennen, Sie vor der Kamera entspannt fühlen zu lassen."
+    },
+    "theProblem": {
+      "text": "Italien ist eines der fotogensten Länder Europas. Roms goldenes Licht, Florenz' dramatisches Flussufer, die märchenhaften Paläste der Toskana, die rohe Küstenschönheit der Amalfiküste — es ist ein Traum für jeden Fotografen. Doch jedes Jahr kommen Millionen von Touristen nach Hause mit nichts als unscharfen Selfies und peinlichen \"Können Sie ein Foto von uns machen?\"-Aufnahmen von Fremden."
+    },
+    "trustPoints": {
+      "locationsCovered": {
+        "text": "Von den Straßen Roms bis zu den Klippen der Amalfiküste, von den Weinbergen des Val d'Orcia bis nach Sardinien — wir decken ganz Italien ab."
+      }
+    }
+  },
+  "askQuestion": {
+    "placeholder": "Hallo! Ich plane eine Reise nach Italien und würde gerne über ein Fotoshooting sprechen..."
+  },
+  "auth": {
+    "signIn": {
+      "subtitle": "Melden Sie sich bei Ihrem Photo-Italy-Konto an"
+    },
+    "signUp": {
+      "lookingForPhotographerDesc": "Buchen Sie ein professionelles Fotoshooting in Italien",
+      "subtitle": "Photo Italy als Reisender oder Fotograf beitreten"
+    }
+  },
+  "blog": {
+    "subtitle": "Tipps, Anleitungen und Inspiration, um Ihre schönsten Momente in Italien festzuhalten. Von den besten Foto-Spots bis zur Planung Ihres Traum-Fotoshootings."
+  },
+  "blogCategories": {
+    "businessDesc": "Firmenevents, Team-Headshots und Brand-Content — Fotografie für Unternehmen in Italien.",
+    "comparisonsDesc": "Wie Photo Italy im Vergleich zu anderen Urlaubs-Fotografie-Diensten abschneidet",
+    "couplesDesc": "Romantische Paar-Fotoshooting-Ideen und Inspiration in Italien",
+    "elopementsDesc": "Alles, was Sie über Eloping in Italien wissen müssen",
+    "familyDesc": "Familien-Fotoshooting-Tipps, Locations und Ideen in ganz Italien",
+    "locationsDesc": "Entdecken Sie die besten Foto-Spots und Location-Guides in ganz Italien",
+    "planningDesc": "Was anziehen, wann shooten und wie Sie Ihr Italien-Fotoshooting planen",
+    "pricingDesc": "Was Fotoshootings in Italien kosten — transparente Preisaufschlüsselungen",
+    "proposalsDesc": "Planen Sie den perfekten Überraschungs-Heiratsantrag in Italien",
+    "soloDesc": "Solo-Reise- und Content-Creator-Fotografie in Italien",
+    "weddingsDesc": "Reise-Hochzeitsfotografie-Guides für Italien"
+  },
+  "blogDetail": {
+    "blogCta": {
+      "title": "Bereit, Ihre Italien-Reise festzuhalten?"
+    },
+    "readyToBookSubtitle": "Stöbern Sie in unseren talentierten Fotografen in ganz Italien und halten Sie Ihre perfekten Urlaubserinnerungen fest."
+  },
+  "book": {
+    "form": {
+      "locationDetailPlaceholder": "z. B. Strand von Positano, Hotel-Lobby, Stadtviertel Trastevere..."
+    }
+  },
+  "business": {
+    "band": {
+      "kicker": "Photo Italy für Unternehmen",
+      "text": "Ein Vertrag, eine Rechnung, geprüfte Fotografen in ganz Italien. Ein menschlicher Account-Manager kümmert sich um alles."
+    },
+    "cases": {
+      "offsitesText": "Team-Building, Incentive-Reisen und Retreats an der Amalfiküste, auf Sizilien und darüber hinaus."
+    },
+    "form": {
+      "locationPh": "Rom, Amalfiküste…",
+      "submitFailed": "Anfrage konnte nicht gesendet werden. Bitte erneut versuchen oder an {email} schreiben."
+    },
+    "heroTitle": "Professionelle Fotografie für Ihr Unternehmen, überall in Italien",
+    "heroTitleRich": "Professionelle Fotografie für Ihr Unternehmen, <accent>überall in Italien</accent>",
+    "how3Text": "Photo Italy ist Ihr einziger Vertragspartner: Vertrag, Rechnung mit MwSt., Liefertermine und Qualität liegen bei uns.",
+    "metaDescription": "Firmenfotografie in ganz Italien: Events, Konferenzen, Team-Headshots, Brand-Content. Ein Vertrag, eine Rechnung, ein persönlicher Account-Manager.",
+    "metaTitle": "Firmen- und Event-Fotografie",
+    "trustPhotographers": "{count} geprüfte Fotografen in ganz Italien",
+    "whyTitle": "Warum Unternehmen Photo Italy wählen"
+  },
+  "cardPreview": {
+    "remind_place": "Italien ist erkennbar — ein Ort, den ein Kunde benennen kann"
+  },
+  "chooseBookingType": {
+    "metaTitle": "Fotoshooting in Italien buchen",
+    "subtitle": "Zwei Wege, Ihren perfekten Fotografen in Italien zu finden."
+  },
+  "chooseRole": {
+    "title": "Willkommen bei Photo Italy!",
+    "touristDesc": "Auf der Suche nach einem Fotografen, der meine Reise nach Italien festhält."
+  },
+  "common": {
+    "newOnPhotoPortugal": "Neu auf Photo Italy",
+    "photographyIn": "Fotografie in {location}, Italien",
+    "siteName": "Photo Italy"
+  },
+  "concierge": {
+    "askHumanCta": "Photo Italy Team kontaktieren",
+    "blindBookingAllIn": "Alles inklusive — wir wählen Ihren Fotografen aus unseren geprüften Top 1% der Profis in Italien.",
+    "conciergeBadge": "Lens · Photo Italy",
+    "metaTitle": "Finden Sie Ihren Fotografen in 30 Sek.",
+    "nudge": {
+      "body": "Hey 👋 Keine Scheu — ich bin **Lens**, die KI von Photo Italy. Sprechen Sie jede Sprache, schreiben Sie wie es Ihnen natürlich kommt — formell, locker, unvollkommenes Englisch, egal. Ihre Nachricht bleibt zwischen uns, kein Mensch liest mit. Ich kenne jeden Fotografen auf der Plattform, die besten Spots in jeder Stadt und was ein Shooting unvergesslich macht. Erzählen Sie mir von Ihrer Reise — ich finde Ihren Match sofort.",
+      "chipCouples": "❤️ Paar-Shooting an der Amalfiküste, goldene Stunde",
+      "chipFamily": "👨‍👩‍👧 Familien-Shooting in der Toskana für 4",
+      "chipProposal": "💍 Überraschungsantrag bei Sonnenuntergang in Rom"
+    },
+    "openingMessage": "Hallo! Ich bin Ihr Smart Concierge von Photo Italy. Sagen Sie mir, wo Sie sein werden und den Anlass — ich finde Ihnen sofort die richtigen Fotografen. ✨",
+    "plaque": {
+      "homepageChips": [
+        "Paar in Rom",
+        "Antrag 💍",
+        "Familie an der Amalfiküste",
+        "Hilf mir bei der Wahl"
+      ],
+      "homepagePlaceholder": "z. B. Paar-Shooting in der Toskana nächsten Samstag",
+      "occasionChips": [
+        "Rom",
+        "Amalfiküste",
+        "Toskana",
+        "Hilf mir bei der Wahl"
+      ],
+      "occasionPlaceholder": "z. B. {occasion} in Rom nächsten Monat"
+    },
+    "suggestion1": "Paarshooting in Rom nächsten Monat",
+    "suggestion2": "Heiratsantrag in der Toskana bei Sonnenuntergang",
+    "suggestion3": "Familien-Fotoshooting in Portofino",
+    "suggestion4": "Hochzeit im Val d'Orcia",
+    "title1": "Finden Sie Ihren Fotografen in Italien",
+    "whatsappGreeting": "Hallo! Ich habe mit dem KI-Concierge von Photo Italy gesprochen und würde gerne mit Ihnen weitermachen.",
+    "why": {
+      "title": "Warum Photo Italy"
+    }
+  },
+  "contact": {
+    "metaDescription": "Nehmen Sie Kontakt mit Photo Italy auf. Fragen zu Buchungen, Fotografen-Konten oder Partnerschaften? Wir sind für Sie da.",
+    "metaTitle": "Kontakt — Photo Italy"
+  },
+  "dashboard": {
+    "findPhotographer": "Finden Sie Ihren perfekten Fotografen in Italien"
+  },
+  "delivery": {
+    "brandFooter": "{brand} — {domain}",
+    "galleryPasswordPlaceholder": "z. B. rom2026",
+    "titleHelp": "Erscheint als Überschrift über der Galerie. Kurz und persönlich — z. B. \"Ihr magischer Abend in Rom\".",
+    "titlePlaceholder": "Titel — z. B. \"Ihr magischer Rom-Abend\""
+  },
+  "exitIntent": {
+    "conciergePlaceholder": "z. B. Paar-Shooting in Rom nächsten Samstag zur goldenen Stunde",
+    "photographerConciergePlaceholder": "z. B. Passt {name} für ein Familien-Shooting in Rom?"
+  },
+  "faq": {
+    "metaDescription": "Antworten auf häufige Fragen zur Buchung eines Urlaubsfotografen in Italien. Preise, Stornierungsbedingungen, Lieferzeiten, Orte und mehr.",
+    "metaTitle": "FAQ — Preise, Buchung und Lieferung",
+    "questions": {
+      "becomePhotographer": {
+        "question": "Wie werde ich Fotograf bei Photo Italy?"
+      },
+      "howDoesItWork": {
+        "question": "Wie funktioniert Photo Italy?"
+      },
+      "locationsAvailable": {
+        "answer": "Wir decken {locationCount}+ Orte in ganz Italien ab, darunter <a href=\"/photographers/location/lisbon\">Rom</a>, <a href=\"/photographers/location/porto\">Florenz</a>, <a href=\"/photographers/location/algarve\">Amalfiküste</a>, <a href=\"/photographers/location/sintra\">Toskana</a>, <a href=\"/photographers/location/madeira\">Sizilien</a>, <a href=\"/photographers/location/azores\">Sardinien</a> und viele mehr."
+      },
+      "reviewsVerified": {
+        "answer": "Ja. Alle Bewertungen auf Photo Italy sind an abgeschlossene Buchungen gekoppelt. Nur Kunden, die ein bestätigtes Fotoshooting hatten, können eine Bewertung hinterlassen, was authentisches und vertrauenswürdiges Feedback gewährleistet."
+      },
+      "speakEnglish": {
+        "answer": "Die meisten Fotografen auf unserer Plattform sprechen Englisch. Sie können Fotografen auf der <a href=\"/photographers\">Katalogseite</a> nach Sprache filtern. Viele sprechen auch Italienisch, Spanisch, Französisch und Deutsch."
+      }
+    },
+    "subtitle": "Urlaubs-Fotoshooting in Italien — Preise, Buchung, Lieferung & mehr"
+  },
+  "findPhotographer": {
+    "locationLabel": "Wo in Italien?",
+    "metaDescription": "Erzählen Sie uns von Ihrem Fotoshooting und wir matchen Sie mit 2-3 handverlesenen Fotografen in Italien. Kostenloser Concierge-Matching-Service.",
+    "metaTitle": "Finden Sie meinen Fotografen in Italien"
+  },
+  "footer": {
+    "appTitle": "Photo Italy immer dabei",
+    "copyright": "Photo Italy. Alle Rechte vorbehalten.",
+    "legalEntityLocation": "Portugal",
+    "partnerBikeTagline": "Mehrtägige Radtouren durch Italien",
+    "partnerWalkingTagline": "Wander- und Hiking-Touren in Italien",
+    "tagline": "Wir verbinden Reisende mit talentierten lokalen Fotografen in ganz Italien. Halten Sie Ihre schönsten Momente fest."
+  },
+  "forPhotographers": {
+    "community": {
+      "description": "Wir bauen eine Community für Fotografen mit Sitz in Italien — mit Treffen, Workshops und Lern-Sessions. Vernetzen Sie sich mit anderen Kreativen, teilen Sie Erfahrungen und wachsen Sie gemeinsam."
+    },
+    "faq": {
+      "items": [
+        {
+          "a": "Ja. Wir prüfen jeden Fotografen sorgfältig. Sie sollten ein starkes Portfolio, professionelle Ausrüstung und Erfahrung mit bezahlten Sessions haben. Hobbyisten werden nicht angenommen.",
+          "q": "Muss ich ein professioneller Fotograf sein?"
+        },
+        {
+          "a": "Sie müssen in Italien ansässig oder rechtlich berechtigt sein, hier zu arbeiten. Die meisten unserer Fotografen leben in oder in der Nähe der Städte, die sie bedienen (Rom, Florenz, Amalfiküste usw.).",
+          "q": "Muss ich in Italien leben?"
+        },
+        {
+          "a": "Wir berechnen 15 % Plattform-Gebühr pro Buchung (reduziert auf 10 % beim Premium-Plan). Den Rest behalten Sie. Keine Vorabkosten und kein Abo erforderlich, um zu starten.",
+          "q": "Wie viel nehmen Sie pro Buchung?"
+        },
+        {
+          "a": "Kunden zahlen über Stripe, wenn sie buchen. Die Gelder werden 24 Stunden nach Annahme der gelieferten Fotos durch den Kunden freigegeben. Auszahlungen gehen direkt auf Ihr Bankkonto.",
+          "q": "Wie und wann werde ich bezahlt?"
+        },
+        {
+          "a": "Auf zwei Arten: (1) Kunden durchsuchen unseren Katalog und buchen Sie direkt, und (2) Unser Concierge-Team wählt Fotografen für Kundenanfragen handverlesen aus — Sie bestätigen einfach die Buchung.",
+          "q": "Wie bekomme ich Kunden?"
+        },
+        {
+          "a": "In der Regel 1-3 Werktage. Wir prüfen Ihr Portfolio, Ihre Identität und stellen sicher, dass Ihr Profil unseren Qualitätsstandards entspricht.",
+          "q": "Wie lange dauert die Freigabe?"
+        }
+      ]
+    },
+    "heroSubtitle": "Tausende Touristen träumen von schönen Fotos an Italiens atemberaubendsten Orten — und sie suchen nach Ihnen. Wir bringen die Kunden, verwalten Buchungen, kümmern uns um Zahlungen und lassen Sie tun, was Sie lieben.",
+    "howWeSelect": {
+      "aboutCta": "Über Photo Italy",
+      "founderBody": "Photo Italy wurde von Kate Belova gegründet, einer professionellen Fotografin mit über 10 Jahren Erfahrung. Kate weiß aus erster Hand, was ein großartiges Fotoshooting ausmacht — technisches Können, die Fähigkeit, mit Menschen in Verbindung zu treten, und der Instinkt für das perfekte Licht. Deshalb leitet sie den Auswahlprozess für Fotografen persönlich.",
+      "metaDescription": "Jeder Fotograf bei Photo Italy wird persönlich von unserem Gründerteam geprüft. Erfahren Sie mehr über unseren strengen Auswahlprozess.",
+      "steps": {
+        "portfolio": {
+          "desc": "Wir beginnen mit der Bewertung des gesamten Werks jedes Fotografen — nicht nur der Highlights. Wir achten auf gleichbleibende Qualität, das Beherrschen natürlichen Lichts, echte Emotionen in Porträts und die Fähigkeit, den einzigartigen Charakter Italiens einzufangen."
+        }
+      }
+    },
+    "metaDescription": "Treten Sie Italiens wachsendem Fotografen-Marktplatz bei. Verbinden Sie sich mit internationalen Reisenden, verwalten Sie Buchungen und bauen Sie Ihr.",
+    "metaTitle": "Als Urlaubsfotograf in Italien verdienen",
+    "whyJoin": {
+      "benefits": {
+        "clients": {
+          "desc": "Touristen aus den USA, Großbritannien, Deutschland und darüber hinaus — alle aktiv auf der Suche nach Fotografen in Italien. Sie bestätigen einfach den Termin."
+        },
+        "payments": {
+          "desc": "Sichere Zahlungen über Stripe — Kunden zahlen im Voraus, Sie werden automatisch bezahlt, sobald die Fotos geliefert sind. Keine Rechnungen, kein Hinterherlaufen."
+        },
+        "seo": {
+          "desc": "Ihre Profilseite ist für Google optimiert. Kunden, die nach 'Fotograf in Rom' suchen, finden Sie organisch."
+        }
+      },
+      "title": "Warum Photo Italy beitreten?"
+    }
+  },
+  "giftCardsPage": {
+    "h1": "Verschenken Sie eine Photo Italy Session",
+    "personalMessagePlaceholder": "Alles Gute zum Geburtstag! Viel Spaß beim Shooting in Rom ✨",
+    "recipientPhonePlaceholder": "+351 912 345 678",
+    "subtitle": "Verschenken Sie ein Fotoshooting in Italien. Die beschenkte Person wählt Fotograf, Datum und Location — Ihr Geschenk deckt alles ab."
+  },
+  "heroSearch": {
+    "placeholder": "Wo in Italien?"
+  },
+  "heroSingle": {
+    "browseAll": "Oder <link>alle {count} Fotografen durchsuchen</link> in ganz Italien",
+    "siteAvailableChip": "{count, plural, =1 {# Fotograf} other {# Fotografen}} in ganz Italien sofort buchbar"
+  },
+  "home": {
+    "cta": {
+      "subtitle": "Schließen Sie sich Hunderten glücklicher Reisender an, die ihren perfekten professionellen Fotografen über Photo Italy gebucht haben.",
+      "title": "Bereit, Ihre Italien-Geschichte festzuhalten?"
+    },
+    "featured": {
+      "portfolioAlt": "{name} — Portfolio eines professionellen Fotografen in Italien",
+      "title": "Top-Fotografen in Italien"
+    },
+    "floatingReviews": [
+      {
+        "author": "Sarah T.",
+        "location": "Rom",
+        "text": "Aleksandra hat uns sofort wohlgefühlt. Die Fotos sind unglaublich!"
+      },
+      {
+        "author": "James R.",
+        "location": "Amalfiküste",
+        "text": "Cindy hat unseren Heiratsantrag perfekt eingefangen. Wir konnten beim Anschauen der Fotos nicht aufhören zu weinen!"
+      },
+      {
+        "author": "Emma L.",
+        "location": "Toskana",
+        "text": "Monica kannte die schönsten versteckten Plätze in der Toskana. Eine absolut magische Session!"
+      },
+      {
+        "author": "Rachel M.",
+        "location": "Rom",
+        "text": "Mit Kate zu arbeiten hat richtig Spaß gemacht! Unsere Familienfotos sind über alle Erwartungen hinaus geworden."
+      },
+      {
+        "author": "David K.",
+        "location": "Positano",
+        "text": "Jonathan hat unser Sonnenuntergangs-Shooting in Positano zu einem unvergesslichen Erlebnis gemacht. Wirklich talentiert!"
+      },
+      {
+        "author": "Sophie W.",
+        "location": "Florenz",
+        "text": "Elena hat die schönsten Solo-Porträts von mir in Florenz gemacht. Das beste Souvenir überhaupt!"
+      }
+    ],
+    "giftPromo": {
+      "title": "Verschenken Sie ein Fotoshooting in Italien"
+    },
+    "heroDescription": "Der einfachste Weg, einen Reisefotografen oder ein Urlaubs-Fotoshooting in Italien zu buchen — handverlesene lokale Profis, verifizierte Bewertungen, sofortige Buchung. Jeder Fotograf wird persönlich auf Qualität, Zuverlässigkeit und Stil geprüft.",
+    "heroImages": {
+      "alt1": "Familien-Urlaubs-Fotoshooting an einem goldenen Strand der Amalfiküste in Italien",
+      "alt2": "Paar-Fotosession in Roms historischen Straßen, Italien",
+      "alt3": "Urlaubs-Fotoshooting in der Grotta dello Smeraldo an der Amalfiküste, Italien",
+      "alt4": "Reisefotografie an den Kraterseen von Monticchio in der Basilikata, Italien",
+      "alt5": "Romantisches Fotoshooting vor dem Palazzo Pitti in der Toskana, Italien"
+    },
+    "heroTitle": "Buchen Sie einen Urlaubsfotografen in",
+    "heroTitleHighlight": "Italien",
+    "locations": {
+      "subtitle": "Von Roms Kopfsteinpflasterstraßen bis zu den goldenen Klippen der Amalfiküste — jedes Reiseziel bietet einzigartige Kulissen",
+      "title": "Italiens fotogenste Orte"
+    },
+    "socialProofStrip": {
+      "coverage": "Festland, Sizilien und Sardinien",
+      "islandsCovered": "Abdeckung der Insel Sardinien",
+      "portugalWide": "Ganz Italien"
+    }
+  },
+  "homepageMeta": {
+    "description": "Buchen Sie einen professionellen Reise- oder Urlaubsfotografen in Italien. {photographers}+ handverlesene Fotografen in Rom, Florenz, an der Amalfiküste, in der Toskana und an {locations}+ weiteren Orten. {reviews}Paare, Familien und Solo-Reisende. Ab {price} €.",
+    "descriptionNoRoster": "Buchen Sie einen handverlesenen Urlaubsfotografen in Italien — Rom, Florenz, Toskana, Amalfiküste, Sizilien. Geprüfte Profis. Ab {price} €.",
+    "ogDescription": "{photographers}+ professionelle Reise- & Urlaubsfotografen in Italien. {reviews}Ab {price} €.",
+    "ogDescriptionNoRoster": "Professionelle Reise- und Urlaubsfotografen in ganz Italien. Ab {price} €.",
+    "ogTitle": "Reise- & Urlaubsfotograf in Italien — Online buchen",
+    "schemaService": "Marktplatz für Urlaubsfotografie in Italien. Buchen Sie professionelle Fotografen in Rom, Florenz, an der Amalfiküste und an über {locations} weiteren Orten.",
+    "schemaWebsite": "Finden und buchen Sie professionelle Fotografen in ganz Italien für Urlaubs-Fotoshootings.",
+    "title": "Reise- & Urlaubsfotograf in Italien — Online buchen"
+  },
+  "howItWorks": {
+    "page": {
+      "forPhotographersSubtitle": "Werden Sie Teil von Italiens wachsender Community von Urlaubsfotografen und erreichen Sie internationale Kunden.",
+      "metaDescription": "Buchen Sie einen professionellen Fotografen in Italien in 4 einfachen Schritten. Portfolios durchsuchen, sofort mit sicheren Stripe-Zahlungen buchen, Ihr.",
+      "metaTitle": "Fotograf buchen — in 4 Schritten",
+      "subtitle": "Einen professionellen Fotografen in Italien zu buchen ist einfach, sicher und macht Spaß. Hier ist alles, was Sie wissen müssen.",
+      "title": "So buchen Sie einen Fotografen in Italien"
+    },
+    "whyUsTitle": "Warum Photo Italy?"
+  },
+  "join": {
+    "calculator": {
+      "subtitle": "Stellen Sie die Schieberegler ein, um Ihren potenziellen Verdienst auf Photo Italy zu sehen."
+    },
+    "founderAlt": "Kate Belova, Gründerin von Photo Italy",
+    "founderQuote": "Ich habe Photo Italy gegründet, weil ich weiß, wie schwer es für talentierte Fotografen ist, beständig Kunden zu finden. Diese Plattform bringt Touristen direkt zu Ihnen — kein Hinterherlaufen, kein Feilschen über Preise. Sie konzentrieren sich auf das, was Sie lieben: schöne Fotos zu machen.",
+    "gettingStarted": {
+      "steps": {
+        "setupProfile": {
+          "desc": "Fügen Sie Bio, Avatar, Coverfoto hinzu und wählen Sie Ihre Standorte in Italien."
+        }
+      }
+    },
+    "heroSubtitle": "Wir bauen Italiens führenden Fotografie-Marktplatz für Touristen auf. Treten Sie jetzt bei und sichern Sie sich exklusive Vorteile, bevor wir öffentlich starten.",
+    "howPaymentsWork": {
+      "steps": {
+        "clientBooks": {
+          "desc": "Kunde wählt Ihr Paket und zahlt. Der volle Betrag wird sicher von Stripe verwahrt."
+        },
+        "youGetPaid": {
+          "desc": "Sobald der Kunde die Fotos akzeptiert, wird die Zahlung automatisch an Ihr Stripe-Konto abzüglich unserer Provision freigegeben."
+        }
+      },
+      "subtitle": "Transparent, sicher und automatisch — bereitgestellt von Stripe"
+    },
+    "whatYouGet": {
+      "securePayments": {
+        "desc": "Stripe wickelt alle Zahlungen ab. Geld treuhänderisch verwahrt, bis der Kunde die Fotos akzeptiert. Keine Zahlungsstreitigkeiten."
+      },
+      "touristClients": {
+        "desc": "Wir bringen internationale Reisende, die professionelle Fotografen in Italien suchen. Keine Kaltakquise nötig."
+      }
+    }
+  },
+  "locations": {
+    "detail": {
+      "altProfessionalShoot": "Professionelles Urlaubs-Fotoshooting in {location}, Italien",
+      "realPhotos": {
+        "subtitle": "Von Fotografen auf Photo Italy — Foto antippen für das Profil"
+      }
+    },
+    "mapMetaDescription": "Entdecken Sie Italiens Fotoshooting-Regionen, Städte und Inseln auf einer interaktiven Karte. Finden Sie verfügbare Fotografen in Rom, Florenz, an der Amalfiküste, auf Sizilien, Sardinien und mehr.",
+    "mapMetaTitle": "Italien-Fotokarte — Fotoshooting-Orte entdecken",
+    "mapOgAlt": "Interaktive Italien-Fotokarte mit Fotoshooting-Orten",
+    "subtitle": "Von Roms Kopfsteinpflasterstraßen bis zu den goldenen Klippen der Amalfiküste — {count}+ der besten Orte zum Fotografieren in Italien, handverlesen für Urlaubs-Fotoshootings, Paare, Familien und Solo-Reisende.",
+    "title": "Die besten Orte zum Fotografieren in Italien"
+  },
+  "lp": {
+    "heroSubtitlePortugalNoPrice": "Handverlesene, verifizierte Fotografen in ganz Italien — sofort buchen, sicher bezahlen.",
+    "heroSubtitlePortugalWithPrice": "Handverlesene, verifizierte Fotografen in ganz Italien — ab {price}. Sofort buchen, sicher bezahlen.",
+    "howItWorks": {
+      "step1DescPortugal": "Sehen Sie echte Fotografen in ganz Italien mit echten Preisen."
+    },
+    "metaDescriptionPortugalGeneric": "Professionelle Fotografen für Fotoshootings in ganz Italien — Rom, Florenz, Amalfiküste, Toskana und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
+    "metaDescriptionPortugalTyped": "Professionelle {shootTypeLower}-Fotografen in ganz Italien — Rom, Florenz, Amalfiküste, Toskana und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
+    "metaTitleGeneric": "Fotografen in {city} — Sofort buchen",
+    "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen",
+    "reviewsSubtitleCity": "Echte Bewertungen von verifizierten Photo-Italy-Buchungen",
+    "reviewsTitlePortugal": "Was Reisende über Photo Italy sagen",
+    "viewAllPortugalGeneric": "Alle {count} Fotografen in ganz Italien ansehen",
+    "viewAllPortugalTyped": "Alle {count} {shootTypeLower}-Fotografen in ganz Italien ansehen"
+  },
+  "messages": {
+    "customProposalNamePlaceholder": "z. B. 1,5 h Portofino bei Sonnenuntergang für Familie Schmidt",
+    "founderRole": "Gründerin von Photo Italy"
+  },
+  "nav": {
+    "aboutDesc": "Unsere Geschichte und das Team hinter Photo Italy",
+    "announcementSuffix": "an {count} atemberaubenden Orten in Italien",
+    "giftCardsDesc": "Ein Fotoshooting in Italien verschenken",
+    "megaAboutDesc": "Unsere Geschichte und das Team hinter Photo Italy",
+    "megaWhyJoin": "Warum Photo Italy",
+    "photoMap": "Italien-Fotokarte"
+  },
+  "peek": {
+    "bookYourOwn": "Buchen Sie Ihr eigenes Fotoshooting in Italien →",
+    "expiredCta": "Photo Italy entdecken"
+  },
+  "photographerDashboard": {
+    "taglinePlaceholder": "z. B. Die Seele Roms durch Licht und Emotion einfangen"
+  },
+  "photographers": {
+    "card": {
+      "coverAlt": "{name} — Urlaubsfotograf in Italien"
+    },
+    "profile": {
+      "coverageRegionsMany": "Deckt {count} Regionen in Italien ab"
+    }
+  },
+  "photographersMeta": {
+    "browseByCitySub": "Entdecken Sie verifizierte Fotografen in den schönsten Städten Italiens.",
+    "description": "Finden und buchen Sie einen professionellen Fotografen in Rom, Florenz, der Toskana, an der Amalfiküste und über 40 weiteren Orten in Italien. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 299 €.",
+    "locationDescription": "Finden und buchen Sie verifizierte Fotografen in {location}, Italien. Portfolios ansehen, Bewertungen lesen, Pakete vergleichen. Ab 299 €. Sofortbuchung.",
+    "ogAlt": "Fotografen in {location}, Italien",
+    "title": "Fotograf in Italien buchen – Rom, Florenz, Amalfiküste"
+  },
+  "pricing": {
+    "metaDescription": "Urlaubs-Fotoshooting-Pakete in Italien ab 299 EUR. Paar-, Familien-, Solo- und Heiratsantrag-Fotografie.",
+    "metaTitle": "Foto-Pakete und Preise"
+  },
+  "privacy": {
+    "metaDescription": "Datenschutzerklärung von Photo Italy – wie wir Ihre personenbezogenen Daten erheben, verwenden und schützen.",
+    "sections": {
+      "businessTransfers": {
+        "content": "Sollte Photo Italy an einer Fusion, Übernahme, einem Verkauf von Vermögenswerten oder einer Insolvenz beteiligt sein, können Ihre personenbezogenen Daten als Teil dieser Transaktion übertragen werden. In einem solchen Fall werden wir alle betroffenen Nutzer mindestens 30 Tage vor der Übertragung der personenbezogenen Daten und vor Inkrafttreten einer neuen Datenschutzerklärung benachrichtigen. Sie haben die Möglichkeit, Ihr Konto und Ihre Daten vor Abschluss der Übertragung zu löschen."
+      },
+      "changes": {
+        "content": "Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren, um Änderungen unserer Praktiken, der Technologie, gesetzlicher Anforderungen oder anderer Faktoren widerzuspiegeln. Bei wesentlichen Änderungen werden wir Sie per E-Mail oder durch einen deutlich sichtbaren Hinweis auf unserer Plattform mindestens 14 Tage vor Inkrafttreten der Änderungen benachrichtigen. Ihre fortgesetzte Nutzung von Photo Italy nach dem Wirksamkeitsdatum gilt als Zustimmung zur aktualisierten Richtlinie."
+      },
+      "children": {
+        "content": "Photo Italy ist nicht für die Nutzung durch Kinder unter 18 Jahren bestimmt. Wir erheben wissentlich keine personenbezogenen Daten von Kindern unter 18 Jahren. Wenn Sie Elternteil oder Erziehungsberechtigter sind und glauben, dass Ihr Kind uns personenbezogene Daten zur Verfügung gestellt hat, kontaktieren Sie uns bitte unter"
+      },
+      "complaint": {
+        "cnpdAddress1": "Via Carlo I, 134 — 1.º",
+        "cnpdAddress2": "1200-651 Rom, Italien",
+        "cnpdName": "Garante per la protezione dei dati personali",
+        "intro": "Wenn Sie der Ansicht sind, dass unsere Verarbeitung Ihrer personenbezogenen Daten gegen die DSGVO verstößt, haben Sie das Recht, Beschwerde bei einer Aufsichtsbehörde einzulegen. In Italien ist die zuständige Behörde:"
+      },
+      "dataRetention": {
+        "items": {
+          "booking": "<strong>Buchungs- und Transaktionsdaten:</strong> werden 7 Jahre nach dem Buchungsdatum gespeichert, um italienische steuer- und buchhaltungsrechtliche Verpflichtungen zu erfüllen."
+        }
+      },
+      "informationSharing": {
+        "legalRequirements": "<strong>Gesetzliche Anforderungen:</strong> sofern dies gesetzlich vorgeschrieben, durch Vorschriften, gerichtliche Verfahren oder eine durchsetzbare behördliche Anordnung erforderlich ist oder um die Rechte, das Eigentum oder die Sicherheit von Photo Italy, unseren Nutzern oder der Öffentlichkeit zu schützen."
+      },
+      "informationWeCollect": {
+        "intro": "Wenn Sie Photo Italy nutzen, können wir die folgenden Informationen erheben:"
+      },
+      "internationalTransfers": {
+        "intro": "Photo Italy hat seinen Sitz in Italien und speichert Daten primär innerhalb der Europäischen Union. Einige unserer Drittanbieter-Auftragsverarbeiter können personenbezogene Daten jedoch außerhalb der EU/des EWR verarbeiten:"
+      },
+      "legalBasis": {
+        "items": {
+          "legalObligation": "<strong>Rechtliche Verpflichtung (Artikel 6 Abs. 1 lit. c):</strong> zur Einhaltung steuerlicher, buchhalterischer und sonstiger gesetzlicher Anforderungen nach italienischem und EU-Recht."
+        }
+      }
+    }
+  },
+  "quickBooking": {
+    "allInclusive": "Ein All-in-Preis — wir wählen Ihren Fotografen aus unseren geprüften Top 1% der Profis in Italien. Keine Extra-Gebühren.",
+    "trust": "Zahlung über Stripe. Photo Italy wählt Ihren Fotografen aus geprüften Profis aus."
+  },
+  "settings": {
+    "calendarBufferDesc": "Blockieren Sie diese Zeit vor und nach Kalenderterminen und Photo Italy Buchungen."
+  },
+  "shootTypes": {
+    "altSuffix": "{title}-Fotoshooting in Italien",
+    "types": {
+      "anniversary": {
+        "description": "Feiern Sie Ihren Meilenstein in Italien"
+      },
+      "engagement": {
+        "description": "Sagen Sie Ja mit Italien als Kulisse"
+      },
+      "honeymoon": {
+        "description": "Feiern Sie Ihre Liebesgeschichte in Italien"
+      }
+    }
+  },
+  "shootTypesPage": {
+    "bestLocationsSubtitle": "Unsere Fotografen sind in ganz Italien tätig. Hier sind die Top-Reiseziele für Ihr {name}-Fotoshooting.",
+    "bestLocationsTitle": "Die besten Orte für {name}-Fotografie in Italien",
+    "guidesSubtitle": "Tipps und Inspiration für Ihr {nameLower}-Fotoshooting in Italien",
+    "photographersTitle": "{name}-Fotografen in Italien",
+    "popularPackagesSub": "Echte Preise von verifizierten Fotografen, die {nameLower}-Fotoshooting-Pakete in Italien anbieten.",
+    "reviewsSubtitleClients": "Von Kunden, die über Photo Italy gebucht haben",
+    "stepBrowseDesc": "Sehen Sie sich Portfolios von Fotografen an, die in {name}-Fotografie in ganz Italien erfahren sind.",
+    "subtitle": "Was auch immer Sie nach Italien führt – wir haben den perfekten Fotografen für Ihren Anlass. Von romantischen Paarsessions bis hin zu fröhlichen Gruppenfotos auf Reisen mit Freunden – entdecken Sie alle Möglichkeiten, Ihre Erlebnisse in Italien festzuhalten.",
+    "title": "Urlaubs-Fotoshooting-Arten in Italien"
+  },
+  "subscriptions": {
+    "enterValidPhone": "Geben Sie eine gültige Telefonnummer mit Ländervorwahl ein (z. B. +351...)",
+    "phoneAutoPrefix": "Italienische Nummern erhalten automatisch +351. Für andere Länder bitte die Vorwahl angeben, z. B. +49."
+  },
+  "support": {
+    "errorMessage": "Etwas ist schiefgegangen. Bitte versuchen Sie es erneut oder schreiben Sie uns an {email}."
+  },
+  "supportPage": {
+    "articles": {
+      "clients": {
+        "cancelReschedule": {
+          "answer": "Ja. Sie können über Ihr Dashboard stornieren oder verschieben.\n\n**Stornierungserstattungen:**\n• 7 oder mehr Tage vor dem Shooting – 100 % Erstattung\n• 3–7 Tage vorher – 50 % Erstattung\n• Weniger als 3 Tage – Keine Erstattung\n• Nichterscheinen – Keine Erstattung\n\n**Verschiebung:** Sie erhalten eine kostenlose Verschiebung, wenn diese 48 oder mehr Stunden vor der Session beantragt wird. Verschiebungen innerhalb von 48 Stunden liegen im Ermessen des Fotografen. Wetterbedingte Verschiebungen sind immer kostenlos.\n\n**Wenn der Fotograf storniert oder verschiebt:** Sie erhalten unabhängig vom Zeitpunkt stets eine vollständige 100%ige Erstattung. Erfolgt die Stornierung weniger als 48 Stunden vor dem Shooting, wird Photo Italy versuchen, einen Ersatzfotografen für Sie zu finden."
+        }
+      },
+      "general": {
+        "contactSupport": {
+          "answer": "Sie erreichen unser Support-Team über:\n\n• **E-Mail:** {email}\n• **Dashboard:** Fotografen können Support-Tickets direkt aus ihrem Dashboard einreichen\n• **Kontaktseite:** Besuchen Sie unsere Kontaktseite, um uns eine Nachricht zu senden\n\nWir bemühen uns, alle Anfragen innerhalb von 24 Stunden an Werktagen zu beantworten."
+        },
+        "forcesMajeure": {
+          "answer": "Im Falle höherer Gewalt – Naturkatastrophen, schwere Wetterwarnungen, Pandemien oder andere Umstände, die außerhalb der Kontrolle liegen – haben beide Parteien Anspruch auf eine vollständige Erstattung oder eine kostenlose Verschiebung ohne Strafen.\n\nPhoto Italy arbeitet mit beiden Parteien zusammen, um die beste Lösung zu finden."
+        }
+      },
+      "gifts": {
+        "chooseAnyPhotographer": {
+          "answer": "Ja — der Gutschein funktioniert mit jedem **teilnehmenden** Photo Italy Fotografen in ganz Italien. Die beschenkte Person stöbert im vollständigen Katalog im Geschenk-Modus und bucht wie eine normale Session. Fotografen nehmen standardmäßig teil; einige wenige entscheiden sich dagegen, und diese sind im Geschenkkatalog einfach ausgeblendet.\n\nVolle Freiheit für die beschenkte Person: jeden auswählen, überall in Italien, an jedem Termin, der für beide passt."
+        }
+      },
+      "photographers": {
+        "externalLinks": {
+          "answer": "Nein. Fotografen ist es nicht gestattet, URLs persönlicher Websites, Social-Media-Links (Instagram, Facebook, TikTok usw.), E-Mail-Adressen oder Telefonnummern an irgendeiner Stelle ihres Profils anzugeben – einschließlich Bio, Slogan, Paketbeschreibungen und Portfolio-Bildunterschriften.\n\nDie gesamte Kommunikation mit Kunden muss über das integrierte Nachrichtensystem von Photo Italy erfolgen. Dies schützt beide Parteien, indem Gespräche dokumentiert, Zahlungen sicher und Streitfälle lösbar bleiben.\n\nProfile, in denen externe Links oder Kontaktdaten gefunden werden, werden zur Entfernung aufgefordert. Wiederholte Verstöße können zur Kontosperrung führen."
+        },
+        "photographerCancels": {
+          "answer": "Wenn Sie stornieren müssen, tun Sie dies so früh wie möglich über Ihr Dashboard. Der Kunde erhält unabhängig vom Zeitpunkt stets eine 100%ige Erstattung.\n\nWenn Sie weniger als 48 Stunden vor dem Shooting stornieren, kann Photo Italy versuchen, einen Ersatzfotografen für den Kunden zu finden.\n\n**Wichtig:** Wiederholte Stornierungen (3 oder mehr in 3 Monaten) können zum Verlust des Hervorgehoben-Status, zu reduzierter Sichtbarkeit in der Suche oder zur Sperrung des Kontos führen."
+        }
+      }
+    },
+    "metaDescription": "Finden Sie Antworten auf häufige Fragen zur Buchung von Fotografen, Zahlungen, Stornierungen und mehr auf Photo Italy.",
+    "metaTitle": "Hilfe-Center — Photo Italy",
+    "subtitle": "Alles, was Sie über Buchungen, Zahlungen und das Beste aus Photo Italy wissen müssen"
+  },
+  "terms": {
+    "metaDescription": "Nutzungsbedingungen von Photo Italy – Buchung, Zahlungen, Stornierungen, Erstattungen und Plattformregeln.",
+    "sections": {
+      "cancellationByPhotographer": {
+        "items": {
+          "replacement": "Wenn der Fotograf weniger als 48 Stunden vor dem Shooting storniert, wird Photo Italy versuchen, einen Ersatzfotografen zu finden"
+        }
+      },
+      "chargebacks": {
+        "content": "Wenn ein Kunde eine Rückbuchung über seine Bank oder seinen Kreditkartenanbieter veranlasst, anstatt das Reklamationsverfahren von Photo Italy zu nutzen, behalten wir uns vor, sein Konto bis zum Abschluss der Untersuchung zu sperren. Von Rückbuchungen betroffene Fotografen werden benachrichtigt und können Beweise zur Anfechtung der Rückbuchung vorlegen. Betrügerische Rückbuchungen können zu einer dauerhaften Kontosperrung führen."
+      },
+      "commission": {
+        "intro": "Photo Italy erhebt eine Provision auf jede abgeschlossene Buchung. Die Provisionssätze richten sich nach dem Tarif des Fotografen:"
+      },
+      "disputeResolution": {
+        "content1": "Alle Streitigkeiten zwischen Nutzern werden zunächst über das interne Streitbeilegungsverfahren von Photo Italy gemäß Abschnitt 11 beigelegt. Führt das interne Verfahren zu keiner zufriedenstellenden Lösung, vereinbaren die Parteien, vor einer rechtlichen Auseinandersetzung eine Mediation zu versuchen.",
+        "content2": "Diese Bedingungen unterliegen dem Recht Italiens. Etwaige rechtliche Verfahren sind vor den Gerichten in Rom, Italien, anhängig zu machen."
+      },
+      "disputes": {
+        "intro": "Wenn Sie mit den übermittelten Fotos unzufrieden sind, können Sie innerhalb von 7 Tagen nach der Übermittlung eine Reklamation einreichen. Photo Italy prüft die Reklamation und antwortet innerhalb von <strong>5 Werktagen</strong> und arbeitet mit beiden Parteien an einer fairen Lösung."
+      },
+      "forPhotographers": {
+        "items": {
+          "noOffPlatform": "Es ist Ihnen strikt untersagt, mit Kunden, die Sie über Photo Italy kontaktiert haben, Geschäfte außerhalb der Plattform anzubahnen oder durchzuführen. Dies umfasst den Austausch von Kontaktdaten, die Weiterleitung von Kunden auf persönliche Websites oder die Annahme von Direktzahlungen. Verstöße gegen diese Richtlinie führen zur sofortigen und dauerhaften Sperrung Ihres Kontos"
+        }
+      },
+      "intellectualProperty": {
+        "photographerUse": "Mit der Buchung einer Session stimmt der Kunde zu, dass der Fotograf Fotos aus der Session in seinem Portfolio, auf seinem Photo-Italy-Profil und für professionelle Marketingzwecke (Website, Social Media, Werbematerialien) verwenden darf. Wenn der Kunde nicht möchte, dass seine Fotos veröffentlicht werden, muss er den Fotografen vor oder während der Session darüber informieren. Der Fotograf ist verpflichtet, diesen Wunsch zu respektieren.",
+        "platformDisclaimer": "Photo Italy beansprucht kein Eigentum an Fotos, die während über die Plattform gebuchter Sessions entstehen. Streitigkeiten über die Bildverwendung werden zwischen Kunde und Fotograf ausgetragen. Photo Italy kann bei der Beilegung solcher Streitigkeiten unterstützen, haftet jedoch nicht für die unberechtigte Nutzung von Bildern durch eine der Parteien."
+      },
+      "overview": {
+        "content": "{brand} („wir\", „uns\", „unser\") betreibt unter {domain} eine Marktplatz-Plattform, die Touristen („Kunden\") mit professionellen Fotografen („Fotografen\") {countryIn} verbindet. Mit der Nutzung unserer Plattform stimmen Sie diesen Bedingungen zu."
+      },
+      "paymentsEscrow": {
+        "intro": "Alle Zahlungen werden sicher über Stripe abgewickelt. Wenn ein Kunde ein Fotoshooting bucht, wird der volle Betrag belastet und von Photo Italy treuhänderisch verwahrt. Der Zahlungsablauf ist wie folgt:"
+      },
+      "photoDelivery": {
+        "items": {
+          "gallery": "Fotos werden über eine private, passwortgeschützte Galerie auf Photo Italy übermittelt"
+        }
+      },
+      "platformRole": {
+        "content": "Photo Italy ist ein Marktplatz, der die Verbindung zwischen Kunden und Fotografen ermöglicht. Wir verifizieren Fotografenprofile, moderieren Bewertungen und bieten eine Streitbeilegung an, sind jedoch nicht Vertragspartei der Dienstleistungsvereinbarung zwischen Kunden und Fotografen. Photo Italy wird „wie besehen\" ohne Gewährleistungen jeglicher Art bereitgestellt. Unsere Gesamthaftung ist auf den Betrag der betreffenden Buchung beschränkt."
+      },
+      "prohibitedContent": {
+        "items": {
+          "externalLinks": "Aufnahme von URLs persönlicher Websites, Social-Media-Links (Instagram, Facebook usw.), E-Mail-Adressen oder Telefonnummern in Ihre Profil-Bio, Ihren Slogan, Paketbeschreibungen oder Portfolio-Bildunterschriften. Die gesamte Kundenkommunikation muss über das Nachrichtensystem von Photo Italy erfolgen."
+        }
+      }
+    }
+  },
+  "testimonials": {
+    "items": {
+      "anna": {
+        "location": "Positano"
+      },
+      "david": {
+        "location": "Florenz",
+        "text": "Wir haben eine Sonnenaufgangs-Session am Arno-Ufer gebucht. Das goldene Licht, die Spiegelungen — absolut magisch. Unser Fotograf hat unsere Verlobung perfekt festgehalten."
+      },
+      "emily": {
+        "location": "Toskana",
+        "text": "Ich war alleine unterwegs und wollte schöne Fotos am Dom von Florenz. Meine Fotografin war wie eine freundliche Reiseführerin — sie kannte die besten Perspektiven und Zeiten, um Menschenmassen zu meiden."
+      },
+      "martinez": {
+        "location": "Amalfiküste"
+      },
+      "sarah": {
+        "location": "Rom",
+        "text": "Unser Fotograf kannte alle versteckten Schätze in Trastevere. Die Fotos sind absolut atemberaubend geworden — unsere Freunde können nicht glauben, dass das Urlaubsfotos sind!"
+      },
+      "tanaka": {
+        "location": "Portofino"
+      }
+    },
+    "subtitle": "Echte Geschichten von echten Reisenden, die unvergessliche Erinnerungen in Italien eingefangen haben"
+  },
+  "videoCall": {
+    "consentText": "Zur Sicherheit aller können Anrufe auf Photo Italy aufgezeichnet und transkribiert werden. Das Transkript wird diesem Chat angehängt, die Aufnahme direkt danach gelöscht. Mit dem Beitritt stimmen Sie dem zu."
+  }
+}

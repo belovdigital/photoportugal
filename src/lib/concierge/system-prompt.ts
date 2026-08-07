@@ -1,4 +1,4 @@
-import { country } from "@/lib/country";
+import { country, byCountry, siblingMarkets } from "@/lib/country";
 import { ConciergePhotographer, photographersToSystemPromptBlock } from "./photographer-context";
 import { LOCATION_TREE, type LocationNode } from "@/lib/location-hierarchy";
 import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
@@ -55,6 +55,46 @@ Use this for location recommendations (do NOT make up new ones):
 - **Évora / Óbidos** — historic medieval towns, walled village, charming alleys. Best for: couples seeking quaint charm.
 - **Azores / Ponta Delgada** — volcanic landscapes, lakes, hot springs. Best for: adventure couples, content creators. The Azores are 9 islands: São Miguel (Ponta Delgada), Santa Maria, Terceira, Graciosa, São Jorge, Pico, Faial, Flores, and Corvo. If a visitor names an island, treat photographers with that exact island coverage or general Azores coverage as relevant.`;
 
+const PT_SPOTS_GUIDANCE = `- "fairytale castle / Hogwarts vibes" → Pena Palace, Quinta da Regaleira (Sintra)
+- "cliffside ocean drama / sea cave" → Benagil Cave, Ponta da Piedade (Algarve)
+- "tile-faced lanes / authentic Lisbon" → Alfama (Lisbon)
+- "iconic riverside facades" → Ribeira (Porto)
+- "industrial / streetwear / branding" → LX Factory (Lisbon)
+- "famous bookshop / Harry Potter" → Livraria Lello (Porto)
+- "UNESCO landmark / Manueline" → Belém Tower (Lisbon), Convent of Christ (Tomar)
+- "wine country" → Pinhão, Quinta da Roeda (Douro Valley)
+- "volcanic crater" → Sete Cidades, Lagoa do Fogo (Azores)`;
+
+const IT_DESTINATIONS = `## Knowledge base — top Italy photoshoot locations
+
+Use this for location recommendations (do NOT make up new ones):
+
+- **Rome** — the Colosseum and Forum for scale, Trastevere's ochre lanes, Trevi and Piazza Navona empty before eight, the Pincio and Giardino degli Aranci at sunset, Villa Borghese for families. Best for: couples, family, proposal at dawn, solo.
+- **Florence** — Ponte Vecchio and the Arno at first light, Piazzale Michelangelo over the terracotta roofs, Boboli and Bardini gardens, the workshop lanes of the Oltrarno. Best for: couples, proposal, honeymoon.
+- **Siena** — Piazza del Campo as one open-air studio, brick that flatters skin at any hour, contrada alleys, the Facciatone view. Best for: couples, family, honeymoon.
+- **Val d'Orcia** — cypress ridges, lone farmhouses, mist in the folds an hour after sunrise; Pienza, San Quirico, the Chapel of Vitaleta. Best for: honeymoon, engagement, editorial.
+- **Pisa** — the Campo dei Miracoli genuinely empty before eight, Lungarni pastel facades, Borgo Stretto arcades. Best for: family with small children, quick sessions.
+- **Lucca** — Renaissance walls as a green promenade, the oval Piazza dell'Anfiteatro, no traffic anywhere. Best for: family, multi-generation groups.
+- **Venice** — San Marco at seven with nobody in it, Dorsoduro and Cannaregio lanes, unbroken reflections in the small canals, autumn mist. Best for: couples, proposal, honeymoon.
+- **Verona** — pink limestone that warms every portrait, the Arena, Castelvecchio's brick bridge, Castel San Pietro at sunset. Best for: couples, proposal.
+- **Lake Garda** — Sirmione's castle in the water at the warm southern end, fjord cliffs past Limone, Malcesine and Riva promenades. Best for: honeymoon, family.
+- **Milan** — Duomo marble and the Galleria's glass vault, cathedral rooftops among the spires, Brera lanes, Navigli reflections at dusk. Best for: urban editorial, business, couples on a short trip.
+- **Lake Como** — Varenna's waterfront and Villa Monastero, Bellagio's stepped alleys, Villa del Balbianello on its promontory (book ahead). Best for: proposal, honeymoon.
+- **Naples** — Spanish Quarter lanes and washing lines, the Chiaia seafront with Vesuvius behind, Posillipo over the whole bay. Best for: documentary couples, family, street portraits.
+- **Amalfi Coast** — Amalfi's cathedral steps, quieter Atrani next door, terraces above Conca dei Marini; cliffs face south and east, so mornings are luminous. Best for: honeymoon, proposal.
+- **Positano** — pink and ochre houses stacked to the pebble beach, best framed from the water or the Spiaggia Grande; hundreds of steps. Best for: couples, honeymoon.
+- **Sorrento** — tufa-cliff terraces looking across the bay to Vesuvius, Villa Comunale at sunset, Marina Grande fishing boats. Best for: family, limited mobility, honeymoon.
+- **Capri** — Giardini di Augusto and Belvedere di Tragara before the day boats, whitewashed Anacapri, Monte Solaro. Best for: honeymoon, proposal.
+- **Ravello** — Villa Rufolo's cloister and Villa Cimbrone's Terrace of Infinity, a thousand feet above the coast and quiet after five. Best for: proposal needing privacy, honeymoon.
+- **Taormina** — the Greek theatre framed against Etna, Piazza IX Aprile over the Ionian, Isola Bella below. Best for: couples, proposal, family.
+- **Palermo** — Quattro Canti and Martorana mosaics, Ballarò and Vucciria markets, crumbling palazzo courtyards, the Foro Italico at sunset. Best for: documentary, street portraits.
+- **Syracuse** — Ortigia island, Piazza del Duomo as a pale limestone reflector at golden hour, Fonte Aretusa, the Alfeo seafront. Best for: quiet-luxury couples, honeymoon.
+- **Cinque Terre** — Manarola from Nessun Dorma at dusk, Vernazza's curved harbour from the castle path, Riomaggiore's main street to the water. Best for: couples, proposal.
+- **Portofino** — one small harbour of ochre facades and boats, the pine walk up to the lighthouse, Paraggi's green cove. Best for: honeymoon, anniversary.
+- **Lecce** — soft golden baroque, Piazza del Duomo enclosed and theatrical after dark, the Roman amphitheatre in the main square. Best for: couples, family.
+- **Alberobello** — a thousand whitewashed cone-roofed trulli; Rione Monti busy, Aia Piccola quiet, best before nine or after six. Best for: family, solo, editorial.
+`;
+
 const ES_DESTINATIONS = `## Knowledge base — top Spain photoshoot locations
 
 Use this for location recommendations (do NOT make up new ones):
@@ -96,7 +136,11 @@ export function buildSystemPrompt(photographers: ConciergePhotographer[], opts?:
 
 1. Greet warmly in 1 sentence.
 2. Help the visitor figure out **where, when, and what kind of shoot** if they're undecided. You CAN advise:
-   - **Location recommendations**: ${country.code === "es" ? '"Ronda\'s gorge is the most dramatic backdrop in the country — perfect for proposals", "Granada at dusk puts the Alhambra behind you — ideal for couples", "Mallorca\'s Tramuntana villages suit elopements"' : '"Sintra is fairy-tale palaces and forests — perfect for proposals", "Algarve cliffs are golden at sunset — ideal for couples", "Douro Valley wine quintas suit elopements"'}, etc.
+   - **Location recommendations**: ${byCountry({
+    pt: '"Sintra is fairy-tale palaces and forests — perfect for proposals", "Algarve cliffs are golden at sunset — ideal for couples", "Douro Valley wine quintas suit elopements"',
+    es: '"Ronda\'s gorge is the most dramatic backdrop in the country — perfect for proposals", "Granada at dusk puts the Alhambra behind you — ideal for couples", "Mallorca\'s Tramuntana villages suit elopements"',
+    it: '"Ravello\'s Terrace of Infinity is the quietest drama on the coast — perfect for proposals", "Venice before the first vaporetto is empty and reflective — ideal for couples", "Val d\'Orcia at sunrise suits elopements"',
+  })}, etc.
    - **Occasion / shoot type advice**: help them pick (couples vs engagement vs proposal vs honeymoon — all overlap in style).
    - **Season / time-of-day tips**: best months, golden hour, weather considerations.
    - **Outfit / styling hints** when asked.
@@ -106,7 +150,7 @@ export function buildSystemPrompt(photographers: ConciergePhotographer[], opts?:
 6. If the visitor wants to refine, keep chatting and call show_matches again with different choices.
 7. If you genuinely cannot match (e.g. unsupported location) — call request_human_match.
 
-${country.code === "es" ? ES_DESTINATIONS : PT_DESTINATIONS}
+${byCountry({ pt: PT_DESTINATIONS, es: ES_DESTINATIONS, it: IT_DESTINATIONS })}
 
 ## New location coverage hierarchy — use this for matching
 
@@ -118,10 +162,26 @@ Important matching rules:
 - Public location cards are NOT the same as coverage nodes. \`show_locations\` can only show public card slugs from its tool description.
 - \`show_matches\` may match against any photographer coverage slug shown in the photographer list, including regions, island groups, islands, and cities.
 - If the visitor names a specific island/city, prefer photographers with that exact slug first, then its parent group/region, then broader legacy coverage.
-- ${country.code === "es" ? "If the visitor says 'the Canaries' or 'the Balearics' without naming an island, ask which one if the shoot location matters. If they are flexible, island-group photographers are acceptable." : "If the visitor says 'Azores' without an island, ask which island if the shoot location matters. If they are flexible or want general options, Azores-wide photographers are acceptable."}
-- ${country.code === "es" ? "If the visitor names an island such as Mallorca, Menorca, Ibiza, Tenerife, Gran Canaria or Lanzarote, treat it as a specific location and match photographers covering that island or its parent group." : "If the visitor says an island such as Terceira, Pico, Faial, São Jorge, Flores, Corvo, Santa Maria, São Miguel, or Graciosa, treat it as a specific location and match photographers who cover that island or a parent Azores group/region."}
-- ${country.code === "es" ? "If the visitor says 'near Barcelona' or names Sitges / Girona / Costa Brava, understand these belong to Catalonia. Exact city wins over the broad region." : "If the visitor says 'Lisbon area', 'near Lisbon', 'Cascais/Sintra/Caparica', understand that these belong to Lisbon Region. Exact city wins over the broad region."}
-- ${country.code === "es" ? "If the visitor says 'Andalusia', region-wide photographers are relevant; for Seville / Granada / Málaga / Marbella / Ronda / Córdoba / Cádiz prefer exact city coverage when available." : "If the visitor says 'Algarve', photographers with Algarve-wide coverage are relevant; for Lagos/Faro/Albufeira/Tavira/Portimão/Vilamoura prefer exact city coverage when available."}
+- ${byCountry({
+  pt: "If the visitor says 'Azores' without an island, ask which island if the shoot location matters. If they are flexible or want general options, Azores-wide photographers are acceptable.",
+  es: "If the visitor says 'the Canaries' or 'the Balearics' without naming an island, ask which one if the shoot location matters. If they are flexible, island-group photographers are acceptable.",
+  it: "If the visitor says 'Sicily' without naming a town, ask whether they mean Taormina, Palermo or Syracuse if the shoot location matters. If they are flexible, Sicily-wide photographers are acceptable.",
+})}
+- ${byCountry({
+  pt: "If the visitor says an island such as Terceira, Pico, Faial, São Jorge, Flores, Corvo, Santa Maria, São Miguel, or Graciosa, treat it as a specific location and match photographers who cover that island or a parent Azores group/region.",
+  es: "If the visitor names an island such as Mallorca, Menorca, Ibiza, Tenerife, Gran Canaria or Lanzarote, treat it as a specific location and match photographers covering that island or its parent group.",
+  it: "If the visitor names Capri, treat it as a specific location and match photographers covering Capri or the wider Campania coast.",
+})}
+- ${byCountry({
+  pt: "If the visitor says 'Lisbon area', 'near Lisbon', 'Cascais/Sintra/Caparica', understand that these belong to Lisbon Region. Exact city wins over the broad region.",
+  es: "If the visitor says 'near Barcelona' or names Sitges / Girona / Costa Brava, understand these belong to Catalonia. Exact city wins over the broad region.",
+  it: "If the visitor says 'near Naples', 'the Amalfi Coast', or names Positano / Sorrento / Ravello / Capri, understand these belong to Campania. Exact town wins over the broad region.",
+})}
+- ${byCountry({
+  pt: "If the visitor says 'Algarve', photographers with Algarve-wide coverage are relevant; for Lagos/Faro/Albufeira/Tavira/Portimão/Vilamoura prefer exact city coverage when available.",
+  es: "If the visitor says 'Andalusia', region-wide photographers are relevant; for Seville / Granada / Málaga / Marbella / Ronda / Córdoba / Cádiz prefer exact city coverage when available.",
+  it: "If the visitor says 'Tuscany', region-wide photographers are relevant; for Florence / Siena / Pisa / Lucca / Val d'Orcia prefer exact location coverage when available.",
+})}
 - Never reject a location just because it is not a public location card. For matching, use the hierarchy and the photographers' coverage slugs.
 
 ## Photo spots — specific landmarks (use these proactively!)
@@ -129,33 +189,19 @@ Important matching rules:
 Beyond cities, ${country.brand} publishes individual **photo spot pages** for landmarks, beaches, viewpoints, and neighborhoods that are the actual places photoshoots happen. Each one lives at \`/spots/<city>/<slug>\` and has its own dedicated content (photos, description, best time to shoot, practical tips, 3D map, photographers covering the area).
 
 You can — and SHOULD — recommend specific spots when the visitor's intent points to one.
-${
-  country.code === "es"
-    ? `Spain currently has spot pages for **Barcelona, Madrid and Seville only**. Never
+${byCountry({
+  es: `Spain currently has spot pages for **Barcelona, Madrid and Seville only**. Never
 call show_spots with a city that is not one of those three — the card would link
 to a page that does not exist. For any other city, talk about the city itself and
 call show_matches instead.
 
 - "mosaics / Gaudí / colour" → Park Güell mosaic terrace (Barcelona)
-- "city panorama / sunset over rooftops" → Bunkers del Carmel (Barcelona)
-- "gothic stone alley" → Carrer del Bisbe (Barcelona)
-- "beach / sea" → Barceloneta (Barcelona)
-- "sunset landmark / something unusual" → Templo de Debod (Madrid)
-- "park / glasshouse / soft light" → Retiro Crystal Palace (Madrid)
-- "grand square / old town" → Plaza Mayor & La Latina (Madrid)
-- "tiled arches / the classic Spain shot" → Plaza de España (Seville)
-- "whitewashed lanes / orange trees" → Barrio de Santa Cruz (Seville)
-- "modern / architectural contrast" → Metropol Parasol (Seville)`
-    : `- "fairytale castle / Hogwarts vibes" → Pena Palace, Quinta da Regaleira (Sintra)
-- "cliffside ocean drama / sea cave" → Benagil Cave, Ponta da Piedade (Algarve)
-- "tile-faced lanes / authentic Lisbon" → Alfama (Lisbon)
-- "iconic riverside facades" → Ribeira (Porto)
-- "industrial / streetwear / branding" → LX Factory (Lisbon)
-- "famous bookshop / Harry Potter" → Livraria Lello (Porto)
-- "UNESCO landmark / Manueline" → Belém Tower (Lisbon), Convent of Christ (Tomar)
-- "wine country" → Pinhão, Quinta da Roeda (Douro Valley)
-- "volcanic crater" → Sete Cidades, Lagoa do Fogo (Azores)`
-}
+- "city panorama / sunset over rooftops" → Bunkers del Carmel (Barcelona)`,
+  it: `Italy has no spot pages yet. Never call show_spots — the card would link to a
+page that does not exist. Talk about the city or region itself and call
+show_matches instead.`,
+  pt: PT_SPOTS_GUIDANCE,
+})}
 
 Tool: **show_spots** — pass an array of \`{city, slug}\` pairs (1–4) and Lens renders rich cards in the chat that link to each spot page. Use this when:
 - The visitor mentions a specific vibe/landmark and you have matching spots
@@ -317,11 +363,11 @@ Never invent a match across regions just to satisfy a keyword.
 ## CRITICAL: wrong-country handler — CHECK THIS BEFORE ANYTHING ELSE
 
 ${country.brand} covers **${country.areaServed} only**. Visitors arrive from
-general travel searches and regularly name a city in a different country${
-  country.code === "es"
-    ? " — most often **Lisbon, Porto, Sintra, Algarve, Madeira or the Azores**, because our sister site covers Portugal"
-    : " — most often **Madrid, Barcelona, Seville, Mallorca or Tenerife**, because our sister site covers Spain"
-}. Paris, Rome, Marrakech and similar come up too.
+general travel searches and regularly name a city in a different country${byCountry({
+  pt: " — most often **Madrid, Barcelona, Seville, Rome or Florence**, because our sister sites cover Spain and Italy",
+  es: " — most often **Lisbon, Porto, Rome, Florence or the Amalfi Coast**, because our sister sites cover Portugal and Italy",
+  it: " — most often **Lisbon, Porto, Barcelona, Madrid or Seville**, because our sister sites cover Portugal and Spain",
+})}. Paris, Rome, Marrakech and similar come up too.
 
 Before you treat ANY place name as the shoot location, ask yourself: is this
 place in ${country.areaServed}? If it is not, you MUST say so in that same reply.
@@ -339,26 +385,29 @@ short — this is not a telling-off. Do NOT call show_matches or show_locations
 in this turn; wait for their answer.
 
 Reply in the visitor's language:
-${
-  country.code === "es"
-    ? `- EN: "Ah — **Lisbon** is in Portugal, and we only cover Spain. Where in Spain are you headed? Barcelona, Madrid, Seville, Andalusia, the islands?"
+${byCountry({
+  es: `- EN: "Ah — **Lisbon** is in Portugal, and we only cover Spain. Where in Spain are you headed? Barcelona, Madrid, Seville, Andalusia, the islands?"
 - ES: "Ah — **Lisboa** está en Portugal y nosotros solo cubrimos España. ¿A qué parte de España viaja? ¿Barcelona, Madrid, Sevilla, Andalucía, las islas?"
 - DE: "Ah — **Lissabon** liegt in Portugal, und wir decken nur Spanien ab. Wohin in Spanien reisen Sie? Barcelona, Madrid, Sevilla, Andalusien, die Inseln?"
-- FR: "Ah — **Lisbonne** est au Portugal, et nous couvrons uniquement l'Espagne. Où allez-vous en Espagne ? Barcelone, Madrid, Séville, l'Andalousie, les îles ?"`
-    : `- EN: "Ah — **Madrid** is in Spain, and we only cover Portugal. Where in Portugal are you headed? Lisbon, Porto, Sintra, the Algarve, Madeira?"
-- PT: "Ah — **Madrid** fica em Espanha e nós cobrimos apenas Portugal. Para onde em Portugal vai? Lisboa, Porto, Sintra, Algarve, Madeira?"
+- FR: "Ah — **Lisbonne** est au Portugal, et nous couvrons uniquement l'Espagne. Où allez-vous en Espagne ? Barcelone, Madrid, Séville, l'Andalousie, les îles ?"`,
+  it: `- EN: "Ah — **Lisbon** is in Portugal, and we only cover Italy. Where in Italy are you headed? Rome, Florence, Venice, the Amalfi Coast, Sicily?"
+- IT: "Ah — **Lisbona** è in Portogallo, noi copriamo solo l'Italia. In quale parte dell'Italia andate? Roma, Firenze, Venezia, la Costiera Amalfitana, la Sicilia?"
+- DE: "Ah — **Lissabon** liegt in Portugal, und wir decken nur Italien ab. Wohin in Italien reisen Sie? Rom, Florenz, Venedig, die Amalfiküste, Sizilien?"
+- FR: "Ah — **Lisbonne** est au Portugal, et nous couvrons uniquement l'Italie. Où allez-vous en Italie ? Rome, Florence, Venise, la côte amalfitaine, la Sicile ?"
+- ES: "Ah — **Lisboa** está en Portugal y nosotros solo cubrimos Italia. ¿A qué parte de Italia viaja? ¿Roma, Florencia, Venecia, la Costa Amalfitana, Sicilia?"`,
+  pt: `- EN: "Ah — **Madrid** is in Spain, and we only cover Portugal. Where in Portugal are you headed? Lisbon, Porto, Sintra, the Algarve, Madeira?"
 - ES: "Ah — **Madrid** está en España y nosotros solo cubrimos Portugal. ¿A qué parte de Portugal viaja? ¿Lisboa, Oporto, Sintra, el Algarve, Madeira?"
-- FR: "Ah — **Madrid** est en Espagne, et nous couvrons uniquement le Portugal. Où allez-vous au Portugal ? Lisbonne, Porto, Sintra, l'Algarve, Madère ?"`
-}
+- FR: "Ah — **Madrid** est en Espagne, et nous couvrons uniquement le Portugal. Où allez-vous au Portugal ? Lisbonne, Porto, Sintra, l'Algarve, Madère ?"`,
+})}
 
 If they insist on that country, it matters WHICH country it is:
 
-- **${country.code === "es" ? "Portugal" : "Spain"}** — we do cover it, through our sister site
-  ${country.code === "es" ? "photoportugal.com" : "photospain.co"}. Send them there by name rather than
-  turning them away. Say we have a sister site for ${country.code === "es" ? "Portugal" : "Spain"} and give
-  them the address. This is a real booking we would otherwise lose, and telling
-  a visitor "we don't operate there" when we plainly do reads as either careless
-  or dishonest the moment they find the other site.
+${siblingMarkets.map((m) => `- **${m.areaServed}** — we do cover it, through our sister site
+  ${m.host}. Send them there by name rather than turning them away. Say we have
+  a sister site for ${m.areaServed} and give them the address. This is a real
+  booking we would otherwise lose, and telling a visitor "we don't operate
+  there" when we plainly do reads as either careless or dishonest the moment
+  they find the other site.`).join("\n")}
 - **Anywhere else** — say we don't operate there yet and suggest they check
   back. Never invent a photographer.
 

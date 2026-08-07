@@ -1,4 +1,5 @@
 import { LOCATION_EXPLORER_REGIONS_ES } from "./location-explorer-data-es";
+import { LOCATION_EXPLORER_REGIONS_IT } from "./location-explorer-data-it";
 export type LocationExplorerChild = {
   slug: string;
   name: string;
@@ -208,7 +209,11 @@ const LOCATION_EXPLORER_REGIONSPT: LocationExplorerRegion[] = [
  * Portugal stays the default: absent or unrecognised value → the PT dataset.
  */
 export const LOCATION_EXPLORER_REGIONS: LocationExplorerRegion[] =
-  process.env.NEXT_PUBLIC_COUNTRY === "es" ? LOCATION_EXPLORER_REGIONS_ES : LOCATION_EXPLORER_REGIONSPT;
+  process.env.NEXT_PUBLIC_COUNTRY === "es"
+    ? LOCATION_EXPLORER_REGIONS_ES
+    : process.env.NEXT_PUBLIC_COUNTRY === "it"
+      ? LOCATION_EXPLORER_REGIONS_IT
+      : LOCATION_EXPLORER_REGIONSPT;
 
 
 export const LOCATION_EXPLORER_SHOOT_FILTERS = [

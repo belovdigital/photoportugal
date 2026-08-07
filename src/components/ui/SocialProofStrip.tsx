@@ -3,22 +3,24 @@
 import { Camera, CheckCircle2, MapPin, ShieldCheck, Star } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Link } from "@/i18n/navigation";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
 // Headline destinations in the strip, per market. This sat right next to the
 // islands list I had already fixed and was missed — the Spanish homepage still
 // advertised Lisbon, the Algarve and Madeira as its own coverage.
-const PRIMARY_DESTINATIONS =
-  country.code === "es"
-    ? ["Barcelona", "Madrid", "Seville", "Granada", "Mallorca", "Tenerife"]
-    : ["Lisbon", "Algarve", "Azores", "Madeira", "Porto", "Sintra"];
+const PRIMARY_DESTINATIONS = byCountry({
+  pt: ["Lisbon", "Algarve", "Azores", "Madeira", "Porto", "Sintra"],
+  es: ["Barcelona", "Madrid", "Seville", "Granada", "Mallorca", "Tenerife"],
+  it: ["Rome", "Florence", "Venice", "Amalfi Coast", "Milan", "Sicily"],
+});
 
 // Islands named in the social-proof strip, per market. Listing Madeira and the
 // Azores on the Spanish site advertises coverage in another country.
-const ISLAND_DESTINATIONS =
-  country.code === "es"
-    ? ["Mallorca", "Ibiza", "Menorca", "Tenerife", "Gran Canaria", "Lanzarote"]
-    : ["Madeira", "Sao Miguel", "Terceira", "Pico", "Faial", "Flores"];
+const ISLAND_DESTINATIONS = byCountry({
+  pt: ["Madeira", "Sao Miguel", "Terceira", "Pico", "Faial", "Flores"],
+  es: ["Mallorca", "Ibiza", "Menorca", "Tenerife", "Gran Canaria", "Lanzarote"],
+  it: ["Capri", "Sicily", "Taormina", "Palermo", "Syracuse", "Ischia"],
+});
 
 export function SocialProofStrip({
   photographerCount,

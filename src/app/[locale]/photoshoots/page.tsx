@@ -15,7 +15,7 @@ import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { locations } from "@/lib/locations-data";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { BUSINESS_SHOOT_TYPE } from "@/lib/shoot-type-labels";
 import { getBusinessPhotos } from "@/lib/business-showcase";
 
@@ -27,9 +27,11 @@ const CN = country.countryName;
 // Example city for the search placeholder, in the language of the page.
 // It was hardcoded to Madrid during the Spain adaptation, so photoportugal.com
 // was suggesting "sessão de casal em Madrid" to Portuguese visitors.
-const CITY = country.code === "es"
-  ? { en: "Madrid", pt: "Madrid", de: "Madrid", es: "Madrid", fr: "Madrid" }
-  : { en: "Lisbon", pt: "Lisboa", de: "Lissabon", es: "Lisboa", fr: "Lisbonne" };
+const CITY = byCountry({
+  pt: { en: "Lisbon", pt: "Lisboa", de: "Lissabon", es: "Lisboa", fr: "Lisbonne", it: "Lisbona" },
+  es: { en: "Madrid", pt: "Madrid", de: "Madrid", es: "Madrid", fr: "Madrid", it: "Madrid" },
+  it: { en: "Rome", pt: "Roma", de: "Rom", es: "Roma", fr: "Rome", it: "Roma" },
+});
 
 
 // Force-dynamic so live counts + min prices + the random representative

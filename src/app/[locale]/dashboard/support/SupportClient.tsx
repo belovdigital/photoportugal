@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { country } from "@/lib/country";
 
 export default function SupportClient() {
   const { data: session, status: sessionStatus } = useSession();
@@ -63,7 +64,7 @@ export default function SupportClient() {
 
       {status === "error" && (
         <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-          {t("errorMessage")}
+          {t("errorMessage", { email: country.supportEmail })}
         </div>
       )}
 

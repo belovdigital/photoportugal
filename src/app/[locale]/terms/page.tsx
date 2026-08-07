@@ -32,7 +32,13 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
         {/* 1. Overview */}
         <section>
           <h2 className="text-xl font-bold text-gray-900">{t("sections.overview.title")}</h2>
-          <p className="mt-3">{t("sections.overview.content")}</p>
+          <p className="mt-3">
+            {t("sections.overview.content", {
+              brand: country.brand,
+              domain: country.host,
+              countryIn: country.countryIn[locale as keyof typeof country.countryIn] ?? country.areaServed,
+            })}
+          </p>
         </section>
 
         {/* 2. Accounts */}

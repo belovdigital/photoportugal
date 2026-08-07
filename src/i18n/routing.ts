@@ -19,6 +19,7 @@ export const routing = defineRouting({
       de: "/fotografen",
       es: "/fotografos",
       fr: "/photographes",
+      it: "/fotografi",
     },
     "/photographers/[slug]": {
       en: "/photographers/[slug]",
@@ -26,6 +27,7 @@ export const routing = defineRouting({
       de: "/fotografen/[slug]",
       es: "/fotografos/[slug]",
       fr: "/photographes/[slug]",
+      it: "/fotografi/[slug]",
     },
     // Per-package pages. Without this entry the localized form the
     // middleware slug-map 301s to (/fr/photographes/{slug}/{pkg}) has no
@@ -37,6 +39,7 @@ export const routing = defineRouting({
       de: "/fotografen/[slug]/[package]",
       es: "/fotografos/[slug]/[package]",
       fr: "/photographes/[slug]/[package]",
+      it: "/fotografi/[slug]/[package]",
     },
     // Filtered photographer catalog by location — keeps the literal "location"
     // segment untranslated so middleware's slug-map redirect (`/photographers`
@@ -49,6 +52,7 @@ export const routing = defineRouting({
       de: "/fotografen/location/[slug]",
       es: "/fotografos/location/[slug]",
       fr: "/photographes/location/[slug]",
+      it: "/fotografi/location/[slug]",
     },
     "/locations": {
       en: "/locations",
@@ -56,6 +60,7 @@ export const routing = defineRouting({
       de: "/orte",
       es: "/lugares",
       fr: "/lieux",
+      it: "/luoghi",
     },
     "/locations/[slug]": {
       en: "/locations/[slug]",
@@ -63,6 +68,7 @@ export const routing = defineRouting({
       de: "/orte/[slug]",
       es: "/lugares/[slug]",
       fr: "/lieux/[slug]",
+      it: "/luoghi/[slug]",
     },
     "/locations/[slug]/[occasion]": {
       en: "/locations/[slug]/[occasion]",
@@ -70,6 +76,7 @@ export const routing = defineRouting({
       de: "/orte/[slug]/[occasion]",
       es: "/lugares/[slug]/[occasion]",
       fr: "/lieux/[slug]/[occasion]",
+      it: "/luoghi/[slug]/[occasion]",
     },
     "/how-it-works": {
       en: "/how-it-works",
@@ -77,6 +84,7 @@ export const routing = defineRouting({
       de: "/wie-es-funktioniert",
       es: "/como-funciona",
       fr: "/comment-ca-marche",
+      it: "/come-funziona",
     },
     "/about": {
       en: "/about",
@@ -84,6 +92,7 @@ export const routing = defineRouting({
       de: "/ueber-uns",
       es: "/sobre-nosotros",
       fr: "/a-propos",
+      it: "/chi-siamo",
     },
     "/faq": "/faq",
     "/photoshoots": {
@@ -92,6 +101,7 @@ export const routing = defineRouting({
       de: "/fotoshootings",
       es: "/sesiones-de-fotos",
       fr: "/seances-photo",
+      it: "/servizi-fotografici",
     },
     // Dedicated wedding landing — /photoshoots/wedding 301s here
     // (see next.config.ts redirects).
@@ -101,6 +111,7 @@ export const routing = defineRouting({
       de: "/hochzeiten",
       es: "/bodas",
       fr: "/mariages",
+      it: "/matrimoni",
     },
     "/photoshoots/[slug]": {
       en: "/photoshoots/[slug]",
@@ -108,6 +119,7 @@ export const routing = defineRouting({
       de: "/fotoshootings/[slug]",
       es: "/sesiones-de-fotos/[slug]",
       fr: "/seances-photo/[slug]",
+      it: "/servizi-fotografici/[slug]",
     },
     "/contact": {
       en: "/contact",
@@ -115,6 +127,7 @@ export const routing = defineRouting({
       de: "/kontakt",
       es: "/contacto",
       fr: "/contact",
+      it: "/contatti",
     },
     "/support": {
       en: "/support",
@@ -122,6 +135,7 @@ export const routing = defineRouting({
       de: "/hilfe",
       es: "/ayuda",
       fr: "/aide",
+      it: "/assistenza",
     },
     "/terms": {
       en: "/terms",
@@ -129,6 +143,7 @@ export const routing = defineRouting({
       de: "/agb",
       es: "/terminos",
       fr: "/conditions",
+      it: "/termini",
     },
     "/privacy": {
       en: "/privacy",
@@ -136,6 +151,7 @@ export const routing = defineRouting({
       de: "/datenschutz",
       es: "/privacidad",
       fr: "/confidentialite",
+      it: "/privacy",
     },
   },
 });

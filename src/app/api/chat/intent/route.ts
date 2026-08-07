@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
           content:
             'You read a chat between a wedding/portrait photographer and a potential client on a booking platform in Portugal. Extract the client\'s booking intent into a strict JSON object with these keys (use null when missing, do NOT guess):\n' +
             '- shoot_date: ISO date "YYYY-MM-DD" if explicitly stated; otherwise null.\n' +
-            `- location: city/region name as the client said it (e.g. ${country.code === "es" ? '"Ronda", "Barcelona"' : '"Comporta", "Lisbon"'}).\n` +
+            `- location: city/region name as the client said it (e.g. ${byCountry({ pt: '"Comporta", "Lisbon"', es: '"Ronda", "Barcelona"', it: '"Positano", "Rome"' })}).\n` +
             '- occasion: one of "couples", "family", "wedding", "engagement", "maternity", "solo", "boudoir", "event", "real_estate", "other"; null if unclear.\n' +
             '- group_size: integer headcount.\n' +
             '- budget: free text, e.g. "around 300€" or null.\n' +

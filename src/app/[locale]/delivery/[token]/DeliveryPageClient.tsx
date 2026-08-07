@@ -628,7 +628,7 @@ export function DeliveryPageClient({
           </form>
 
           <p className="mt-6 text-center text-xs text-gray-400">
-            {t("brandFooter")}
+            {t("brandFooter", { brand: country.brand, domain: country.host })}
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { country } from "@/lib/country";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { SupportContent } from "@/components/support/SupportContent";
@@ -202,7 +203,7 @@ export default async function SupportPage({
       articles: CLIENT_ARTICLE_KEYS.map((key) => ({
         id: `client-${key}`,
         question: t(`articles.clients.${key}.question`),
-        answer: t(`articles.clients.${key}.answer`),
+        answer: t(`articles.clients.${key}.answer`, { email: country.supportEmail }),
       })),
     },
     {
@@ -213,7 +214,7 @@ export default async function SupportPage({
       articles: PHOTOGRAPHER_ARTICLE_KEYS.map((key) => ({
         id: `photographer-${key}`,
         question: t(`articles.photographers.${key}.question`),
-        answer: t(`articles.photographers.${key}.answer`),
+        answer: t(`articles.photographers.${key}.answer`, { email: country.supportEmail }),
       })),
     },
     {
@@ -224,7 +225,7 @@ export default async function SupportPage({
       articles: PAYMENTS_ARTICLE_KEYS.map((key) => ({
         id: `payments-${key}`,
         question: t(`articles.payments.${key}.question`),
-        answer: t(`articles.payments.${key}.answer`),
+        answer: t(`articles.payments.${key}.answer`, { email: country.supportEmail }),
       })),
     },
     {
@@ -235,7 +236,7 @@ export default async function SupportPage({
       articles: GIFT_ARTICLE_KEYS.map((key) => ({
         id: `gifts-${key}`,
         question: t(`articles.gifts.${key}.question`),
-        answer: t(`articles.gifts.${key}.answer`),
+        answer: t(`articles.gifts.${key}.answer`, { email: country.supportEmail }),
       })),
     },
     {
@@ -246,7 +247,7 @@ export default async function SupportPage({
       articles: GENERAL_ARTICLE_KEYS.map((key) => ({
         id: `general-${key}`,
         question: t(`articles.general.${key}.question`),
-        answer: t(`articles.general.${key}.answer`),
+        answer: t(`articles.general.${key}.answer`, { email: country.supportEmail }),
       })),
     },
   ];

@@ -242,7 +242,8 @@
     "soon": "Soon",
     "appStoreAlt": "Download on the App Store",
     "googlePlayAlt": "Get it on Google Play",
-    "forBusiness": "For Business"
+    "forBusiness": "For Business",
+    "alsoIn": "Also in"
   },
   "giftCardsPage": {
     "h1": "Gift a Photo Portugal session",
@@ -2062,7 +2063,7 @@
     "sections": {
       "overview": {
         "title": "1. Overview",
-        "content": "Photo Portugal (\"we,\" \"us,\" \"our\") operates a marketplace platform at photoportugal.com that connects tourists (\"clients\") with professional photographers (\"photographers\") in Portugal. By using our platform, you agree to these terms."
+        "content": "{brand} (\"we,\" \"us,\" \"our\") operates a marketplace platform at {domain} that connects tourists (\"clients\") with professional photographers (\"photographers\") {countryIn}. By using our platform, you agree to these terms."
       },
       "accounts": {
         "title": "2. Accounts",
@@ -2698,7 +2699,7 @@
     "title": "Support",
     "subtitle": "Have a question or issue? Send us a message and we'll get back to you.",
     "successMessage": "Your message has been sent! We'll get back to you as soon as possible.",
-    "errorMessage": "Something went wrong. Please try again or email us at info@photoportugal.com.",
+    "errorMessage": "Something went wrong. Please try again or email us at {email}.",
     "subject": "Subject",
     "subjectPlaceholder": "What do you need help with?",
     "message": "Message",
@@ -2896,7 +2897,7 @@
         },
         "contactSupport": {
           "question": "How do I contact support?",
-          "answer": "You can reach our support team through:\n\n• **Email:** info@photoportugal.com\n• **Dashboard:** Photographers can submit support tickets directly from their dashboard\n• **Contact page:** Visit our contact page to send us a message\n\nWe aim to respond to all inquiries within 24 hours during business days."
+          "answer": "You can reach our support team through:\n\n• **Email:** {email}\n• **Dashboard:** Photographers can submit support tickets directly from their dashboard\n• **Contact page:** Visit our contact page to send us a message\n\nWe aim to respond to all inquiries within 24 hours during business days."
         }
       },
       "gifts": {
@@ -2988,7 +2989,7 @@
     "galleryPasswordInputPlaceholder": "Gallery password",
     "verifying": "Verifying...",
     "viewPhotos": "View Photos",
-    "brandFooter": "Photo Portugal — photoportugal.com",
+    "brandFooter": "{brand} — {domain}",
     "photosReady": "Your photos are ready!",
     "photoSingular": "photo",
     "photoPlural": "photos",
@@ -4112,7 +4113,7 @@
       "submit": "Send request",
       "sending": "Sending…",
       "sla": "No spam, no obligations — a real person will reply within one business day.",
-      "submitFailed": "Could not send your request. Please try again or email info@photoportugal.com.",
+      "submitFailed": "Could not send your request. Please try again or email {email}.",
       "thanksTitle": "Request received!",
       "thanksText": "Thank you — our team will get back to you within one business day. Check your inbox (and spam folder, just in case).",
       "types": {
