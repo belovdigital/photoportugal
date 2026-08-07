@@ -7,6 +7,7 @@ import { locations, locField } from "@/lib/locations-data";
 import { country } from "@/lib/country";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
+import { NorteiraLogo } from "./NorteiraLogo";
 
 // Footer shortcut list, per market. These are slugs, so a Portuguese list on
 // the Spanish site matches nothing and the column renders empty.
@@ -140,6 +141,22 @@ export function Footer() {
                 className="h-8 w-auto"
               />
             </Link>
+            {/* Umbrella-brand credit. Deliberately plain literals rather than a
+                translation key: "by" plus a wordmark is the same in all five
+                locales, and an unmatched key would render "footer.byNorteira"
+                on screen. */}
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+              by
+              <a
+                href="https://norteira.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Norteira"
+                className="inline-flex py-1 transition hover:text-gray-700"
+              >
+                <NorteiraLogo className="h-4 w-auto" />
+              </a>
+            </p>
             <p className="mt-3 text-sm text-gray-500">
               {t("tagline")}
             </p>
