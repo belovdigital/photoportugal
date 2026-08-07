@@ -399,7 +399,9 @@
       "tierFull": "Completa €520",
       "perk1": "Válido durante 12 meses",
       "perk2": "El destinatario elige al fotógrafo",
-      "perk3": "Entregado al instante por email"
+      "perk3": "Entregado al instante por email",
+      "cardLabel": "Tarjeta regalo",
+      "cardValidity": "Válida 12 meses · en todo el país"
     }
   },
   "heroSearch": {

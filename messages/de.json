@@ -399,7 +399,9 @@
       "tierFull": "Komplett 520 €",
       "perk1": "12 Monate gültig",
       "perk2": "Beschenkter wählt den Fotografen",
-      "perk3": "Sofort per E-Mail versandt"
+      "perk3": "Sofort per E-Mail versandt",
+      "cardLabel": "Geschenkkarte",
+      "cardValidity": "12 Monate gültig · landesweit"
     }
   },
   "heroSearch": {

@@ -712,7 +712,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 <div className="flex items-start justify-between text-white">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest opacity-90">{country.brand}</p>
-                    <p className="mt-0.5 text-[11px] uppercase tracking-wider opacity-75">Gift Card</p>
+                    <p className="mt-0.5 text-[11px] uppercase tracking-wider opacity-75">{t("giftPromo.cardLabel")}</p>
                   </div>
                   <span className="text-3xl">🎁</span>
                 </div>
@@ -726,7 +726,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <span className="text-xs opacity-80">2 hours</span>
                   </div>
                 </div>
-                <p className="mt-6 text-[10px] uppercase tracking-widest text-white/70">Valid 12 months · {country.areaServed}-wide</p>
+                <p className="mt-6 text-[10px] uppercase tracking-widest text-white/70">{t("giftPromo.cardValidity")}</p>
               </div>
             </div>
           </div>

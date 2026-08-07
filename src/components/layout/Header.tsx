@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { locations } from "@/lib/locations-data";
 import { country } from "@/lib/country";
+import { LOCALE_LABELS, type Locale } from "@/i18n/config";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { trackCTAClick } from "@/lib/analytics";
@@ -135,21 +136,12 @@ export function Header() {
     window.location.href = newPath;
   }
 
-  // Filtered by the country pack: offering a language the market does not ship
-  // sends the visitor to a 404 (Spain has no /pt route at all).
-  const ALL_LOCALE_OPTIONS: Array<{ code: string; label: string; flag: string }> = [
-    { code: "en", label: "EN", flag: "🇬🇧" },
-    { code: "pt", label: "PT", flag: "🇵🇹" },
-    { code: "de", label: "DE", flag: "🇩🇪" },
-    { code: "es", label: "ES", flag: "🇪🇸" },
-    { code: "fr", label: "FR", flag: "🇫🇷" },
-  ];
-  // Order comes from the country pack, not from the master list — filtering the
-  // master list preserved ITS order (en, pt, de, es, fr) and pushed Spanish
-  // below German on the Spanish site.
+  // Only the languages this market ships — offering one it does not send the
+  // visitor to a 404 (Spain has no /pt route at all). Order comes from the
+  // country pack, so each market leads with its own language.
   const availableLocales = (country.locales as readonly string[])
-    .map((code) => ALL_LOCALE_OPTIONS.find((l) => l.code === code))
-    .filter((l): l is (typeof ALL_LOCALE_OPTIONS)[number] => !!l);
+    .filter((code): code is Locale => code in LOCALE_LABELS)
+    .map((code) => ({ code, ...LOCALE_LABELS[code] }));
   const [langOpen, setLangOpen] = useState(false);
 
   return (

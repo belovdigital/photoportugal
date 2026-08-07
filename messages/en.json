@@ -399,7 +399,9 @@
       "tierFull": "Full €520",
       "perk1": "Valid for 12 months",
       "perk2": "Recipient picks photographer",
-      "perk3": "Delivered instantly by email"
+      "perk3": "Delivered instantly by email",
+      "cardLabel": "Gift Card",
+      "cardValidity": "Valid 12 months · anywhere in the country"
     }
   },
   "heroSearch": {

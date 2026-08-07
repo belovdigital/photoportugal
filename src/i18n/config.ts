@@ -21,6 +21,23 @@ export const locales = country.locales as readonly Locale[];
 export const defaultLocale: Locale = "en";
 
 /**
+ * How each locale is labelled in the language switcher.
+ *
+ * `Record<Locale, …>` on purpose: the switcher used to carry its own list of
+ * five, so Italian shipped as an active locale but never appeared in the menu —
+ * the country pack offered it and the header quietly filtered it out. A new
+ * locale now fails the build here instead.
+ */
+export const LOCALE_LABELS: Record<Locale, { label: string; flag: string }> = {
+  en: { label: "EN", flag: "🇬🇧" },
+  pt: { label: "PT", flag: "🇵🇹" },
+  de: { label: "DE", flag: "🇩🇪" },
+  es: { label: "ES", flag: "🇪🇸" },
+  fr: { label: "FR", flag: "🇫🇷" },
+  it: { label: "IT", flag: "🇮🇹" },
+};
+
+/**
  * hreflang values emitted per locale. Single source of truth: both the page
  * metadata (`lib/seo.ts`) and the sitemap read it. A locale missing here reads
  * as `undefined` at the iteration site and takes the whole page down, which is

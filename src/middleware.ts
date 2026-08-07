@@ -1,11 +1,16 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { locales as activeLocales } from "./i18n/config";
+import { locales as activeLocales, type Locale } from "./i18n/config";
 import { NextRequest, NextResponse } from "next/server";
 import { getRedirect } from "./lib/redirects-cache";
 import { country } from "@/lib/country";
 
 const intlMiddleware = createMiddleware(routing);
+
+/** Non-English locale prefixes, from the locale list rather than written out.
+ *  Four separate hardcoded copies of this alternation shipped Italian broken. */
+const PREFIXED_LOCALES = (activeLocales as readonly string[]).filter((l) => l !== "en");
+const LOCALE_PREFIX_RE = PREFIXED_LOCALES.join("|");
 
 // Localised slug → canonical-EN slug, per source locale.
 // Used to translate a path under one locale into another locale's path.
@@ -62,9 +67,9 @@ const EN_TO_LOCALIZED: Record<"de" | "es" | "fr", Record<string, string>> = {
  *   remapPath("fr", "/photographes/john", "de") → "/de/fotografen/john"
  */
 function remapPath(
-  source: "en" | "pt" | "de" | "es" | "fr",
+  source: Locale,
   rest: string,
-  target: "en" | "pt" | "de" | "es" | "fr",
+  target: Locale,
 ): string | null {
   // Step 1: convert source path → canonical EN path
   let canonical = rest;
@@ -111,10 +116,10 @@ const EXCLUDED_PREFIXES = [
 // already stripped and DE/ES/FR slugs mapped back to canonical EN.
 function agentMarkdownPath(pathname: string): string | null {
   let rest = pathname.replace(/\/+$/, "") || "/";
-  const m = rest.match(/^\/(pt|de|es|fr)(\/.*)?$/);
-  let source: "en" | "pt" | "de" | "es" | "fr" = "en";
+  const m = rest.match(new RegExp(`^/(${LOCALE_PREFIX_RE})(/.*)?$`));
+  let source: Locale = "en";
   if (m) {
-    source = m[1] as "pt" | "de" | "es" | "fr";
+    source = m[1] as Locale;
     rest = m[2] || "/";
   }
   if (source === "de" || source === "es" || source === "fr") {
@@ -290,7 +295,7 @@ export default async function middleware(request: NextRequest) {
   // /quickbook (any locale prefix) → homepage with ?quickbook=1, which
   // auto-opens the QuickBooking drawer (see QuickBookingDeepLink).
   // Other query params (utm_*) are carried through.
-  const quickbookMatch = pathname.match(/^\/(?:(pt|de|es|fr)\/)?quickbook\/?$/);
+  const quickbookMatch = pathname.match(new RegExp(`^/(?:(${LOCALE_PREFIX_RE})/)?quickbook/?$`));
   if (quickbookMatch) {
     const url = new URL(quickbookMatch[1] ? `/${quickbookMatch[1]}` : "/", request.url);
     request.nextUrl.searchParams.forEach((v, k) => url.searchParams.set(k, v));
@@ -324,8 +329,8 @@ export default async function middleware(request: NextRequest) {
   const isBot = /bot|crawl|spider|slurp|facebookexternalhit|telegrambot|whatsapp|twitterbot|linkedinbot|discordbot|preview|chatgpt|gptbot|claudebot|perplexitybot|google-pagerenderer|google-readaloud|adsbot/i.test(ua);
 
   // Picks the highest-q Accept-Language tag we support, OR null if none / EN.
-  // Returns "pt" | "de" | "es" | "fr" | "en" — null means user has no preference signal.
-  function preferredLocale(): "en" | "pt" | "de" | "es" | "fr" | null {
+  // Returns one of the market's locales, or null when there is no signal.
+  function preferredLocale(): Locale | null {
     const accept = request.headers.get("accept-language") || "";
     // Only locales this market actually serves. Hardcoding all five here sent
     // Spanish visitors with a Portuguese browser preference to /pt on
@@ -340,7 +345,7 @@ export default async function middleware(request: NextRequest) {
     });
     parts.sort((a, b) => b.q - a.q);
     for (const p of parts) {
-      if (SUPPORTED.has(p.lang)) return p.lang as "en" | "pt" | "de" | "es" | "fr";
+      if (SUPPORTED.has(p.lang)) return p.lang as Locale;
     }
     // Fallback: CF geo only if no Accept-Language at all
     if (parts.length === 0 || !parts[0].lang) {
@@ -352,7 +357,7 @@ export default async function middleware(request: NextRequest) {
       else if (cf === "FR" || cf === "BE" || cf === "CH" || cf === "LU" || cf === "MC") geo = "fr";
       // Same filter as above: a market that does not ship this locale must not
       // be sent to it, however the preference was expressed.
-      if (geo && SUPPORTED.has(geo)) return geo as "en" | "pt" | "de" | "es" | "fr";
+      if (geo && SUPPORTED.has(geo)) return geo as Locale;
     }
     return null;
   }
@@ -375,19 +380,19 @@ export default async function middleware(request: NextRequest) {
   // the destination. If they followed a /de/blog/... link they meant it.
   // The lang_choice cookie (explicit UI switch) is still honoured below.
   const isBlogPath = pathname === "/blog" || pathname.startsWith("/blog/")
-    || /^\/(pt|de|es|fr)\/blog(\/|$)/.test(pathname);
+    || new RegExp(`^/(${LOCALE_PREFIX_RE})/blog(/|$)`).test(pathname);
 
   if (!isBot && !isBlogPath) {
     const explicitChoice = request.cookies.get("lang_choice")?.value as
-      | "en" | "pt" | "de" | "es" | "fr" | undefined;
+      | Locale | undefined;
     const browserPref = preferredLocale();
     // Explicit choice wins; otherwise use Accept-Language.
     const pref = explicitChoice || browserPref;
 
-    const urlLocaleMatch = pathname.match(/^\/(pt|de|es|fr)(\/.*)?$/);
-    const urlLocale = urlLocaleMatch?.[1] as "pt" | "de" | "es" | "fr" | undefined;
+    const urlLocaleMatch = pathname.match(new RegExp(`^/(${LOCALE_PREFIX_RE})(/.*)?$`));
+    const urlLocale = urlLocaleMatch?.[1] as Locale | undefined;
     const urlRest = urlLocaleMatch?.[2] || "";
-    const effectiveUrlLocale: "en" | "pt" | "de" | "es" | "fr" = urlLocale || "en";
+    const effectiveUrlLocale: Locale = urlLocale || "en";
 
     if (pathname === "/" && pref && pref !== "en") {
       // Bare root → preferred non-EN locale. Keep the query string —

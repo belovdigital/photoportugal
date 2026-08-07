@@ -399,7 +399,9 @@
       "tierFull": "Complet 520 €",
       "perk1": "Valable 12 mois",
       "perk2": "Le destinataire choisit le photographe",
-      "perk3": "Livré instantanément par e-mail"
+      "perk3": "Livré instantanément par e-mail",
+      "cardLabel": "Carte cadeau",
+      "cardValidity": "Valable 12 mois · partout dans le pays"
     }
   },
   "heroSearch": {
