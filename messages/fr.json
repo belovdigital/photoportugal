@@ -3343,7 +3343,7 @@
     "takeAllBtnFree": "Tout prendre — {count} gratuites",
     "takeAllBtn": "Tout prendre — {count}",
     "takeAllTitle": "Tout prendre ?",
-    "takeAllFree": "Les {count} sont gratuites — elles sont à vous immédiatement et c'est irréversible.",
+    "takeAllFree": "Les {count} sont offertes — elles sont à vous tout de suite. Vous pouvez les échanger ou les rendre jusqu’à ce que vous acceptiez la livraison.",
     "takeAllMixed": "{free} sont gratuites et à vous tout de suite. Les {paid} autres vont dans le panier pour {total} — l'achat reste votre choix.",
     "takeAllPaid": "Les {count} vont dans le panier pour {total}. Rien n'est débité avant d'appuyer sur Acheter.",
     "takeAllConfirm": "Oui, je les prends",

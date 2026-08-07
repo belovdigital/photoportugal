@@ -3095,7 +3095,7 @@
     "takeAllBtnFree": "Take all {count} free",
     "takeAllBtn": "Take all {count}",
     "takeAllTitle": "Take them all?",
-    "takeAllFree": "All {count} are free — they become yours straight away and this cannot be undone.",
+    "takeAllFree": "All {count} are free — they become yours right away. You can swap or hand any of them back until you accept the delivery.",
     "takeAllMixed": "{free} are free and become yours now. The other {paid} go into your basket for {total} — you still choose whether to buy.",
     "takeAllPaid": "All {count} go into your basket for {total}. Nothing is charged until you press Buy.",
     "takeAllConfirm": "Yes, take them",

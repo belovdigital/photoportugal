@@ -3096,7 +3096,7 @@
     "takeAllBtnFree": "Alle {count} gratis nehmen",
     "takeAllBtn": "Alle {count} nehmen",
     "takeAllTitle": "Alle nehmen?",
-    "takeAllFree": "Alle {count} sind gratis — sie gehören Ihnen dann sofort, und das lässt sich nicht rückgängig machen.",
+    "takeAllFree": "Alle {count} sind gratis — sie gehören Ihnen sofort. Bis zur Abnahme können Sie jedes davon tauschen oder zurückgeben.",
     "takeAllMixed": "{free} sind gratis und gehören Ihnen sofort. Die anderen {paid} landen für {total} im Warenkorb — der Kauf bleibt Ihre Entscheidung.",
     "takeAllPaid": "Alle {count} landen für {total} im Warenkorb. Berechnet wird erst, wenn Sie auf Kaufen tippen.",
     "takeAllConfirm": "Ja, nehmen",

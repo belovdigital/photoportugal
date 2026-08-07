@@ -2870,7 +2870,7 @@
     "takeAllBtnFree": "Levar todas as {count} de graça",
     "takeAllBtn": "Levar todas as {count}",
     "takeAllTitle": "Levar todas?",
-    "takeAllFree": "Todas as {count} são grátis — passam a ser suas de imediato e não pode ser desfeito.",
+    "takeAllFree": "Todas as {count} são grátis — passam a ser suas já. Pode trocá-las ou devolvê-las até aceitar a entrega.",
     "takeAllMixed": "{free} são grátis e passam a ser suas já. As outras {paid} vão para o cesto por {total} — a compra continua a ser sua escolha.",
     "takeAllPaid": "As {count} vão para o cesto por {total}. Nada é cobrado até carregar em Comprar.",
     "takeAllConfirm": "Sim, quero",
