@@ -257,6 +257,44 @@ else
 • Google Drive: нет ни remote на сервере, ни GDRIVE_* в .env"
 fi
 
+# --- the .env, encrypted -----------------------------------------------------
+# A rebuilt box comes back with no secrets at all: database password, Stripe
+# keys, OAuth, the mail password. Spain lost its Migadu password exactly this
+# way on 2026-08-07 — the database was the loud casualty, the .env was the
+# quiet one.
+#
+# Encrypted, never plain. The whole point of the backup bucket is that one S3
+# key reaches it; if the .env sat there in the clear, that one key would also
+# hand over Stripe and the database. The passphrase lives in .env for
+# encrypting and in Alex's password manager for decrypting — it must NOT be
+# recoverable from the backups themselves, or it protects nothing.
+ENV_PASS="$(getenv ENV_BACKUP_PASSPHRASE)"
+export ENV_PASS
+if [ -n "$ENV_PASS" ] && command -v openssl >/dev/null; then
+  ENV_ENC="${LOCAL_DIR}/env_${STAMP}.enc"
+  if openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+       -in "$ENV_FILE" -out "$ENV_ENC" -pass env:ENV_PASS 2>/dev/null; then
+    cat "$ENV_ENC" | "${R2C[@]}" rcat "r2:${BUCKET}/env/${MARKET}/env_${STAMP}.enc" >/dev/null 2>&1 || true
+    # Same rule as the dump: it counts only if it reads back and decrypts.
+    if "${R2C[@]}" cat "r2:${BUCKET}/env/${MARKET}/env_${STAMP}.enc" 2>/dev/null \
+         | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:ENV_PASS 2>/dev/null \
+         | grep -q '^DATABASE_URL='; then
+      UPLOADED="${UPLOADED} env(зашифрован)"
+    else
+      DEGRADED="${DEGRADED}
+• .env: зашифрованная копия не читается обратно"
+    fi
+    rm -f "$ENV_ENC"
+    unset ENV_PASS
+  else
+    DEGRADED="${DEGRADED}
+• .env: openssl не смог зашифровать"
+  fi
+else
+  DEGRADED="${DEGRADED}
+• .env НЕ бэкапится: нет ENV_BACKUP_PASSPHRASE в .env"
+fi
+
 if [ -z "$UPLOADED" ]; then
   alert "Ни одна копия НЕ ушла с сервера. База есть только на диске, который переустановка сотрёт.${DEGRADED}"
   exit 1
