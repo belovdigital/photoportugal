@@ -78,12 +78,17 @@ echo "✓ rclone, pg_dump, openssl установлены"
 
 # --- symlinks ----------------------------------------------------------------
 SRC="/var/www/${APP}-incoming/scripts"
-if [ ! -f "${SRC}/backup-db.sh" ]; then
-  SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ ! -f "${SRC}/backup-db.sh" ] || [ ! -f "${SRC}/check-backups.sh" ]; then
+  echo "✗ Не нахожу скрипты в ${SRC}" >&2
+  echo "  Сделай rsync репозитория в /var/www/${APP}-incoming/ и повтори." >&2
+  echo "  Симлинк обязан указывать в развёрнутое дерево: если он будет вести" >&2
+  echo "  во временный каталог, бэкап тихо умрёт вместе с ним." >&2
+  exit 1
 fi
 for s in backup-db.sh check-backups.sh; do
   ln -sfn "${SRC}/${s}" "/usr/local/bin/${s}"
   chmod +x "${SRC}/${s}" 2>/dev/null || true
+  [ -x "/usr/local/bin/${s}" ] || { echo "✗ /usr/local/bin/${s} не исполняется" >&2; exit 1; }
 done
 echo "✓ скрипты: /usr/local/bin -> ${SRC}"
 

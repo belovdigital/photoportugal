@@ -107,8 +107,9 @@ for market in $MARKETS; do
     problems="${problems}
 • <b>${market}</b>: последний бэкап всего ${size} байт"
   else
+    if [ "$size" -ge 1048576 ]; then human="$(( size / 1048576 )) МБ"; else human="$(( size / 1024 )) КБ"; fi
     report="${report}
-• ${market}: ${age_h}ч назад, $(( size / 1024 / 1024 )) МБ"
+• ${market}: ${age_h}ч назад, ${human}"
   fi
 done
 
