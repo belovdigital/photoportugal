@@ -94,10 +94,20 @@ GD_CLIENT_SECRET="$(getenv GDRIVE_CLIENT_SECRET)"
 GD_TOKEN="$(getenv GDRIVE_TOKEN)"
 GD_ROOT="$(getenv GDRIVE_ROOT_FOLDER_ID)"
 
+# An unknown COUNTRY must NOT fall through to Portugal. It used to: a fourth
+# market would have written its dump into photoportugal/ under Portugal's name,
+# quietly mixing two countries in one folder and making the watchdog report
+# Portugal as fresh while the new market had nothing. Adding a country is one
+# line here and one word in MARKETS in check-backups.sh — refuse until it is
+# done rather than guess.
 case "$COUNTRY" in
-  es) MARKET="photospain";   LABEL="ES" ;;
-  it) MARKET="photoitalia";  LABEL="IT" ;;
-  *)  MARKET="photoportugal"; LABEL="PT" ;;
+  pt|"") MARKET="photoportugal"; LABEL="PT" ;;
+  es)    MARKET="photospain";    LABEL="ES" ;;
+  it)    MARKET="photoitalia";   LABEL="IT" ;;
+  *)
+    LABEL="$COUNTRY"
+    alert "COUNTRY=${COUNTRY} не описан в backup-db.sh. Бэкап НЕ сделан — добавь страну в case и в MARKETS в check-backups.sh."
+    exit 1 ;;
 esac
 
 BUCKET="$(getenv DB_BACKUP_BUCKET)"; BUCKET="${BUCKET:-norteirabackups}"
