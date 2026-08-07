@@ -642,7 +642,7 @@ export function DeliveryPageClient({
                 </p>
                 {(gallery?.gift_remaining ?? 0) > 0 && (
                   <p className="mt-1.5 text-xs font-semibold leading-snug text-accent-800">
-                    🎁 {t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}
+                    🎁 {t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0, name: normalizeName(gallery.photographer_name).split(" ")[0] })}
                   </p>
                 )}
               </div>
@@ -882,6 +882,7 @@ export function DeliveryPageClient({
           takingAll={takingAll}
           extrasPriceCents={gallery?.extras_price_cents ?? 290}
           giftLeft={gallery?.gift_remaining ?? 0}
+          photographerFirstName={normalizeName(gallery.photographer_name).split(" ")[0]}
           />
 
 

@@ -86,6 +86,7 @@ export function DeliveryGalleryClient({
   takingAll = false,
   extrasPriceCents = 290,
   giftLeft = 0,
+  photographerFirstName = "",
 }: {
   photos: Photo[];
   deliveryAccepted: boolean;
@@ -99,6 +100,8 @@ export function DeliveryGalleryClient({
   onTakeAll?: () => Promise<void>;
   takingAll?: boolean;
   extrasPriceCents?: number;
+  /** Named, because "your photographer" is not who gave you the photos. */
+  photographerFirstName?: string;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
@@ -453,7 +456,7 @@ export function DeliveryGalleryClient({
               </h3>
               <p className="mt-0.5 text-sm text-amber-800">
                 {giftLeft > 0
-                  ? t("sectionOnOfferFree", { count: giftLeft })
+                  ? t("sectionOnOfferFree", { count: giftLeft, name: photographerFirstName })
                   : t("sectionOnOfferPaid", { price: money(extrasPriceCents) })}
               </p>
             </div>
