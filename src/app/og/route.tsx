@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import fs from "node:fs";
 import path from "node:path";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 
 export const runtime = "nodejs";
 
@@ -20,13 +20,39 @@ export const runtime = "nodejs";
 
 // Placeholder hero shot. Same file the Portuguese homepage collage uses, served
 // from the public R2 host so ImageResponse can fetch it at render time.
-const HERO_PHOTO =
-  "https://files.photoportugal.com/portfolio/33becad3-d2b3-4641-a62b-147e354e9a40/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg";
+// Italy serves its copy from its own bucket, so a shared card does not fetch —
+// or advertise — another market's infrastructure.
+const HERO_PHOTO = byCountry({
+  pt: "https://files.photoportugal.com/portfolio/33becad3-d2b3-4641-a62b-147e354e9a40/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg",
+  es: "https://files.photoportugal.com/portfolio/33becad3-d2b3-4641-a62b-147e354e9a40/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg",
+  it: "https://files.photoitaly.co/hero/4bb6595f-04b8-4989-af65-8cf2e0dadb78.jpg",
+});
 
-const CITIES: Record<string, string> = {
-  es: "Barcelona · Madrid · Seville · Granada · Mallorca · 24 locations.",
+// Keyed by the pack rather than a lookup with a Portuguese default: Italy
+// inherited "Lisbon · Porto · Algarve" on every share until this changed.
+const CITIES = byCountry({
   pt: "Lisbon · Porto · Algarve · Sintra · Madeira · 30+ locations.",
-};
+  es: "Barcelona · Madrid · Seville · Granada · Mallorca · 24 locations.",
+  it: "Rome · Florence · Venice · Amalfi · 24 locations.",
+});
+
+/**
+ * The brand faces, read from disk for the same reason as the wordmark below.
+ *
+ * Without them `ImageResponse` falls back to whatever sans-serif the renderer
+ * has, so the headline of every shared card was set in a system font while the
+ * site's own display face is Playfair Display. Vendored (both are OFL) so the
+ * card never depends on Google Fonts being reachable at render time.
+ */
+function loadFont(file: string): Buffer | null {
+  try {
+    return fs.readFileSync(path.join(process.cwd(), "public", "fonts", file));
+  } catch {
+    return null;
+  }
+}
+const playfairBold = loadFont("PlayfairDisplay-Bold.ttf");
+const interRegular = loadFont("Inter-Regular.ttf");
 
 /**
  * The real wordmark, inlined as a data URI.
@@ -50,7 +76,7 @@ const logoDataUri = (() => {
 })();
 
 export async function GET() {
-  const cities = CITIES[country.code] || CITIES.pt;
+  const cities = CITIES;
 
   return new ImageResponse(
     (
@@ -63,7 +89,7 @@ export async function GET() {
           alignItems: "center",
           padding: "72px 80px",
           background: "#FAF8F5",
-          fontFamily: "sans-serif",
+          fontFamily: "Inter",
           position: "relative",
         }}
       >
@@ -85,13 +111,13 @@ export async function GET() {
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", fontSize: 68, fontWeight: 700, color: "#1F1F1F", lineHeight: 1.1 }}>
+        <div style={{ display: "flex", flexDirection: "column", fontFamily: "Playfair Display", fontSize: 68, fontWeight: 700, color: "#1F1F1F", lineHeight: 1.1 }}>
           <div style={{ display: "flex" }}>Hand-picked photographers</div>
           <div style={{ display: "flex", color: "#C94536" }}>across {country.areaServed}</div>
         </div>
 
-        <div style={{ display: "flex", marginTop: 32, fontSize: 30, color: "#6B6B6B" }}>{cities}</div>
-        <div style={{ display: "flex", marginTop: 10, fontSize: 30, color: "#6B6B6B" }}>
+        <div style={{ display: "flex", marginTop: 32, fontSize: 27, color: "#6B6B6B" }}>{cities}</div>
+        <div style={{ display: "flex", marginTop: 10, fontSize: 27, color: "#6B6B6B" }}>
           Every photographer personally vetted.
         </div>
         </div>
@@ -104,6 +130,13 @@ export async function GET() {
         />
       </div>
     ),
-    { width: 1200, height: 630 }
+    {
+      width: 1200,
+      height: 630,
+      fonts: [
+        ...(playfairBold ? [{ name: "Playfair Display", data: playfairBold, weight: 700 as const, style: "normal" as const }] : []),
+        ...(interRegular ? [{ name: "Inter", data: interRegular, weight: 400 as const, style: "normal" as const }] : []),
+      ],
+    }
   );
 }
