@@ -3115,7 +3115,8 @@
     "extrasClearConfirm": "Remove all {count, plural, one {# photo} other {# photos}} from your selection?",
     "railYours": "yours",
     "railCanAdd": "you can add",
-    "extrasNothingChargedYet": "Nothing is charged until you press Buy"
+    "extrasNothingChargedYet": "Nothing is charged until you press Buy",
+    "acceptReleasesPayment": "Releases the payment to your photographer and unlocks full resolution."
   },
   "availability": {
     "pageTitle": "Availability",

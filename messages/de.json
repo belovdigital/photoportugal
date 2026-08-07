@@ -3116,7 +3116,8 @@
     "extrasClearConfirm": "{count, plural, one {# Foto} other {Alle # Fotos}} aus Ihrer Auswahl entfernen?",
     "railYours": "Ihre",
     "railCanAdd": "zur Auswahl",
-    "extrasNothingChargedYet": "Berechnet wird erst mit Kaufen"
+    "extrasNothingChargedYet": "Berechnet wird erst mit Kaufen",
+    "acceptReleasesPayment": "Gibt die Zahlung an den Fotografen frei und schaltet volle Auflösung frei."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

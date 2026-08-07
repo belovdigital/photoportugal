@@ -3363,7 +3363,8 @@
     "extrasClearConfirm": "Retirer {count, plural, one {# photo} other {les # photos}} de votre sélection ?",
     "railYours": "à vous",
     "railCanAdd": "à ajouter",
-    "extrasNothingChargedYet": "Rien n'est débité avant Acheter"
+    "extrasNothingChargedYet": "Rien n'est débité avant Acheter",
+    "acceptReleasesPayment": "Libère le paiement au photographe et débloque la haute résolution."
   },
   "availability": {
     "pageTitle": "Disponibilités",

@@ -2890,7 +2890,8 @@
     "extrasClearConfirm": "Remover {count, plural, one {# fotografia} other {as # fotografias}} da sua seleção?",
     "railYours": "suas",
     "railCanAdd": "pode juntar",
-    "extrasNothingChargedYet": "Nada é cobrado até carregar em Comprar"
+    "extrasNothingChargedYet": "Nada é cobrado até carregar em Comprar",
+    "acceptReleasesPayment": "Liberta o pagamento ao fotógrafo e desbloqueia a alta resolução."
   },
   "availability": {
     "pageTitle": "Disponibilidade",

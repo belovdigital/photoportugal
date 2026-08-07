@@ -582,7 +582,7 @@ export function DeliveryPageClient({
           rail carries who, how many, what state and every action; the column
           beside it is photographs and nothing else. Sticky, so the basket and
           the primary action are on screen at photo 400 exactly as at photo 1. */}
-      <div className="lg:grid lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-10">
+      <div className="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
 
           <div className="flex items-center gap-3">
@@ -644,7 +644,7 @@ export function DeliveryPageClient({
           {gallery?.extras_zip_ready ? (
           <a
           href={`/api/delivery/${token}/download?set=extras&password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-2.5 text-sm font-semibold text-primary-700 hover:bg-primary-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-warm-200 bg-warm-50 px-4 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-warm-100"
           >
           {t("extrasDownload", { count: gallery.extras_owned ?? 0 })}
           {gallery.extras_zip_size ? <span className="text-xs opacity-75">({(gallery.extras_zip_size / (1024 * 1024)).toFixed(0)} MB)</span> : null}
@@ -664,7 +664,7 @@ export function DeliveryPageClient({
           gallery?.zip_ready ? (
           <a
           href={`/api/delivery/${token}/download?password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-green-700"
           >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -729,28 +729,22 @@ export function DeliveryPageClient({
           ) : null}
           </>
           ) : (
-          <div className="rounded-2xl border border-warm-200 bg-warm-50 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-          <p className="font-semibold text-gray-800">{t("happyWithPhotos")}</p>
-          <p className="mt-1 text-sm text-gray-600">
-          {t("acceptDeliveryPrompt")} {gallery.payment_status === "paid" ? t("acceptDeliveryPaymentNote") : ""}
-          </p>
-          </div>
-          <div className="flex items-center gap-4">
-          <DisputeForm bookingId={gallery.booking_id} token={token} />
-          <button
-          onClick={handleAcceptDelivery}
-          disabled={accepting}
-          className="shrink-0 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-          >
-          {accepting ? t("accepting") : t("acceptDelivery")}
-          </button>
-          </div>
-          </div>
-          {acceptError && (
-          <p className="mt-3 text-sm text-red-600">{acceptError}</p>
-          )}
+          <div className="rounded-2xl border border-warm-200 bg-white p-4">
+            <p className="text-sm font-semibold text-gray-900">{t("happyWithPhotos")}</p>
+            <button
+              onClick={handleAcceptDelivery}
+              disabled={accepting}
+              className="mt-3 w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-green-700 disabled:opacity-50"
+            >
+              {accepting ? t("accepting") : t("acceptDelivery")}
+            </button>
+            <p className="mt-2 text-xs leading-snug text-gray-500">{t("acceptReleasesPayment")}</p>
+            <div className="mt-3 border-t border-warm-200 pt-2 text-xs">
+              <DisputeForm bookingId={gallery.booking_id} token={token} />
+            </div>
+            {acceptError && (
+              <p className="mt-3 text-xs leading-snug text-red-600">{acceptError}</p>
+            )}
           </div>
           )}
           </div>
