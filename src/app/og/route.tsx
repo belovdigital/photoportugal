@@ -24,8 +24,8 @@ export const runtime = "nodejs";
 // or advertise — another market's infrastructure.
 const HERO_PHOTO = byCountry({
   pt: "https://files.photoportugal.com/portfolio/33becad3-d2b3-4641-a62b-147e354e9a40/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg",
-  es: "https://files.photoportugal.com/portfolio/33becad3-d2b3-4641-a62b-147e354e9a40/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg",
-  it: "https://files.photoitaly.co/hero/4bb6595f-04b8-4989-af65-8cf2e0dadb78.jpg",
+  es: "https://files.photospain.co/hero/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg",
+  it: "https://files.photoitaly.co/hero/22f6704a-e0db-48fe-8d2a-8644ca4e6714.jpeg",
 });
 
 // Keyed by the pack rather than a lookup with a Portuguese default: Italy

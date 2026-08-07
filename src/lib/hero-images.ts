@@ -75,13 +75,13 @@ export const heroImages: HeroImage[] = [
 /**
  * Neutral hero photo URL.
  *
- * The pictures are Portuguese work. Italy has its own copies in its own R2
- * bucket, so its homepage does not have to reference photoportugal.com in
- * every page of HTML or depend on a bucket another market controls. Markets
- * without a copy fall back to the original until their files are seeded.
+ * The pictures are Portuguese work, but every market serves its own copy from
+ * its own R2 bucket: otherwise their homepages reference photoportugal.com in
+ * every page of HTML and depend on a bucket they do not control. The files are
+ * seeded under hero/ in each bucket; Portugal keeps the original portfolio path.
  */
 function neutralHero(file: string, fallback: string): string {
-  return country.code === "it" ? `https://${country.filesHost}/hero/${file}` : fallback;
+  return country.code === "pt" ? fallback : `https://${country.filesHost}/hero/${file}`;
 }
 
 export const heroImagesNeutral: HeroImage[] = [
