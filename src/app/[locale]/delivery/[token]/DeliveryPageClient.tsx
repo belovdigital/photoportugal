@@ -641,7 +641,10 @@ export function DeliveryPageClient({
                   {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
                 </p>
                 {(gallery?.gift_remaining ?? 0) > 0 && (
-                  <p className="mt-1.5 text-xs font-semibold leading-snug text-accent-800">
+                  /* Its own soft ground so the present reads as a present and
+                     not as more small print under the price. Rose rather than
+                     the page's green or amber — neither of which is a gift. */
+                  <p className="mt-2.5 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold leading-snug text-rose-900 ring-1 ring-rose-100">
                     🎁 {t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0, name: normalizeName(gallery.photographer_name).split(" ")[0] })}
                   </p>
                 )}
