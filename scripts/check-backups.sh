@@ -65,6 +65,9 @@ R2C=(rclone --config "$RCLONE_CONF" --s3-disable-checksum)
 BUCKET="$(getenv DB_BACKUP_BUCKET)"; BUCKET="${BUCKET:-norteirabackups}"
 MARKETS="photoportugal photospain photoitalia"
 MAX_AGE_HOURS=26
+# Same floor as backup-db.sh. A market mid-restore, or simply a young one, is
+# legitimately small; the real signal is staleness, not absolute size.
+MIN_BYTES="$(getenv MIN_BACKUP_BYTES)"; MIN_BYTES="${MIN_BYTES:-15000}"
 
 problems=""
 report=""
@@ -100,7 +103,7 @@ for market in $MARKETS; do
   elif [ "$age_h" -gt "$MAX_AGE_HOURS" ]; then
     problems="${problems}
 • <b>${market}</b>: последний бэкап ${age_h}ч назад (${newest})"
-  elif [ "$size" -lt 100000 ]; then
+  elif [ "$size" -lt "$MIN_BYTES" ]; then
     problems="${problems}
 • <b>${market}</b>: последний бэкап всего ${size} байт"
   else

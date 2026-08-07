@@ -138,11 +138,25 @@ mkdir -p "$LOCAL_DIR"
 pg_dump --no-owner --no-acl "$DATABASE_URL" | gzip -9 > "$FILE"
 
 SIZE_BYTES="$(stat -c%s "$FILE" 2>/dev/null || stat -f%z "$FILE")"
-# A dump that shrank to nothing is the classic silent corruption: the command
-# "succeeded", the file exists, and it restores an empty database.
-if [ "$SIZE_BYTES" -lt 100000 ]; then
-  alert "Дамп подозрительно мал: ${SIZE_BYTES} байт. Не выгружаю, чтобы не затереть хорошие копии."
+
+# A dump that shrank is the classic silent corruption: the command "succeeded",
+# the file exists, and it restores an empty database. What "too small" means
+# depends on the market, so the useful comparison is against yesterday rather
+# than a number picked once — a young country is legitimately tiny, and a big
+# one halving overnight is alarming even at 200MB.
+MIN_BYTES="$(getenv MIN_BACKUP_BYTES)"; MIN_BYTES="${MIN_BYTES:-15000}"
+if [ "$SIZE_BYTES" -lt "$MIN_BYTES" ]; then
+  alert "Дамп подозрительно мал: ${SIZE_BYTES} байт (порог ${MIN_BYTES}). Не выгружаю, чтобы не затереть хорошие копии."
   exit 1
+fi
+
+PREV="$(ls -t "${LOCAL_DIR}"/*.sql.gz 2>/dev/null | sed -n '2p' || true)"
+if [ -n "$PREV" ]; then
+  PREV_BYTES="$(stat -c%s "$PREV" 2>/dev/null || stat -f%z "$PREV" || echo 0)"
+  if [ "$PREV_BYTES" -gt 0 ] && [ "$((SIZE_BYTES * 2))" -lt "$PREV_BYTES" ]; then
+    alert "Дамп вдвое меньше вчерашнего: ${SIZE_BYTES} против ${PREV_BYTES} байт. Не выгружаю — проверь базу."
+    exit 1
+  fi
 fi
 
 # --- upload ----------------------------------------------------------------
