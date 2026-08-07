@@ -3366,7 +3366,7 @@
     "railFromGift": "{count} offertes par {name}",
     "railCanBuy": "à acheter",
     "giftGiveBack": "Rendre",
-    "acceptWindow": "Il reste {days} jours — la galerie ferme le {date}",
+    "acceptWindow": "Il reste {days} jours pour vérifier — le {date} nous acceptons pour vous et payons votre photographe",
     "acceptGiftsLeftTitle": "Il vous reste {count} photos offertes",
     "acceptGiftsLeftBody": "{name} vous offre {count} photos de plus, et vous ne les avez pas encore choisies. Vous pourrez les prendre plus tard, mais une fois la livraison acceptée vous ne pourrez plus les échanger.",
     "acceptGiftsTakeFirst": "Prendre mes photos offertes",

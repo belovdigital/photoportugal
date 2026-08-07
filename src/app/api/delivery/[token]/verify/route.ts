@@ -51,6 +51,7 @@ export async function POST(
     gift_recipient_user_id: string | null;
     delivery_password: string;
     delivery_expires_at: string;
+    auto_accept_at: string | null;
     photographer_name: string;
     photographer_avatar: string | null;
     photographer_slug: string;
@@ -71,6 +72,7 @@ export async function POST(
     zip_size: number | null;
   }>(
     `SELECT b.id, b.client_id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
+            (b.updated_at + INTERVAL '14 days')::text AS auto_accept_at,
             u.name as photographer_name, u.avatar_url as photographer_avatar,
             pp.slug as photographer_slug, cu.name as client_name,
             b.shoot_date, b.location_slug,
@@ -263,6 +265,7 @@ export async function POST(
     shoot_date: booking.shoot_date,
     location_slug: booking.location_slug,
     expires_at: booking.delivery_expires_at,
+    auto_accept_at: booking.auto_accept_at,
     photos,
     photo_count: photos.length,
     // What the extras strip needs to price a basket without hardcoding the

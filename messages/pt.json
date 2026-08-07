@@ -2893,7 +2893,7 @@
     "railFromGift": "{count} oferecidas por {name}",
     "railCanBuy": "pode comprar",
     "giftGiveBack": "Devolver",
-    "acceptWindow": "Faltam {days} dias — a galeria fecha a {date}",
+    "acceptWindow": "Faltam {days} dias para rever — a {date} aceitamos por si e pagamos ao seu fotógrafo",
     "acceptGiftsLeftTitle": "Tem {count} fotos grátis à sua espera",
     "acceptGiftsLeftBody": "{name} está a oferecer-lhe mais {count} fotos, e ainda não as escolheu. Pode levá-las depois, mas assim que aceitar já não poderá trocá-las por outras.",
     "acceptGiftsTakeFirst": "Levar as minhas fotos grátis",

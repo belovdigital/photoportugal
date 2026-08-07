@@ -35,6 +35,7 @@ interface GalleryData {
   photos: Photo[];
   photo_count: number;
   expires_at: string;
+  auto_accept_at?: string | null;
   delivery_accepted: boolean;
   payment_status: string;
   zip_ready?: boolean;
@@ -642,10 +643,15 @@ export function DeliveryPageClient({
   const expiresDate = new Date(gallery.expires_at).toLocaleDateString(dateLocale, {
     month: "long", day: "numeric", year: "numeric",
   });
-  const daysLeft = Math.max(
-    0,
-    Math.ceil((new Date(gallery.expires_at).getTime() - Date.now()) / 86_400_000)
-  );
+  const autoAcceptAt = gallery.auto_accept_at ? new Date(gallery.auto_accept_at) : null;
+  const autoAcceptDate = autoAcceptAt
+    ? autoAcceptAt.toLocaleDateString(dateLocale, { month: "long", day: "numeric" })
+    : "";
+  // Never negative and never zero-and-still-showing: the cron runs hourly, so a
+  // gallery can sit a little past its own deadline.
+  const daysLeft = autoAcceptAt
+    ? Math.max(0, Math.ceil((autoAcceptAt.getTime() - Date.now()) / 86_400_000))
+    : 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
@@ -725,7 +731,7 @@ export function DeliveryPageClient({
               {totalSize > 1024 * 1024
                 ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
                 : `${(totalSize / 1024).toFixed(0)} KB`}
-              {" · "}{t("availableUntil", { date: expiresDate })}
+              {accepted ? <>{" · "}{t("availableUntil", { date: expiresDate })}</> : null}
             </p>
           </div>
 
@@ -790,9 +796,11 @@ export function DeliveryPageClient({
           </svg>
           {t("acceptToUnlockFullRes")}
           </span>
+          {autoAcceptAt && daysLeft > 0 ? (
           <span className="mt-1.5 block pl-6 text-xs font-semibold text-amber-700">
-          {t("acceptWindow", { days: daysLeft, date: expiresDate })}
+          {t("acceptWindow", { days: daysLeft, date: autoAcceptDate })}
           </span>
+          ) : null}
           </div>
           ) : null}
           </div>

@@ -3119,7 +3119,7 @@
     "railFromGift": "{count} geschenkt von {name}",
     "railCanBuy": "zum Kauf",
     "giftGiveBack": "Zurückgeben",
-    "acceptWindow": "Noch {days} Tage — die Galerie schließt am {date}",
+    "acceptWindow": "Noch {days} Tage zum Prüfen — am {date} nehmen wir für Sie ab und zahlen Ihren Fotografen aus",
     "acceptGiftsLeftTitle": "Sie haben noch {count} Gratisfotos offen",
     "acceptGiftsLeftBody": "{name} schenkt Ihnen {count} weitere Fotos, und Sie haben sie noch nicht ausgewählt. Sie können sie auch später nehmen, aber nach der Abnahme lassen sie sich nicht mehr gegen andere tauschen.",
     "acceptGiftsTakeFirst": "Gratisfotos nehmen",

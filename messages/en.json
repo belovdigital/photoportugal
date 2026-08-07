@@ -3118,7 +3118,7 @@
     "railFromGift": "{count} free from {name}",
     "railCanBuy": "you can buy",
     "giftGiveBack": "Give back",
-    "acceptWindow": "{days} days left — the gallery closes on {date}",
+    "acceptWindow": "{days} days left to review — on {date} we accept for you and pay your photographer",
     "acceptGiftsLeftTitle": "You have {count} free photos waiting",
     "acceptGiftsLeftBody": "{name} is giving you {count} more photos, free, and you have not picked them yet. You can still take them afterwards, but once you accept you can no longer swap them for different shots.",
     "acceptGiftsTakeFirst": "Take my free photos",
