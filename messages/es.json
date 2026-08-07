@@ -3362,7 +3362,10 @@
     "railYours": "tuyas",
     "railCanAdd": "puedes añadir",
     "extrasNothingChargedYet": "No se cobra nada hasta que pulses Comprar",
-    "acceptReleasesPayment": "Libera el pago al fotógrafo y desbloquea la alta resolución."
+    "acceptReleasesPayment": "Libera el pago al fotógrafo y desbloquea la alta resolución.",
+    "railFromPackage": "{count} de tu paquete",
+    "railFromGift": "{count} de regalo de {name}",
+    "railCanBuy": "puedes comprar"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

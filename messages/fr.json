@@ -3362,7 +3362,10 @@
     "railYours": "à vous",
     "railCanAdd": "à ajouter",
     "extrasNothingChargedYet": "Rien n'est débité avant Acheter",
-    "acceptReleasesPayment": "Libère le paiement au photographe et débloque la haute résolution."
+    "acceptReleasesPayment": "Libère le paiement au photographe et débloque la haute résolution.",
+    "railFromPackage": "{count} de votre forfait",
+    "railFromGift": "{count} offertes par {name}",
+    "railCanBuy": "à acheter"
   },
   "availability": {
     "pageTitle": "Disponibilités",

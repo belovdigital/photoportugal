@@ -3114,7 +3114,10 @@
     "railYours": "yours",
     "railCanAdd": "you can add",
     "extrasNothingChargedYet": "Nothing is charged until you press Buy",
-    "acceptReleasesPayment": "Releases the payment to your photographer and unlocks full resolution."
+    "acceptReleasesPayment": "Releases the payment to your photographer and unlocks full resolution.",
+    "railFromPackage": "{count} from your package",
+    "railFromGift": "{count} free from {name}",
+    "railCanBuy": "you can buy"
   },
   "availability": {
     "pageTitle": "Availability",

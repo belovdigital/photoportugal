@@ -271,6 +271,10 @@ export async function POST(
     extras_price_cents: resolveExtrasPricing(booking).priceCents,
     gift_remaining: Math.max(0, booking.gift_slots - booking.gift_used),
     extras_available: photos.filter((p) => p.locked).length,
+    // Split so the client can be told WHERE their photos came from: the
+    // package they paid for, and whatever the photographer added on top.
+    package_photos: photos.filter((p) => !p.locked && !p.purchased && p.media_type !== "video").length,
+    gifted_photos: photos.filter((p) => p.purchased && !p.paid).length,
     delivery_accepted: isAccepted,
     payment_status: booking.payment_status,
     zip_ready: isAccepted && booking.zip_ready,

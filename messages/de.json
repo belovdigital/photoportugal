@@ -3115,7 +3115,10 @@
     "railYours": "Ihre",
     "railCanAdd": "zur Auswahl",
     "extrasNothingChargedYet": "Berechnet wird erst mit Kaufen",
-    "acceptReleasesPayment": "Gibt die Zahlung an den Fotografen frei und schaltet volle Auflösung frei."
+    "acceptReleasesPayment": "Gibt die Zahlung an den Fotografen frei und schaltet volle Auflösung frei.",
+    "railFromPackage": "{count} aus Ihrem Paket",
+    "railFromGift": "{count} geschenkt von {name}",
+    "railCanBuy": "zum Kauf"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

@@ -2889,7 +2889,10 @@
     "railYours": "suas",
     "railCanAdd": "pode juntar",
     "extrasNothingChargedYet": "Nada é cobrado até carregar em Comprar",
-    "acceptReleasesPayment": "Liberta o pagamento ao fotógrafo e desbloqueia a alta resolução."
+    "acceptReleasesPayment": "Liberta o pagamento ao fotógrafo e desbloqueia a alta resolução.",
+    "railFromPackage": "{count} do seu pacote",
+    "railFromGift": "{count} oferecidas por {name}",
+    "railCanBuy": "pode comprar"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

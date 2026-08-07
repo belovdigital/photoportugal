@@ -42,6 +42,8 @@ interface GalleryData {
   extras_zip_ready?: boolean;
   extras_zip_size?: number | null;
   extras_owned?: number;
+  package_photos?: number;
+  gifted_photos?: number;
   extras_price_cents?: number;
   gift_remaining?: number;
   extras_available?: number;
@@ -613,11 +615,25 @@ export function DeliveryPageClient({
                 {gallery.photo_count - (gallery.extras_available ?? 0)}
               </p>
               <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("railYours")}</p>
+              {/* "15 yours" hid the nicest fact on the page: five were paid
+                  for and ten were a present. */}
+              {(gallery.gifted_photos ?? 0) > 0 && (
+                <p className="mt-2 text-xs leading-snug text-gray-600">
+                  {t("railFromPackage", { count: gallery.package_photos ?? 0 })}
+                  <span className="mt-0.5 block font-semibold text-accent-800">
+                    🎁 {t("railFromGift", { count: gallery.gifted_photos ?? 0, name: normalizeName(gallery.photographer_name).split(" ")[0] })}
+                  </span>
+                </p>
+              )}
             </div>
             {(gallery.extras_available ?? 0) > 0 && (
               <div className="border-t border-warm-200 pt-3">
                 <p className="font-display text-2xl font-bold leading-none text-amber-800">{gallery.extras_available ?? 0}</p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">{t("railCanAdd")}</p>
+                {/* "Buy" is only true once the gift is spent — until then some
+                    of these are free, and the label must not say otherwise. */}
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                  {(gallery?.gift_remaining ?? 0) > 0 ? t("railCanAdd") : t("railCanBuy")}
+                </p>
                 {/* The only place this is explained now. It used to say the
                     same thing here, in a green banner above the grid, and
                     again in the section header below it. */}
