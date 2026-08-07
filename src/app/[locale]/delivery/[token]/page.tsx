@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   );
 
   return {
-    title: booking ? `Photos by ${booking.photographer_name} — ${country.brand}` : `Photo Delivery — ${country.brand}`,
+    title: booking ? `Photos by ${maskSurname(booking.photographer_name)} — ${country.brand}` : `Photo Delivery — ${country.brand}`,
     robots: "noindex, nofollow",
   };
 }
