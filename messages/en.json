@@ -3078,7 +3078,6 @@
     "tooManyPhotos": "The delivery holds {count} photos but this package promises {required}. Move {over} to Extra photos first — your client can then buy them, or receive them free if you set a gift.",
     "giftUnsaved": "Press Save to let your client pick {count, plural, one {# extra photo} other {# extra photos}} for free.",
     "giftMoreThanExtras": "There {available, plural, one {is only # extra photo} other {are only # extra photos}} to give right now.",
-    "giftAll": "Give them all",
     "moveSurplus": "Move the last {over} down",
     "extraPick": "Add",
     "extraPicked": "Added",
@@ -3105,14 +3104,14 @@
     "takeAllConfirm": "Yes, take them",
     "swapShort": "Swap",
     "extrasSomeGone": "{count, plural, one {# photo is no longer available} other {# photos are no longer available}} — your gallery has been refreshed. Please choose again.",
-    "swapNotOwned": "That photo is already yours — swap onto one from your package instead.",
     "swapNotVideo": "Videos are always included and cannot be swapped.",
     "swapNotPaid": "Photos you paid for stay yours — swap onto one from your package or a gifted one instead.",
     "sectionYoursSwapHint": "Prefer a different shot? Drag any photo from Extra onto one here — they swap, free.",
     "giftedBadge": "Gifted",
     "statDelivered": "Delivered",
     "statOnOffer": "On offer · {price} each",
-    "statGiftTaken": "Free photos taken"
+    "statGiftTaken": "Free photos taken",
+    "deleteSkippedSold": "{count, plural, one {# photo could not be removed} other {# photos could not be removed}} — your client has bought {count, plural, one {it} other {them}} or is paying for {count, plural, one {it} other {them}} right now."
   },
   "availability": {
     "pageTitle": "Availability",

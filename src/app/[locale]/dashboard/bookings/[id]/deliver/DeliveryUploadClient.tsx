@@ -598,6 +598,7 @@ export function DeliveryUploadClient({
     // and the progress bar honest.
     const CHUNK = 50;
     let removed = 0;
+    let skipped = 0;
     let failed = 0;
     for (let i = 0; i < ids.length; i += CHUNK) {
       const chunk = ids.slice(i, i + CHUNK);
@@ -620,6 +621,10 @@ export function DeliveryUploadClient({
         const gone = new Set(deleted);
         setPhotos((prev) => prev.filter((p) => !gone.has(p.id)));
         removed += deleted.length;
+        // The server refuses to delete a photo that is sold or has a live
+        // checkout against it. Saying nothing left the photographer staring at
+        // a tile that would not go away.
+        skipped += chunk.length - deleted.length;
       } catch {
         failed += chunk.length;
         alert(t("deleteFailed"));
@@ -632,6 +637,8 @@ export function DeliveryUploadClient({
     setDeleting(false);
     if (failed > 0 && removed > 0) {
       alert(t("deletePartial", { removed, failed }));
+    } else if (skipped > 0) {
+      alert(t("deleteSkippedSold", { count: skipped }));
     }
   }
 

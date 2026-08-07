@@ -3326,7 +3326,6 @@
     "tooManyPhotos": "La entrega tiene {count} fotos pero este paquete promete {required}. Mueva {over} a las extra — su cliente podrá comprarlas, o recibirlas gratis si define un regalo.",
     "giftUnsaved": "Pulse Guardar para que su cliente pueda elegir {count, plural, one {# foto extra} other {# fotos extra}} gratis.",
     "giftMoreThanExtras": "Ahora mismo solo {available, plural, one {hay # foto extra} other {hay # fotos extra}} para regalar.",
-    "giftAll": "Regalarlas todas",
     "moveSurplus": "Bajar las últimas {over}",
     "extraPick": "Añadir",
     "extraPicked": "Añadida",
@@ -3353,14 +3352,14 @@
     "takeAllConfirm": "Sí, quiero",
     "swapShort": "Cambiar",
     "extrasSomeGone": "{count, plural, one {# foto ya no está disponible} other {# fotos ya no están disponibles}} — tu galería se ha actualizado. Elige de nuevo.",
-    "swapNotOwned": "Esa foto ya es tuya — cámbiala por una de tu paquete.",
     "swapNotVideo": "Los vídeos siempre están incluidos y no se pueden cambiar.",
     "swapNotPaid": "Las fotos que compraste son tuyas — cámbialas por una de tu paquete o por una regalada.",
     "sectionYoursSwapHint": "¿Prefieres otra? Arrastra una foto de Extra sobre una de estas — se cambian, gratis.",
     "giftedBadge": "Regalada",
     "statDelivered": "Entregadas",
     "statOnOffer": "A la venta · {price} c/u",
-    "statGiftTaken": "Gratis ya elegidas"
+    "statGiftTaken": "Gratis ya elegidas",
+    "deleteSkippedSold": "{count, plural, one {# foto no se pudo eliminar} other {# fotos no se pudieron eliminar}} — tu cliente ya las compró o las está pagando ahora mismo."
   },
   "availability": {
     "pageTitle": "Disponibilidad",
