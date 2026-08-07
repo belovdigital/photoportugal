@@ -111,6 +111,37 @@ export async function POST(
   }
 
   // Use a transaction with FOR UPDATE to prevent double-payout race condition
+  // The extras story, told once. Gift slots the photographer offered, how many
+  // the client actually took, and how many they paid for. payout_cents rather
+  // than amount_cents wherever this reaches a photographer: they see what they
+  // earn, never what the client was charged.
+  const extras = await queryOne<{
+    offered: number; taken: number; bought: number; payout: string | null; gross: string | null;
+  }>(
+    `SELECT COALESCE(b.extras_gift_slots, 0) AS offered,
+            COUNT(*) FILTER (WHERE x.status = 'paid' AND x.amount_cents = 0)::int AS taken,
+            COUNT(*) FILTER (WHERE x.status = 'paid' AND x.amount_cents > 0)::int AS bought,
+            COALESCE(SUM(x.payout_cents) FILTER (WHERE x.status = 'paid'), 0)::text AS payout,
+            COALESCE(SUM(x.amount_cents) FILTER (WHERE x.status = 'paid'), 0)::text AS gross
+       FROM bookings b
+       LEFT JOIN delivery_extra_purchases x ON x.booking_id = b.id
+      WHERE b.id = $1
+      GROUP BY b.extras_gift_slots`,
+    [booking.id]
+  ).catch(() => null);
+
+  const giftOffered = extras?.offered ?? 0;
+  const giftTaken = extras?.taken ?? 0;
+  const extrasBought = extras?.bought ?? 0;
+  const extrasPayout = Number(extras?.payout ?? 0) / 100;
+  const extrasGross = Number(extras?.gross ?? 0) / 100;
+
+  /** For the photographer: counts and their own money, never the client's. */
+  const extrasLineForPhotographer = giftOffered > 0 || extrasBought > 0
+    ? `\n\n🎁 Gifted: ${giftTaken} of ${giftOffered} taken` +
+      (extrasBought > 0 ? `\n🛒 Bought: ${extrasBought} extra · +€${extrasPayout.toFixed(2)} to you` : "")
+    : "";
+
   let payoutSuccess = false;
 
   const accepted = await withTransaction(async (client) => {
@@ -266,7 +297,8 @@ export async function POST(
               booking.photographer_name,
               booking.client_name,
               payoutAmount,
-              extrasStillOnOffer
+              extrasStillOnOffer,
+              { giftOffered, giftTaken, extrasBought, extrasPayout }
             );
           } catch (transferErr) {
             // Transfer failed (network, Stripe error). Roll back the
@@ -314,7 +346,13 @@ export async function POST(
     const ourCut = base != null && payout > 0 && base - payout >= 0
       ? Math.round((base - payout + fee) * 100) / 100
       : null;
-    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${payout.toFixed(2)}${ourCut != null ? ` · нам €${ourCut.toFixed(2)}` : ""}` : ""}`, "bookings");
+    const extrasLine = giftOffered > 0 || extrasBought > 0
+      ? `\n🎁 Подарок: ${giftTaken} из ${giftOffered}` +
+        (extrasBought > 0
+          ? `\n🛒 Докупил: ${extrasBought} шт · €${extrasGross.toFixed(2)} (фотографу €${extrasPayout.toFixed(2)}, нам €${(extrasGross - extrasPayout).toFixed(2)})`
+          : "\n🛒 Докупил: 0")
+      : "";
+    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${payout.toFixed(2)}${ourCut != null ? ` · нам €${ourCut.toFixed(2)}` : ""}` : ""}${extrasLine}`, "bookings");
   }).catch((err) => console.error("[delivery/accept] telegram admin error:", err));
 
   // Telegram: notify photographer of delivery acceptance
@@ -328,7 +366,7 @@ export async function POST(
       import("@/lib/notify-photographer").then(m =>
         m.notifyPhotographerViaTelegram(
           photographerProfileForTg.id,
-          `${clientFirst} accepted your delivery!${payoutInfo}\n\nView: ${country.baseUrl}/dashboard/bookings`
+          `${clientFirst} accepted your delivery!${payoutInfo}${extrasLineForPhotographer}\n\nView: ${country.baseUrl}/dashboard/bookings`
         )
       ).catch((err) => console.error("[delivery/accept] telegram photographer error:", err));
     }

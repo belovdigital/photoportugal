@@ -711,11 +711,45 @@ export async function sendDeliveryAcceptedToPhotographer(
   /** Extras still unsold. Acceptance is not the end of the money on this
    *  booking — the gallery lives another 90 days and they can still sell. */
   extrasOnOffer = 0,
+  /** How the extras actually went on this booking. Reported here, at
+   *  acceptance, rather than pinged one photo at a time while the client is
+   *  still choosing. extrasPayout is the photographer's own earnings — the
+   *  client's total is never in a photographer's email. */
+  breakdown?: { giftOffered: number; giftTaken: number; extrasBought: number; extrasPayout: number },
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
   const clientFirstName = clientName.split(" ")[0];
   const amount = `&euro;${payoutAmount.toFixed(2)}`;
+
+  const b = breakdown;
+  const showBreakdown = !!b && (b.giftOffered > 0 || b.extrasBought > 0);
+  const breakdownHtml = showBreakdown
+    ? `<div style="margin:0 0 16px;padding:12px 14px;border-radius:10px;background:#F7F5F1;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#1F1F1F;">${pickT({
+          en: "How the extras went", pt: "Como correram os extras", de: "Wie es mit den Extras lief",
+          es: "Cómo fueron los extras", fr: "Ce qu’il en est des photos en plus",
+        }, locale)}</p>
+        ${b!.giftOffered > 0 ? `<p style="margin:0 0 4px;font-size:14px;line-height:1.5;color:#4A4A4A;">🎁 ${pickT({
+          en: `You offered ${b!.giftOffered} free — ${clientFirstName} took ${b!.giftTaken}.`,
+          pt: `Ofereceu ${b!.giftOffered} grátis — ${clientFirstName} levou ${b!.giftTaken}.`,
+          de: `Sie haben ${b!.giftOffered} gratis angeboten — ${clientFirstName} hat ${b!.giftTaken} genommen.`,
+          es: `Ofreciste ${b!.giftOffered} gratis — ${clientFirstName} cogió ${b!.giftTaken}.`,
+          fr: `Vous en avez offert ${b!.giftOffered} — ${clientFirstName} en a pris ${b!.giftTaken}.`,
+        }, locale)}</p>` : ""}
+        <p style="margin:0;font-size:14px;line-height:1.5;color:#4A4A4A;">🛒 ${b!.extrasBought > 0 ? pickT({
+          en: `Bought ${b!.extrasBought} more — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> to you, included above.`,
+          pt: `Comprou mais ${b!.extrasBought} — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> para si, já incluídos acima.`,
+          de: `${b!.extrasBought} weitere gekauft — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> für Sie, oben bereits enthalten.`,
+          es: `Compró ${b!.extrasBought} más — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> para ti, ya incluidos arriba.`,
+          fr: `${b!.extrasBought} de plus achetées — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> pour vous, déjà comptés ci-dessus.`,
+        }, locale) : pickT({
+          en: "No extras bought this time.", pt: "Nenhum extra comprado desta vez.",
+          de: "Diesmal keine Extras gekauft.", es: "Ningún extra comprado esta vez.",
+          fr: "Aucune photo en plus achetée cette fois.",
+        }, locale)}</p>
+      </div>`
+    : "";
 
   const T = pickT({
     en: { subject: `${clientFirstName} accepted delivery — €${payoutAmount.toFixed(2)} transferred to you`, h2: "Payment Transferred!", greeting: `Hi ${photographerName},`, body1: `<strong>${clientFirstName}</strong> has accepted the photo delivery. A payment of <strong style="color:#16A34A;">${amount}</strong> has been transferred to your Stripe account.`, body2: "The funds should arrive in your bank account within 2-7 business days, depending on your Stripe payout schedule.", cta: "View Dashboard", reviewPrompt: "Enjoyed working with this client? Leave a quick review to help build your reputation on the platform:", reviewCta: "Leave a Review" },
@@ -733,6 +767,7 @@ export async function sendDeliveryAcceptedToPhotographer(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      ${breakdownHtml}
       ${extrasOnOffer > 0 ? `<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#6b7280;">${pickT({
         en: `${extrasOnOffer} extra photo${extrasOnOffer === 1 ? "" : "s"} you held back ${extrasOnOffer === 1 ? "is" : "are"} still on offer in this gallery for another 90 days. You earn your own price on each one sold.`,
         pt: `${extrasOnOffer} fotografia${extrasOnOffer === 1 ? "" : "s"} extra que guardou continua${extrasOnOffer === 1 ? "" : "m"} à venda nesta galeria durante mais 90 dias. Recebe o seu preço por cada uma vendida.`,
@@ -2356,60 +2391,6 @@ export async function sendExtrasBoughtToClient(
       ${emailButton(galleryUrl, C.cta)}
     `, locale)
   );
-}
-
-/**
- * A gift the photographer set up was actually taken up. No money moves, so
- * nothing else in the system would ever tell them it happened.
- */
-export async function sendGiftRedeemedToPhotographer(
-  to: string,
-  photographerName: string,
-  clientName: string,
-  count: number,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
-) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
-  const plural = count === 1;
-  const C = {
-    en: {
-      subject: `${clientName} picked ${count} free photo${plural ? "" : "s"} you gifted`,
-      greet: `Hi ${firstName},`,
-      body: `${clientName} chose ${count} of the extra photograph${plural ? "" : "s"} you offered for free. They already have ${plural ? "it" : "them"} in full resolution.`,
-      tail: "Anything else you held back is still on offer while the gallery is live.",
-    },
-    pt: {
-      subject: `${clientName} escolheu ${count} fotografia${plural ? "" : "s"} grátis que ofereceu`,
-      greet: `Olá ${firstName},`,
-      body: `${clientName} escolheu ${count} das fotografias extra que ofereceu de graça. Já ${plural ? "a tem" : "as tem"} em alta resolução.`,
-      tail: "As restantes que guardou continuam à venda enquanto a galeria estiver ativa.",
-    },
-    de: {
-      subject: `${clientName} hat ${count} Gratisfoto${plural ? "" : "s"} von Ihnen ausgewählt`,
-      greet: `Hallo ${firstName},`,
-      body: `${clientName} hat ${count} der zusätzlichen Fotos gewählt, die Sie gratis angeboten haben — bereits in voller Auflösung.`,
-      tail: "Alles Weitere, das Sie zurückgehalten haben, bleibt im Angebot, solange die Galerie lebt.",
-    },
-    es: {
-      subject: `${clientName} eligió ${count} foto${plural ? "" : "s"} gratis que regalaste`,
-      greet: `Hola ${firstName},`,
-      body: `${clientName} eligió ${count} de las fotos extra que ofreciste gratis. Ya ${plural ? "la tiene" : "las tiene"} en alta resolución.`,
-      tail: "El resto de lo que guardaste sigue a la venta mientras la galería esté activa.",
-    },
-    fr: {
-      subject: `${clientName} a choisi ${count} photo${plural ? "" : "s"} offerte${plural ? "" : "s"}`,
-      greet: `Bonjour ${firstName},`,
-      body: `${clientName} a choisi ${count} des photos supplémentaires que vous avez offertes. Elle${plural ? "" : "s"} ${plural ? "est" : "sont"} déjà en haute résolution.`,
-      tail: "Le reste de ce que vous avez gardé reste proposé tant que la galerie est active.",
-    },
-  }[locale];
-  await sendEmail(to, C.subject,
-    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-      <h2 style="color: #C94536;">\u{1F381} ${C.subject}</h2>
-      <p>${C.greet}</p>
-      <p>${C.body}</p>
-      <p style="color:#6b7280;font-size:14px;">${C.tail}</p>
-    </div>`);
 }
 
 export async function sendExtrasBoughtToPhotographer(
