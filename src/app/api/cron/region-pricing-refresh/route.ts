@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
-import { invalidatePriceCache } from "@/lib/blind-booking/pricing";
+import { invalidatePriceCache, regionsForCountry } from "@/lib/blind-booking/pricing";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +30,13 @@ const FLAT_PRICES: Record<60 | 120 | 180, number> = {
 // Region + occasion combos that get priced. UPSERT covers any new
 // (region, occasion, duration) tuples the LLM might emit before a
 // human seeds them.
-const REGIONS = [
-  "greater-lisbon", "northern-portugal", "central-portugal",
-  "alentejo", "algarve", "madeira", "azores",
-];
+//
+// ⛔ This list used to be hardcoded to the seven Portuguese regions, so the
+// Spanish instance seeded Portuguese rows it can never serve and left every
+// Spanish region unpriced — /api/blind-booking/price?region=catalonia answered
+// 404 and Quick Booking could not quote anything. It now follows the active
+// country pack.
+const REGIONS = regionsForCountry(country.code);
 
 const OCCASIONS = [
   "anniversary", "birthday", "couples", "elopement", "engagement",

@@ -137,6 +137,26 @@ const ES_SLUG_TO_REGION: Record<string, Region> = {
   "santiago-de-compostela": "galicia",
 };
 
+/** Canonical billable regions per market. The nightly seed cron walks these —
+ *  it used to carry its own hardcoded Portuguese list, so on the Spanish
+ *  instance no Spanish region ever got a price row and Quick Booking answered
+ *  404 "No pricing available" for every Spanish destination. Deriving both
+ *  lists from the mapping tables above keeps the seed and the lookup honest:
+ *  a region that can be resolved is a region that gets priced. */
+export const PT_REGIONS: Region[] = [
+  "greater-lisbon", "northern-portugal", "central-portugal",
+  "alentejo", "algarve", "madeira", "azores",
+];
+
+export const ES_REGIONS: Region[] = [
+  "catalonia", "madrid-region", "andalusia", "balearic-islands",
+  "canary-islands", "valencia-region", "basque-country", "galicia",
+];
+
+export function regionsForCountry(code: string): Region[] {
+  return code === "es" ? ES_REGIONS : PT_REGIONS;
+}
+
 export function slugToRegion(slug: string): Region | null {
   const es = ES_SLUG_TO_REGION[slug];
   if (es) return es;
