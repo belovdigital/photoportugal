@@ -116,6 +116,15 @@ export interface CountryPack {
   timezone: string;
   /** Year this market opened. Quoted as fact in llms.txt, so it must be its own. */
   foundedYear: number;
+  /**
+   * May the other markets link here?
+   *
+   * A market with no approved photographers is a dead end: the visitor clicks
+   * through from a working site, finds an empty catalogue, and we have spent
+   * real traffic to show them nothing. Flip to true once the roster can take a
+   * booking.
+   */
+  listedInSiblings: boolean;
 }
 
 const PACKS: Record<CountryCode, CountryPack> = {
@@ -168,6 +177,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "pt", "de", "es", "fr"],
     timezone: "Europe/Lisbon",
     foundedYear: 2024,
+    listedInSiblings: true,
   },
   es: {
     code: "es",
@@ -218,6 +228,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "es", "de", "fr"],
     timezone: "Europe/Madrid",
     foundedYear: 2026,
+    listedInSiblings: true,
   },
   it: {
     code: "it",
@@ -271,6 +282,10 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "it", "de", "fr", "es"],
     timezone: "Europe/Rome",
     foundedYear: 2026,
+    // ⛔ No approved photographers yet — linking here from a working market
+    // spends traffic on an empty catalogue. Flip when the roster can take a
+    // booking.
+    listedInSiblings: false,
     // The operating company is Portuguese and is not registered in Spain, so
     // Stripe Connect onboarding is not available to Spanish photographers.
     // They are paid by bank transfer after the money clears. See docs/SPAIN.md §6.2.
@@ -326,7 +341,8 @@ export function byCountry<T>(choices: Record<CountryCode, T>): T {
  */
 export const siblingMarkets: CountryPack[] = (["pt", "es", "it"] as const)
   .filter((code) => code !== country.code)
-  .map((code) => PACKS[code]);
+  .map((code) => PACKS[code])
+  .filter((pack) => pack.listedInSiblings);
 
 /**
  * Every market pays photographers through Stripe Connect.
