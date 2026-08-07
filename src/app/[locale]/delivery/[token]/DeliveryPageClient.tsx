@@ -662,7 +662,7 @@ export function DeliveryPageClient({
           beside it is photographs and nothing else. Sticky, so the basket and
           the primary action are on screen at photo 400 exactly as at photo 1. */}
       <div className="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
-        <aside className="mt-6 space-y-4 lg:sticky lg:top-6 lg:self-start">
+        <aside className="mt-6 space-y-4 lg:sticky lg:top-20 lg:self-start">
 
           {/* The counts, given the room to be read as numbers rather than as a
               sentence squeezed between two buttons. */}
