@@ -47,10 +47,11 @@ export async function POST(
   // Two modes behind one set of guards: exchange a photo, or just rearrange.
   // Reordering is the client putting their own favourites first; it moves
   // nothing between the free and paid sides, so it needs no count assertion.
+  const ungiftId = typeof body?.ungift === "string" && UUID_RE.test(body.ungift) ? body.ungift : null;
   const order: string[] | null = Array.isArray(body?.order)
     ? [...new Set((body.order as unknown[]).filter((v): v is string => typeof v === "string" && UUID_RE.test(v)))]
     : null;
-  if (!order && (!inId || !outId || inId === outId)) {
+  if (!order && !ungiftId && (!inId || !outId || inId === outId)) {
     return NextResponse.json({ error: "Pick one photo to add and one to remove" }, { status: 400 });
   }
 
@@ -97,6 +98,36 @@ export async function POST(
   if (booking.delivery_accepted) {
     return NextResponse.json({ error: "This delivery has been accepted and can no longer be changed" }, { status: 409 });
   }
+  // Hand a gifted photo back and get the slot returned. Only a gift can be
+  // given back — a paid photo is a purchase — and only before acceptance,
+  // while it is still a watermarked preview and nothing has been downloaded.
+  // This is what makes redeeming safe to do without a confirmation.
+  if (ungiftId) {
+    const removed = await withTransaction(async (client) => {
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [booking.id]);
+      const row = await client.query(
+        `SELECT id FROM delivery_extra_purchases
+          WHERE booking_id = $1 AND delivery_photo_id = $2 AND status = 'paid' AND amount_cents = 0
+          FOR UPDATE`,
+        [booking.id, ungiftId]
+      );
+      if (row.rows.length === 0) return { error: "That photo was not part of the gift", status: 409 };
+      await client.query("DELETE FROM delivery_extra_purchases WHERE id = $1", [row.rows[0].id]);
+      await client.query(
+        "UPDATE delivery_photos SET purchased_at = NULL WHERE id = $1 AND booking_id = $2",
+        [ungiftId, booking.id]
+      );
+      return { ok: true as const };
+    }).catch((err: unknown) => {
+      console.error("[delivery ungift]", err);
+      return { error: "Could not give that photo back", status: 500 };
+    });
+    if ("error" in removed) {
+      return NextResponse.json({ error: removed.error }, { status: removed.status });
+    }
+    return NextResponse.json({ success: true, ungifted: true });
+  }
+
   if (order) {
     if (order.length === 0 || order.length > 1000) {
       return NextResponse.json({ error: "Nothing to reorder" }, { status: 400 });

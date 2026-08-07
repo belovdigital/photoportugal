@@ -3340,7 +3340,6 @@
     "sectionOnOfferPaid": "{price} pièce. Touchez Ajouter sur celles que vous voulez, puis Acheter — ou glissez-en une sur une photo qui vous plaît moins pour les échanger gratuitement.",
     "swapInstead": "Prendre celle-ci à la place",
     "swapPickOut": "Laquelle remplace-t-elle ? Touchez-la.",
-    "giftConfirm": "Elle est à vous immédiatement et c'est irréversible. Ajouter celle-ci ?",
     "takeAllBtnFree": "Tout prendre — {count} gratuites",
     "takeAllBtn": "Tout prendre — {count}",
     "takeAllTitle": "Tout prendre ?",
@@ -3365,7 +3364,13 @@
     "acceptReleasesPayment": "Libère le paiement au photographe et débloque la haute résolution.",
     "railFromPackage": "{count} de votre forfait",
     "railFromGift": "{count} offertes par {name}",
-    "railCanBuy": "à acheter"
+    "railCanBuy": "à acheter",
+    "giftGiveBack": "Rendre",
+    "acceptWindow": "Il reste {days} jours — la galerie ferme le {date}",
+    "acceptGiftsLeftTitle": "Il vous reste {count} photos offertes",
+    "acceptGiftsLeftBody": "{name} vous offre {count} photos de plus, et vous ne les avez pas encore choisies. Vous pourrez les prendre plus tard, mais une fois la livraison acceptée vous ne pourrez plus les échanger.",
+    "acceptGiftsTakeFirst": "Prendre mes photos offertes",
+    "acceptAnyway": "Accepter quand même"
   },
   "availability": {
     "pageTitle": "Disponibilités",

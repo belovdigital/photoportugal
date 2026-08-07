@@ -3093,7 +3093,6 @@
     "sectionOnOfferPaid": "{price} pro Foto. Bei den gewünschten auf Dazu tippen, dann Kaufen — oder eines auf ein Foto ziehen, das Ihnen weniger gefällt, und gratis tauschen.",
     "swapInstead": "Diese stattdessen nehmen",
     "swapPickOut": "Welches soll sie ersetzen? Antippen.",
-    "giftConfirm": "Es gehört Ihnen dann sofort und lässt sich nicht rückgängig machen. Hinzufügen?",
     "takeAllBtnFree": "Alle {count} gratis nehmen",
     "takeAllBtn": "Alle {count} nehmen",
     "takeAllTitle": "Alle nehmen?",
@@ -3118,7 +3117,13 @@
     "acceptReleasesPayment": "Gibt die Zahlung an den Fotografen frei und schaltet volle Auflösung frei.",
     "railFromPackage": "{count} aus Ihrem Paket",
     "railFromGift": "{count} geschenkt von {name}",
-    "railCanBuy": "zum Kauf"
+    "railCanBuy": "zum Kauf",
+    "giftGiveBack": "Zurückgeben",
+    "acceptWindow": "Noch {days} Tage — die Galerie schließt am {date}",
+    "acceptGiftsLeftTitle": "Sie haben noch {count} Gratisfotos offen",
+    "acceptGiftsLeftBody": "{name} schenkt Ihnen {count} weitere Fotos, und Sie haben sie noch nicht ausgewählt. Sie können sie auch später nehmen, aber nach der Abnahme lassen sie sich nicht mehr gegen andere tauschen.",
+    "acceptGiftsTakeFirst": "Gratisfotos nehmen",
+    "acceptAnyway": "Trotzdem abnehmen"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

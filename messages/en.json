@@ -3092,7 +3092,6 @@
     "sectionOnOfferPaid": "{price} each. Tap Add on the ones you want, then Buy — or drag one up onto a photo you like less and swap them for free.",
     "swapInstead": "Take this one instead",
     "swapPickOut": "Which one should it replace? Tap it.",
-    "giftConfirm": "These become yours straight away and cannot be undone. Add this one?",
     "takeAllBtnFree": "Take all {count} free",
     "takeAllBtn": "Take all {count}",
     "takeAllTitle": "Take them all?",
@@ -3117,7 +3116,13 @@
     "acceptReleasesPayment": "Releases the payment to your photographer and unlocks full resolution.",
     "railFromPackage": "{count} from your package",
     "railFromGift": "{count} free from {name}",
-    "railCanBuy": "you can buy"
+    "railCanBuy": "you can buy",
+    "giftGiveBack": "Give back",
+    "acceptWindow": "{days} days left — the gallery closes on {date}",
+    "acceptGiftsLeftTitle": "You have {count} free photos waiting",
+    "acceptGiftsLeftBody": "{name} is giving you {count} more photos, free, and you have not picked them yet. You can still take them afterwards, but once you accept you can no longer swap them for different shots.",
+    "acceptGiftsTakeFirst": "Take my free photos",
+    "acceptAnyway": "Accept anyway"
   },
   "availability": {
     "pageTitle": "Availability",

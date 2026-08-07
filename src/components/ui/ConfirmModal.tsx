@@ -72,25 +72,25 @@ export function ConfirmModal({ open, title, message, confirmLabel, cancelLabel, 
  */
 export function useConfirmModal(): {
   modal: ReactNode;
-  confirm: (title: string, message: string, opts?: { confirmLabel?: string; danger?: boolean }) => Promise<boolean>;
+  confirm: (title: string, message: string, opts?: { confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>;
   /** Same modal, one button. Replaces window.alert, which cannot be styled,
    *  cannot be translated by us, and on iOS names the domain in the heading. */
   notify: (message: string, title?: string) => Promise<boolean>;
 } {
   const resolveRef = useRef<((v: boolean) => void) | null>(null);
-  const [state, setState] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; danger: boolean; noticeOnly: boolean }>({ open: false, title: "", message: "", confirmLabel: undefined, danger: false, noticeOnly: false });
+  const [state, setState] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger: boolean; noticeOnly: boolean }>({ open: false, title: "", message: "", confirmLabel: undefined, cancelLabel: undefined, danger: false, noticeOnly: false });
 
-  const confirm = useCallback((title: string, message: string, opts?: { confirmLabel?: string; danger?: boolean }) => {
+  const confirm = useCallback((title: string, message: string, opts?: { confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => {
     return new Promise<boolean>((resolve) => {
       resolveRef.current = resolve;
-      setState({ open: true, title, message, confirmLabel: opts?.confirmLabel, danger: opts?.danger || false, noticeOnly: false });
+      setState({ open: true, title, message, confirmLabel: opts?.confirmLabel, cancelLabel: opts?.cancelLabel, danger: opts?.danger || false, noticeOnly: false });
     });
   }, []);
 
   const notify = useCallback((message: string, title?: string) => {
     return new Promise<boolean>((resolve) => {
       resolveRef.current = resolve;
-      setState({ open: true, title: title ?? "", message, confirmLabel: undefined, danger: false, noticeOnly: true });
+      setState({ open: true, title: title ?? "", message, confirmLabel: undefined, cancelLabel: undefined, danger: false, noticeOnly: true });
     });
   }, []);
 
@@ -110,6 +110,7 @@ export function useConfirmModal(): {
       title={state.title}
       message={state.message}
       confirmLabel={state.confirmLabel}
+      cancelLabel={state.cancelLabel}
       danger={state.danger}
       noticeOnly={state.noticeOnly}
       onConfirm={handleConfirm}

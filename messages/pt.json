@@ -2867,7 +2867,6 @@
     "sectionOnOfferPaid": "{price} cada. Toque em Juntar nas que quiser e depois Comprar — ou arraste uma para cima de outra de que goste menos e troque-as de graça.",
     "swapInstead": "Levar esta em vez de outra",
     "swapPickOut": "Qual substitui? Toque nela.",
-    "giftConfirm": "Passa a ser sua de imediato e não pode ser desfeito. Juntar esta?",
     "takeAllBtnFree": "Levar todas as {count} de graça",
     "takeAllBtn": "Levar todas as {count}",
     "takeAllTitle": "Levar todas?",
@@ -2892,7 +2891,13 @@
     "acceptReleasesPayment": "Liberta o pagamento ao fotógrafo e desbloqueia a alta resolução.",
     "railFromPackage": "{count} do seu pacote",
     "railFromGift": "{count} oferecidas por {name}",
-    "railCanBuy": "pode comprar"
+    "railCanBuy": "pode comprar",
+    "giftGiveBack": "Devolver",
+    "acceptWindow": "Faltam {days} dias — a galeria fecha a {date}",
+    "acceptGiftsLeftTitle": "Tem {count} fotos grátis à sua espera",
+    "acceptGiftsLeftBody": "{name} está a oferecer-lhe mais {count} fotos, e ainda não as escolheu. Pode levá-las depois, mas assim que aceitar já não poderá trocá-las por outras.",
+    "acceptGiftsTakeFirst": "Levar as minhas fotos grátis",
+    "acceptAnyway": "Aceitar mesmo assim"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

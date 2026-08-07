@@ -150,8 +150,6 @@ export function DeliveryPageClient({
 
   async function redeemGift(id: string) {
     if (redeeming) return;
-    const ok = await confirm(t("extraPickFree"), t("giftConfirm"), { confirmLabel: t("extraPickFree") });
-    if (!ok) return;
     setRedeeming(id);
     try {
       const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
@@ -255,6 +253,60 @@ export function DeliveryPageClient({
       void notify(t("extrasError"));
     } finally {
       setTakingAll(false);
+    }
+  }
+
+  async function takeFreeOnly() {
+    if (takingAll) return;
+    const locked = (gallery?.photos ?? []).filter((p) => p.locked).map((p) => p.id);
+    const freeIds = locked.slice(0, Math.min(gallery?.gift_remaining ?? 0, locked.length));
+    if (freeIds.length === 0) return;
+    setTakingAll(true);
+    const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+    try {
+      const res = await fetch(`/api/delivery/${token}/extras`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gift: true, photo_ids: freeIds, password: pw }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        void notify(data?.error || t("extrasError"));
+        return;
+      }
+      const again = await fetch(`/api/delivery/${token}/verify`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (again.ok) setGallery(await again.json());
+    } catch {
+      void notify(t("extrasError"));
+    } finally {
+      setTakingAll(false);
+    }
+  }
+
+  async function ungiftPhoto(id: string) {
+    if (redeeming) return;
+    setRedeeming(id);
+    try {
+      const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+      const res = await fetch(`/api/delivery/${token}/swap`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ungift: id, password: pw }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { void notify(data?.error || t("extrasError")); return; }
+      const again = await fetch(`/api/delivery/${token}/verify`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (again.ok) setGallery(await again.json());
+    } catch {
+      void notify(t("extrasError"));
+    } finally {
+      setRedeeming(null);
     }
   }
 
@@ -465,6 +517,21 @@ export function DeliveryPageClient({
     // returns the key itself when missing, not a falsy value, so the old
     // `t("foo") || "fallback"` pattern showed the literal "delivery.foo"
     // when keys didn't exist.
+    const giftsLeft = gallery?.gift_remaining ?? 0;
+    if (giftsLeft > 0) {
+      const takeFirst = await confirm(
+        t("acceptGiftsLeftTitle", { count: giftsLeft }),
+        t("acceptGiftsLeftBody", {
+          count: giftsLeft,
+          name: normalizeName(gallery?.photographer_name ?? "").split(" ")[0],
+        }),
+        { confirmLabel: t("acceptGiftsTakeFirst"), cancelLabel: t("acceptAnyway") }
+      );
+      // Confirm is the safe path here, not the destructive one: it takes the
+      // free photos. Cancel is the deliberate "accept without them".
+      if (takeFirst) { void takeFreeOnly(); return; }
+    }
+
     const ok = await confirm(t("acceptDelivery"), t("confirmAcceptDelivery"), { confirmLabel: t("accept") });
     if (!ok) return;
 
@@ -575,6 +642,10 @@ export function DeliveryPageClient({
   const expiresDate = new Date(gallery.expires_at).toLocaleDateString(dateLocale, {
     month: "long", day: "numeric", year: "numeric",
   });
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((new Date(gallery.expires_at).getTime() - Date.now()) / 86_400_000)
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
@@ -712,12 +783,17 @@ export function DeliveryPageClient({
           </span>
           )
           ) : isOwner ? (
-          <span className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 text-sm font-medium text-amber-800">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="rounded-xl bg-amber-100 px-5 py-3 text-sm text-amber-800">
+          <span className="flex items-start gap-2 font-medium">
+          <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           {t("acceptToUnlockFullRes")}
           </span>
+          <span className="mt-1.5 block pl-6 text-xs font-semibold text-amber-700">
+          {t("acceptWindow", { days: daysLeft, date: expiresDate })}
+          </span>
+          </div>
           ) : null}
           </div>
 
@@ -886,6 +962,7 @@ export function DeliveryPageClient({
           extrasPriceCents={gallery?.extras_price_cents ?? 290}
           giftLeft={gallery?.gift_remaining ?? 0}
           photographerFirstName={normalizeName(gallery.photographer_name).split(" ")[0]}
+          onUngift={ungiftPhoto}
           />
 
 

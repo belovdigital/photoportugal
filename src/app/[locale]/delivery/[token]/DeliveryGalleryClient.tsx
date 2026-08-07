@@ -87,6 +87,7 @@ export function DeliveryGalleryClient({
   extrasPriceCents = 290,
   giftLeft = 0,
   photographerFirstName = "",
+  onUngift,
 }: {
   photos: Photo[];
   deliveryAccepted: boolean;
@@ -102,6 +103,8 @@ export function DeliveryGalleryClient({
   extrasPriceCents?: number;
   /** Named, because "your photographer" is not who gave you the photos. */
   photographerFirstName?: string;
+  /** Hand a gifted photo back and get the slot returned. */
+  onUngift?: (id: string) => void;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
@@ -293,7 +296,7 @@ export function DeliveryGalleryClient({
     return (
       <div
         key={photo.id}
-        className={`cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative${picked ? " ring-2 ring-primary-500" : ""}`}
+        className={`group cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative${picked ? " ring-2 ring-primary-500" : ""}`}
         onClick={() => openLightbox(index)}
         {...(drag ? { ...drag.attributes, ...drag.listeners } : {})}
         onContextMenu={(e) => e.preventDefault()}
@@ -312,6 +315,17 @@ export function DeliveryGalleryClient({
         />
         {/* Dragging is not obvious and is fiddly on a phone, so the exchange
             also has a button you can see. Same picker as the lightbox. */}
+        {!locked && photo.purchased && !photo.paid && canRearrange && onUngift && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onUngift(photo.id); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={t("giftGiveBack")}
+            className="absolute right-1.5 top-1.5 z-20 rounded-lg bg-gray-900/70 px-2 py-1.5 text-[11px] font-bold text-white opacity-0 shadow backdrop-blur-sm transition hover:bg-gray-900 focus:opacity-100 group-hover:opacity-100 md:opacity-0"
+          >
+            {t("giftGiveBack")}
+          </button>
+        )}
         {locked && canRearrange && (
           <button
             type="button"
