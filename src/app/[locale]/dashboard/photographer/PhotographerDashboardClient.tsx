@@ -156,7 +156,7 @@ export function PhotographerDashboardClient({
   const t = useTranslations("photographerDashboard");
   const td = useTranslations("dashboard");
   const locale = useLocale();
-  const { modal, confirm } = useConfirmModal();
+  const { modal, confirm, notify } = useConfirmModal();
   const [activeTab, setActiveTabState] = useState<Tab>(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "") as Tab;
@@ -447,10 +447,10 @@ export function PhotographerDashboardClient({
         body: JSON.stringify({ payout_cents: cents }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { alert(data?.error || "Could not save your price"); return; }
+      if (!res.ok) { void notify(data?.error || "Could not save your price"); return; }
       setExtrasPriceDraft(String(data.payout_cents / 100));
     } catch {
-      alert("Could not save your price");
+      void notify("Could not save your price");
     } finally {
       setSavingExtrasPrice(false);
     }
@@ -2345,20 +2345,20 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage, onChange }: { in
     const file = e.target.files?.[0];
     if (!file) return;
     // Explicit, verbal errors. A photographer reported a silent failure on
-    // oversize uploads — alert() guarantees the message appears even if the
+    // oversize uploads — onMessage() guarantees the message appears even if the
     // toast component is offscreen or hidden.
     if (file.size > 10 * 1024 * 1024) {
       const sizeMb = (file.size / 1024 / 1024).toFixed(1);
       const msg = `${t("fileTooLarge", { size: 10 })} — your file is ${sizeMb} MB. Try a smaller export or compress it before uploading.`;
       onMessage(msg);
-      alert(msg);
+      onMessage(msg);
       e.target.value = "";
       return;
     }
     if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) {
       const msg = t("onlyImagesAllowed");
       onMessage(msg);
-      alert(msg);
+      onMessage(msg);
       e.target.value = "";
       return;
     }
@@ -2387,14 +2387,14 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage, onChange }: { in
         setPositionY(initialPositionY);
         const msg = err?.error || t("uploadFailed");
         onMessage(msg);
-        alert(msg);
+        onMessage(msg);
       }
     } catch {
       setPreviewUrl(initialUrl);
       setPositionY(initialPositionY);
       const msg = t("uploadFailedConnection");
       onMessage(msg);
-      alert(msg);
+      onMessage(msg);
     }
     setUploading(false);
     e.target.value = "";

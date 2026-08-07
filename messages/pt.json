@@ -2886,7 +2886,8 @@
     "statDelivered": "Entregues",
     "statOnOffer": "À venda · {price} cada",
     "statGiftTaken": "Grátis já escolhidas",
-    "deleteSkippedSold": "{count, plural, one {# fotografia não pôde ser removida} other {# fotografias não puderam ser removidas}} — o cliente já as comprou ou está a pagar neste momento."
+    "deleteSkippedSold": "{count, plural, one {# fotografia não pôde ser removida} other {# fotografias não puderam ser removidas}} — o cliente já as comprou ou está a pagar neste momento.",
+    "extrasClearConfirm": "Remover {count, plural, one {# fotografia} other {as # fotografias}} da sua seleção?"
   },
   "availability": {
     "pageTitle": "Disponibilidade",
@@ -3089,7 +3090,9 @@
     "offerWithdrawn": "Oferta retirada",
     "withdrawOffer": "Retirar oferta",
     "withdrawOfferConfirm": "Retirar esta oferta? O cliente deixará de poder reservá-la.",
-    "deliveryExtrasLine": "{count, plural, one {# fotografia extra que pode juntar pelo preço definido pelo seu fotógrafo} other {# fotografias extra que pode juntar pelo preço definido pelo seu fotógrafo cada}}"
+    "deliveryExtrasLine": "{count, plural, one {# fotografia extra que pode juntar pelo preço definido pelo seu fotógrafo} other {# fotografias extra que pode juntar pelo preço definido pelo seu fotógrafo cada}}",
+    "deleteMessage": "Apagar mensagem",
+    "deleteMessageConfirm": "Apagar esta mensagem? A outra pessoa verá «Mensagem apagada»."
   },
   "settings": {
     "title": "Definições",

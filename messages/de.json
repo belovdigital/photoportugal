@@ -3112,7 +3112,8 @@
     "statDelivered": "Geliefert",
     "statOnOffer": "Im Angebot · je {price}",
     "statGiftTaken": "Gratisfotos genommen",
-    "deleteSkippedSold": "{count, plural, one {# Foto konnte nicht entfernt werden} other {# Fotos konnten nicht entfernt werden}} — Ihre Kundschaft hat sie gekauft oder bezahlt gerade dafür."
+    "deleteSkippedSold": "{count, plural, one {# Foto konnte nicht entfernt werden} other {# Fotos konnten nicht entfernt werden}} — Ihre Kundschaft hat sie gekauft oder bezahlt gerade dafür.",
+    "extrasClearConfirm": "{count, plural, one {# Foto} other {Alle # Fotos}} aus Ihrer Auswahl entfernen?"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",
@@ -3315,7 +3316,9 @@
     "offerWithdrawn": "Angebot zurückgezogen",
     "withdrawOffer": "Angebot zurückziehen",
     "withdrawOfferConfirm": "Dieses Angebot zurückziehen? Der Kunde kann es dann nicht mehr buchen.",
-    "deliveryExtrasLine": "{count, plural, one {# zusätzliches Foto zum von Ihrem Fotografen festgelegten Preis} other {# zusätzliche Fotos für einen von Ihrem Fotografen festgelegten Preis}}"
+    "deliveryExtrasLine": "{count, plural, one {# zusätzliches Foto zum von Ihrem Fotografen festgelegten Preis} other {# zusätzliche Fotos für einen von Ihrem Fotografen festgelegten Preis}}",
+    "deleteMessage": "Nachricht löschen",
+    "deleteMessageConfirm": "Diese Nachricht löschen? Die andere Person sieht „Nachricht gelöscht\"."
   },
   "settings": {
     "title": "Einstellungen",

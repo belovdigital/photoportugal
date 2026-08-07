@@ -233,7 +233,7 @@ export function DeliveryUploadClient({
   const locale = useLocale();
   const payout = (cents: number) =>
     new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(cents / 100);
-  const { modal, confirm } = useConfirmModal();
+  const { modal, confirm, notify } = useConfirmModal();
 
   // Hydrate deliveryUrl on the client once `window` is available. Runs
   // also when `deliveryToken` changes (e.g. after share) so the URL
@@ -349,7 +349,7 @@ export function DeliveryUploadClient({
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           setPhotos(before);
-          alert(data?.error || t("includeFailed"));
+          void notify(data?.error || t("includeFailed"));
           return;
         }
       }
@@ -363,11 +363,11 @@ export function DeliveryUploadClient({
         setPhotos(flipped
           ? before.map((p) => (p.id === flipped.id ? { ...p, is_included: flipped.included } : p))
           : before);
-        alert(data?.error || t("includeFailed"));
+        void notify(data?.error || t("includeFailed"));
       }
     } catch {
       setPhotos(before);
-      alert(t("includeFailed"));
+      void notify(t("includeFailed"));
     }
   }
 
@@ -453,11 +453,11 @@ export function DeliveryUploadClient({
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setPhotos(before);
-        alert(data?.error || t("includeFailed"));
+        void notify(data?.error || t("includeFailed"));
       }
     } catch {
       setPhotos(before);
-      alert(t("includeFailed"));
+      void notify(t("includeFailed"));
     } finally {
       setBulkMoving(false);
     }
@@ -477,11 +477,11 @@ export function DeliveryUploadClient({
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setPhotos(before);
-        alert(data?.error || t("includeFailed"));
+        void notify(data?.error || t("includeFailed"));
       }
     } catch {
       setPhotos(before);
-      alert(t("includeFailed"));
+      void notify(t("includeFailed"));
     }
   }
 
@@ -577,7 +577,7 @@ export function DeliveryUploadClient({
         body: JSON.stringify({ action: "set_gift_slots", gift_slots: n }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { alert(data?.error || t("includeFailed")); return; }
+      if (!res.ok) { void notify(data?.error || t("includeFailed")); return; }
       setGiftSlots(n);
     } finally {
       setGiftSaving(false);
@@ -612,7 +612,7 @@ export function DeliveryUploadClient({
           failed += chunk.length;
           // Surface the reason — an accepted delivery or an open dispute is
           // refused server-side, and silently doing nothing looks like a bug.
-          alert(typeof data?.error === "string" ? data.error : t("deleteFailed"));
+          void notify(typeof data?.error === "string" ? data.error : t("deleteFailed"));
           break;
         }
         // Trust the server's list rather than the request: anything it did
@@ -627,7 +627,7 @@ export function DeliveryUploadClient({
         skipped += chunk.length - deleted.length;
       } catch {
         failed += chunk.length;
-        alert(t("deleteFailed"));
+        void notify(t("deleteFailed"));
         break;
       }
       setDeleteProgress({ current: Math.min(i + CHUNK, ids.length), total: ids.length });
@@ -636,9 +636,9 @@ export function DeliveryUploadClient({
     setSelectMode(false);
     setDeleting(false);
     if (failed > 0 && removed > 0) {
-      alert(t("deletePartial", { removed, failed }));
+      void notify(t("deletePartial", { removed, failed }));
     } else if (skipped > 0) {
-      alert(t("deleteSkippedSold", { count: skipped }));
+      void notify(t("deleteSkippedSold", { count: skipped }));
     }
   }
 
@@ -904,11 +904,11 @@ export function DeliveryUploadClient({
 
   async function handleShare() {
     if (photos.length === 0) {
-      alert(t("uploadFirst"));
+      void notify(t("uploadFirst"));
       return;
     }
     if (!galleryPassword.trim() || galleryPassword.trim().length < 4) {
-      alert(t("setPassword"));
+      void notify(t("setPassword"));
       return;
     }
     // Held-back extras are on offer, not delivered — they must not count

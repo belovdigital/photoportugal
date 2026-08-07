@@ -10,11 +10,13 @@ interface ConfirmModalProps {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  /** Notice rather than a question: one button, no cancel. */
+  noticeOnly?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function ConfirmModal({ open, title, message, confirmLabel, cancelLabel, danger = false, onConfirm, onCancel }: ConfirmModalProps) {
+export function ConfirmModal({ open, title, message, confirmLabel, cancelLabel, danger = false, noticeOnly = false, onConfirm, onCancel }: ConfirmModalProps) {
   const t = useTranslations("common");
   const confirmText = confirmLabel ?? t("confirm");
   const cancelText = cancelLabel ?? t("cancel");
@@ -38,12 +40,14 @@ export function ConfirmModal({ open, title, message, confirmLabel, cancelLabel, 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 animate-in fade-in duration-150" onClick={onCancel}>
       <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-bold text-gray-900">{title}</h3>
-        <p className="mt-2 text-sm text-gray-600 leading-relaxed">{message}</p>
+        {title ? <h3 className="text-base font-bold text-gray-900">{title}</h3> : null}
+        <p className={`${title ? "mt-2" : ""} text-sm text-gray-700 leading-relaxed`}>{message}</p>
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100">
-            {cancelText}
-          </button>
+          {!noticeOnly && (
+            <button onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100">
+              {cancelText}
+            </button>
+          )}
           <button
             ref={confirmRef}
             onClick={onConfirm}
@@ -69,14 +73,24 @@ export function ConfirmModal({ open, title, message, confirmLabel, cancelLabel, 
 export function useConfirmModal(): {
   modal: ReactNode;
   confirm: (title: string, message: string, opts?: { confirmLabel?: string; danger?: boolean }) => Promise<boolean>;
+  /** Same modal, one button. Replaces window.alert, which cannot be styled,
+   *  cannot be translated by us, and on iOS names the domain in the heading. */
+  notify: (message: string, title?: string) => Promise<boolean>;
 } {
   const resolveRef = useRef<((v: boolean) => void) | null>(null);
-  const [state, setState] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; danger: boolean }>({ open: false, title: "", message: "", confirmLabel: undefined, danger: false });
+  const [state, setState] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; danger: boolean; noticeOnly: boolean }>({ open: false, title: "", message: "", confirmLabel: undefined, danger: false, noticeOnly: false });
 
   const confirm = useCallback((title: string, message: string, opts?: { confirmLabel?: string; danger?: boolean }) => {
     return new Promise<boolean>((resolve) => {
       resolveRef.current = resolve;
-      setState({ open: true, title, message, confirmLabel: opts?.confirmLabel, danger: opts?.danger || false });
+      setState({ open: true, title, message, confirmLabel: opts?.confirmLabel, danger: opts?.danger || false, noticeOnly: false });
+    });
+  }, []);
+
+  const notify = useCallback((message: string, title?: string) => {
+    return new Promise<boolean>((resolve) => {
+      resolveRef.current = resolve;
+      setState({ open: true, title: title ?? "", message, confirmLabel: undefined, danger: false, noticeOnly: true });
     });
   }, []);
 
@@ -97,10 +111,11 @@ export function useConfirmModal(): {
       message={state.message}
       confirmLabel={state.confirmLabel}
       danger={state.danger}
+      noticeOnly={state.noticeOnly}
       onConfirm={handleConfirm}
       onCancel={handleCancel}
     />
   );
 
-  return { modal, confirm };
+  return { modal, confirm, notify };
 }

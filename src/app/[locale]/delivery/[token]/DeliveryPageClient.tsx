@@ -80,7 +80,7 @@ export function DeliveryPageClient({
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
-  const { modal, confirm } = useConfirmModal();
+  const { modal, confirm, notify } = useConfirmModal();
   // Tip card state. `tipJustSent` covers the redirect back from Stripe
   // (?tip=success) before the webhook lands; `tipDismissed` remembers
   // "maybe later" per booking on this device.
@@ -159,7 +159,7 @@ export function DeliveryPageClient({
         body: JSON.stringify({ gift: true, photo_ids: [id], password: pw }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { alert(data?.error || t("extrasError")); return; }
+      if (!res.ok) { void notify(data?.error || t("extrasError")); return; }
       const again = await fetch(`/api/delivery/${token}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,7 +167,7 @@ export function DeliveryPageClient({
       });
       if (again.ok) setGallery(await again.json());
     } catch {
-      alert(t("extrasError"));
+      void notify(t("extrasError"));
     } finally {
       setRedeeming(null);
     }
@@ -185,7 +185,7 @@ export function DeliveryPageClient({
         body: JSON.stringify({ in: inId, out: outId, password: pw }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { alert(data?.error || t("extrasError")); return false; }
+      if (!res.ok) { void notify(data?.error || t("extrasError")); return false; }
       const again = await fetch(`/api/delivery/${token}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,7 +194,7 @@ export function DeliveryPageClient({
       if (again.ok) setGallery(await again.json());
       return true;
     } catch {
-      alert(t("extrasError"));
+      void notify(t("extrasError"));
       return false;
     }
   }
@@ -234,7 +234,7 @@ export function DeliveryPageClient({
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          alert(data?.error || t("extrasError"));
+          void notify(data?.error || t("extrasError"));
           return;
         }
         const again = await fetch(`/api/delivery/${token}/verify`, {
@@ -250,7 +250,7 @@ export function DeliveryPageClient({
         try { sessionStorage.setItem(extrasKey, JSON.stringify(paidIds)); } catch {}
       }
     } catch {
-      alert(t("extrasError"));
+      void notify(t("extrasError"));
     } finally {
       setTakingAll(false);
     }
@@ -266,7 +266,7 @@ export function DeliveryPageClient({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data?.error || t("extrasError"));
+        void notify(data?.error || t("extrasError"));
         return;
       }
       const again = await fetch(`/api/delivery/${token}/verify`, {
@@ -276,7 +276,7 @@ export function DeliveryPageClient({
       });
       if (again.ok) setGallery(await again.json());
     } catch {
-      alert(t("extrasError"));
+      void notify(t("extrasError"));
     }
   }
 
@@ -297,7 +297,7 @@ export function DeliveryPageClient({
           body: JSON.stringify({ gift: true, photo_ids: ids, password: pw }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) { alert(data?.error || t("extrasError")); setBuyingExtras(false); return; }
+        if (!res.ok) { void notify(data?.error || t("extrasError")); setBuyingExtras(false); return; }
         setSelectedExtras(new Set());
         try { sessionStorage.removeItem(extrasKey); } catch {}
         const again = await fetch(`/api/delivery/${token}/verify`, {
@@ -317,18 +317,18 @@ export function DeliveryPageClient({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.url) {
-        alert(data?.error || t("extrasError"));
+        void notify(data?.error || t("extrasError"));
         setBuyingExtras(false);
         return;
       }
       if (typeof data.photos === "number" && data.photos < ids.length) {
-        alert(t("extrasSomeGone", { count: ids.length - data.photos }));
+        void notify(t("extrasSomeGone", { count: ids.length - data.photos }));
         setBuyingExtras(false);
         return;
       }
       window.location.href = data.url;
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      void notify(err instanceof Error ? err.message : String(err));
       setBuyingExtras(false);
     }
   }
@@ -806,7 +806,18 @@ export function DeliveryPageClient({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setSelectedExtras(new Set()); try { sessionStorage.removeItem(extrasKey); } catch {} }}
+              onClick={async () => {
+                // One tap next to Buy that throws away a selection someone
+                // built photo by photo. Cheap to confirm, annoying to redo.
+                const ok = await confirm(
+                  t("extrasClear"),
+                  t("extrasClearConfirm", { count: selectedExtras.size }),
+                  { confirmLabel: t("extrasClear") }
+                );
+                if (!ok) return;
+                setSelectedExtras(new Set());
+                try { sessionStorage.removeItem(extrasKey); } catch {}
+              }}
               className="text-xs font-medium text-gray-300 hover:text-white"
             >
               {t("extrasClear")}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -60,6 +61,7 @@ function StarRating({ rating, reviewCount }: { rating: number; reviewCount: numb
 }
 
 export function MatchRequestsList({ matchRequests }: { matchRequests: MatchRequest[] }) {
+  const { modal, notify } = useConfirmModal();
   const router = useRouter();
   const t = useTranslations("matchRequests");
   const [choosingId, setChoosingId] = useState<string | null>(null);
@@ -97,13 +99,13 @@ export function MatchRequestsList({ matchRequests }: { matchRequests: MatchReque
 
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || t("error"));
+        void notify(data.error || t("error"));
         return;
       }
 
       router.push("/dashboard/bookings");
     } catch {
-      alert(t("error"));
+      void notify(t("error"));
     } finally {
       setChoosingId(null);
     }
@@ -243,6 +245,7 @@ export function MatchRequestsList({ matchRequests }: { matchRequests: MatchReque
           </div>
         );
       })}
+      {modal}
     </div>
   );
 }

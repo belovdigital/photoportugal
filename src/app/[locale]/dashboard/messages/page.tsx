@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { DateProposalCard } from "./DateProposalCard";
 import { useSession } from "next-auth/react";
@@ -185,6 +186,7 @@ function formatPresenceLabel(
 }
 
 export function MessagesContent({ initialChatId }: { initialChatId?: string } = {}) {
+  const { modal, confirm, notify } = useConfirmModal();
   const { data: session, status: authStatus } = useSession();
   const t = useTranslations("messages");
   const locale = useLocale();
@@ -344,7 +346,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setVideoCall({ creds: { token: data.token, url: data.url } });
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to start video call");
+      void notify(e instanceof Error ? e.message : "Failed to start video call");
     } finally {
       setStartingCall(false);
     }
@@ -943,7 +945,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.error || "Failed to edit");
+        void notify(data.error || "Failed to edit");
         return;
       }
       setMessages((prev) =>
@@ -959,14 +961,14 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
 
   async function deleteMessage(m: Message) {
     if (!canModifyMessage(m)) return;
-    if (!confirm("Delete this message? The other person will see 'Message deleted'.")) return;
+    if (!(await confirm(t("deleteMessage"), t("deleteMessageConfirm"), { danger: true }))) return;
     setMsgActionBusy(m.id);
     setOpenMenuId(null);
     try {
       const res = await fetch(`/api/messages/${m.id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.error || "Failed to delete");
+        void notify(data.error || "Failed to delete");
         return;
       }
       setMessages((prev) =>
@@ -1101,7 +1103,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        alert(data?.error || "Failed to share the package");
+        void notify(data?.error || "Failed to share the package");
         return;
       }
       if (data?.message) {
@@ -1123,7 +1125,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       // which sent a second card and a second email to the client.
       setShowPackagePicker(false);
     } catch {
-      alert("Failed to share the package");
+      void notify("Failed to share the package");
     } finally {
       setSharingPackageId(null);
     }
@@ -1135,7 +1137,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
     const newFiles: File[] = [];
     const newPreviews: string[] = [];
     for (let i = 0; i < files.length; i++) {
-      if (files[i].size > 30 * 1024 * 1024) { alert(`${files[i].name}: max 30MB`); continue; }
+      if (files[i].size > 30 * 1024 * 1024) { void notify(`${files[i].name}: max 30MB`); continue; }
       newFiles.push(files[i]);
       newPreviews.push(URL.createObjectURL(files[i]));
     }
@@ -1716,7 +1718,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                     <button
                                       type="button"
                                       onClick={async () => {
-                                        if (!window.confirm(t("withdrawOfferConfirm"))) return;
+                                        if (!(await confirm(t("withdrawOffer"), t("withdrawOfferConfirm"), { danger: true }))) return;
                                         try {
                                           const res = await fetch("/api/messages/share-package", {
                                             method: "DELETE",
@@ -1725,12 +1727,12 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                           });
                                           if (!res.ok) {
                                             const d = await res.json().catch(() => ({}));
-                                            alert(d.error || "Failed to withdraw the offer");
+                                            void notify(d.error || "Failed to withdraw the offer");
                                             return;
                                           }
                                           fetchMessages(activeChat!);
                                         } catch {
-                                          alert("Failed to withdraw the offer");
+                                          void notify("Failed to withdraw the offer");
                                         }
                                       }}
                                       className="mt-3 text-xs font-medium text-gray-400 underline decoration-dotted underline-offset-2 hover:text-red-500 transition"
@@ -2651,6 +2653,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
         );
       })()}
     </div>
+    {modal}
     </>
   );
 }

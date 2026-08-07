@@ -3359,7 +3359,8 @@
     "statDelivered": "Livrées",
     "statOnOffer": "Proposées · {price} pièce",
     "statGiftTaken": "Gratuites déjà prises",
-    "deleteSkippedSold": "{count, plural, one {# photo n'a pas pu être supprimée} other {# photos n'ont pas pu être supprimées}} — votre client les a achetées ou est en train de les payer."
+    "deleteSkippedSold": "{count, plural, one {# photo n'a pas pu être supprimée} other {# photos n'ont pas pu être supprimées}} — votre client les a achetées ou est en train de les payer.",
+    "extrasClearConfirm": "Retirer {count, plural, one {# photo} other {les # photos}} de votre sélection ?"
   },
   "availability": {
     "pageTitle": "Disponibilités",
@@ -3562,7 +3563,9 @@
     "offerWithdrawn": "Offre retirée",
     "withdrawOffer": "Retirer l'offre",
     "withdrawOfferConfirm": "Retirer cette offre ? Le client ne pourra plus la réserver.",
-    "deliveryExtrasLine": "{count, plural, one {# photo supplémentaire au prix fixé par votre photographe} other {# photos supplémentaires à un prix fixé par votre photographe}}"
+    "deliveryExtrasLine": "{count, plural, one {# photo supplémentaire au prix fixé par votre photographe} other {# photos supplémentaires à un prix fixé par votre photographe}}",
+    "deleteMessage": "Supprimer le message",
+    "deleteMessageConfirm": "Supprimer ce message ? L'autre personne verra « Message supprimé »."
   },
   "settings": {
     "title": "Paramètres",

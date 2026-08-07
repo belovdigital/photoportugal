@@ -3111,7 +3111,8 @@
     "statDelivered": "Delivered",
     "statOnOffer": "On offer · {price} each",
     "statGiftTaken": "Free photos taken",
-    "deleteSkippedSold": "{count, plural, one {# photo could not be removed} other {# photos could not be removed}} — your client has bought {count, plural, one {it} other {them}} or is paying for {count, plural, one {it} other {them}} right now."
+    "deleteSkippedSold": "{count, plural, one {# photo could not be removed} other {# photos could not be removed}} — your client has bought {count, plural, one {it} other {them}} or is paying for {count, plural, one {it} other {them}} right now.",
+    "extrasClearConfirm": "Remove all {count, plural, one {# photo} other {# photos}} from your selection?"
   },
   "availability": {
     "pageTitle": "Availability",
@@ -3314,7 +3315,9 @@
     "offerWithdrawn": "Offer withdrawn",
     "withdrawOffer": "Withdraw offer",
     "withdrawOfferConfirm": "Withdraw this offer? The client will no longer be able to book it.",
-    "deliveryExtrasLine": "{count, plural, one {# extra photo you can add for the price your photographer set} other {# extra photos you can add for a price your photographer sets}}"
+    "deliveryExtrasLine": "{count, plural, one {# extra photo you can add for the price your photographer set} other {# extra photos you can add for a price your photographer sets}}",
+    "deleteMessage": "Delete message",
+    "deleteMessageConfirm": "Delete this message? The other person will see 'Message deleted'."
   },
   "settings": {
     "title": "Settings",
