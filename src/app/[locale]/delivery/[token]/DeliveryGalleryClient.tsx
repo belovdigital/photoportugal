@@ -428,41 +428,34 @@ export function DeliveryGalleryClient({
               Each group gets a real header — icon, size, and one line saying
               what the group IS — and the paid group sits inside a tinted
               panel so it reads as a different place, not a scroll position. */}
-          <div className="mt-10 flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100 text-xl text-green-700">✓</span>
-            <div className="min-w-0">
-              <h3 className="font-display text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
-                {t("sectionYours", { count: ownedAll.length })}
-              </h3>
-              <p className="text-sm text-gray-500">{t("sectionYoursHint")}</p>
-              {/* The one instruction that unlocks the feature was grey text at
-                  the end of a grey sentence. It is the sentence. */}
+          {/* Two lines, not four. The decorative circle forced everything
+              beside it to centre against a growing stack, and the boxed hint
+              made a third band of colour on a page that already has two. */}
+          <div className="mt-10 border-b border-warm-200 pb-3">
+            <h3 className="font-display text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
+              {t("sectionYours", { count: ownedAll.length })}
+            </h3>
+            <p className="mt-0.5 text-sm text-gray-500">
+              {t("sectionYoursHint")}
               {canRearrange && lockedAll.length > 0 && (
-                <p className="mt-1 inline-block rounded-lg bg-accent-50 px-2.5 py-1 text-sm font-bold text-accent-800 ring-1 ring-accent-200">
-                  ⇄ {t("sectionYoursSwapHint")}
-                </p>
+                <span className="font-medium text-accent-800"> ⇄ {t("sectionYoursSwapHint")}</span>
               )}
-            </div>
+            </p>
           </div>
           <SortableContext items={ownedIndexed.map(({ p }) => p.id)} strategy={rectSortingStrategy}>
             {renderMasonry(ownedIndexed, canRearrange)}
           </SortableContext>
 
-          <div className="mt-12 rounded-3xl border-2 border-amber-200 bg-amber-50/60 p-4 sm:p-6">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-200 text-xl">
-                {giftLeft > 0 ? "🎁" : "＋"}
-              </span>
-              <div className="min-w-0">
-                <h3 className="font-display text-2xl font-bold leading-tight text-amber-900 sm:text-3xl">
-                  {t("sectionOnOffer", { count: lockedAll.length })}
-                </h3>
-                <p className="text-sm text-amber-800">
-                  {giftLeft > 0
-                    ? t("sectionOnOfferFree", { count: giftLeft })
-                    : t("sectionOnOfferPaid", { price: money(extrasPriceCents) })}
-                </p>
-              </div>
+          <div className="mt-12 rounded-2xl bg-amber-50/60 p-4 ring-1 ring-amber-200 sm:p-5">
+            <div className="border-b border-amber-200 pb-3">
+              <h3 className="font-display text-xl font-bold leading-tight text-amber-900 sm:text-2xl">
+                {giftLeft > 0 ? "🎁 " : ""}{t("sectionOnOffer", { count: lockedAll.length })}
+              </h3>
+              <p className="mt-0.5 text-sm text-amber-800">
+                {giftLeft > 0
+                  ? t("sectionOnOfferFree", { count: giftLeft })
+                  : t("sectionOnOfferPaid", { price: money(extrasPriceCents) })}
+              </p>
             </div>
             {onTakeAll && !deliveryAccepted && (
               <button

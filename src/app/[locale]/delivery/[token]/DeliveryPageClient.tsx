@@ -618,6 +618,17 @@ export function DeliveryPageClient({
               <div className="border-t border-warm-200 pt-3">
                 <p className="font-display text-2xl font-bold leading-none text-amber-800">{gallery.extras_available ?? 0}</p>
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">{t("railCanAdd")}</p>
+                {/* The only place this is explained now. It used to say the
+                    same thing here, in a green banner above the grid, and
+                    again in the section header below it. */}
+                <p className="mt-2 text-xs leading-snug text-gray-600">
+                  {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
+                </p>
+                {(gallery?.gift_remaining ?? 0) > 0 && (
+                  <p className="mt-1.5 text-xs font-semibold leading-snug text-accent-800">
+                    🎁 {t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}
+                  </p>
+                )}
               </div>
             )}
             <p className="border-t border-warm-200 pt-3 text-[11px] text-gray-400">
@@ -844,21 +855,6 @@ export function DeliveryPageClient({
           </div>
           )}
           {/* Gallery */}
-          {(gallery?.extras_available ?? 0) > 0 && (
-          <div className="mb-5 mt-8 rounded-2xl border-2 border-accent-200 bg-accent-50 p-5">
-          <p className="text-base font-bold text-accent-900">
-          {(gallery?.gift_remaining ?? 0) > 0
-          ? `🎁 ${t("giftBanner", { count: gallery.gift_remaining ?? 0 })}`
-          : `✨ ${t("extrasBannerTitle", { count: gallery.extras_available ?? 0 })}`}
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-accent-800">
-          {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
-          </p>
-          {(gallery?.gift_remaining ?? 0) > 0 && (
-          <p className="mt-1 text-sm text-accent-800">{t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}</p>
-          )}
-          </div>
-          )}
           <DeliveryGalleryClient
           photos={gallery.photos}
           deliveryAccepted={accepted}
