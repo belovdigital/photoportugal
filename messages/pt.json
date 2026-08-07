@@ -2887,7 +2887,10 @@
     "statOnOffer": "À venda · {price} cada",
     "statGiftTaken": "Grátis já escolhidas",
     "deleteSkippedSold": "{count, plural, one {# fotografia não pôde ser removida} other {# fotografias não puderam ser removidas}} — o cliente já as comprou ou está a pagar neste momento.",
-    "extrasClearConfirm": "Remover {count, plural, one {# fotografia} other {as # fotografias}} da sua seleção?"
+    "extrasClearConfirm": "Remover {count, plural, one {# fotografia} other {as # fotografias}} da sua seleção?",
+    "railYours": "suas",
+    "railCanAdd": "pode juntar",
+    "extrasNothingChargedYet": "Nada é cobrado até carregar em Comprar"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

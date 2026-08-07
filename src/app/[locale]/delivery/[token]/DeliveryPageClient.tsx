@@ -575,267 +575,312 @@ export function DeliveryPageClient({
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-      {/* Header */}
-      <div className="text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary-100">
-          {photographerAvatar ? (
-            <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-2xl font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
-          )}
-        </div>
-        {/* The photographer's optional custom title overrides the generic
-            "Your Photos Are Ready" headline; their long-form note appears
-            below as a quoted block. Falls back to the default copy when
-            title is empty. */}
-        <h1 className="mt-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-          {deliveryTitle?.trim() || t("photosReady")}
-        </h1>
-        <p className="mt-2 text-gray-500">
-          {normalizeName(gallery.photographer_name)} &middot;{" "}
-          {gallery.shoot_date
-            ? new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })
-            : `${country.brand}`}
-        </p>
-        {deliveryMessage?.trim() && (
-          <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-warm-200 bg-warm-50 px-5 py-4 text-left">
-            <p className="whitespace-pre-line text-sm text-gray-700 leading-relaxed sm:text-base">
-              {deliveryMessage.trim()}
-            </p>
-            <p className="mt-3 text-xs text-gray-400">— {normalizeName(gallery.photographer_name)}</p>
-          </div>
-        )}
-      </div>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
 
-      {/* Stats & Download */}
-      <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-warm-200 bg-white p-5">
-        <div className="text-sm text-gray-500">
-          <span className="block text-lg font-bold text-gray-900">
-            {gallery.photo_count - (gallery.extras_available ?? 0)} {gallery.photo_count - (gallery.extras_available ?? 0) !== 1 ? t("photoPlural") : t("photoSingular")}
-            {(gallery.extras_available ?? 0) > 0 && <span className="font-medium text-gray-500">{" "}{t("plusExtrasAvailable", { count: gallery.extras_available ?? 0 })}</span>}
-          </span>
-          <span className="mt-0.5 block text-xs text-gray-400">
-            {totalSize > 1024 * 1024
-              ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
-              : `${(totalSize / 1024).toFixed(0)} KB`}
-            {" · "}{t("availableUntil", { date: expiresDate })}
-          </span>
-        </div>
-        {/* Only AFTER acceptance. The main archive is written once, at
-            acceptance, and now contains everything the client owns by then —
-            promised photos plus any extra already taken, free or paid. Before
-            that moment a second archive would split their photos into two
-            downloads for no reason, and offering "download your 10 extra
-            photos" while the other five are still locked reads as nonsense.
-            Anything bought later cannot reach the frozen main file, so from
-            acceptance onward the second archive earns its place. */}
-        {accepted && (gallery?.extras_owned ?? 0) > 0 && (
-          <div className="mb-3">
-            {gallery?.extras_zip_ready ? (
-              <a
-                href={`/api/delivery/${token}/download?set=extras&password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
-                className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-2.5 text-sm font-semibold text-primary-700 hover:bg-primary-100"
-              >
-                {t("extrasDownload", { count: gallery.extras_owned ?? 0 })}
-                {gallery.extras_zip_size ? <span className="text-xs opacity-75">({(gallery.extras_zip_size / (1024 * 1024)).toFixed(0)} MB)</span> : null}
-              </a>
-            ) : (
-              <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-medium text-gray-500">
-                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-                {t("extrasZipPreparing")}
-              </span>
-            )}
-          </div>
-        )}
-        {accepted ? (
-          gallery?.zip_ready ? (
-            <a
-              href={`/api/delivery/${token}/download?password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              {t("downloadAllZip")}
-              {gallery.zip_size && <span className="text-xs opacity-75">({(gallery.zip_size / (1024 * 1024)).toFixed(0)} MB)</span>}
-            </a>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-3 text-sm font-medium text-gray-500">
-              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Preparing ZIP...
-            </span>
-          )
-        ) : isOwner ? (
-          <span className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 text-sm font-medium text-amber-800">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            {t("acceptToUnlockFullRes")}
-          </span>
-        ) : null}
-      </div>
+      {/* Two columns, and nothing spans both. The old page was four full-width
+          cards stacked above the photographs, all shouting at one volume. The
+          rail carries who, how many, what state and every action; the column
+          beside it is photographs and nothing else. Sticky, so the basket and
+          the primary action are on screen at photo 400 exactly as at photo 1. */}
+      <div className="lg:grid lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-10">
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
 
-      {/* Accept Delivery Section — only for the logged-in client who owns this booking */}
-      {isOwner ? (
-        <div className="mt-6">
-          {accepted ? (
-            <>
-            <div className="rounded-xl border border-green-200 bg-green-50 p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                  <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-green-700">{t("deliveryAccepted")}</p>
-                  <p className="text-sm text-green-600">{t("deliveryAcceptedThankYou")}</p>
-                </div>
-              </div>
-            </div>
-            {/* Optional tip — peak-happiness moment, right below the accept
-                confirmation, NEVER between the client and the download. */}
-            {tipJustSent || gallery.tipped ? (
-              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5 text-center">
-                <p className="font-semibold text-amber-800">💛 {t("tipThanks", { name: normalizeName(gallery.photographer_name).split(" ")[0] })}</p>
-              </div>
-            ) : gallery.tip_allowed !== false && !tipDismissed ? (
-              <TipCard
-                token={token}
-                photographerName={normalizeName(gallery.photographer_name).split(" ")[0]}
-                photographerAvatar={gallery.photographer_avatar}
-                password={password || (typeof window !== "undefined" ? sessionStorage.getItem(`delivery_pw_${token}`) || "" : "")}
-                onDismiss={() => {
-                  setTipDismissed(true);
-                  try { localStorage.setItem(`tip_dismissed_${gallery.booking_id}`, "1"); } catch {}
-                }}
-              />
-            ) : null}
-            </>
-          ) : (
-            <div className="rounded-2xl border border-warm-200 bg-warm-50 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold text-gray-800">{t("happyWithPhotos")}</p>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {t("acceptDeliveryPrompt")} {gallery.payment_status === "paid" ? t("acceptDeliveryPaymentNote") : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <DisputeForm bookingId={gallery.booking_id} token={token} />
-                  <button
-                    onClick={handleAcceptDelivery}
-                    disabled={accepting}
-                    className="shrink-0 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {accepting ? t("accepting") : t("acceptDelivery")}
-                  </button>
-                </div>
-              </div>
-              {acceptError && (
-                <p className="mt-3 text-sm text-red-600">{acceptError}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
+              {photographerAvatar ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
               )}
             </div>
+            <div className="min-w-0">
+              <h1 className="truncate font-display text-lg font-bold leading-tight text-gray-900">
+                {deliveryTitle?.trim() || t("photosReady")}
+              </h1>
+              <p className="truncate text-xs text-gray-500">
+                {normalizeName(gallery.photographer_name)}
+                {gallery.shoot_date ? ` · ${new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}` : ""}
+              </p>
+            </div>
+          </div>
+
+          {/* The counts, given the room to be read as numbers rather than as a
+              sentence squeezed between two buttons. */}
+          <div className="grid gap-3 rounded-2xl border border-warm-200 bg-white p-4">
+            <div>
+              <p className="font-display text-2xl font-bold leading-none text-gray-900">
+                {gallery.photo_count - (gallery.extras_available ?? 0)}
+              </p>
+              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("railYours")}</p>
+            </div>
+            {(gallery.extras_available ?? 0) > 0 && (
+              <div className="border-t border-warm-200 pt-3">
+                <p className="font-display text-2xl font-bold leading-none text-amber-800">{gallery.extras_available ?? 0}</p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">{t("railCanAdd")}</p>
+              </div>
+            )}
+            <p className="border-t border-warm-200 pt-3 text-[11px] text-gray-400">
+              {totalSize > 1024 * 1024
+                ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
+                : `${(totalSize / 1024).toFixed(0)} KB`}
+              {" · "}{t("availableUntil", { date: expiresDate })}
+            </p>
+          </div>
+
+          {/* Actions. One primary at a time — download after acceptance, the
+              locked notice before it. */}
+          <div className="flex flex-col gap-3 rounded-2xl border border-warm-200 bg-white p-4">
+          {/* Only AFTER acceptance. The main archive is written once, at
+          acceptance, and now contains everything the client owns by then —
+          promised photos plus any extra already taken, free or paid. Before
+          that moment a second archive would split their photos into two
+          downloads for no reason, and offering "download your 10 extra
+          photos" while the other five are still locked reads as nonsense.
+          Anything bought later cannot reach the frozen main file, so from
+          acceptance onward the second archive earns its place. */}
+          {accepted && (gallery?.extras_owned ?? 0) > 0 && (
+          <div className="mb-3">
+          {gallery?.extras_zip_ready ? (
+          <a
+          href={`/api/delivery/${token}/download?set=extras&password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
+          className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-2.5 text-sm font-semibold text-primary-700 hover:bg-primary-100"
+          >
+          {t("extrasDownload", { count: gallery.extras_owned ?? 0 })}
+          {gallery.extras_zip_size ? <span className="text-xs opacity-75">({(gallery.extras_zip_size / (1024 * 1024)).toFixed(0)} MB)</span> : null}
+          </a>
+          ) : (
+          <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-medium text-gray-500">
+          <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          {t("extrasZipPreparing")}
+          </span>
           )}
-        </div>
-      ) : !accepted && (
-        <div className="mt-6 rounded-xl border border-warm-200 bg-warm-50 p-5 text-center">
+          </div>
+          )}
+          {accepted ? (
+          gallery?.zip_ready ? (
+          <a
+          href={`/api/delivery/${token}/download?password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
+          >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {t("downloadAllZip")}
+          {gallery.zip_size && <span className="text-xs opacity-75">({(gallery.zip_size / (1024 * 1024)).toFixed(0)} MB)</span>}
+          </a>
+          ) : (
+          <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-3 text-sm font-medium text-gray-500">
+          <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Preparing ZIP...
+          </span>
+          )
+          ) : isOwner ? (
+          <span className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 text-sm font-medium text-amber-800">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          {t("acceptToUnlockFullRes")}
+          </span>
+          ) : null}
+          </div>
+
+          {/* Accept Delivery Section — only for the logged-in client who owns this booking */}
+          {isOwner ? (
+          <div className="mt-6">
+          {accepted ? (
+          <>
+          <div className="rounded-xl border border-green-200 bg-green-50 p-5">
+          <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+          <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+          </div>
+          <div>
+          <p className="font-semibold text-green-700">{t("deliveryAccepted")}</p>
+          <p className="text-sm text-green-600">{t("deliveryAcceptedThankYou")}</p>
+          </div>
+          </div>
+          </div>
+          {/* Optional tip — peak-happiness moment, right below the accept
+          confirmation, NEVER between the client and the download. */}
+          {tipJustSent || gallery.tipped ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5 text-center">
+          <p className="font-semibold text-amber-800">💛 {t("tipThanks", { name: normalizeName(gallery.photographer_name).split(" ")[0] })}</p>
+          </div>
+          ) : gallery.tip_allowed !== false && !tipDismissed ? (
+          <TipCard
+          token={token}
+          photographerName={normalizeName(gallery.photographer_name).split(" ")[0]}
+          photographerAvatar={gallery.photographer_avatar}
+          password={password || (typeof window !== "undefined" ? sessionStorage.getItem(`delivery_pw_${token}`) || "" : "")}
+          onDismiss={() => {
+          setTipDismissed(true);
+          try { localStorage.setItem(`tip_dismissed_${gallery.booking_id}`, "1"); } catch {}
+          }}
+          />
+          ) : null}
+          </>
+          ) : (
+          <div className="rounded-2xl border border-warm-200 bg-warm-50 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+          <p className="font-semibold text-gray-800">{t("happyWithPhotos")}</p>
+          <p className="mt-1 text-sm text-gray-600">
+          {t("acceptDeliveryPrompt")} {gallery.payment_status === "paid" ? t("acceptDeliveryPaymentNote") : ""}
+          </p>
+          </div>
+          <div className="flex items-center gap-4">
+          <DisputeForm bookingId={gallery.booking_id} token={token} />
+          <button
+          onClick={handleAcceptDelivery}
+          disabled={accepting}
+          className="shrink-0 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+          >
+          {accepting ? t("accepting") : t("acceptDelivery")}
+          </button>
+          </div>
+          </div>
+          {acceptError && (
+          <p className="mt-3 text-sm text-red-600">{acceptError}</p>
+          )}
+          </div>
+          )}
+          </div>
+          ) : !accepted && (
+          <div className="mt-6 rounded-xl border border-warm-200 bg-warm-50 p-5 text-center">
           <p className="text-sm text-gray-500">{t("loginToAccept")}</p>
           <a href="/auth/signin" className="mt-3 inline-block rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700">
-            {t("logIn")}
+          {t("logIn")}
           </a>
-        </div>
-      )}
+          </div>
+          )}
 
-      {/* Gallery */}
-      {(gallery?.extras_available ?? 0) > 0 && (
-        <div className="mb-5 mt-8 rounded-2xl border-2 border-accent-200 bg-accent-50 p-5">
+          {/* The rail gives the basket a permanent home, so it can stop being a
+              pill that floats over the photographs and become a summary that
+              answers the question a pill cannot: WHICH ones did I choose. On a
+              phone there is no rail, so it stays a fixed bar at the bottom. */}
+          {selectedExtras.size > 0 && (
+            <div className="fixed inset-x-3 bottom-3 z-30 rounded-2xl bg-gray-900 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] ring-1 ring-white/10 lg:static lg:inset-auto lg:shadow-lg">
+              <div className="flex items-baseline justify-between gap-3">
+                <div>
+                  <p className="font-display text-xl font-bold leading-none text-white">
+                    {(() => {
+                      const free = Math.min(selectedExtras.size, gallery.gift_remaining ?? 0);
+                      const paid = selectedExtras.size - free;
+                      if (free > 0 && paid === 0) return t("giftAllFree", { count: free });
+                      return money(paid * (gallery.extras_price_cents ?? 290));
+                    })()}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-300">{t("extrasSelected", { count: selectedExtras.size })}</p>
+                </div>
+                <p className="hidden text-[11px] leading-snug text-gray-400 sm:block lg:hidden">{t("extrasNothingChargedYet")}</p>
+              </div>
+
+              {/* Which three. Without this a client who picked photo 7, 31 and
+                  44 has to scroll back to find out what is in their basket. */}
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {(gallery.photos ?? [])
+                  .filter((ph) => selectedExtras.has(ph.id))
+                  .slice(0, 8)
+                  .map((ph) => (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      key={ph.id}
+                      src={ph.thumbnail_url || ph.preview_url || ph.url}
+                      alt=""
+                      className="h-10 w-10 rounded-md object-cover ring-1 ring-white/20"
+                    />
+                  ))}
+                {selectedExtras.size > 8 && (
+                  <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white/10 text-[11px] font-bold text-gray-200">
+                    +{selectedExtras.size - 8}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <button
+                  onClick={async () => {
+                    // One tap next to Buy that throws away a selection someone
+                    // built photo by photo. Cheap to confirm, annoying to redo.
+                    const ok = await confirm(
+                      t("extrasClear"),
+                      t("extrasClearConfirm", { count: selectedExtras.size }),
+                      { confirmLabel: t("extrasClear") }
+                    );
+                    if (!ok) return;
+                    setSelectedExtras(new Set());
+                    try { sessionStorage.removeItem(extrasKey); } catch {}
+                  }}
+                  className="rounded-lg px-3 py-2 text-xs font-medium text-gray-300 transition hover:text-white"
+                >
+                  {t("extrasClear")}
+                </button>
+                <button
+                  onClick={buyExtras}
+                  disabled={buyingExtras}
+                  className="flex-1 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-700 disabled:opacity-50 lg:flex-none"
+                >
+                  {buyingExtras ? "…" : t("extrasBuy")}
+                </button>
+              </div>
+            </div>
+          )}
+
+
+
+        </aside>
+
+        <main className="min-w-0">
+
+          {deliveryMessage?.trim() && (
+          <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-warm-200 bg-warm-50 px-5 py-4 text-left">
+          <p className="whitespace-pre-line text-sm text-gray-700 leading-relaxed sm:text-base">
+          {deliveryMessage.trim()}
+          </p>
+          <p className="mt-3 text-xs text-gray-400">— {normalizeName(gallery.photographer_name)}</p>
+          </div>
+          )}
+          {/* Gallery */}
+          {(gallery?.extras_available ?? 0) > 0 && (
+          <div className="mb-5 mt-8 rounded-2xl border-2 border-accent-200 bg-accent-50 p-5">
           <p className="text-base font-bold text-accent-900">
-            {(gallery?.gift_remaining ?? 0) > 0
-              ? `🎁 ${t("giftBanner", { count: gallery.gift_remaining ?? 0 })}`
-              : `✨ ${t("extrasBannerTitle", { count: gallery.extras_available ?? 0 })}`}
+          {(gallery?.gift_remaining ?? 0) > 0
+          ? `🎁 ${t("giftBanner", { count: gallery.gift_remaining ?? 0 })}`
+          : `✨ ${t("extrasBannerTitle", { count: gallery.extras_available ?? 0 })}`}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-accent-800">
-            {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
+          {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
           </p>
           {(gallery?.gift_remaining ?? 0) > 0 && (
-            <p className="mt-1 text-sm text-accent-800">{t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}</p>
+          <p className="mt-1 text-sm text-accent-800">{t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0 })}</p>
           )}
-        </div>
-      )}
-      <DeliveryGalleryClient
-        photos={gallery.photos}
-        deliveryAccepted={accepted}
-        selectedExtras={selectedExtras}
-        onToggleExtra={toggleExtra}
-        onSwap={swapPhoto}
-        onReorder={reorderPhotos}
-        onTakeAll={takeAllExtras}
-        takingAll={takingAll}
-        extrasPriceCents={gallery?.extras_price_cents ?? 290}
-        giftLeft={gallery?.gift_remaining ?? 0}
-      />
+          </div>
+          )}
+          <DeliveryGalleryClient
+          photos={gallery.photos}
+          deliveryAccepted={accepted}
+          selectedExtras={selectedExtras}
+          onToggleExtra={toggleExtra}
+          onSwap={swapPhoto}
+          onReorder={reorderPhotos}
+          onTakeAll={takeAllExtras}
+          takingAll={takingAll}
+          extrasPriceCents={gallery?.extras_price_cents ?? 290}
+          giftLeft={gallery?.gift_remaining ?? 0}
+          />
 
-      {/* Extras basket — only exists when the photographer held something back */}
-      {selectedExtras.size > 0 && (
-        /* Glass does not work here. The background is a wall of photographs in
-           every colour, so anything translucent and pale takes on whatever is
-           behind it and disappears. Solid near-black with light text is the
-           one treatment nothing in a photo grid can camouflage. */
-        <div className="sticky bottom-4 z-30 mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl bg-gray-900 px-5 py-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] ring-1 ring-white/10">
-          <div>
-            <p className="text-sm font-bold text-white">
-              {t("extrasSelected", { count: selectedExtras.size })}
-            </p>
-            <p className="text-xs text-gray-300">
-              {(() => {
-                const free = Math.min(selectedExtras.size, gallery.gift_remaining ?? 0);
-                const paid = selectedExtras.size - free;
-                if (free > 0 && paid > 0) return t("giftFreeLine", { free, paid, total: money(paid * (gallery.extras_price_cents ?? 290)) });
-                if (free > 0) return t("giftAllFree", { count: free });
-                return money(paid * (gallery.extras_price_cents ?? 290));
-              })()}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={async () => {
-                // One tap next to Buy that throws away a selection someone
-                // built photo by photo. Cheap to confirm, annoying to redo.
-                const ok = await confirm(
-                  t("extrasClear"),
-                  t("extrasClearConfirm", { count: selectedExtras.size }),
-                  { confirmLabel: t("extrasClear") }
-                );
-                if (!ok) return;
-                setSelectedExtras(new Set());
-                try { sessionStorage.removeItem(extrasKey); } catch {}
-              }}
-              className="text-xs font-medium text-gray-300 hover:text-white"
-            >
-              {t("extrasClear")}
-            </button>
-            <button
-              onClick={buyExtras}
-              disabled={buyingExtras}
-              className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-            >
-              {buyingExtras
-                ? "…"
-                : selectedExtras.size <= (gallery.gift_remaining ?? 0)
-                  ? t("giftGet", { count: selectedExtras.size })
-                  : t("extrasBuy")}
-            </button>
-          </div>
-        </div>
-      )}
+
+        </main>
+      </div>
 
       {/* Footer */}
       <div className="mt-12 text-center">

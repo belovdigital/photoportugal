@@ -3113,7 +3113,10 @@
     "statOnOffer": "Im Angebot · je {price}",
     "statGiftTaken": "Gratisfotos genommen",
     "deleteSkippedSold": "{count, plural, one {# Foto konnte nicht entfernt werden} other {# Fotos konnten nicht entfernt werden}} — Ihre Kundschaft hat sie gekauft oder bezahlt gerade dafür.",
-    "extrasClearConfirm": "{count, plural, one {# Foto} other {Alle # Fotos}} aus Ihrer Auswahl entfernen?"
+    "extrasClearConfirm": "{count, plural, one {# Foto} other {Alle # Fotos}} aus Ihrer Auswahl entfernen?",
+    "railYours": "Ihre",
+    "railCanAdd": "zur Auswahl",
+    "extrasNothingChargedYet": "Berechnet wird erst mit Kaufen"
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

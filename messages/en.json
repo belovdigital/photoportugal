@@ -3112,7 +3112,10 @@
     "statOnOffer": "On offer · {price} each",
     "statGiftTaken": "Free photos taken",
     "deleteSkippedSold": "{count, plural, one {# photo could not be removed} other {# photos could not be removed}} — your client has bought {count, plural, one {it} other {them}} or is paying for {count, plural, one {it} other {them}} right now.",
-    "extrasClearConfirm": "Remove all {count, plural, one {# photo} other {# photos}} from your selection?"
+    "extrasClearConfirm": "Remove all {count, plural, one {# photo} other {# photos}} from your selection?",
+    "railYours": "yours",
+    "railCanAdd": "you can add",
+    "extrasNothingChargedYet": "Nothing is charged until you press Buy"
   },
   "availability": {
     "pageTitle": "Availability",

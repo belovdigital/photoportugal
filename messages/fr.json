@@ -3360,7 +3360,10 @@
     "statOnOffer": "Proposées · {price} pièce",
     "statGiftTaken": "Gratuites déjà prises",
     "deleteSkippedSold": "{count, plural, one {# photo n'a pas pu être supprimée} other {# photos n'ont pas pu être supprimées}} — votre client les a achetées ou est en train de les payer.",
-    "extrasClearConfirm": "Retirer {count, plural, one {# photo} other {les # photos}} de votre sélection ?"
+    "extrasClearConfirm": "Retirer {count, plural, one {# photo} other {les # photos}} de votre sélection ?",
+    "railYours": "à vous",
+    "railCanAdd": "à ajouter",
+    "extrasNothingChargedYet": "Rien n'est débité avant Acheter"
   },
   "availability": {
     "pageTitle": "Disponibilités",
