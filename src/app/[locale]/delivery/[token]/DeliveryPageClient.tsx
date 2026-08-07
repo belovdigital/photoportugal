@@ -664,20 +664,25 @@ export function DeliveryPageClient({
       <div className="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
 
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
-              {photographerAvatar ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-lg font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <h1 className="truncate font-display text-lg font-bold leading-tight text-gray-900">
-                {deliveryTitle?.trim() || t("photosReady")}
-              </h1>
-              <p className="truncate text-xs text-gray-500">
+          {/* The title is the one line on this page the photographer wrote
+              themselves, so it gets the full width of the rail and as many
+              lines as it needs. Beside a 48px avatar it had about eighteen
+              characters and ended in an ellipsis on every real delivery.
+              The attribution underneath is secondary and may still clip. */}
+          <div>
+            <h1 className="text-balance font-display text-lg font-bold leading-snug text-gray-900">
+              {deliveryTitle?.trim() || t("photosReady")}
+            </h1>
+            <div className="mt-2.5 flex items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
+                {photographerAvatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
+                )}
+              </div>
+              <p className="min-w-0 truncate text-xs text-gray-500">
                 {normalizeName(gallery.photographer_name)}
                 {gallery.shoot_date ? ` · ${new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}` : ""}
               </p>
