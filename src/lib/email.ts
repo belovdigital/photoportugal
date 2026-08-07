@@ -640,9 +640,11 @@ export async function sendPaymentReceivedToPhotographer(
 export async function sendPaymentConfirmedToClient(
   clientEmail: string,
   clientName: string,
-  photographerName: string,
+  photographerNameRaw: string,
   amount: number
 ) {
+  /** Anti-disintermediation: a client never sees the surname. */
+  const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT, localizedUrl, formatPrice } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
   const firstName = clientName.split(" ")[0];
@@ -785,12 +787,14 @@ export async function sendDeliveryAcceptedToPhotographer(
 export async function sendDeliveryAcceptedToClient(
   clientEmail: string,
   clientName: string,
-  photographerName: string,
+  photographerNameRaw: string,
   /** Deep link back to the gallery (with ?pw=…&tip=1) — when present the
    *  email includes a soft optional-tip line + button below the download
    *  note. Catches the different-device / next-morning tip moment. */
   tipUrl?: string | null
 ) {
+  /** Anti-disintermediation: a client never sees the surname. */
+  const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
   const firstName = clientName.split(" ")[0];
@@ -889,8 +893,10 @@ export async function sendDeliveryAcceptedToClient(
 export async function sendTrustpilotFollowUpToClient(
   clientEmail: string,
   clientName: string,
-  photographerName: string
+  photographerNameRaw: string
 ) {
+  /** Anti-disintermediation: a client never sees the surname. */
+  const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
   const firstName = clientName.split(" ")[0];
@@ -1532,9 +1538,11 @@ export async function sendPaymentReminderToClient(
 export async function sendShootReminderToClient(
   clientEmail: string,
   clientName: string,
-  photographerName: string,
+  photographerNameRaw: string,
   shootDate: string
 ) {
+  /** Anti-disintermediation: a client never sees the surname. */
+  const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
   shootDate = formatShootDate(shootDate, locale) || shootDate;

@@ -15,6 +15,7 @@ import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist"
 import { BookingJourney } from "./BookingJourney";
 import { ProposalSmsToggle } from "./ProposalSmsToggle";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
 import { bookingGroupSizeEstimateSelect } from "@/lib/booking-group-size-fields";
 import { country } from "@/lib/country";
@@ -257,6 +258,16 @@ export default async function BookingsPage() {
       );
     }
   } catch {}
+
+  // Anti-disintermediation: this page is a server component and queries the
+  // database directly, so it never passed through the masking in
+  // /api/bookings. For a client, other_name IS the photographer. For a
+  // photographer it is their client, who is never masked.
+  if (!isPhotographer) {
+    for (const b of bookings) {
+      if (typeof b.other_name === "string") b.other_name = maskSurname(b.other_name);
+    }
+  }
 
   // Serialize Date objects to strings (node-postgres returns date columns as Date objects)
   for (const b of bookings) {

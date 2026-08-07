@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { maskSurname } from "@/lib/photographer-name";
 import { queryOne } from "@/lib/db";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -64,7 +65,7 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
   return (
     <DeliveryPageClient
       token={token}
-      photographerName={booking.photographer_name}
+      photographerName={maskSurname(booking.photographer_name)}
       photographerAvatar={booking.photographer_avatar}
       deliveryTitle={booking.delivery_title}
       deliveryMessage={booking.delivery_message}

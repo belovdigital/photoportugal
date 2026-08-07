@@ -55,7 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // surname until the pair shares a PAID booking (then full for
     // coordination). The photographer viewing their own booking is unaffected.
     const b = booking as Record<string, unknown>;
-    if (b.client_id === user.id && !b.any_paid_booking && typeof b.photographer_name === "string") {
+    if (b.client_id === user.id && typeof b.photographer_name === "string") {
       b.photographer_name = maskSurname(b.photographer_name as string);
     }
 

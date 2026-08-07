@@ -784,12 +784,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Anti-disintermediation: in the CLIENT's booking list, mask the
-    // photographer's surname while the booking is still UNPAID (pre-payment
-    // lead). Once paid, the full name shows for coordination. Photographer-
-    // viewer rows carry client_name (no photographer_name) and are untouched.
+    // Anti-disintermediation: a client never sees a photographer's surname,
+    // paid or not (policy widened 2026-08-07 — payment used to lift it, on the
+    // reasoning that coordination needs a real name; a delivered gallery is
+    // exactly when a happy client is most tempted to book the next one direct).
+    // Photographer-viewer rows carry client_name (no photographer_name) and are
+    // untouched: clients are not masked from anyone.
     for (const b of bookings as Array<Record<string, unknown>>) {
-      if (typeof b.photographer_name === "string" && b.payment_status !== "paid") {
+      if (typeof b.photographer_name === "string") {
         b.photographer_name = maskSurname(b.photographer_name as string);
       }
     }

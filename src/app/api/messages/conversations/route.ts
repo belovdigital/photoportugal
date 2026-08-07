@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
     // (post-payment coordination keeps the full name). Photographer-viewer
     // rows show the CLIENT (other_role='client') and are never masked.
     for (const c of conversations as Array<Record<string, unknown>>) {
-      if (c.other_role === "photographer" && !c.any_paid_booking && typeof c.other_name === "string") {
+      if (c.other_role === "photographer" && typeof c.other_name === "string") {
         c.other_name = maskSurname(c.other_name as string);
       }
     }

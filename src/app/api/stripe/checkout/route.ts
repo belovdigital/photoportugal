@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { maskSurname } from "@/lib/photographer-name";
 export const dynamic = "force-dynamic";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
@@ -130,7 +131,7 @@ export async function POST(req: NextRequest) {
           product_data: {
             name: isBlind
               ? `${country.brand} photoshoot — handpicked photographer`
-              : `${booking.package_name || "Photoshoot"} with ${booking.photographer_name}`,
+              : `${booking.package_name || "Photoshoot"} with ${maskSurname(booking.photographer_name)}`,
             description: isBlind
               ? "Authorised now — charged when your photographer is confirmed (within 24h). Auto-refund if we can't match."
               : `${country.brand} photoshoot session`,

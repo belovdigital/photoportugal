@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { maskSurname } from "@/lib/photographer-name";
 export const dynamic = "force-dynamic";
 import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
@@ -259,7 +260,7 @@ export async function POST(
     client_id: booking.client_id,
     tipped: !!tipRow,
     tip_allowed: !openDispute && booking.payment_status === "paid",
-    photographer_name: booking.photographer_name,
+    photographer_name: maskSurname(booking.photographer_name),
     photographer_avatar: booking.photographer_avatar,
     client_name: booking.client_name,
     shoot_date: booking.shoot_date,

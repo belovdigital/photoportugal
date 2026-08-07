@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { maskSurname } from "@/lib/photographer-name";
 export const dynamic = "force-dynamic";
 import { queryOne } from "@/lib/db";
 
@@ -30,6 +31,6 @@ export async function GET(
   return NextResponse.json({
     exists: true,
     expired,
-    photographer_name: booking.photographer_name,
+    photographer_name: maskSurname(booking.photographer_name),
   });
 }

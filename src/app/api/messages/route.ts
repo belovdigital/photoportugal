@@ -118,20 +118,15 @@ export async function GET(req: NextRequest) {
       [booking.client_id, photographerId, userId]
     );
 
-    // Anti-disintermediation: when the CLIENT is viewing the thread, mask the
-    // photographer's surname on the photographer's own messages until they
-    // share a PAID booking (post-payment coordination keeps the full name).
-    // The photographer viewing the thread always sees the client's full name.
+    // Anti-disintermediation: when the CLIENT is viewing the thread, the
+    // photographer's surname is masked on their own messages. Paying no longer
+    // lifts this (2026-08-07) — the extra round-trip that asked whether they
+    // shared a paid booking goes with it. The photographer viewing the thread
+    // always sees the client's full name; clients are not masked from anyone.
     if (userId === booking.client_id) {
-      const paid = await queryOne<{ exists: boolean }>(
-        `SELECT EXISTS (SELECT 1 FROM bookings WHERE client_id = $1 AND photographer_id = $2 AND payment_status = 'paid') as exists`,
-        [booking.client_id, photographerId]
-      );
-      if (!paid?.exists) {
-        for (const m of messages as Array<Record<string, unknown>>) {
-          if (m.sender_id === booking.photographer_user_id && typeof m.sender_name === "string") {
-            m.sender_name = maskSurname(m.sender_name as string);
-          }
+      for (const m of messages as Array<Record<string, unknown>>) {
+        if (m.sender_id === booking.photographer_user_id && typeof m.sender_name === "string") {
+          m.sender_name = maskSurname(m.sender_name as string);
         }
       }
     }
@@ -459,14 +454,12 @@ export async function POST(req: NextRequest) {
             // read / replied / came online. No more "I got an email
             // about a message I already responded to 30 sec ago".
             const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
-            // Anti-disintermediation: if the sender is the photographer and the
-            // recipient (client) hasn't paid yet, mask the photographer surname
-            // in the notification ("Jennifer D."). Client->photographer emails
-            // show the client's full name unchanged.
+            // Anti-disintermediation: a notification about a photographer's
+            // message names them "Jennifer D." to the client, whether or not
+            // the booking is paid. Client->photographer emails show the
+            // client's full name unchanged.
             const senderIsPhotographer = userId === booking.photographer_user_id;
-            const senderDisplay = senderIsPhotographer && booking.payment_status !== "paid"
-              ? maskSurname(sender.name)
-              : sender.name;
+            const senderDisplay = senderIsPhotographer ? maskSurname(sender.name) : sender.name;
             await enqueueNewMessageNotif({
               recipientId,
               recipient: recipient.email,

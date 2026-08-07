@@ -173,6 +173,8 @@ async function runReminders(): Promise<NextResponse> {
     );
 
     for (const booking of finalReminderBookings) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         const BASE_URL = process.env.AUTH_URL || country.baseUrl;
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
@@ -261,6 +263,8 @@ async function runReminders(): Promise<NextResponse> {
     );
 
     for (const booking of criticalBookings) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         const BASE_URL = process.env.AUTH_URL || country.baseUrl;
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
@@ -506,11 +510,11 @@ async function runReminders(): Promise<NextResponse> {
         const { getUserLocaleByEmail: gulb, pickT: pkt } = await import("@/lib/email-locale");
         const cLoc = await gulb(booking.client_email);
         const Tcancel = pkt({
-          en: { subject: "Booking cancelled — payment not received", h2: "Booking Auto-Cancelled", greet: `Hi ${booking.client_name},`, body1: `Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because payment was not received within 24 hours.`, body2: "If you'd still like to book, feel free to submit a new request.", cta: "Browse Photographers" },
-          pt: { subject: "Reserva cancelada — pagamento não recebido", h2: "Reserva cancelada automaticamente", greet: `Olá ${booking.client_name},`, body1: `A sua reserva com <strong>${booking.photographer_name}</strong> foi cancelada automaticamente porque o pagamento não foi recebido em 24 horas.`, body2: "Se ainda desejar reservar, fique à vontade para enviar um novo pedido.", cta: "Ver fotógrafos" },
-          de: { subject: "Buchung storniert — Zahlung nicht erhalten", h2: "Buchung automatisch storniert", greet: `Hallo ${booking.client_name},`, body1: `Ihre Buchung mit <strong>${booking.photographer_name}</strong> wurde automatisch storniert, da die Zahlung nicht innerhalb von 24 Stunden eingegangen ist.`, body2: "Wenn Sie weiterhin buchen möchten, senden Sie gerne eine neue Anfrage.", cta: "Fotografen ansehen" },
-          es: { subject: "Reserva cancelada — pago no recibido", h2: "Reserva cancelada automáticamente", greet: `Hola ${booking.client_name},`, body1: `Su reserva con <strong>${booking.photographer_name}</strong> ha sido cancelada automáticamente porque no se recibió el pago en 24 horas.`, body2: "Si aún desea reservar, no dude en enviar una nueva solicitud.", cta: "Ver fotógrafos" },
-          fr: { subject: "Réservation annulée — paiement non reçu", h2: "Réservation annulée automatiquement", greet: `Bonjour ${booking.client_name},`, body1: `Votre réservation avec <strong>${booking.photographer_name}</strong> a été automatiquement annulée car le paiement n'a pas été reçu dans les 24 heures.`, body2: "Si vous souhaitez toujours réserver, n'hésitez pas à envoyer une nouvelle demande.", cta: "Voir les photographes" },
+          en: { subject: "Booking cancelled — payment not received", h2: "Booking Auto-Cancelled", greet: `Hi ${booking.client_name},`, body1: `Your booking with <strong>${maskSurname(booking.photographer_name)}</strong> has been automatically cancelled because payment was not received within 24 hours.`, body2: "If you'd still like to book, feel free to submit a new request.", cta: "Browse Photographers" },
+          pt: { subject: "Reserva cancelada — pagamento não recebido", h2: "Reserva cancelada automaticamente", greet: `Olá ${booking.client_name},`, body1: `A sua reserva com <strong>${maskSurname(booking.photographer_name)}</strong> foi cancelada automaticamente porque o pagamento não foi recebido em 24 horas.`, body2: "Se ainda desejar reservar, fique à vontade para enviar um novo pedido.", cta: "Ver fotógrafos" },
+          de: { subject: "Buchung storniert — Zahlung nicht erhalten", h2: "Buchung automatisch storniert", greet: `Hallo ${booking.client_name},`, body1: `Ihre Buchung mit <strong>${maskSurname(booking.photographer_name)}</strong> wurde automatisch storniert, da die Zahlung nicht innerhalb von 24 Stunden eingegangen ist.`, body2: "Wenn Sie weiterhin buchen möchten, senden Sie gerne eine neue Anfrage.", cta: "Fotografen ansehen" },
+          es: { subject: "Reserva cancelada — pago no recibido", h2: "Reserva cancelada automáticamente", greet: `Hola ${booking.client_name},`, body1: `Su reserva con <strong>${maskSurname(booking.photographer_name)}</strong> ha sido cancelada automáticamente porque no se recibió el pago en 24 horas.`, body2: "Si aún desea reservar, no dude en enviar una nueva solicitud.", cta: "Ver fotógrafos" },
+          fr: { subject: "Réservation annulée — paiement non reçu", h2: "Réservation annulée automatiquement", greet: `Bonjour ${booking.client_name},`, body1: `Votre réservation avec <strong>${maskSurname(booking.photographer_name)}</strong> a été automatiquement annulée car le paiement n'a pas été reçu dans les 24 heures.`, body2: "Si vous souhaitez toujours réserver, n'hésitez pas à envoyer une nouvelle demande.", cta: "Voir les photographes" },
         }, cLoc);
         sendEmail(
           booking.client_email,
@@ -607,6 +611,8 @@ async function runReminders(): Promise<NextResponse> {
     );
 
     for (const booking of upcomingBookings) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         // Get phone numbers for timezone-aware queuing
         const smsInfo = await queryOne<{
@@ -910,7 +916,7 @@ async function runReminders(): Promise<NextResponse> {
             `[Alert] Photographer ${booking.photographer_name} overdue on delivery for 14 days`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Delivery Overdue — 14 Days</h2>
-              <p>Photographer <strong>${booking.photographer_name}</strong> (${booking.photographer_email}) has not delivered photos for booking ${booking.id}.</p>
+              <p>Photographer <strong>${maskSurname(booking.photographer_name)}</strong> (${booking.photographer_email}) has not delivered photos for booking ${booking.id}.</p>
               <p>Client: <strong>${booking.client_name}</strong> (${booking.client_email})</p>
               <p>The booking will be auto-refunded at 21 days if not resolved.</p>
               <p><a href="${process.env.AUTH_URL || country.baseUrl}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin</a></p>
@@ -985,7 +991,7 @@ async function runReminders(): Promise<NextResponse> {
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
             <p>Hi ${booking.client_name},</p>
-            <p>Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because the photos were not delivered within 21 days.</p>
+            <p>Your booking with <strong>${maskSurname(booking.photographer_name)}</strong> has been automatically cancelled because the photos were not delivered within 21 days.</p>
             ${booking.payment_status === "paid" ? `<p>A full refund has been issued. The refund should appear in your account within 5-10 business days.</p>` : ""}
             <p><a href="${baseUrl}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
             <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
@@ -1146,7 +1152,7 @@ async function runReminders(): Promise<NextResponse> {
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Photos Auto-Accepted</h2>
             <p>Hi ${booking.client_name},</p>
-            <p>Your photos from <strong>${booking.photographer_name}</strong> have been automatically accepted after 14 days. The payment has been released to the photographer.</p>
+            <p>Your photos from <strong>${maskSurname(booking.photographer_name)}</strong> have been automatically accepted after 14 days. The payment has been released to the photographer.</p>
             <p>Your photos are still available for download for 90 days.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
             <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
@@ -1197,6 +1203,8 @@ async function runReminders(): Promise<NextResponse> {
     );
 
     for (const booking of unacceptedDeliveries) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         const baseUrl = process.env.AUTH_URL || country.baseUrl;
         await sendEmail(
@@ -1365,6 +1373,8 @@ async function runReminders(): Promise<NextResponse> {
     );
 
     for (const b of pendingAccepts) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      b.photographer_name = maskSurname(b.photographer_name);
       try {
         // Stamp BEFORE sending so an SMTP failure can't double-send.
         await queryOne(
@@ -1516,6 +1526,8 @@ async function runReminders(): Promise<NextResponse> {
     const baseUrl = process.env.AUTH_URL || country.baseUrl;
 
     for (const booking of needsReviewReminder) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         const firstName = booking.client_name.split(" ")[0];
         const reviewUrl = `${baseUrl}/dashboard/bookings?review=${encodeURIComponent(booking.id)}`;
@@ -1567,6 +1579,8 @@ async function runReminders(): Promise<NextResponse> {
     const { normalizeLocale, pickT, localizedUrl } = await import("@/lib/email-locale");
 
     for (const booking of needsSmsReview) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         const firstName = booking.client_name.split(" ")[0];
         const cLocale = normalizeLocale(booking.client_locale);
@@ -1831,6 +1845,8 @@ async function runReminders(): Promise<NextResponse> {
 
     const baseUrl = process.env.AUTH_URL || country.baseUrl;
     for (const booking of expiringSoon) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      booking.photographer_name = maskSurname(booking.photographer_name);
       try {
         let pw = "";
         if (booking.delivery_chat_payload?.startsWith("DELIVERY:")) {
@@ -2823,6 +2839,8 @@ async function runReminders(): Promise<NextResponse> {
     const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     for (const c of silentClients) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      c.photographer_name = maskSurname(c.photographer_name);
       try {
         const firstName = c.client_name.split(" ")[0];
         // Email
@@ -2917,6 +2935,8 @@ async function runReminders(): Promise<NextResponse> {
     const BASE_URL2 = process.env.AUTH_URL || country.baseUrl;
 
     for (const c of silent7d) {
+      // Anti-disintermediation: client-bound mail never carries the surname.
+      c.photographer_name = maskSurname(c.photographer_name);
       try {
         const firstName = c.client_name.split(" ")[0];
         await queueNotification({
