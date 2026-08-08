@@ -161,6 +161,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             de: { subject: `Ihre Geschenk-Session wurde wiederhergestellt`, h2: `${giftPhotog} musste absagen`, body: `Es tut uns leid — ${firstName} musste Ihre Session absagen. Ihre Geschenkkarte ist wieder in Ihrem Konto mit 30 zusätzlichen Tagen. Wählen Sie einen anderen Fotografen.`, cta: "Anderen Fotografen wählen" },
             es: { subject: `Su sesión de regalo ha sido restaurada`, h2: `${giftPhotog} tuvo que cancelar`, body: `Lo sentimos — ${firstName} tuvo que cancelar su sesión. Su tarjeta de regalo está de nuevo en su cuenta con 30 días adicionales. Elija otro fotógrafo.`, cta: "Elegir otro fotógrafo" },
             fr: { subject: `Votre séance cadeau est rétablie`, h2: `${giftPhotog} a dû annuler`, body: `Désolé — ${firstName} a dû annuler votre séance. Votre carte cadeau est de retour dans votre compte avec 30 jours supplémentaires. Choisissez un autre photographe.`, cta: "Choisir un autre photographe" },
+            it: { subject: `La tua sessione regalo è stata ripristinata`, h2: `${giftPhotog} ha dovuto annullare`, body: `Ci dispiace — ${firstName} ha dovuto annullare la tua sessione. La gift card è tornata nel tuo account con 30 giorni in più per usarla. Scegli un altro fotografo qui sotto.`, cta: "Scegli un altro fotografo" },
           }, loc);
           const html = emailLayout(`
             <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>

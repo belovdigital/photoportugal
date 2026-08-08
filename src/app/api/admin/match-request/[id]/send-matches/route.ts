@@ -257,6 +257,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         pt: `Olá ${firstName}! Os seus fotógrafos para ${locationName} estão prontos. Veja e escolha o seu favorito: ${BASE_URL}/dashboard/match-requests`,
         de: `Hallo ${firstName}! Ihre Fotografen für ${locationName} sind bereit. Sehen Sie sie an und wählen Sie Ihren Favoriten: ${BASE_URL}/dashboard/match-requests`,
         fr: `Bonjour ${firstName} ! Vos photographes pour ${locationName} sont prêts. Découvrez-les et choisissez votre favori : ${BASE_URL}/dashboard/match-requests`,
+        it: `Ciao ${firstName}! I fotografi selezionati per ${locationName} sono pronti. Guardali e scegli il tuo preferito: ${BASE_URL}/dashboard/match-requests`,
       }, cLocale);
       import("@/lib/sms").then(({ sendSMS }) => {
         sendSMS(matchReq.phone!, smsBody);
@@ -324,6 +325,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                 ? `Bonne nouvelle — nous vous avons recommandé(e) à <strong>${matchReq.name}</strong> pour une séance ${stLower} à ${locationName}.`
                 : `Bonne nouvelle — nous vous avons recommandé(e) à <strong>${matchReq.name}</strong> pour une séance photo à ${locationName}.`,
               footer: "Le/la client(e) examine votre profil. S'il/elle vous choisit, vous recevrez une notification de réservation avec tous les détails.",
+            },
+            it: {
+              subject: `Sei stato consigliato a ${firstName}!`,
+              h2: "Sei stato selezionato!",
+              greeting: `Ciao ${photogFirst},`,
+              body: hasSpecificShootType
+                ? `Buone notizie — ti abbiamo consigliato a <strong>${matchReq.name}</strong> per un servizio ${stLower} a ${locationName}.`
+                : `Buone notizie — ti abbiamo consigliato a <strong>${matchReq.name}</strong> per un servizio fotografico a ${locationName}.`,
+              footer: "Il cliente sta guardando il tuo profilo. Se sceglie te, riceverai una notifica di prenotazione con tutti i dettagli.",
             },
           }, pLocale);
 

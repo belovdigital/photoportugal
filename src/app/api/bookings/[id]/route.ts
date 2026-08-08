@@ -849,11 +849,13 @@ export async function PATCH(
                   pt: `${country.brand}: ${bookingDetails.photographer_name} confirmou a sua sessão de presente! Veja o seu painel.`,
                   de: `${country.brand}: ${bookingDetails.photographer_name} hat Ihre Geschenk-Session bestätigt! Im Dashboard sehen.`,
                   fr: `${country.brand} : ${bookingDetails.photographer_name} a confirmé votre séance cadeau ! Voir votre tableau de bord.`,
+                  it: `${country.brand}: ${bookingDetails.photographer_name} ha confermato la tua sessione regalo! Vedi la tua dashboard.`,
                 }, cLocale) : pickT({
                   en: `${country.brand}: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`,
                   pt: `${country.brand}: ${bookingDetails.photographer_name} confirmou a sua reserva! Veja o seu painel para os detalhes de pagamento.`,
                   de: `${country.brand}: ${bookingDetails.photographer_name} hat Ihre Buchung bestätigt! Zahlungsdetails finden Sie in Ihrem Dashboard.`,
                   fr: `${country.brand} : ${bookingDetails.photographer_name} a confirmé votre réservation ! Détails de paiement sur votre tableau de bord.`,
+                  it: `${country.brand}: ${bookingDetails.photographer_name} ha confermato la tua prenotazione! I dettagli di pagamento sono nella tua dashboard.`,
                 }, cLocale);
                 sendSMS(
                   clientPhone.phone,
@@ -895,6 +897,7 @@ export async function PATCH(
                 de: { subject: `${bookingDetails.photographer_name} hat Ihre Geschenk-Session bestätigt`, h2: `Ihre Geschenk-Session ist bestätigt`, body: `${bookingDetails.photographer_name} hat Ihre Fotosession bestätigt. Ihre Geschenkkarte hat den Preis bereits übernommen — keine weitere Zahlung erforderlich. Details im Dashboard.`, cta: "Dashboard öffnen" },
                 es: { subject: `${bookingDetails.photographer_name} confirmó su sesión de regalo`, h2: `Su sesión de regalo está confirmada`, body: `${bookingDetails.photographer_name} confirmó su sesión fotográfica. Su tarjeta de regalo ya cubrió el precio — no se requiere más pago. Detalles en su panel.`, cta: "Abrir el panel" },
                 fr: { subject: `${bookingDetails.photographer_name} a confirmé votre séance cadeau`, h2: `Votre séance cadeau est confirmée`, body: `${bookingDetails.photographer_name} a confirmé votre séance photo. Votre carte cadeau a déjà couvert le prix — aucun paiement supplémentaire requis. Détails dans votre tableau de bord.`, cta: "Ouvrir le tableau de bord" },
+                it: { subject: `${bookingDetails.photographer_name} ha confermato la tua sessione regalo`, h2: `La tua sessione regalo è confermata`, body: `${bookingDetails.photographer_name} ha confermato il tuo servizio fotografico. La gift card ha già coperto il prezzo — non serve altro pagamento. I dettagli sono nella tua dashboard.`, cta: "Apri la dashboard" },
               }, loc);
               await sendEmail(
                 bookingDetails.client_email,

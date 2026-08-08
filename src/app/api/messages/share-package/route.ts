@@ -126,6 +126,17 @@ async function notifyClientAboutPackageOffer({
       book: "Réserver ce forfait",
       messages: "Ouvrir les messages",
     },
+    it: {
+      subject: isCustom ? `${photographerName} ti ha inviato una proposta personalizzata` : `${photographerName} ti ha inviato un pacchetto fotografico`,
+      h2: isCustom ? "Proposta personalizzata inviata" : "Pacchetto inviato",
+      greeting: `Ciao ${firstName},`,
+      intro: isCustom
+        ? `<strong>${escapeHtml(photographerName)}</strong> ha creato una proposta fotografica su misura per te.`
+        : `<strong>${escapeHtml(photographerName)}</strong> ha condiviso con te un pacchetto fotografico.`,
+      details: "Dettagli del pacchetto:",
+      book: "Prenota questo pacchetto",
+      messages: "Apri i messaggi",
+    },
   }, locale);
 
   const descriptionHtml = description

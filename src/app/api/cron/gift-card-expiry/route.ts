@@ -105,6 +105,12 @@ async function runGiftCardExpiry(): Promise<NextResponse> {
             body: `Juste un rappel, ${card.recipient_name.split(" ")[0]} : la séance offerte par ${card.buyer_name} expire le ${expiry}. Choisissez un photographe et réservez une date avant cette échéance.`,
             cta: "Choisir un photographe",
           },
+          it: {
+            subject: `La tua gift card ${country.brand} scade tra ${tier.label === "30 days" ? "30 giorni" : tier.label === "7 days" ? "7 giorni" : "1 giorno"}`,
+            h2: `Il tuo regalo ti aspetta — manca${tier.label === "1 day" ? "" : "no"} ${tier.label === "30 days" ? "30 giorni" : tier.label === "7 days" ? "7 giorni" : "1 giorno"}`,
+            body: `Un promemoria, ${card.recipient_name.split(" ")[0]}: la sessione regalata da ${card.buyer_name} scade il ${expiry}. Scegli un fotografo e fissa una data prima di allora.`,
+            cta: "Scegli un fotografo",
+          },
         }, loc);
         const html = emailLayout(`
           <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>

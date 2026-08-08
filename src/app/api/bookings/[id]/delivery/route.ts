@@ -347,6 +347,7 @@ export async function POST(
             de: { subject: `✨ ${pFirst} hat eine Vorschau Ihrer Fotos geteilt`, body: `${pFirst} hat ${imgCount} Favorit${imgCount === 1 ? "en" : "en"} aus Ihrer Session ausgewählt, während der Rest der Galerie bearbeitet wird.`, expect: expStr ? `Ihre vollständige Galerie${details.num_photos ? ` mit ~${details.num_photos} Fotos` : ""} wird etwa am ${expStr} erwartet.` : "", cta: "Vorschau ansehen", share: "Teilen Sie den Link gerne mit Familie und Freunden!" },
             es: { subject: `✨ ${pFirst} compartió un adelanto de tus fotos`, body: `${pFirst} eligió ${imgCount} favorita${imgCount === 1 ? "" : "s"} de tu sesión mientras edita el resto de la galería.`, expect: expStr ? `Tu galería completa${details.num_photos ? ` de ~${details.num_photos} fotos` : ""} llegará alrededor del ${expStr}.` : "", cta: "Ver el adelanto", share: "¡Comparte el enlace con familia y amigos!" },
             fr: { subject: `✨ ${pFirst} a partagé un aperçu de vos photos`, body: `${pFirst} a choisi ${imgCount} favorite${imgCount === 1 ? "" : "s"} de votre séance pendant que le reste de la galerie est en cours de retouche.`, expect: expStr ? `Votre galerie complète${details.num_photos ? ` de ~${details.num_photos} photos` : ""} est attendue vers le ${expStr}.` : "", cta: "Voir l’aperçu", share: "Partagez le lien avec votre famille et vos amis !" },
+            it: { subject: `✨ ${pFirst} ha condiviso un'anteprima delle tue foto`, body: `${pFirst} ha scelto ${imgCount} preferit${imgCount === 1 ? "a" : "e"} della tua sessione mentre finisce di ritoccare il resto della galleria.`, expect: expStr ? `La galleria completa${details.num_photos ? ` di ~${details.num_photos} foto` : ""} è attesa intorno al ${expStr}.` : "", cta: "Guarda l'anteprima", share: "Condividi pure il link con famiglia e amici!" },
           }, loc);
           await sendEmail(
             details.client_email,
@@ -641,6 +642,7 @@ export async function POST(
               pt: `${country.brand}: As suas fotos de ${deliveryDetails.photographer_name} estão prontas! Veja o link da galeria no seu email.`,
               de: `${country.brand}: Ihre Fotos von ${deliveryDetails.photographer_name} sind bereit! Galerie-Link finden Sie in Ihrer E-Mail.`,
               fr: `${country.brand} : Vos photos de ${deliveryDetails.photographer_name} sont prêtes ! Le lien de la galerie est dans votre e-mail.`,
+              it: `${country.brand}: le tue foto di ${deliveryDetails.photographer_name} sono pronte! Il link alla galleria è nella tua email.`,
             }, cLocale);
             sendSMS(
               deliveryDetails.client_phone,

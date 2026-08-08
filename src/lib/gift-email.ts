@@ -97,6 +97,19 @@ export async function sendGiftRevealEmail(toEmail: string, p: GiftRevealPayload)
       cta: "Ouvrir votre cadeau",
       footer: "Cliquez sur le bouton pour configurer votre accès et voir les détails. Le lien est unique — ne le partagez pas.",
     },
+    it: {
+      subject: `🎁 ${p.buyerName} ti ha regalato un servizio fotografico`,
+      h1: `${p.buyerName} ti ha appena regalato un servizio fotografico 🎁`,
+      intro: `Ciao ${p.recipientName.split(" ")[0]} —`,
+      body: `${p.buyerName} ha prenotato un servizio fotografico per te su ${country.brand}. Ecco i dettagli:`,
+      who: "Fotografo",
+      pkg: "Pacchetto",
+      when: "Data",
+      where: "Luogo",
+      note: "Messaggio di chi te lo regala",
+      cta: "Apri il tuo regalo",
+      footer: "Clicca sul pulsante per impostare l'accesso e vedere i dettagli del servizio. Il link è solo tuo — non condividerlo.",
+    },
   }, loc);
 
   // Date formatting in recipient's locale. Falls back to "Flexible" copy
