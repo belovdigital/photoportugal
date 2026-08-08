@@ -117,6 +117,18 @@ export interface CountryPack {
   /** Year this market opened. Quoted as fact in llms.txt, so it must be its own. */
   foundedYear: number;
   /**
+   * Does this market have photography of its own locations?
+   *
+   * Portugal does. Spain and Italy currently borrow Portuguese photos, chosen
+   * by character, as placeholders. That is fine as decoration and a lie as a
+   * caption: an audit found /locations/rome serving a picture of Lisbon's Tram
+   * 28 — Portuguese street sign in frame — under `og:image:alt` "Rome, Italy",
+   * and the same file submitted to Google Images titled "Vacation photography
+   * in Rome, Italy". Where this is false the pictures stay, but nothing claims
+   * they show the place.
+   */
+  hasOwnLocationImagery: boolean;
+  /**
    * May the other markets link here?
    *
    * A market with no approved photographers is a dead end: the visitor clicks
@@ -177,6 +189,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "pt", "de", "es", "fr"],
     timezone: "Europe/Lisbon",
     foundedYear: 2024,
+    hasOwnLocationImagery: true,
     listedInSiblings: true,
   },
   es: {
@@ -228,6 +241,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "es", "de", "fr"],
     timezone: "Europe/Madrid",
     foundedYear: 2026,
+    hasOwnLocationImagery: false,
     listedInSiblings: true,
   },
   it: {
@@ -282,6 +296,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     locales: ["en", "it", "de", "fr", "es"],
     timezone: "Europe/Rome",
     foundedYear: 2026,
+    hasOwnLocationImagery: false,
     // ⛔ No approved photographers yet — linking here from a working market
     // spends traffic on an empty catalogue. Flip when the roster can take a
     // booking.

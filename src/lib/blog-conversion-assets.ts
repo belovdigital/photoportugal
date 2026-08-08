@@ -459,7 +459,7 @@ async function fetchEndCapPhotographers(
   shootTypeNames: string[],
   locale?: string
 ): Promise<EndCapPhotographer[]> {
-  const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+  const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
   const useLoc = locale && TR_LOCALES.has(locale) ? locale : null;
   const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
 

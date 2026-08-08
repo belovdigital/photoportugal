@@ -173,7 +173,7 @@ export default async function ShootTypePage({
   // matching work, not random portfolio pieces.
   let heroPhotographer: HeroFeaturedPhotographer | null = null;
   try {
-    const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = TR_LOCALES.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
     const heroRows = await query<{
@@ -330,7 +330,7 @@ export default async function ShootTypePage({
   };
   let topPhotographers: ShootTypePhotographerRow[] = [];
   try {
-    const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = TR_LOCALES.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
     topPhotographers = await query<ShootTypePhotographerRow>(

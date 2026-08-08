@@ -539,7 +539,7 @@ export default async function OccasionPage({
   // narrower filter returns no rows so the hero never goes empty.
   let heroPhotographer: HeroFeaturedPhotographer | null = null;
   try {
-    const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = TR_LOCALES.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
     const heroRows = await query<{
@@ -716,7 +716,7 @@ export default async function OccasionPage({
   };
   let topPhotographers: LocationPhotographerRow[] = [];
   try {
-    const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = TR_LOCALES.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
     topPhotographers = await query<LocationPhotographerRow>(

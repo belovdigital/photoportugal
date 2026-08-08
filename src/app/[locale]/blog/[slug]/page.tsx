@@ -411,7 +411,6 @@ function renderContent(content: string) {
   return renderMarkdownContent(content);
 }
 
-let _blogLocale = "en";
 function formatInline(text: string): React.ReactNode {
   // Process bold, italic, and link markers
   const parts: React.ReactNode[] = [];
@@ -445,12 +444,11 @@ function formatInline(text: string): React.ReactNode {
     } else if (minIdx === linkIdx && linkMatch) {
       if (linkIdx > 0) parts.push(remaining.slice(0, linkIdx));
       const isInternal = linkMatch[2].startsWith("/");
-      const href = isInternal && _blogLocale !== "en" ? `/${_blogLocale}${linkMatch[2]}` : linkMatch[2];
       parts.push(
         isInternal ? (
-          <a key={key++} href={href} className="text-primary-600 underline transition hover:text-primary-700">
+          <Link key={key++} href={linkMatch[2]} className="text-primary-600 underline transition hover:text-primary-700">
             {formatInline(linkMatch[1])}
-          </a>
+          </Link>
         ) : (
           <a key={key++} href={linkMatch[2]} className="text-primary-600 underline transition hover:text-primary-700" target="_blank" rel="noopener noreferrer">
             {formatInline(linkMatch[1])}
@@ -471,7 +469,6 @@ function formatInline(text: string): React.ReactNode {
 export default async function BlogPostPage({ params }: PageProps) {
   const { locale, slug } = await params;
   setRequestLocale(locale);
-  _blogLocale = locale;
 
   const t = await getTranslations("blogDetail");
   const tc = await getTranslations("common");

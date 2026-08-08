@@ -32,7 +32,7 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
   let photographers: FeaturedPhotographer[] = [];
 
   try {
-    const TR = new Set(["pt", "de", "es", "fr"]);
+    const TR = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = locale && TR.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
     // Pool: featured ∪ verified ∪ founding. Featured photographers ALWAYS take

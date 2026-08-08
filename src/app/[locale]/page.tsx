@@ -350,7 +350,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       location_slug: string | null; portfolio_urls: string[] | null;
     }>(
       (() => {
-        const TR = new Set(["pt", "de", "es", "fr"]);
+        const TR = new Set(["pt", "de", "es", "fr", "it"]);
         const useLoc = TR.has(locale) ? locale : null;
         const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
         return `SELECT pp.slug, u.name, ${taglineSql} as tagline, pp.cover_url, u.avatar_url,

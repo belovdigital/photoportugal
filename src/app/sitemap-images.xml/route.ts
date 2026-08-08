@@ -85,8 +85,13 @@ export async function GET() {
     console.error("[sitemap-images] photographer error:", err);
   }
 
-  // 2. Location pages — each with their curated cover image from unsplash-images.ts
-  for (const loc of locations) {
+  // 2. Location pages — each with their curated cover image.
+  //
+  // Skipped entirely on a market whose location photography is still borrowed:
+  // submitting a picture of Lisbon to Google Images titled "Vacation
+  // photography in Rome, Italy" is a false claim on the most literal surface
+  // there is.
+  for (const loc of country.hasOwnLocationImagery ? locations : []) {
     const imgUrl = locationImage(loc.slug, "hero");
     if (!imgUrl) continue;
     urls.push(`<url>

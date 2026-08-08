@@ -128,7 +128,7 @@ function formatMobileCoverageLabel(groups: CoverageGroup[]): string | null {
 async function getPhotographer(slug: string, canViewUnapproved = false, viewerUserId?: string, locale: string = "en") {
   const isAdmin = canViewUnapproved;
   // Locale-aware column resolution: COALESCE(p.bio_<loc>, p.bio) for non-EN locales
-  const SUPPORTED = new Set(["pt", "de", "es", "fr"]);
+  const SUPPORTED = new Set(["pt", "de", "es", "fr", "it"]);
   const useLoc = SUPPORTED.has(locale) ? locale : null;
   const tagCol = useLoc ? `COALESCE(p.tagline_${useLoc}, p.tagline)` : "p.tagline";
   const bioCol = useLoc ? `COALESCE(p.bio_${useLoc}, p.bio)` : "p.bio";
@@ -377,7 +377,7 @@ export default async function PhotographerProfilePage({
   const tc = await getTranslations("common");
 
   // Locale-aware column names for reviews query below
-  const REVIEW_LOCALES = new Set(["pt", "de", "es", "fr"]);
+  const REVIEW_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
   const useLoc = REVIEW_LOCALES.has(locale) ? locale : null;
 
   const isPreview = !!process.env.ADMIN_PREVIEW_SECRET && sp.preview === process.env.ADMIN_PREVIEW_SECRET;
@@ -398,7 +398,7 @@ export default async function PhotographerProfilePage({
   // instead of an empty "no packages" state.
   let giftPhotographerOptedIn = true;
   if (giftCard && result?.type === "db") {
-    const TIER_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const TIER_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = TIER_LOCALES.has(locale) ? locale : null;
     const nameCol = useLoc ? `COALESCE(name_${useLoc}, name)` : "name";
     const descCol = useLoc ? `COALESCE(description_${useLoc}, description)` : "description";

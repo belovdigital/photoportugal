@@ -139,7 +139,7 @@ export default async function BlogPage({
   };
   let featuredPhotographers: BlogFeaturedRow[] = [];
   try {
-    const TR = new Set(["pt", "de", "es", "fr"]);
+    const TR = new Set(["pt", "de", "es", "fr", "it"]);
     const useLocB = TR.has(locale) ? locale : null;
     const taglineSql = useLocB ? `COALESCE(p.tagline_${useLocB}, p.tagline)` : "p.tagline";
     featuredPhotographers = await query<BlogFeaturedRow>(

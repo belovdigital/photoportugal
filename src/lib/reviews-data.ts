@@ -49,7 +49,7 @@ function mapRow(r: DbRow): PublicReview {
 
 // Allowed locale columns on the reviews table (text_pt, text_de, text_es, text_fr).
 // Fall back to source `text` when locale is "en" or unknown.
-const REVIEW_LOCALES = new Set(["pt", "de", "es", "fr"]);
+const REVIEW_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
 function localeText(locale?: string): string {
   if (locale && REVIEW_LOCALES.has(locale)) return `COALESCE(r.text_${locale}, r.text)`;
   return "r.text";

@@ -16,6 +16,14 @@ const PRIMARY_DESTINATIONS = byCountry({
 
 // Islands named in the social-proof strip, per market. Listing Madeira and the
 // Azores on the Spanish site advertises coverage in another country.
+// Where the island card points. Must be a slug that exists in this market's
+// locations dataset — the hardcoded Portuguese one 404'd on both new markets.
+const ISLAND_HUB = byCountry({
+  pt: "/locations/azores",
+  es: "/locations/mallorca",
+  it: "/locations/capri",
+});
+
 const ISLAND_DESTINATIONS = byCountry({
   pt: ["Madeira", "Sao Miguel", "Terceira", "Pico", "Faial", "Flores"],
   es: ["Mallorca", "Ibiza", "Menorca", "Tenerife", "Gran Canaria", "Lanzarote"],
@@ -136,7 +144,7 @@ export function SocialProofStrip({
             </Link>
 
             <Link
-              href="/locations/azores"
+              href={ISLAND_HUB}
               className="rounded-xl border border-accent-200 bg-accent-50/80 p-5 transition hover:border-accent-300 hover:bg-accent-50 sm:col-span-2"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

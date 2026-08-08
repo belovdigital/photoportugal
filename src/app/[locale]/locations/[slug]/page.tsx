@@ -77,7 +77,12 @@ export async function generateMetadata({
       title: seoTitle,
       description: seoDescription,
       type: "website",
-      images: [{ url: locationCoverUrl(location), width: 1200, height: 630, alt: `${location.name}, ${country.areaServed}` }],
+      // Only claim the picture shows this place where it actually does. On a
+      // market still using borrowed photography, share the branded card rather
+      // than another country's landmark captioned as this one.
+      images: country.hasOwnLocationImagery
+        ? [{ url: locationCoverUrl(location), width: 1200, height: 630, alt: `${location.name}, ${country.areaServed}` }]
+        : [{ url: `${country.baseUrl}/og`, width: 1200, height: 630, alt: country.brand }],
     },
   };
 }
@@ -207,7 +212,7 @@ export default async function LocationPage({
       portfolio_urls: string[] | null;
     }>(
       (() => {
-        const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+        const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
         const useLoc = TR_LOCALES.has(locale) ? locale : null;
         const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
         // Soft preference: photographers who have actually tagged photos
@@ -367,7 +372,7 @@ export default async function LocationPage({
   try {
     topPhotographers = await query<LocationPhotographerRow>(
       (() => {
-        const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+        const TR_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
         const useLoc = TR_LOCALES.has(locale) ? locale : null;
         const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
         return `SELECT pp.id, pp.slug, u.name, u.avatar_url,
@@ -693,7 +698,14 @@ export default async function LocationPage({
           <div className="absolute inset-0">
             <OptimizedImage
               src={locationImage(location.slug, "hero")}
-              alt={`Vacation photography session in ${location.name}, ${country.areaServed}`}
+              alt={
+                // The picture is decorative until this market has its own
+                // photography — do not tell a screen reader or Google that it
+                // shows this city when it shows a different country.
+                country.hasOwnLocationImagery
+                  ? `Vacation photography session in ${location.name}, ${country.areaServed}`
+                  : `${country.brand} — vacation photography`
+              }
               priority
               className="h-full w-full"
             />

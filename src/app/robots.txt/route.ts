@@ -21,6 +21,9 @@ const disallow = [
 export const dynamic = "force-static";
 
 export function GET() {
+  // The image sitemap is advertised only where the location photography is this
+  // market's own. Where it is still borrowed that file has no entries, and an
+  // empty sitemap is a warning in Search Console rather than a signal.
   const text = `# ${country.brand} — ${country.baseUrl}
 # AI agents: site overview at ${country.baseUrl}/llms.txt
 # Key public pages also serve markdown via content negotiation (Accept: text/markdown)
@@ -44,8 +47,8 @@ ${["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-User", "Claud
   .map((bot) => `User-Agent: ${bot}\nContent-Signal: search=yes, ai-input=yes, ai-train=no\nAllow: /\n${disallow.map((p) => `Disallow: ${p}`).join("\n")}`)
   .join("\n\n")}
 
-Sitemap: ${country.baseUrl}/sitemap.xml
-Sitemap: ${country.baseUrl}/sitemap-images.xml
+Sitemap: ${country.baseUrl}/sitemap.xml${country.hasOwnLocationImagery ? `
+Sitemap: ${country.baseUrl}/sitemap-images.xml` : ""}
 `;
 
   return new NextResponse(text, {

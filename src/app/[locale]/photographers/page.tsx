@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 // Locales that have translation columns on photographer_profiles + packages.
-const TRANSLATABLE_LOCALES = new Set(["pt", "de", "es", "fr"]);
+const TRANSLATABLE_LOCALES = new Set(["pt", "de", "es", "fr", "it"]);
 
 async function getDbPhotographers(locale?: string, giftMode = false): Promise<PhotographerProfile[]> {
   try {

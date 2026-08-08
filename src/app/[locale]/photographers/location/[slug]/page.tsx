@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[]> {
   try {
-    const TR = new Set(["pt", "de", "es", "fr"]);
+    const TR = new Set(["pt", "de", "es", "fr", "it"]);
     const useLoc = locale && TR.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(p.tagline_${useLoc}, p.tagline)` : "p.tagline";
     const bioSql = useLoc ? `COALESCE(p.bio_${useLoc}, p.bio)` : "p.bio";

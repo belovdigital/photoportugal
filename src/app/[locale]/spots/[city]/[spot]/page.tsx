@@ -288,7 +288,7 @@ export default async function SpotPage({
   // Photographers in the city — same query as the old template, picks the
   // 6 highest-signal photographers covering this location for the bottom
   // grid section.
-  const TR = new Set(["pt", "de", "es", "fr"]);
+  const TR = new Set(["pt", "de", "es", "fr", "it"]);
   const useLoc = locale && TR.has(locale) ? locale : null;
   const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
   type PhotographerRow = {
