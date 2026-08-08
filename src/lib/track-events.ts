@@ -1,4 +1,5 @@
 import { useEffect, type RefObject } from "react";
+import { prefixedLocales } from "@/lib/country";
 
 /**
  * Client-side photographer-analytics events (card impressions, card
@@ -28,6 +29,10 @@ const FLUSH_AFTER_MS = 4000;
 const FLUSH_AT_COUNT = 25;
 const IMPRESSION_DWELL_MS = 600;
 
+// Built from the market's own locale list rather than written out, so a new
+// market cannot silently stop being measured.
+const LOCALE_PREFIX_RE = new RegExp(`^/(${prefixedLocales.join("|")})(?=/|$)`);
+
 const queue: TrackedEvent[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let listenersBound = false;
@@ -40,7 +45,11 @@ const seenImpressions = new Set<string>();
  * must mirror src/i18n/routing.ts pathnames.
  */
 function surfaceFromPath(pathname: string): string {
-  const p = pathname.replace(/^\/(pt|de|es|fr)(?=\/|$)/, "") || "/";
+  // Strip the market's OWN locale prefixes. This was a literal (pt|de|es|fr),
+  // so on the Italian site every event fired from an /it/… page kept its
+  // prefix, fell through every branch below and was filed as "other" — the
+  // entire Italian-language half of the traffic, invisible in the stats.
+  const p = pathname.replace(LOCALE_PREFIX_RE, "") || "/";
   const seg = p.split("/").filter(Boolean);
   if (seg.length === 0) return "home";
   const catalog = ["photographers", "fotografen", "fotografos", "photographes"];
