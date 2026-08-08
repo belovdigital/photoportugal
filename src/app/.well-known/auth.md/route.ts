@@ -26,7 +26,11 @@ Not yet enabled on this market. The server card at
 \`/.well-known/mcp.json\` returns 404 until there is a bookable roster here.
 `;
 
-  const body = `# Authentication — ${country.brand}
+  // The checker validates the literal heading — the spec's file is named
+  // Auth.md and titled that way, so the brand moves to the byline.
+  const body = `# Auth.md
+
+**${country.brand}** — agent access and authentication.
 
 ## Public content
 
