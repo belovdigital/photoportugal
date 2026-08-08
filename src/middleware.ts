@@ -160,7 +160,7 @@ export default async function middleware(request: NextRequest) {
   // scanner probe is rejected with 400 instead of crashing usePathname()
   // during render (a bogus 500). These extensions previously bypassed the
   // middleware entirely via the matcher, which is why the guard missed them.
-  if (/\.(?:txt|xml|ico|png|jpe?g|svg|webp|gif|woff2?|map)$/i.test(pathname)) {
+  if (/\.(?:txt|xml|ico|png|jpe?g|svg|webp|gif|woff2?|map|md)$/i.test(pathname)) {
     return NextResponse.next();
   }
 
