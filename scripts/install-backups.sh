@@ -19,7 +19,7 @@ set -uo pipefail
 
 ENV_FILE="${1:-}"
 if [ -z "$ENV_FILE" ]; then
-  for c in /var/www/photoportugal/.env /var/www/photospain/.env /var/www/photoitalia/.env; do
+  for c in /var/www/photoportugal/.env /var/www/photospain/.env /var/www/photoitaly/.env; do
     [ -f "$c" ] && ENV_FILE="$c" && break
   done
 fi
@@ -41,7 +41,7 @@ COUNTRY="$(getenv COUNTRY)"; COUNTRY="${COUNTRY:-pt}"
 case "$COUNTRY" in
   pt) APP="photoportugal"; MARKET="photoportugal" ;;
   es) APP="photospain";    MARKET="photospain" ;;
-  it) APP="photoitalia";   MARKET="photoitalia" ;;
+  it) APP="photoitaly";    MARKET="photoitalia" ;;
   *)
     echo "✗ COUNTRY=$COUNTRY не описан." >&2
     echo "  Добавь страну в ТРЁХ местах, иначе её дамп уедет в чужую папку:" >&2
