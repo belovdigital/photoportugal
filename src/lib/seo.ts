@@ -112,6 +112,42 @@ export function localeAlternatesFiltered(
 }
 
 /**
+ * Alternates where each locale has its OWN path, not the same path prefixed.
+ *
+ * Blog translations do not share a slug: the Italian version of
+ * /blog/photographing-rome-guide lives at /it/blog/fotografare-roma-guida.
+ * Emitting the English slug under an Italian prefix would point hreflang at a
+ * URL that does not exist, which is worse than emitting nothing — so this takes
+ * the real path per locale and drops any locale this market does not ship.
+ */
+export function localeAlternatesPerSlug(
+  pathByLocale: Record<string, string>,
+  locale: string,
+) {
+  const safeLocale = LOCALES.includes(locale as Locale) ? (locale as Locale) : "en";
+  const urls: Partial<Record<Locale, string>> = {};
+  for (const loc of LOCALES) {
+    const path = pathByLocale[loc];
+    if (path) urls[loc] = localizedUrl(path, loc);
+  }
+  // The current page is always its own canonical, even if the map is missing it.
+  if (!urls[safeLocale] && pathByLocale[safeLocale]) {
+    urls[safeLocale] = localizedUrl(pathByLocale[safeLocale], safeLocale);
+  }
+
+  const languages: Record<string, string> = {};
+  const fallback = urls.en ?? urls[safeLocale];
+  if (fallback) languages["x-default"] = fallback;
+  for (const loc of LOCALES) {
+    const url = urls[loc];
+    if (!url) continue;
+    for (const hreflang of HREFLANGS[loc]) languages[hreflang] = url;
+  }
+
+  return { canonical: urls[safeLocale]!, languages };
+}
+
+/**
  * The OpenGraph half of a page's identity: its own canonical URL and its own
  * locale.
  *

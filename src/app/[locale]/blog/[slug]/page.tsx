@@ -6,7 +6,7 @@ import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
-import { localeAlternates, localeAlternatesFiltered, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, localeAlternatesFiltered, openGraphIdentity, localeAlternatesPerSlug } from "@/lib/seo";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
@@ -42,6 +42,7 @@ interface BlogPost {
   updated_at: string | null;
   created_at: string;
   category: string | null;
+  locale: string | null;
 }
 
 interface PageProps {
@@ -127,10 +128,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // actually published, otherwise the alternate URL would 308-redirect
   // back to the canonical (bad signal for Google). Query which locales
   // host this slug live, then emit hreflang only for those.
-  const availableLocales = await query<{ locale: string }>(
-    "SELECT locale FROM blog_posts WHERE slug = $1 AND is_published = TRUE",
+  // Translations do not share a slug — "photographing-rome-guide" and
+  // "fotografare-roma-guida" are the same article — so asking which locales
+  // publish THIS slug always answered "only this one", and every post declared
+  // itself the sole version. Group membership is the real answer; a post
+  // without a group still falls back to the slug lookup.
+  const siblings = await query<{ locale: string; slug: string }>(
+    `SELECT locale, slug FROM blog_posts
+      WHERE is_published = TRUE
+        AND (translation_group IS NOT NULL AND translation_group = (
+              SELECT translation_group FROM blog_posts WHERE slug = $1 LIMIT 1)
+             OR slug = $1)`,
     [post.slug]
-  ).then((rows) => rows.map((r) => r.locale)).catch(() => [locale]);
+  ).catch(() => [] as { locale: string; slug: string }[]);
+  const availableLocales = siblings.length ? siblings.map((r) => r.locale) : [locale];
+  const slugByLocale = Object.fromEntries(siblings.map((r) => [r.locale, r.slug]));
 
   return {
     // absolute: the root template appends "| Photo Spain", which pushed
@@ -139,7 +151,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // characters to say something the URL says anyway.
     title: { absolute: pageTitle },
     description: pageDescription,
-    alternates: localeAlternatesFiltered(`/blog/${post.slug}`, locale, availableLocales),
+    // Each alternate points at that language's OWN slug, not this one prefixed.
+    alternates: localeAlternatesPerSlug(
+      Object.fromEntries(Object.entries(slugByLocale).map(([loc, sl]) => [loc, `/blog/${sl}`])),
+      locale,
+    ),
     openGraph: {
       ...openGraphIdentity(`/blog/${post.slug}`, locale),
       title: pageTitle,
@@ -861,15 +877,21 @@ export default async function BlogPostPage({ params }: PageProps) {
     },
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
+    // The post's own URL in the locale it is written in — a German post is not
+    // a version of an English page and must not point at one.
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${country.baseUrl}/blog/${post.slug}`,
+      "@id": locale === "en" ? `${country.baseUrl}/blog/${post.slug}` : `${country.baseUrl}/${locale}/blog/${post.slug}`,
     },
-    ...((post.cover_image_url || heroSrc) && {
-      image: (post.cover_image_url || heroSrc)!.startsWith("http")
-        ? (post.cover_image_url || heroSrc)!
-        : `${country.baseUrl}${post.cover_image_url || heroSrc}`,
-    }),
+    inLanguage: post.locale || locale,
+    // `image` is required for the Article rich result. No post here has a cover
+    // yet, and rather than leave the field absent on all of them, fall back to
+    // the branded share card, which is ours and claims nothing about a place.
+    image: (() => {
+      const raw = post.cover_image_url || heroSrc;
+      if (!raw) return `${country.baseUrl}/og`;
+      return raw.startsWith("http") ? raw : `${country.baseUrl}${raw}`;
+    })(),
   };
 
   return (

@@ -226,7 +226,7 @@ ${locationCoverageText}
 ${shootTypeDetail}
 
 ## Featured Photographers
-${photographerList || "See the full catalog at ${country.baseUrl}/photographers"}
+${photographerList || `See the full catalog at ${country.baseUrl}/photographers`}
 
 ## Sample Verified Reviews
 ${reviewSamples || "Reviews are available on each photographer's profile page."}

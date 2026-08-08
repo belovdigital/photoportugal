@@ -4,7 +4,7 @@ import { shootTypes } from "@/lib/shoot-types-data";
 import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
 import { query } from "@/lib/db";
 import { localizedUrl } from "@/lib/seo";
-import { country } from "@/lib/country";
+import { country, byCountry } from "@/lib/country";
 import { HREFLANGS, type Locale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,15 @@ const LOCALES = country.locales as readonly Locale[];
 // you do a meaningful content refresh; Google uses it to decide whether
 // to recrawl. For dynamic content (photographers, blog posts, locations)
 // we override below from the actual DB updated_at timestamps.
-const STATIC_CONTENT_LAST_MODIFIED = new Date("2026-05-13T00:00:00.000Z");
+// Per market, because it is a claim about when THAT market's pages last
+// changed. Italy and Spain inherited Portugal's date and told Search Console
+// their pages were last modified three months before the market existed, which
+// is both false and a reason for Google to deprioritise a recrawl.
+const STATIC_CONTENT_LAST_MODIFIED = byCountry({
+  pt: new Date("2026-05-13T00:00:00.000Z"),
+  es: new Date("2026-08-01T00:00:00.000Z"),
+  it: new Date("2026-08-07T00:00:00.000Z"),
+});
 
 function urlFor(path: string, locale: string): string {
   const safeLocale = LOCALES.includes(locale as Locale)

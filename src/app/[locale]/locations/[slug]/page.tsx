@@ -518,7 +518,12 @@ export default async function LocationPage({
        WHERE is_published = TRUE
        AND COALESCE(locale, 'en') = $2
        AND (title ILIKE '%' || $1 || '%' OR content ILIKE '%' || $1 || '%' OR meta_description ILIKE '%' || $1 || '%')
-       ORDER BY published_at DESC
+       -- Relevance before recency. Every post went live within minutes of the
+       -- others, so ordering by date alone handed Rome's page three posts that
+       -- merely mention Rome and dropped the guide actually written about it.
+       ORDER BY (title ILIKE '%' || $1 || '%') DESC,
+                (meta_description ILIKE '%' || $1 || '%') DESC,
+                published_at DESC
        LIMIT 3`,
       [location.name, locale]
     );
