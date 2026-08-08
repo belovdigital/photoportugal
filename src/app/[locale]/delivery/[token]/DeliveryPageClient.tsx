@@ -85,6 +85,9 @@ export function DeliveryPageClient({
   const [accepting, setAccepting] = useState(false);
   // Default on, as asked. See the note in the accept route about what that means.
   const [socialConsent, setSocialConsent] = useState(true);
+  // Bumped when a rail counter is tapped: tells the gallery to stop lazy-loading
+  // and render every photo, so the anchor stops moving under the scroll.
+  const [revealAll, setRevealAll] = useState(0);
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
   const { modal, confirm, notify } = useConfirmModal();
@@ -517,11 +520,34 @@ export function DeliveryPageClient({
     setLoading(false);
   }
 
-  // The gallery sections live in a child component, so this reaches them by id
-  // rather than a ref. `scroll-mt-24` on the targets keeps the heading clear of
-  // the sticky header.
+  // Jumping to the paid group used to land short of it. The grid loads in
+  // batches of 40 as a sentinel enters the viewport, so the scroll itself
+  // pulled more photos in ABOVE the target and pushed it further down while
+  // the browser was still animating towards where it used to be.
+  //
+  // Two parts: ask the gallery to reveal everything first, then keep
+  // correcting for a moment while images settle into their real heights.
   function scrollToSection(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setRevealAll((n) => n + 1);
+
+    const target = () => document.getElementById(id);
+    const settle = (deadline: number) => {
+      const el = target();
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      // 96px = the targets' `scroll-mt-24`, so correcting lands exactly where
+      // scrollIntoView meant to. Within a few pixels of it, stop correcting.
+      if (Math.abs(top - 96) > 4) {
+        window.scrollTo({ top: window.scrollY + top - 96, behavior: "auto" });
+      }
+      if (performance.now() < deadline) requestAnimationFrame(() => settle(deadline));
+    };
+
+    requestAnimationFrame(() => {
+      target()?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Long enough to cover the reveal plus a batch of images decoding.
+      window.setTimeout(() => settle(performance.now() + 1200), 350);
+    });
   }
 
   async function handleAcceptDelivery() {
@@ -675,69 +701,88 @@ export function DeliveryPageClient({
       <div className="lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
         <aside className="mt-6 space-y-4 lg:sticky lg:top-20 lg:self-start">
 
-          {/* The counts, given the room to be read as numbers rather than as a
-              sentence squeezed between two buttons. */}
-          <div className="grid gap-3 rounded-2xl border border-warm-200 bg-white p-4">
-            <div>
+          {/* Two counters side by side rather than stacked: they are the same
+              kind of fact and the comparison is the point. Each is a real
+              control — a bordered tile with an arrow badge — because the plain
+              number with a "↓" after the label did not read as tappable. */}
+          <div className="rounded-2xl border border-warm-200 bg-white p-4">
+            <div className={(gallery.extras_available ?? 0) > 0 ? "grid grid-cols-2 gap-2" : ""}>
               <button
                 type="button"
                 onClick={() => scrollToSection("delivery-yours")}
-                className="group block w-full text-left"
+                className="group rounded-xl border border-warm-200 bg-warm-50/60 p-3 text-left transition hover:border-primary-300 hover:bg-primary-50/50 active:scale-[0.98]"
               >
-                <p className="font-display text-2xl font-bold leading-none text-gray-900 group-hover:text-primary-700">
-                  {gallery.photo_count - (gallery.extras_available ?? 0)}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 group-hover:text-primary-600">
-                  {t("railYours")} <span aria-hidden="true">↓</span>
-                </p>
-              </button>
-              {/* "15 yours" hid the nicest fact on the page: five were paid
-                  for and ten were a present. */}
-              {(gallery.gifted_photos ?? 0) > 0 && (
-                <p className="mt-2 text-xs leading-snug text-gray-600">
-                  {t("railFromPackage", { count: gallery.package_photos ?? 0 })}
-                  <span className="mt-0.5 block font-semibold text-accent-800">
-                    🎁 {t("railFromGift", { count: gallery.gifted_photos ?? 0, name: normalizeName(gallery.photographer_name).split(" ")[0] })}
+                <span className="flex items-start justify-between gap-2">
+                  <span className="font-display text-2xl font-bold leading-none text-gray-900">
+                    {gallery.photo_count - (gallery.extras_available ?? 0)}
                   </span>
-                </p>
-              )}
-            </div>
-            {(gallery.extras_available ?? 0) > 0 && (
-              <div className="border-t border-warm-200 pt-3">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-gray-500 ring-1 ring-warm-200 transition group-hover:bg-primary-600 group-hover:text-white group-hover:ring-primary-600" aria-hidden="true">↓</span>
+                </span>
+                <span className="mt-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-500 group-hover:text-primary-700">
+                  {t("railYours")}
+                </span>
+                <span className="mt-0.5 block text-[10px] text-gray-400">
+                  {totalSize > 1024 * 1024
+                    ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
+                    : `${(totalSize / 1024).toFixed(0)} KB`}
+                </span>
+              </button>
+
+              {(gallery.extras_available ?? 0) > 0 && (
                 <button
                   type="button"
                   onClick={() => scrollToSection("delivery-extras")}
-                  className="group block w-full text-left"
+                  className="group rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-left transition hover:border-amber-400 hover:bg-amber-100/70 active:scale-[0.98]"
                 >
-                  <p className="font-display text-2xl font-bold leading-none text-amber-800 group-hover:text-amber-900">{gallery.extras_available ?? 0}</p>
+                  <span className="flex items-start justify-between gap-2">
+                    <span className="font-display text-2xl font-bold leading-none text-amber-900">{gallery.extras_available ?? 0}</span>
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-amber-700 ring-1 ring-amber-200 transition group-hover:bg-amber-700 group-hover:text-white group-hover:ring-amber-700" aria-hidden="true">↓</span>
+                  </span>
                   {/* "Buy" is only true once the gift is spent — until then some
                       of these are free, and the label must not say otherwise. */}
-                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700 group-hover:text-amber-900">
-                    {(gallery?.gift_remaining ?? 0) > 0 ? t("railCanAdd") : t("railCanBuy")} <span aria-hidden="true">↓</span>
-                  </p>
+                  <span className="mt-1 block text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                    {(gallery?.gift_remaining ?? 0) > 0 ? t("railCanAdd") : t("railCanBuy")}
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-amber-700/80">
+                    {t("railEach", { price: money(gallery?.extras_price_cents ?? 290) })}
+                  </span>
                 </button>
-                {/* The only place this is explained now. It used to say the
-                    same thing here, in a green banner above the grid, and
-                    again in the section header below it. */}
-                <p className="mt-2 text-xs leading-snug text-gray-600">
-                  {t("extrasHowTo", { price: money(gallery?.extras_price_cents ?? 290) })}
+              )}
+            </div>
+
+            {/* "15 yours" hid the nicest fact on the page: five were paid for
+                and ten were a present. */}
+            {(gallery.gifted_photos ?? 0) > 0 && (
+              <p className="mt-3 text-xs leading-snug text-gray-600">
+                {t("railFromPackage", { count: gallery.package_photos ?? 0 })}
+                <span className="mt-0.5 block font-semibold text-accent-800">
+                  🎁 {t("railFromGift", { count: gallery.gifted_photos ?? 0, name: normalizeName(gallery.photographer_name).split(" ")[0] })}
+                </span>
+              </p>
+            )}
+
+            {(gallery.extras_available ?? 0) > 0 && (
+              <>
+                {/* The only place this is explained. The price moved onto the
+                    tile above, so this is now one line about how, not two. */}
+                <p className="mt-3 border-t border-warm-200 pt-3 text-xs leading-snug text-gray-600">
+                  {t("extrasHowTo")}
                 </p>
                 {(gallery?.gift_remaining ?? 0) > 0 && (
                   /* Its own soft ground so the present reads as a present and
-                     not as more small print under the price. Rose rather than
-                     the page's green or amber — neither of which is a gift. */
+                     not as more small print under the price. */
                   <p className="mt-2.5 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold leading-snug text-rose-900 ring-1 ring-rose-100">
                     🎁 {t("extrasFreeFirst", { count: gallery.gift_remaining ?? 0, name: normalizeName(gallery.photographer_name).split(" ")[0] })}
                   </p>
                 )}
-              </div>
+              </>
             )}
-            <p className="border-t border-warm-200 pt-3 text-[11px] text-gray-400">
-              {totalSize > 1024 * 1024
-                ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
-                : `${(totalSize / 1024).toFixed(0)} KB`}
-              {accepted ? <>{" · "}{t("availableUntil", { date: expiresDate })}</> : null}
-            </p>
+
+            {accepted ? (
+              <p className="mt-3 border-t border-warm-200 pt-3 text-[11px] text-gray-400">
+                {t("availableUntil", { date: expiresDate })}
+              </p>
+            ) : null}
           </div>
 
           {/* Actions. One primary at a time — download after acceptance, the
@@ -1020,6 +1065,7 @@ export function DeliveryPageClient({
           giftLeft={gallery?.gift_remaining ?? 0}
           photographerFirstName={normalizeName(gallery.photographer_name).split(" ")[0]}
           onUngift={ungiftPhoto}
+          revealAllSignal={revealAll}
           />
 
 

@@ -88,6 +88,7 @@ export function DeliveryGalleryClient({
   giftLeft = 0,
   photographerFirstName = "",
   onUngift,
+  revealAllSignal = 0,
 }: {
   photos: Photo[];
   deliveryAccepted: boolean;
@@ -105,6 +106,9 @@ export function DeliveryGalleryClient({
   photographerFirstName?: string;
   /** Hand a gifted photo back and get the slot returned. */
   onUngift?: (id: string) => void;
+  /** Bumped by the rail when a counter is tapped: render everything, so an
+   *  anchor further down the page stops moving while the browser scrolls. */
+  revealAllSignal?: number;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
@@ -236,6 +240,10 @@ export function DeliveryGalleryClient({
   const BATCH = 40;
   const [visibleCount, setVisibleCount] = useState(BATCH);
   const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
+
+  useEffect(() => {
+    if (revealAllSignal > 0) setVisibleCount(photos.length);
+  }, [revealAllSignal, photos.length]);
   const sentinelRef = useRef<HTMLDivElement>(null);
   // Growth is gated on images actually LOADING, not just the sentinel
   // being visible: unloaded cells have zero height (dims are NULL on
