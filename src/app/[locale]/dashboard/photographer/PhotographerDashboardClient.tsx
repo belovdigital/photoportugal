@@ -12,7 +12,7 @@ import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -619,8 +619,16 @@ export function PhotographerDashboardClient({
     });
   }
 
+  // MouseSensor, not the pointer one. Pointer events cover touch as well, so
+  // that sensor claimed every touch on a photo, and its 8px distance
+  // constraint fired the moment the finger moved — which is what scrolling is.
+  // A photographer reported a photo sticking to her thumb while she scrolled
+  // her own delivery. TouchSensor never got a look in: the pointer sensor had
+  // already activated before its 200ms delay elapsed. Splitting the two gives
+  // each input the constraint that suits it — a mouse drags immediately, a
+  // finger has to hold still for a moment first, and a scroll passes through.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
   );
 

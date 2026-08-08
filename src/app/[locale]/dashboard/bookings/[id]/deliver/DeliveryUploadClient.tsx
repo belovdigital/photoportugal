@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
+  DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors,
   DragOverlay, useDroppable, type DragStartEvent, type DragEndEvent,
 } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
@@ -323,8 +323,16 @@ export function DeliveryUploadClient({
   // Dragging: within a pile it reorders, across piles it also changes what the
   // client gets. The global order IS the two piles concatenated, which keeps
   // the server's first-N trim agreeing with what the photographer sees.
+  // MouseSensor, not the pointer one. Pointer events cover touch as well, so
+  // that sensor claimed every touch on a photo, and its 8px distance
+  // constraint fired the moment the finger moved — which is what scrolling is.
+  // A photographer reported a photo sticking to her thumb while she scrolled
+  // her own delivery. TouchSensor never got a look in: the pointer sensor had
+  // already activated before its 200ms delay elapsed. Splitting the two gives
+  // each input the constraint that suits it — a mouse drags immediately, a
+  // finger has to hold still for a moment first, and a scroll passes through.
   const dndSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
   );
   const canDrag = canEdit && !selectMode;

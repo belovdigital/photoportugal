@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
+  DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors,
   DragOverlay, type DragStartEvent, type DragEndEvent,
 } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
@@ -143,8 +143,16 @@ export function DeliveryGalleryClient({
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
   }, []);
+  // MouseSensor, not the pointer one. Pointer events cover touch as well, so
+  // that sensor claimed every touch on a photo, and its 8px distance
+  // constraint fired the moment the finger moved — which is what scrolling is.
+  // A photographer reported a photo sticking to her thumb while she scrolled
+  // her own delivery. TouchSensor never got a look in: the pointer sensor had
+  // already activated before its 200ms delay elapsed. Splitting the two gives
+  // each input the constraint that suits it — a mouse drags immediately, a
+  // finger has to hold still for a moment first, and a scroll passes through.
   const dndSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
