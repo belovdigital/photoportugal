@@ -32,6 +32,14 @@ Not yet enabled on this market. The server card at
 
 **${country.brand}** — agent access and authentication.
 
+## Agent registration
+
+No registration is required. Agents do not need to create an account,
+request an API key or obtain credentials to read public content or to call
+the MCP server where it is enabled — access is anonymous by design. There is
+no register_uri because there is nothing to register. For partnerships or
+elevated access, email the contact below and a human will answer.
+
 ## Public content
 
 Everything under ${country.baseUrl} that a signed-out visitor can see is open
