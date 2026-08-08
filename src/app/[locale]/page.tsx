@@ -22,7 +22,7 @@ import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { BrandHero } from "@/components/ui/BrandHero";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, clampMeta } from "@/lib/seo";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
 
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
   return {
     title: t("title"),
-    description,
+    description: clampMeta(description),
     alternates: localeAlternates("/", locale),
     openGraph: {
       ...openGraphIdentity("/", locale),

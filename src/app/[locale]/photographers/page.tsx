@@ -6,7 +6,7 @@ import { PhotographerCatalog } from "./PhotographerCatalog";
 import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 import { query } from "@/lib/db";
 import { maskSurname } from "@/lib/photographer-name";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, clampMeta } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 import { getActiveGiftCard } from "@/lib/gift-card-session";
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const t = await getTranslations("photographersMeta");
   return {
     title: t("title"),
-    description: t("description"),
+    description: clampMeta(t("description")),
     alternates: localeAlternates("/photographers", locale),
     openGraph: { title: t("title"), description: t("description"), ...openGraphIdentity("/photographers", locale), images: [{ url: country.ogImage, width: 1200, height: 630, alt: `${country.brand}` }] },
   };
