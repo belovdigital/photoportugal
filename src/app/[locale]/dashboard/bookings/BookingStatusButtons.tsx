@@ -99,7 +99,12 @@ export function BookingStatusButtons({
 
   if (currentStatus === "confirmed") {
     const shootDateStr = shootDate ? (shootDate.includes("T") ? shootDate.split("T")[0] : shootDate) : null;
-    const isFutureDate = shootDateStr && new Date(shootDateStr + "T23:59:59") > new Date();
+    // Enabled from the START of the shoot day, not its end. T23:59:59 kept the
+    // button dead for the whole day of the session — a photographer walking
+    // off a sunset proposal couldn't mark it done until midnight, under a
+    // tooltip claiming it was "available" that same day. The server has always
+    // allowed it (shoot_date > CURRENT_DATE); the client now agrees with it.
+    const isFutureDate = shootDateStr && new Date(shootDateStr + "T00:00:00") > new Date();
     const isUnpaid = paymentStatus !== "paid";
     return (
       <div>
