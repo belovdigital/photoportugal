@@ -46,6 +46,7 @@ const DURATION_WORDS: Record<string, { min: string; hour: string; hours: string;
   de: { min: "Min.", hour: "Stunde", hours: "Stunden", halfHour: "1,5 Stunden", fullDay: "Ganzer Tag (12h)" },
   es: { min: "min", hour: "hora", hours: "horas", halfHour: "1,5 horas", fullDay: "Día completo (12h)" },
   fr: { min: "min", hour: "heure", hours: "heures", halfHour: "1,5 heures", fullDay: "Journée entière (12h)" },
+  it: { min: "min", hour: "ora", hours: "ore", halfHour: "1,5 ore", fullDay: "Giornata intera (12h)" },
 };
 
 export function formatDuration(minutes: number, locale = "en"): string {

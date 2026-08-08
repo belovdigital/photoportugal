@@ -145,6 +145,7 @@ const LEAD_BLOCKED: Record<Locale, string> = {
   de: `Zahlungen sind ausschließlich über ${country.brand} möglich, deshalb wurde diese Nachricht nicht gesendet.`,
   es: `Los pagos solo pueden realizarse a través de ${country.brand}, por eso este mensaje no se ha enviado.`,
   fr: `Les paiements ne peuvent se faire que via ${country.brand}, ce message n'a donc pas été envoyé.`,
+  it: `I pagamenti si possono fare solo tramite ${country.brand}, quindi questo messaggio non è stato inviato.`,
 };
 
 const LEAD_DELIVERED: Record<Locale, string> = {
@@ -153,6 +154,7 @@ const LEAD_DELIVERED: Record<Locale, string> = {
   de: `Ein Hinweis von ${country.brand}: Zahlungen sind ausschließlich über die Plattform möglich.`,
   es: `Un aviso de ${country.brand}: los pagos solo pueden realizarse a través de la plataforma.`,
   fr: `Un mot de ${country.brand} : les paiements ne peuvent se faire que via la plateforme.`,
+  it: `Una nota da ${country.brand}: i pagamenti si possono fare solo tramite la piattaforma.`,
 };
 
 const CLIENT_COPY: Record<Locale, string> = {
@@ -161,6 +163,7 @@ const CLIENT_COPY: Record<Locale, string> = {
   de: `\n\nDas ist keine Formsache. Die Buchung über die Plattform sichert Ihnen den Fotografen zu, erstattet Ihnen den Betrag, falls das Shooting ausfällt, deckt Sie ab, wenn am Tag selbst etwas schiefgeht, und gibt Ihnen ein Team, das dann erreichbar ist. Bei einer privaten Zahlung entfällt das alles.\n\nWenn der Gesamtbetrag über Ihrem Budget liegt, nennen Sie dem Fotografen Ihr Budget — viele bieten kürzere Sessions oder ruhigere Zeitfenster an, die nicht ausgeschrieben sind. Dieses Gespräch ist hier willkommen; die Zahlung von der Plattform wegzuleiten ist es nicht und gefährdet das Konto des Fotografen.`,
   es: `\n\nNo es burocracia. Reservar por la plataforma es lo que le garantiza el fotógrafo, el reembolso si la sesión no se celebra, cobertura si algo sale mal ese día y un equipo al que acudir si ocurre. Pagando por fuera, nada de eso existe.\n\nSi el total supera lo que quería gastar, dígale su presupuesto al fotógrafo: muchos tienen sesiones más cortas u horarios menos solicitados que no están publicados. Esa conversación es bienvenida aquí; sacar el pago del sitio no lo es, y pone en riesgo la cuenta del fotógrafo.`,
   fr: `\n\nCe n'est pas de la paperasse. Réserver par la plateforme est ce qui vous garantit le photographe, le remboursement si la séance n'a pas lieu, une couverture si quelque chose se passe mal le jour J, et une équipe joignable le cas échéant. En payant en privé, plus rien de tout cela n'existe.\n\nSi le total dépasse ce que vous vouliez dépenser, indiquez votre budget au photographe : beaucoup proposent des séances plus courtes ou des créneaux plus calmes qui ne sont pas affichés. Cette conversation est la bienvenue ici ; sortir le paiement du site ne l'est pas, et met en danger le compte du photographe.`,
+  it: `\n\nNon è burocrazia. Prenotare tramite la piattaforma è ciò che ti garantisce il fotografo, il rimborso se il servizio salta, una copertura se qualcosa va storto quel giorno e un team a cui rivolgerti se succede. Pagando privatamente, niente di tutto questo esiste.\n\nSe il totale è più di quanto volevi spendere, dì al fotografo il tuo budget: molti hanno sessioni più brevi o fasce orarie meno richieste che non sono in listino. Quella conversazione qui è benvenuta; spostare il pagamento fuori dal sito no, e mette a rischio l'account del fotografo.`,
 };
 
 const PHOTOGRAPHER_COPY: Record<Locale, string> = {
@@ -169,6 +172,7 @@ const PHOTOGRAPHER_COPY: Record<Locale, string> = {
   de: `Diese Nachricht wurde nicht gesendet: Sie verweist die Kundschaft auf eine Zahlungsmethode außerhalb von ${country.brand}.\n\nEine Buchung von der Plattform zu nehmen, streicht Erstattung und Absicherung der Kundschaft und verstößt gegen Ihre Vereinbarung mit uns — Wiederholungsfälle enden mit dem Ausschluss. Wenn die Kundschaft darauf drängt, lehnen Sie ab und sagen Sie uns Bescheid; für deren Anfrage werden Sie nicht belangt.\n\nGeht es um den Preis, können Sie jederzeit ein individuelles Angebot in beliebiger Höhe aus Ihrem Dashboard senden.`,
   es: `Este mensaje no se ha enviado: dirige al cliente a un método de pago fuera de ${country.brand}.\n\nSacar una reserva de la plataforma elimina el reembolso y la cobertura del cliente, e incumple su acuerdo con nosotros; los casos repetidos acaban en expulsión. Si es el cliente quien insiste, niéguese y avísenos; no será penalizado por lo que él pida.\n\nSi el problema es el precio, puede enviar al cliente una oferta personalizada por el importe que quiera desde su panel.`,
   fr: `Ce message n'a pas été envoyé : il oriente le client vers un moyen de paiement hors ${country.brand}.\n\nSortir une réservation de la plateforme supprime le remboursement et la couverture du client, et enfreint votre accord avec nous — les cas répétés se terminent par une exclusion. Si c'est le client qui insiste, refusez et prévenez-nous ; sa demande ne vous sera pas reprochée.\n\nSi le sujet est le prix, vous pouvez envoyer au client une offre personnalisée du montant de votre choix depuis votre tableau de bord.`,
+  it: `Questo messaggio non è stato inviato: indirizza il cliente verso un metodo di pagamento fuori da ${country.brand}.\n\nPortare una prenotazione fuori dalla piattaforma toglie al cliente rimborso e copertura e viola il tuo accordo con noi — i casi ripetuti finiscono con la rimozione dalla piattaforma. Se è il cliente a insistere, rifiuta e avvisaci: non sarai penalizzato per la sua richiesta.\n\nSe il problema è il prezzo, puoi inviare al cliente un'offerta personalizzata dell'importo che vuoi dalla tua dashboard.`,
 };
 
 /**
@@ -181,7 +185,7 @@ export function blockedCopy(
   locale: string,
   mode: "blocked" | "delivered" = "blocked",
 ): string {
-  const l: Locale = (["en", "pt", "de", "es", "fr"] as const).includes(locale as Locale)
+  const l: Locale = (["en", "pt", "de", "es", "fr", "it"] as const).includes(locale as Locale)
     ? (locale as Locale)
     : "en";
   if (role === "photographer") {

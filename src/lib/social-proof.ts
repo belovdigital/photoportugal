@@ -52,7 +52,7 @@ export interface SocialProofEvent {
   ageDays: number; // whole days since the event; the feed is sorted by this
 }
 
-const LOCALES: SocialProofLocale[] = ["en", "pt", "de", "es", "fr"];
+const LOCALES: SocialProofLocale[] = ["en", "pt", "de", "es", "fr", "it"];
 
 // --- city slug -> localized display name -----------------------------------
 type CityNames = Record<SocialProofLocale, string>;
@@ -65,6 +65,7 @@ const CITY_MAP: Map<string, CityNames> = new Map(
       de: l.name_de || l.name,
       es: l.name_es || l.name,
       fr: l.name_fr || l.name,
+      it: l.name_it || l.name,
     },
   ])
 );
@@ -76,7 +77,9 @@ function prettifySlug(slug: string): string {
     .join(" ");
 }
 
-const COUNTRY: CityNames = { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal" };
+// The market decides which country this is. It used to say Portugal on the
+// Spanish and Italian sites too.
+const COUNTRY: CityNames = country.countryName;
 
 function cityName(slug: string | null, locale: SocialProofLocale): string {
   if (!slug) return COUNTRY[locale];
@@ -106,7 +109,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     booked: (c, p, city) => `${c} booked ${p} in ${city}`,
     delivered: (c, p, city) => `${p} delivered ${c}’s gallery in ${city}`,
     review: (c, p, s) => `${c} left ${p} a ${s}-star review`,
-    aggregate: (n) => `${n} shoots booked across Portugal in the last 30 days`,
+    aggregate: (n) => `${n} shoots booked across ${country.countryName.en} in the last 30 days`,
   },
   pt: {
     stats: `Em direto na ${country.brand}`,
@@ -116,7 +119,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     booked: (c, p, city) => `${c} reservou ${p} em ${city}`,
     delivered: (c, p, city) => `${p} entregou a galeria de ${c} em ${city}`,
     review: (c, p, s) => `${c} deixou uma avaliação de ${s} estrelas a ${p}`,
-    aggregate: (n) => `${n} sessões reservadas por todo Portugal nos últimos 30 dias`,
+    aggregate: (n) => `${n} sessões reservadas por todo ${country.countryName.pt} nos últimos 30 dias`,
   },
   de: {
     stats: `Live auf ${country.brand}`,
@@ -126,7 +129,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     booked: (c, p, city) => `${c} hat ${p} in ${city} gebucht`,
     delivered: (c, p, city) => `${p} hat ${c}s Galerie in ${city} geliefert`,
     review: (c, p, s) => `${c} hat ${p} mit ${s} Sternen bewertet`,
-    aggregate: (n) => `${n} Shootings in den letzten 30 Tagen in ganz Portugal gebucht`,
+    aggregate: (n) => `${n} Shootings in den letzten 30 Tagen in ganz ${country.countryName.de} gebucht`,
   },
   es: {
     stats: `En directo en ${country.brand}`,
@@ -136,7 +139,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     booked: (c, p, city) => `${c} reservó a ${p} en ${city}`,
     delivered: (c, p, city) => `${p} entregó la galería de ${c} en ${city}`,
     review: (c, p, s) => `${c} dejó una reseña de ${s} estrellas a ${p}`,
-    aggregate: (n) => `${n} sesiones reservadas en todo Portugal en los últimos 30 días`,
+    aggregate: (n) => `${n} sesiones reservadas en todo ${country.countryName.es} en los últimos 30 días`,
   },
   fr: {
     stats: `En direct sur ${country.brand}`,
@@ -146,7 +149,17 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     booked: (c, p, city) => `${c} a réservé ${p} à ${city}`,
     delivered: (c, p, city) => `${p} a livré la galerie de ${c} à ${city}`,
     review: (c, p, s) => `${c} a laissé un avis de ${s} étoiles à ${p}`,
-    aggregate: (n) => `${n} séances réservées dans tout le Portugal ces 30 derniers jours`,
+    aggregate: (n) => `${n} séances réservées dans tout ${country.countryName.fr} ces 30 derniers jours`,
+  },
+  it: {
+    stats: `In diretta su ${country.brand}`,
+    today: "Oggi",
+    yesterday: "Ieri",
+    daysAgo: (n) => `${n} giorni fa`,
+    booked: (c, p, city) => `${c} ha prenotato ${p} a ${city}`,
+    delivered: (c, p, city) => `${p} ha consegnato la galleria di ${c} a ${city}`,
+    review: (c, p, s) => `${c} ha lasciato a ${p} una recensione da ${s} stelle`,
+    aggregate: (n) => `${n} servizi prenotati in tutta ${country.countryName.it} negli ultimi 30 giorni`,
   },
 };
 

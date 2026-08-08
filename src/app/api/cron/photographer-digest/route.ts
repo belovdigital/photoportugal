@@ -139,6 +139,23 @@ const T: Record<Locale, DigestCopy> = {
     cta: "Voir les statistiques complètes",
     outro: "Astuce : la page de statistiques montre les photos les plus ouvertes, d'où viennent les visiteurs et quoi améliorer ensuite.",
   },
+  it: {
+    subject: (views: number) => `Il tuo mese su ${country.brand}: ${views} visite al profilo`,
+    heading: "Le tue statistiche degli ultimi 30 giorni",
+    intro: "Ecco come è andato il tuo profilo negli ultimi 30 giorni:",
+    views: "Visite al profilo",
+    visitors: "Visitatori unici",
+    shownSite: "Scheda mostrata sul sito",
+    shownGoogle: "Mostrato nella ricerca Google",
+    inquiries: "Nuove richieste",
+    paid: "Prenotazioni pagate",
+    peer: (n: number) => `Un fotografo tipo sulla piattaforma ha avuto ${n} visite al profilo negli stessi 30 giorni.`,
+    quiet:
+      "La tua scheda è stata mostrata, ma questo mese nessuno ha aperto il profilo. Circa 3-4 visitatori su 100 che vedono una scheda aprono il profilo, quindi un mese con poche visualizzazioni può davvero finire a zero. Cosa incide di più: aggiungi tutte le località in cui fotografi davvero (i fotografi presenti in 10+ località vengono mostrati circa il doppio delle volte) e cambia la foto di copertina — negli elenchi è l'unica cosa che il visitatore vede.",
+    unanswered: (n: number) => `⚠️ Hai ${n} richiest${n === 1 ? "a" : "e"} senza risposta — rispondi oggi: le richieste evase in fretta convertono molto meglio.`,
+    cta: "Apri le statistiche complete",
+    outro: "Consiglio: la pagina delle statistiche mostra quali foto vengono aperte di più, da dove arrivano i visitatori e cosa migliorare.",
+  },
 };
 
 function statRow(label: string, value: number): string {

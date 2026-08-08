@@ -94,6 +94,17 @@ function photoEmail(args: Args): { subject: string; html: string } {
       apply: `Saisissez-le au moment du paiement de votre prochaine séance.`,
       cta: `Découvrir les photographes`,
     },
+    it: {
+      subject: `Ecco il tuo codice sconto del ${percentOff}%`,
+      heading: `Grazie per la recensione${greet}!`,
+      body: `Recensioni come la tua aiutano altri viaggiatori a trovare il fotografo giusto. Grazie davvero.`,
+      promise: `Come promesso, ecco il tuo <strong>codice sconto del ${percentOff}%</strong> per la prossima prenotazione su ${country.brand}:`,
+      codeLabel: "IL TUO CODICE",
+      validLabel: "Valido 12 mesi",
+      oneUseLabel: "Utilizzabile una sola volta",
+      apply: `Inseriscilo al momento del pagamento quando prenoti la prossima sessione.`,
+      cta: `Scopri i fotografi`,
+    },
   };
 
   const t = variants[locale] || variants.en;
@@ -166,6 +177,17 @@ function videoEmail(args: Args): { subject: string; html: string } {
       oneUseLabel: "Utilisation unique",
       apply: `Saisissez-le au moment du paiement de votre prochaine séance.`,
       cta: `Découvrir les photographes`,
+    },
+    it: {
+      subject: `Il tuo codice sconto del ${percentOff}% — grazie per la video recensione!`,
+      heading: `Quel video ha significato molto${greet} 🎥`,
+      body: `Una video recensione richiede impegno vero, e si vede. I viaggiatori si fidano di un volto e di una voce come non fanno con il testo — la tua aiuterà qualcuno a scegliere il fotografo giusto.`,
+      promise: `Per questo la tua ricompensa è <strong>${percentOff}% di sconto</strong> — un po' più del solito grazie. Usalo su qualsiasi prenotazione futura su ${country.brand}:`,
+      codeLabel: "IL TUO CODICE",
+      validLabel: "Valido 12 mesi",
+      oneUseLabel: "Utilizzabile una sola volta",
+      apply: `Inseriscilo al momento del pagamento quando prenoti la prossima sessione.`,
+      cta: `Scopri i fotografi`,
     },
   };
 

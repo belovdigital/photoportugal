@@ -95,6 +95,24 @@ const LABELS: Record<string, Record<string, string>> = {
     "Content Creator": "Créateur de contenu",
     Fashion: "Mode",
   },
+  it: {
+    Couples: "Coppie",
+    Family: "Famiglia",
+    "Solo Portrait": "Ritratto individuale",
+    Engagement: "Fidanzamento",
+    Proposal: "Proposta di matrimonio",
+    Honeymoon: "Luna di miele",
+    Wedding: "Matrimonio",
+    Maternity: "Gravidanza",
+    "Friends Trip": "Viaggio tra amici",
+    Anniversary: "Anniversario",
+    Elopement: "Elopement",
+    Birthday: "Compleanno",
+    "Kids Birthday": "Compleanno per bambini",
+    "Studio Portrait": "Ritratto in studio",
+    "Content Creator": "Content creator",
+    Fashion: "Moda",
+  },
 };
 
 // ─── Canonicalization ──────────────────────────────────────────────────
