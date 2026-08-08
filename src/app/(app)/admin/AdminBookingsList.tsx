@@ -322,7 +322,7 @@ export function AdminBookingsList({
                     }`}>
                       {b.status === "cancelled" ? "cancelled" :
                        b.delivery_accepted ? "✓ accepted" :
-                       b.status === "delivered" ? "awaiting review" :
+                       b.status === "delivered" ? "awaiting acceptance" :
                        b.status === "completed" ? "awaiting photos" :
                        b.payment_status === "paid" && b.status === "confirmed" ? "paid · awaiting session" :
                        b.status === "confirmed" ? "awaiting payment" :
