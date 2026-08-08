@@ -51,19 +51,13 @@ function localized(path: string, opts: Omit<MetadataRoute.Sitemap[0], "url">): M
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Freshness signal for catalog-style pages (locations/photoshoots/photographers
-  // index) — they're derived from the photographers table. Whenever a
-  // photographer updates their profile, the catalog they appear on is
-  // effectively updated too. We use the latest profile update as the
-  // sitemap lastModified so Google picks up real freshness, not the
-  // hardcoded constant.
-  let catalogLastModified = STATIC_CONTENT_LAST_MODIFIED;
-  try {
-    const r = await query<{ ts: string }>(
-      "SELECT MAX(updated_at)::text AS ts FROM photographer_profiles WHERE is_approved = TRUE"
-    );
-    if (r[0]?.ts) catalogLastModified = new Date(r[0].ts);
-  } catch {}
+  // No lastModified for catalog-derived pages. The previous approach stamped
+  // every location, shoot-type and filtered-catalog URL with the single
+  // MAX(updated_at) across all photographers — after one profile edit, 1,500
+  // URLs claimed to have changed that day. A lastmod that moves in lockstep
+  // across the whole sitemap is precisely the pattern Google documents as
+  // "we ignore lastmod when it isn't consistent" — worse than omitting it.
+  const catalogLastModified = undefined;
 
   // Same idea for /blog/category/X — latest post date among posts in
   // that category. Fallback to static.
@@ -255,7 +249,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogCategoryPages = blogCategories.flatMap((cat) =>
     LOCALES.filter((loc) => populatedCategories.has(`${loc}:${cat}`)).map((loc) => ({
       url: urlFor(`/blog/category/${cat}`, loc),
-      lastModified: blogLastModified,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     }))
