@@ -195,6 +195,28 @@ export function openGraphIdentity(path: string, locale: string) {
  * so the last thing a searcher reads becomes half a word. This cuts at a
  * word boundary instead, and only when there is something to cut.
  */
+/**
+ * Absolute URL for a breadcrumb / JSON-LD item, in the locale's OWN path.
+ *
+ * Every BreadcrumbList on the site used to print the English path on
+ * localised pages (item: baseUrl + "/locations/lisbon" on /de/orte/lisbon),
+ * telling Google the German page's trail runs through pages it is not on.
+ * getPathname resolves through the same pathnames table the visible links
+ * use, so the two can no longer disagree.
+ */
+export function localizedAbsolute(href: string, locale: string): string {
+  try {
+    // Lazy import keeps seo.ts usable from scripts that have no next-intl.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getPathname } = require("@/i18n/navigation") as { getPathname: (a: { href: string; locale: string }) => string };
+    const path = getPathname({ href, locale });
+    return `${country.baseUrl}${path === "/" ? "" : path}`;
+  } catch {
+    const prefix = locale === "en" ? "" : `/${locale}`;
+    return `${country.baseUrl}${prefix}${href === "/" ? "" : href}`;
+  }
+}
+
 export function clampMeta(text: string, max = 155): string {
   const clean = text.replace(/\s+/g, " ").trim();
   if (clean.length <= max) return clean;

@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { GiftCardCheckoutForm } from "./GiftCardCheckoutForm";
 import { GIFT_CARD_TIERS } from "@/lib/gift-card";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
 import { getSiteReviewStats } from "@/lib/reviews-data";
 import { country } from "@/lib/country";
 
@@ -133,7 +133,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: `${base}${locale === "en" ? "/" : "/" + locale + "/"}`,
+        item: localizedAbsolute("/", locale),
       },
       {
         "@type": "ListItem",

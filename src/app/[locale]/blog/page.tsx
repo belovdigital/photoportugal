@@ -6,7 +6,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
 import { country } from "@/lib/country";
 import { formatLocationList } from "@/lib/location-priority";
 
@@ -95,13 +95,13 @@ export default async function BlogPage({
         "@type": "ListItem",
         position: 1,
         name: tc("home"),
-        item: country.baseUrl,
+        item: localizedAbsolute("/", locale),
       },
       {
         "@type": "ListItem",
         position: 2,
         name: tc("blog"),
-        item: `${country.baseUrl}/blog`,
+        item: localizedAbsolute("/blog", locale),
       },
     ],
   };

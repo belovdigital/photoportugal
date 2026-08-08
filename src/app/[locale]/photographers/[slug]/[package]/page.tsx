@@ -16,7 +16,7 @@ import { maskSurname } from "@/lib/photographer-name";
 import { LARGE_GROUP_SURCHARGE_RATE, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { inferPackageTags, locationDisplayName } from "@/lib/package-photo-matching";
 import { PackageHeroCarousel } from "./PackageHeroCarousel";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
 import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
@@ -321,9 +321,9 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `${country.baseUrl}/` },
-      { "@type": "ListItem", position: 2, name: "Photographers", item: `${country.baseUrl}/photographers` },
-      { "@type": "ListItem", position: 3, name: photographer.display_name, item: `${country.baseUrl}/photographers/${slug}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: localizedAbsolute("/", locale) },
+      { "@type": "ListItem", position: 2, name: "Photographers", item: localizedAbsolute("/photographers", locale) },
+      { "@type": "ListItem", position: 3, name: photographer.display_name, item: localizedAbsolute(`/photographers/${slug}`, locale) },
       { "@type": "ListItem", position: 4, name: pkg.name, item: canonical },
     ],
   };

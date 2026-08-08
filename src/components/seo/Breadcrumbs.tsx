@@ -1,6 +1,6 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { country } from "@/lib/country";
+import { localizedAbsolute } from "@/lib/seo";
 
 export interface BreadcrumbItem {
   name: string;
@@ -13,6 +13,7 @@ interface BreadcrumbsProps {
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const t = useTranslations("common");
+  const locale = useLocale();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -20,7 +21,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: `${country.baseUrl}${item.href === "/" ? "" : item.href}`,
+      item: localizedAbsolute(item.href, locale),
     })),
   };
 

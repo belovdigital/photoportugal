@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 import { country } from "@/lib/country";
 
@@ -91,8 +91,8 @@ export default async function BlogPaginatedPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: tc("home"), item: country.baseUrl },
-      { "@type": "ListItem", position: 2, name: tc("blog"), item: `${country.baseUrl}/blog` },
+      { "@type": "ListItem", position: 1, name: tc("home"), item: localizedAbsolute("/", locale) },
+      { "@type": "ListItem", position: 2, name: tc("blog"), item: localizedAbsolute("/blog", locale) },
       { "@type": "ListItem", position: 3, name: `Page ${currentPage}` },
     ],
   };

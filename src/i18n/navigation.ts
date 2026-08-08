@@ -20,3 +20,8 @@ export const useRouter = nav.useRouter as unknown as () => {
   forward: () => void;
   refresh: () => void;
 };
+
+// Server-safe: builds the locale's own path ("/de/orte" for "/locations" on de)
+// from the same pathnames table Link uses. Widened like the rest — call sites
+// pass interpolated strings.
+export const getPathname = nav.getPathname as unknown as (args: { href: string | object; locale: string }) => string;

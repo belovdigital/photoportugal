@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, locField } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { locationImage, IMAGE_SIZES } from "@/lib/unsplash-images";
@@ -309,7 +309,7 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
             "@type": "ListItem",
             position: 1,
             name: country.brand,
-            item: country.baseUrl,
+            item: localizedAbsolute("/", locale),
           },
           {
             "@type": "ListItem",

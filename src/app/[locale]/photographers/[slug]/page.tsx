@@ -21,7 +21,7 @@ import { PackageCard } from "@/components/ui/PackageCard";
 import { clientExtraPriceCents, DEFAULT_EXTRA_PHOTO_PAYOUT_CENTS } from "@/lib/extras-pricing";
 import { RequestCustomPackageCard } from "@/components/ui/RequestCustomPackageCard";
 import { BusinessQuoteCard } from "@/components/ui/BusinessQuoteCard";
-import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { StickyBookBar } from "@/components/ui/StickyBookBar";
@@ -761,9 +761,9 @@ export default async function PhotographerProfilePage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: tc("home"), item: country.baseUrl },
-      { "@type": "ListItem", position: 2, name: tc("photographers"), item: `${country.baseUrl}/photographers` },
-      { "@type": "ListItem", position: 3, name: normalizeName(photographer.name), item: `${country.baseUrl}/photographers/${slug}` },
+      { "@type": "ListItem", position: 1, name: tc("home"), item: localizedAbsolute("/", locale) },
+      { "@type": "ListItem", position: 2, name: tc("photographers"), item: localizedAbsolute("/photographers", locale) },
+      { "@type": "ListItem", position: 3, name: normalizeName(photographer.name), item: localizedAbsolute(`/photographers/${slug}`, locale) },
     ],
   };
 

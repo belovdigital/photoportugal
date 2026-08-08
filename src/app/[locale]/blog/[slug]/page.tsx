@@ -6,7 +6,7 @@ import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
-import { localeAlternates, localeAlternatesFiltered, openGraphIdentity, localeAlternatesPerSlug } from "@/lib/seo";
+import { localeAlternates, localeAlternatesFiltered, openGraphIdentity, localeAlternatesPerSlug, localizedAbsolute } from "@/lib/seo";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
@@ -810,19 +810,19 @@ export default async function BlogPostPage({ params }: PageProps) {
         "@type": "ListItem",
         position: 1,
         name: tc("home"),
-        item: country.baseUrl,
+        item: localizedAbsolute("/", locale),
       },
       {
         "@type": "ListItem",
         position: 2,
         name: tc("blog"),
-        item: `${country.baseUrl}/blog`,
+        item: localizedAbsolute("/blog", locale),
       },
       {
         "@type": "ListItem",
         position: 3,
         name: post.title,
-        item: `${country.baseUrl}/blog/${post.slug}`,
+        item: localizedAbsolute(`/blog/${post.slug}`, locale),
       },
     ],
   };
