@@ -5,7 +5,7 @@
 //     same matches re-rendered so they don't have to find the chat
 //   - "24h": last-touch ("still deciding? happy to help") + offer human
 //
-// Localised through pickT (en, pt, de, es, fr).
+// Localised through pickT (en, pt, de, es, fr, it).
 
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { pickT, normalizeLocale, localizedUrl, type Locale } from "@/lib/email-locale";
@@ -108,6 +108,15 @@ export async function sendConciergeFollowup30min(opts: {
         from: "À partir de",
         viewProfile: "Voir le profil",
       },
+      it: {
+        subject: "I tuoi fotografi selezionati — ci stai ancora pensando?",
+        h1: opts.firstName ? `Ciao ${opts.firstName}` : "Ciao",
+        intro: "Te li rimetto in casella, nel caso avessi chiuso la chat. Ecco di nuovo la tua selezione — tocca uno qualsiasi per vedere il profilo completo e prenotare.",
+        cta: "Apri la chat per confrontare",
+        ps: "Se preferisci parlare con una persona vera, rispondi a questa email — le leggiamo tutte.",
+        from: "Da",
+        viewProfile: "Vedi il profilo",
+      },
     },
     loc
   );
@@ -191,6 +200,17 @@ export async function sendConciergeFollowup24h(opts: {
         ps: "Ce n'est pas le bon moment ? Pas de souci — nous serons là quand vous serez prêt(e).",
         from: "À partir de",
         viewProfile: "Voir le profil",
+      },
+      it: {
+        subject: "Ti serve una mano a scegliere il fotografo?",
+        h1: opts.firstName ? `Ciao ${opts.firstName}` : "Ciao",
+        intro: "Ieri Lens (il nostro concierge AI) ti ha mandato qualche proposta di fotografo. Se sei ancora indeciso, il nostro team può aiutarti a confrontarli o organizzare una chiamata.",
+        cta: "Rispondi e parla con una persona",
+        replyEmail: country.supportEmail,
+        humanLine: "Oppure rispondi a questa email con le tue domande — di solito rispondiamo entro un'ora.",
+        ps: "Non è il momento giusto? Nessun problema — siamo qui quando vorrai.",
+        from: "Da",
+        viewProfile: "Vedi il profilo",
       },
     },
     loc
@@ -316,6 +336,23 @@ export async function sendConciergeWeddingNurture(opts: {
         ps: "Répondez à cet e-mail quand vous voulez — une vraie personne le lit.",
         from: "À partir de",
         viewProfile: "Voir le profil",
+      },
+      it: {
+        subject: {
+          d4: `Stai ancora sognando il tuo matrimonio in ${country.areaServed}?`,
+          d11: "La tua selezione di fotografi di matrimonio",
+          d21: "Fissiamo la data del vostro matrimonio?",
+        }[opts.stage],
+        h1: hi("Ciao", "Ciao"),
+        intro: {
+          d4: "Organizzare un matrimonio richiede tempo — nessuna fretta. La tua selezione resta qui per quando sarai pronto. I migliori fotografi di matrimonio si prenotano spesso con 6-12 mesi di anticipo, quindi vale la pena aprire qualche profilo per tempo.",
+          d11: "Siamo sempre qui. Guarda con calma i fotografi di matrimonio qui sotto — apri un profilo per vedere le gallerie complete di matrimoni veri e scrivi direttamente con la tua data e il luogo.",
+          d21: "Un ultimo messaggio da parte nostra. Le date dei matrimoni vanno via in fretta dai fotografi più richiesti: se uno ti piace, scrivigli ora per bloccare la tua data — basta un messaggio.",
+        }[opts.stage],
+        cta: "Apri la mia selezione",
+        ps: "Rispondi a questa email quando vuoi — la legge una persona vera.",
+        from: "Da",
+        viewProfile: "Vedi il profilo",
       },
     },
     loc
