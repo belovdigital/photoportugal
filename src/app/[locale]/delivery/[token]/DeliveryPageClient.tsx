@@ -786,7 +786,10 @@ export function DeliveryPageClient({
           </div>
 
           {/* Actions. One primary at a time — download after acceptance, the
-              locked notice before it. */}
+              locked notice before it. Both branches need one of these two to
+              be true, so without them the card rendered as an empty white
+              box in the rail: visible padding around nothing. */}
+          {(accepted || isOwner) && (
           <div className="flex flex-col gap-3 rounded-2xl border border-warm-200 bg-white p-4">
           {/* Only AFTER acceptance. The main archive is written once, at
           acceptance, and now contains everything the client owns by then —
@@ -854,6 +857,7 @@ export function DeliveryPageClient({
           </div>
           ) : null}
           </div>
+          )}
 
           {/* Accept Delivery Section — only for the logged-in client who owns this booking */}
           {isOwner ? (
