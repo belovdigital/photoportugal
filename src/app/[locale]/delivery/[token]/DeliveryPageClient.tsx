@@ -85,9 +85,9 @@ export function DeliveryPageClient({
   const [accepting, setAccepting] = useState(false);
   // Default on, as asked. See the note in the accept route about what that means.
   const [socialConsent, setSocialConsent] = useState(true);
-  // Bumped when a rail counter is tapped: tells the gallery to stop lazy-loading
-  // and render every photo, so the anchor stops moving under the scroll.
-  const [revealAll, setRevealAll] = useState(0);
+  // Set when a rail counter is tapped: tells the gallery to render as far as
+  // that section before the scroll starts, so the anchor stops moving.
+  const [revealFor, setRevealFor] = useState<{ target: string } | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
   const { modal, confirm, notify } = useConfirmModal();
@@ -525,10 +525,10 @@ export function DeliveryPageClient({
   // pulled more photos in ABOVE the target and pushed it further down while
   // the browser was still animating towards where it used to be.
   //
-  // Two parts: ask the gallery to reveal everything first, then keep
+  // Two parts: ask the gallery to render down to the target first, then keep
   // correcting for a moment while images settle into their real heights.
   function scrollToSection(id: string) {
-    setRevealAll((n) => n + 1);
+    setRevealFor({ target: id });
 
     const target = () => document.getElementById(id);
     const settle = (deadline: number) => {
@@ -1065,7 +1065,7 @@ export function DeliveryPageClient({
           giftLeft={gallery?.gift_remaining ?? 0}
           photographerFirstName={normalizeName(gallery.photographer_name).split(" ")[0]}
           onUngift={ungiftPhoto}
-          revealAllSignal={revealAll}
+          revealFor={revealFor}
           />
 
 

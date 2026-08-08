@@ -88,7 +88,7 @@ export function DeliveryGalleryClient({
   giftLeft = 0,
   photographerFirstName = "",
   onUngift,
-  revealAllSignal = 0,
+  revealFor,
 }: {
   photos: Photo[];
   deliveryAccepted: boolean;
@@ -106,9 +106,9 @@ export function DeliveryGalleryClient({
   photographerFirstName?: string;
   /** Hand a gifted photo back and get the slot returned. */
   onUngift?: (id: string) => void;
-  /** Bumped by the rail when a counter is tapped: render everything, so an
-   *  anchor further down the page stops moving while the browser scrolls. */
-  revealAllSignal?: number;
+  /** Set by the rail when a counter is tapped, so the section it jumps to is
+   *  rendered before the browser starts scrolling towards it. */
+  revealFor?: { target: string } | null;
   /** Free picks the photographer granted and the client has not spent yet.
    *  While this is above zero a tap redeems immediately instead of basketing. */
   giftLeft?: number;
@@ -241,9 +241,6 @@ export function DeliveryGalleryClient({
   const [visibleCount, setVisibleCount] = useState(BATCH);
   const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
 
-  useEffect(() => {
-    if (revealAllSignal > 0) setVisibleCount(photos.length);
-  }, [revealAllSignal, photos.length]);
   const sentinelRef = useRef<HTMLDivElement>(null);
   // Growth is gated on images actually LOADING, not just the sentinel
   // being visible: unloaded cells have zero height (dims are NULL on
@@ -292,6 +289,18 @@ export function DeliveryGalleryClient({
   const all = useMemo(() => photos.map((p, i) => ({ p, i })), [photos]);
   const ownedAll = useMemo(() => all.filter(({ p }) => !p.locked), [all]);
   const lockedAll = useMemo(() => all.filter(({ p }) => p.locked), [all]);
+  // The rail's counters jump to these two sections, and an anchor is only
+  // trustworthy once everything above it is laid out. "Yours" is the first
+  // section, so it never moves; the paid group sits below the entire owned
+  // pile, so that pile has to be rendered before the scroll starts. Reveal
+  // exactly that far — not the whole gallery, which on a 400-photo delivery
+  // would mean loading hundreds of images nobody asked to see.
+  useEffect(() => {
+    if (revealFor?.target === "delivery-extras") {
+      setVisibleCount((c) => Math.max(c, ownedAll.length));
+    }
+  }, [revealFor, ownedAll.length]);
+
   const ownedIndexed = useMemo(() => ownedAll.slice(0, visibleCount), [ownedAll, visibleCount]);
   const lockedIndexed = useMemo(() => lockedAll.slice(0, visibleCount), [lockedAll, visibleCount]);
   const split = lockedAll.length > 0 && ownedAll.length > 0;
