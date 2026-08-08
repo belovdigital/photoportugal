@@ -135,7 +135,7 @@ export async function classifyOffPlatformPayment(
 // out per locale here rather than going through next-intl — there is no key to
 // forget and no path to leak (see CLAUDE.md).
 
-type Locale = "en" | "pt" | "de" | "es" | "fr";
+import { type Locale } from "@/lib/email-locale";
 
 // The post-delivery scan can't un-send, so its notice must not claim it did.
 // Same body, different opening line.

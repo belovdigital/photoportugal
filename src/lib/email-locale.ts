@@ -1,8 +1,8 @@
 import { queryOne } from "@/lib/db";
 import { country } from "@/lib/country";
 
-export type Locale = "en" | "pt" | "de" | "es" | "fr";
-export const SUPPORTED_LOCALES: readonly Locale[] = ["en", "pt", "de", "es", "fr"] as const;
+export type Locale = "en" | "pt" | "de" | "es" | "fr" | "it";
+export const SUPPORTED_LOCALES: readonly Locale[] = ["en", "pt", "de", "es", "fr", "it"] as const;
 
 export function normalizeLocale(input: string | null | undefined): Locale {
   if (!input) return "en";
@@ -43,12 +43,12 @@ export function pickT<T>(dict: Partial<Record<Locale, T>> & { en: T }, locale: L
 
 /**
  * Format currency per locale convention used elsewhere on the site.
- *   pt: "150€"   de/es/fr: "150 €"   en: "€150"
+ *   pt: "150€"   de/es/fr/it: "150 €"   en: "€150"
  */
 export function formatPrice(amount: number, locale: Locale): string {
   const n = Math.round(amount);
   if (locale === "pt") return `${n}€`;
-  if (locale === "de" || locale === "es" || locale === "fr") return `${n} €`;
+  if (locale === "de" || locale === "es" || locale === "fr" || locale === "it") return `${n} €`;
   return `€${n}`;
 }
 

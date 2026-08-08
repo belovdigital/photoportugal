@@ -3169,7 +3169,7 @@ async function runReminders(): Promise<NextResponse> {
         const { sendCalendarSyncBrokenEmail } = await import("@/lib/email");
         const label = c.display_name || (c.type === "google" ? "Google Calendar" : "iCal calendar");
         const loc = (["en", "pt", "de", "es", "fr"] as const).includes(c.locale as "en")
-          ? (c.locale as "en" | "pt" | "de" | "es" | "fr")
+          ? (c.locale as import("@/lib/email-locale").Locale)
           : "en";
         await sendCalendarSyncBrokenEmail(c.email, c.name, label, c.days, loc);
         await query(

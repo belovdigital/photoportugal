@@ -12,6 +12,7 @@ const LOCALE_MAP: Record<string, string> = {
   de: "de-DE",
   es: "es-ES",
   fr: "fr-FR",
+  it: "it-IT",
 };
 
 export function formatShootDate(

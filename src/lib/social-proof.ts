@@ -31,7 +31,7 @@ import { country } from "@/lib/country";
 // cards from the head. Do not reorder this by kind (see `freshestFirst`).
 // ---------------------------------------------------------------------------
 
-export type SocialProofLocale = "en" | "pt" | "de" | "es" | "fr";
+export type SocialProofLocale = "en" | "pt" | "de" | "es" | "fr" | "it";
 export type SocialProofKind = "booked" | "delivered" | "review" | "aggregate";
 
 // The photographer name is rendered as a clickable link, so the sentence

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { type Locale } from "@/lib/email-locale";
 import { queryOne } from "@/lib/db";
 import { formatShootDate } from "@/lib/format-shoot-date";
 import { maskSurname } from "@/lib/photographer-name";
@@ -91,13 +92,14 @@ export async function sendEmail(to: string, subject: string, html: string, optio
 }
 
 // === Email template wrapper ===
-export function emailLayout(body: string, locale: "en" | "pt" | "de" | "es" | "fr" = "en"): string {
+export function emailLayout(body: string, locale: Locale = "en"): string {
   const labels: Record<string, { help: string; privacy: string; helpUrl: string; privacyUrl: string }> = {
     en: { help: "Help", privacy: "Privacy", helpUrl: "/support", privacyUrl: "/privacy" },
     pt: { help: "Ajuda", privacy: "Privacidade", helpUrl: "/pt/support", privacyUrl: "/pt/privacy" },
     de: { help: "Hilfe", privacy: "Datenschutz", helpUrl: "/de/support", privacyUrl: "/de/privacy" },
     es: { help: "Ayuda", privacy: "Privacidad", helpUrl: "/es/support", privacyUrl: "/es/privacy" },
     fr: { help: "Aide", privacy: "Confidentialité", helpUrl: "/fr/support", privacyUrl: "/fr/privacy" },
+    it: { help: "Aiuto", privacy: "Privacy", helpUrl: "/it/support", privacyUrl: "/it/privacy" },
   };
   const L = labels[locale] || labels.en;
   return `<!DOCTYPE html>
@@ -161,6 +163,7 @@ export async function sendSaveForLaterEmail(
     de: { subject: `Ihr Link zu ${photographer.name}`, h2: "Hier ist Ihr Link", body: "Danke, dass Sie diesen Fotografen gespeichert haben. Sie können jederzeit zurückkehren, um das Portfolio anzusehen und zu buchen.", from: "Ab", cta: "Profil ansehen", footer: "Fragen? Antworten Sie einfach auf diese E-Mail — unser Team ist für Sie da." },
     es: { subject: `Su enlace a ${photographer.name}`, h2: "Aquí tiene su enlace", body: "Gracias por guardar a este fotógrafo. Puede volver cuando quiera para ver el portafolio y reservar.", from: "Desde", cta: "Ver perfil", footer: "¿Preguntas? Responda a este correo — nuestro equipo está aquí para ayudar." },
     fr: { subject: `Votre lien vers ${photographer.name}`, h2: "Voici votre lien", body: "Merci d'avoir enregistré ce photographe. Vous pouvez revenir quand vous voulez pour voir le portfolio et réserver.", from: "À partir de", cta: "Voir le profil", footer: "Des questions ? Répondez simplement à cet e-mail — notre équipe est là pour vous aider." },
+    it: { subject: `Il tuo link a ${photographer.name}`, h2: "Ecco il tuo link", body: "Grazie per aver salvato questo fotografo. Puoi tornare quando vuoi per vedere il portfolio e prenotare.", from: "Da", cta: "Vedi il profilo", footer: "Domande? Rispondi a questa email — il nostro team è qui per aiutarti." },
   }, loc);
 
   const cover = photographer.cover_url
@@ -284,6 +287,7 @@ export async function sendBookingNotification(
             de: "Von Lens (unser AI Concierge) — die ursprüngliche Anfrage:",
             es: "De Lens (nuestro AI Concierge) — petición original del visitante:",
             fr: "De Lens (notre AI Concierge) — demande initiale du visiteur :",
+            it: "Da Lens (il nostro AI Concierge) — la richiesta originale del visitatore:",
           }, locale);
           const safe = firstUserMsg.slice(0, 400).replace(/</g, "&lt;").replace(/>/g, "&gt;");
           const chipLine = row.source_chip ? `<br /><span style="font-size:12px;color:#9aa1a8;">(Started via: ${row.source_chip.replace(/</g, "&lt;").replace(/>/g, "&gt;")})</span>` : "";
@@ -308,6 +312,7 @@ export async function sendBookingNotification(
     de: { subject: `Neue Buchungsanfrage von ${clientFirstName}`, h2: "Neue Buchungsanfrage", greeting: `Hallo ${photographerName},`, body: `<strong>${clientFirstName}</strong> hat ein Fotoshooting angefragt${packageName ? ` (${packageName})` : ""}${shootDate ? ` am ${shootDate}` : ""}.`, cta: "Buchung ansehen" },
     es: { subject: `Nueva solicitud de reserva de ${clientFirstName}`, h2: "Nueva solicitud de reserva", greeting: `Hola ${photographerName},`, body: `<strong>${clientFirstName}</strong> ha solicitado una sesión fotográfica${packageName ? ` (${packageName})` : ""}${shootDate ? ` el ${shootDate}` : ""}.`, cta: "Ver reserva" },
     fr: { subject: `Nouvelle demande de réservation de ${clientFirstName}`, h2: "Nouvelle demande de réservation", greeting: `Bonjour ${photographerName},`, body: `<strong>${clientFirstName}</strong> a demandé une séance photo${packageName ? ` (${packageName})` : ""}${shootDate ? ` le ${shootDate}` : ""}.`, cta: "Voir la réservation" },
+    it: { subject: `Nuova richiesta di prenotazione da ${clientFirstName}`, h2: "Nuova richiesta di prenotazione", greeting: `Ciao ${photographerName},`, body: `<strong>${clientFirstName}</strong> ha richiesto un servizio fotografico${packageName ? ` (${packageName})` : ""}${shootDate ? ` il ${shootDate}` : ""}.`, cta: "Vedi la prenotazione" },
   }, locale);
 
   await sendEmail(
@@ -380,6 +385,15 @@ export async function sendBookingRequestToClient(
       nextLabel: "¿Qué pasa ahora?",
       next: `${photographerDisplay} revisará su solicitud y le responderá en breve. También puede enviarle un mensaje directo para acordar los detalles.`,
       cta: "Ver su reserva",
+    },
+    it: {
+      subject: `Richiesta di prenotazione inviata a ${photographerDisplay}`,
+      h2: "Richiesta di prenotazione inviata!",
+      greeting: `Ciao ${firstName},`,
+      body: `La tua richiesta di prenotazione è stata inviata a <strong>${photographerDisplay}</strong>${packageName ? ` per ${packageName}` : ""}${shootDate ? ` il ${shootDate}` : ""}.`,
+      nextLabel: "Cosa succede adesso?",
+      next: `${photographerDisplay} esaminerà la tua richiesta e ti risponderà a breve. Puoi anche scrivere direttamente per concordare i dettagli.`,
+      cta: "Vedi la tua prenotazione",
     },
   }, locale);
 
@@ -458,6 +472,16 @@ export async function sendBookingConfirmation(
       nextStepLabel: "Siguiente paso:",
       nextStep: "Acuerde con su fotógrafo el punto de encuentro, ideas de outfit y cualquier petición especial a través de nuestro sistema de mensajería.",
       cta: "Abrir mensajes",
+    },
+    it: {
+      subject: `Prenotazione confermata con ${photographerName}!`,
+      h2: "Prenotazione confermata!",
+      greeting: `Ciao ${clientName.split(" ")[0]},`,
+      confirmed: `<strong>${photographerName}</strong> ha confermato il tuo servizio fotografico${shootDate ? ` il ${shootDate}` : ""}.`,
+      msgPrompt: "Puoi scrivere al tuo fotografo per concordare i dettagli.",
+      nextStepLabel: "Prossimo passo:",
+      nextStep: "Concorda con il tuo fotografo il punto d'incontro, le idee sull'outfit e qualsiasi richiesta particolare tramite il nostro sistema di messaggi.",
+      cta: "Apri i messaggi",
     },
   }, locale);
 
@@ -568,6 +592,21 @@ export async function sendBookingConfirmationWithPayment(
       tipLabel: "Consejo:",
       tip: "Le recomendamos también enviar un mensaje a su fotógrafo para acordar el punto de encuentro, ideas de outfit y cualquier petición especial.",
       cta: "Abrir mensajes",
+    },
+    it: {
+      subject: `${photographerDisplay} ha confermato la tua prenotazione${totalPrice ? ` — paga entro 24h per bloccarla` : ""}!`,
+      h2: "Prenotazione confermata!",
+      greeting: `Ciao ${firstName},`,
+      confirmed: `<strong>${photographerDisplay}</strong> ha confermato il tuo servizio fotografico${shootDate ? ` il ${shootDate}` : ""}.`,
+      paymentLabel: "Pagamento richiesto:",
+      paymentBody: (priceStr: string) => `Paga ${priceStr} per bloccare la tua sessione. Il pagamento resta al sicuro finché non ricevi e accetti le foto.`,
+      payNow: (priceStr: string) => `Paga ora — ${priceStr}`,
+      viewBooking: "Vedi la prenotazione",
+      deadlineLabel: "⏰ Importante — il tuo orario è tenuto per 24 ore.",
+      deadlineBody: `Il pagamento garantisce il tuo orario. ${photographerDisplay} lo sta tenendo per te, ma se il pagamento non arriva entro 24 ore la prenotazione viene annullata automaticamente e l'orario torna disponibile. Il posto è tuo solo a pagamento completato — fino ad allora un altro cliente che paga prima può prendersi la data.`,
+      tipLabel: "Consiglio:",
+      tip: "Ti consigliamo anche di scrivere al tuo fotografo per concordare il punto d'incontro, le idee sull'outfit e qualsiasi richiesta particolare.",
+      cta: "Apri i messaggi",
     },
   }, locale);
 
@@ -690,6 +729,14 @@ export async function sendPaymentConfirmedToClient(
       body2: "Su dinero queda guardado de forma segura. Tras la sesión, su fotógrafo le entregará las fotos editadas. Cuando acepte la entrega, el pago se liberará al fotógrafo.",
       cta: "Ver reserva",
     },
+    it: {
+      subject: `Pagamento confermato — ${priceStr} per la tua sessione con ${photographerName}`,
+      h2: "Pagamento confermato!",
+      greeting: `Ciao ${firstName},`,
+      body1: `Il tuo pagamento di <strong>${priceStr}</strong> per il servizio fotografico con <strong>${photographerName}</strong> è stato confermato.`,
+      body2: "Il denaro resta al sicuro. Dopo la sessione il fotografo ti consegnerà le foto ritoccate. Quando accetti la consegna, il pagamento viene sbloccato per il fotografo.",
+      cta: "Vedi la prenotazione",
+    },
   }, locale);
 
   await sendEmail(
@@ -731,6 +778,7 @@ export async function sendDeliveryAcceptedToPhotographer(
         <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#1F1F1F;">${pickT({
           en: "How the extras went", pt: "Como correram os extras", de: "Wie es mit den Extras lief",
           es: "Cómo fueron los extras", fr: "Ce qu’il en est des photos en plus",
+          it: "Com'è andata con le foto extra",
         }, locale)}</p>
         ${b!.giftOffered > 0 ? `<p style="margin:0 0 4px;font-size:14px;line-height:1.5;color:#4A4A4A;">🎁 ${pickT({
           en: `You offered ${b!.giftOffered} free — ${clientFirstName} took ${b!.giftTaken}.`,
@@ -738,6 +786,7 @@ export async function sendDeliveryAcceptedToPhotographer(
           de: `Sie haben ${b!.giftOffered} gratis angeboten — ${clientFirstName} hat ${b!.giftTaken} genommen.`,
           es: `Ofreciste ${b!.giftOffered} gratis — ${clientFirstName} cogió ${b!.giftTaken}.`,
           fr: `Vous en avez offert ${b!.giftOffered} — ${clientFirstName} en a pris ${b!.giftTaken}.`,
+          it: `Ne hai regalate ${b!.giftOffered} — ${clientFirstName} ne ha prese ${b!.giftTaken}.`,
         }, locale)}</p>` : ""}
         <p style="margin:0;font-size:14px;line-height:1.5;color:#4A4A4A;">🛒 ${b!.extrasBought > 0 ? pickT({
           en: `Bought ${b!.extrasBought} more — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> to you, included above.`,
@@ -745,10 +794,12 @@ export async function sendDeliveryAcceptedToPhotographer(
           de: `${b!.extrasBought} weitere gekauft — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> für Sie, oben bereits enthalten.`,
           es: `Compró ${b!.extrasBought} más — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> para ti, ya incluidos arriba.`,
           fr: `${b!.extrasBought} de plus achetées — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> pour vous, déjà comptés ci-dessus.`,
+          it: `Ne ha comprate altre ${b!.extrasBought} — <strong style="color:#16A34A;">+&euro;${b!.extrasPayout.toFixed(2)}</strong> per te, già inclusi sopra.`,
         }, locale) : pickT({
           en: "No extras bought this time.", pt: "Nenhum extra comprado desta vez.",
           de: "Diesmal keine Extras gekauft.", es: "Ningún extra comprado esta vez.",
           fr: "Aucune photo en plus achetée cette fois.",
+          it: "Nessuna foto extra acquistata questa volta.",
         }, locale)}</p>
       </div>`
     : "";
@@ -759,6 +810,7 @@ export async function sendDeliveryAcceptedToPhotographer(
     de: { subject: `${clientFirstName} hat die Lieferung angenommen — €${payoutAmount.toFixed(2)} an Sie überwiesen`, h2: "Zahlung überwiesen!", greeting: `Hallo ${photographerName},`, body1: `<strong>${clientFirstName}</strong> hat die Fotolieferung angenommen. Eine Zahlung von <strong style="color:#16A34A;">${amount}</strong> wurde auf Ihr Stripe-Konto überwiesen.`, body2: "Die Mittel sollten innerhalb von 2-7 Werktagen auf Ihrem Bankkonto eintreffen, je nach Ihrem Stripe-Auszahlungsplan.", cta: "Dashboard ansehen", reviewPrompt: "Hat Ihnen die Zusammenarbeit gefallen? Hinterlassen Sie eine kurze Bewertung, um Ihre Reputation auf der Plattform zu stärken:", reviewCta: "Bewertung abgeben" },
     es: { subject: `${clientFirstName} aceptó la entrega — €${payoutAmount.toFixed(2)} transferidos a usted`, h2: "¡Pago transferido!", greeting: `Hola ${photographerName},`, body1: `<strong>${clientFirstName}</strong> ha aceptado la entrega de las fotos. Un pago de <strong style="color:#16A34A;">${amount}</strong> ha sido transferido a su cuenta de Stripe.`, body2: "Los fondos deberían llegar a su cuenta bancaria en 2-7 días hábiles, según el calendario de pagos de Stripe.", cta: "Ver dashboard", reviewPrompt: "¿Disfrutó trabajando con este cliente? Deje una breve reseña para reforzar su reputación en la plataforma:", reviewCta: "Dejar reseña" },
     fr: { subject: `${clientFirstName} a accepté la livraison — €${payoutAmount.toFixed(2)} transférés vers vous`, h2: "Paiement transféré !", greeting: `Bonjour ${photographerName},`, body1: `<strong>${clientFirstName}</strong> a accepté la livraison des photos. Un paiement de <strong style="color:#16A34A;">${amount}</strong> a été transféré sur votre compte Stripe.`, body2: "Les fonds devraient arriver sur votre compte bancaire sous 2-7 jours ouvrés, selon votre calendrier de versement Stripe.", cta: "Voir le tableau de bord", reviewPrompt: "Vous avez apprécié travailler avec ce client ? Laissez un court avis pour renforcer votre réputation sur la plateforme :", reviewCta: "Laisser un avis" },
+    it: { subject: `${clientFirstName} ha accettato la consegna — €${payoutAmount.toFixed(2)} trasferiti a te`, h2: "Pagamento trasferito!", greeting: `Ciao ${photographerName},`, body1: `<strong>${clientFirstName}</strong> ha accettato la consegna delle foto. Un pagamento di <strong style="color:#16A34A;">${amount}</strong> è stato trasferito sul tuo account Stripe.`, body2: "I fondi dovrebbero arrivare sul tuo conto bancario entro 2-7 giorni lavorativi, secondo il tuo calendario di pagamenti Stripe.", cta: "Vai alla dashboard", reviewPrompt: "Ti sei trovato bene con questo cliente? Lascia una breve recensione per rafforzare la tua reputazione sulla piattaforma:", reviewCta: "Lascia una recensione" },
   }, locale);
 
   await sendEmail(
@@ -776,6 +828,7 @@ export async function sendDeliveryAcceptedToPhotographer(
         de: `${extrasOnOffer} zurückgehaltene Zusatzfoto${extrasOnOffer === 1 ? "" : "s"} ${extrasOnOffer === 1 ? "bleibt" : "bleiben"} in dieser Galerie noch 90 Tage im Angebot. Pro Verkauf erhalten Sie Ihren eigenen Preis.`,
         es: `${extrasOnOffer} foto${extrasOnOffer === 1 ? "" : "s"} extra que guardaste sigue${extrasOnOffer === 1 ? "" : "n"} a la venta en esta galería durante 90 días más. Ganas tu propio precio por cada una vendida.`,
         fr: `${extrasOnOffer} photo${extrasOnOffer === 1 ? "" : "s"} supplémentaire${extrasOnOffer === 1 ? "" : "s"} que vous avez gardée${extrasOnOffer === 1 ? "" : "s"} reste${extrasOnOffer === 1 ? "" : "nt"} proposée${extrasOnOffer === 1 ? "" : "s"} pendant encore 90 jours. Vous gagnez votre propre prix par vente.`,
+        it: `${extrasOnOffer} foto extra che hai tenuto da parte ${extrasOnOffer === 1 ? "resta ancora in vendita" : "restano ancora in vendita"} in questa galleria per altri 90 giorni. Su ogni vendita guadagni il tuo prezzo.`,
       }, locale)}</p>` : ""}
       ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.cta)}
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.reviewPrompt}</p>
@@ -805,6 +858,7 @@ export async function sendDeliveryAcceptedToClient(
     de: { tipIntro: `Hat Ihnen die Arbeit von ${photogFirst} gefallen? Sie können ein optionales Trinkgeld hinterlassen — es geht an ${photogFirst}, abzüglich einer kleinen Bearbeitungsgebühr.`, tipCta: `💛 Trinkgeld für ${photogFirst}` },
     es: { tipIntro: `¿Le encantó el trabajo de ${photogFirst}? Puede dejar una propina opcional — va para ${photogFirst}, menos una pequeña tarifa de procesamiento.`, tipCta: `💛 Dejar una propina para ${photogFirst}` },
     fr: { tipIntro: `Vous avez adoré le travail de ${photogFirst} ? Vous pouvez laisser un pourboire facultatif — il va à ${photogFirst}, moins de petits frais de traitement.`, tipCta: `💛 Laisser un pourboire à ${photogFirst}` },
+    it: { tipIntro: `Ti è piaciuto il lavoro di ${photogFirst}? Puoi lasciare una mancia, se vuoi — va a ${photogFirst}, meno una piccola commissione di elaborazione.`, tipCta: `💛 Lascia una mancia a ${photogFirst}` },
   }, locale);
   const tipBlock = tipUrl
     ? `<div style="margin:16px 0;padding:16px;background:#FFFBEB;border-radius:10px;border:1px solid #FDE68A;">
@@ -868,6 +922,17 @@ export async function sendDeliveryAcceptedToClient(
       googleCta: "⭐ Reséñenos en Google",
       ppCta: `Reseñar a ${photographerName} en ${country.brand}`,
     },
+    it: {
+      subject: `Consegna accettata — grazie!`,
+      h2: "Grazie!",
+      greeting: `Ciao ${firstName},`,
+      body: `Hai accettato la consegna delle foto di <strong>${photographerName}</strong>. Speriamo che ti piacciano!`,
+      downloadNote: `Le tue foto resteranno scaricabili per <strong>90 giorni</strong>. Ricordati di scaricarle prima!`,
+      reviewIntro: `Se ti sei trovato bene, ci farebbe piacere sapere com'è andata! Le recensioni aiutano altri viaggiatori a scoprire ${country.brand}.`,
+      reviewOnLabel: "Lascia una recensione su:",
+      googleCta: "⭐ Recensiscici su Google",
+      ppCta: `Recensisci ${photographerName} su ${country.brand}`,
+    },
   }, locale);
 
   await sendEmail(
@@ -909,7 +974,7 @@ export async function sendTrustpilotFollowUpToClient(
       body2: `We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover ${country.brand}:`,
       googleCta: "Review Us on Google",
       trustpilotCta: "Review Us on Trustpilot",
-      footer: "Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!",
+      footer: `Even a few words make a huge difference. Thank you for supporting independent photography in ${country.countryName.en}!`,
     },
     pt: {
       subject: `Mais uma coisa, ${clientName} — significa muito para nós`,
@@ -919,7 +984,7 @@ export async function sendTrustpilotFollowUpToClient(
       body2: `Temos um pequeno favor a pedir — significaria o mundo para o nosso pequeno negócio se pudesse deixar uma breve avaliação no Google ou Trustpilot. Demora menos de um minuto e ajuda outros viajantes a descobrir a ${country.brand}:`,
       googleCta: "Avalie-nos no Google",
       trustpilotCta: "Avalie-nos no Trustpilot",
-      footer: "Mesmo algumas palavras fazem uma enorme diferença. Obrigado por apoiar a fotografia independente em Portugal!",
+      footer: `Mesmo algumas palavras fazem uma enorme diferença. Obrigado por apoiar a fotografia independente em ${country.countryName.pt}!`,
     },
     de: {
       subject: `Eine letzte Sache, ${clientName} — es bedeutet uns viel`,
@@ -929,7 +994,7 @@ export async function sendTrustpilotFollowUpToClient(
       body2: `Wir haben eine kleine Bitte — es würde unserem kleinen Unternehmen sehr viel bedeuten, wenn Sie eine kurze Bewertung auf Google oder Trustpilot hinterlassen könnten. Es dauert weniger als eine Minute und hilft anderen Reisenden, ${country.brand} zu entdecken:`,
       googleCta: "Bewerten Sie uns auf Google",
       trustpilotCta: "Bewerten Sie uns auf Trustpilot",
-      footer: "Schon ein paar Worte machen einen riesigen Unterschied. Vielen Dank, dass Sie unabhängige Fotografie in Portugal unterstützen!",
+      footer: `Schon ein paar Worte machen einen riesigen Unterschied. Vielen Dank, dass Sie unabhängige Fotografie in ${country.countryName.de} unterstützen!`,
     },
     fr: {
       subject: `Une dernière chose, ${clientName} — cela compte beaucoup pour nous`,
@@ -939,7 +1004,7 @@ export async function sendTrustpilotFollowUpToClient(
       body2: `Nous avons une petite faveur à demander — cela signifierait énormément pour notre petite entreprise si vous pouviez laisser un court avis sur Google ou Trustpilot. Cela prend moins d'une minute et aide d'autres voyageurs à découvrir ${country.brand} :`,
       googleCta: "Évaluez-nous sur Google",
       trustpilotCta: "Évaluez-nous sur Trustpilot",
-      footer: "Même quelques mots font une énorme différence. Merci de soutenir la photographie indépendante au Portugal !",
+      footer: `Même quelques mots font une énorme différence. Merci de soutenir la photographie indépendante au ${country.countryName.fr} !`,
     },
     es: {
       subject: `Una última cosa, ${clientName} — significa mucho para nosotros`,
@@ -949,7 +1014,17 @@ export async function sendTrustpilotFollowUpToClient(
       body2: `Tenemos un pequeño favor que pedirle — significaría muchísimo para nuestro pequeño negocio si pudiera dejar una breve reseña en Google o Trustpilot. Lleva menos de un minuto y ayuda a otros viajeros a descubrir ${country.brand}:`,
       googleCta: "Reséñenos en Google",
       trustpilotCta: "Reséñenos en Trustpilot",
-      footer: "Incluso unas pocas palabras marcan una gran diferencia. ¡Gracias por apoyar la fotografía independiente en Portugal!",
+      footer: `Incluso unas pocas palabras marcan una gran diferencia. ¡Gracias por apoyar la fotografía independiente en ${country.countryName.es}!`,
+    },
+    it: {
+      subject: `Un'ultima cosa, ${clientName} — per noi conta molto`,
+      h2: "Grazie per la tua recensione!",
+      greeting: `Ciao ${firstName},`,
+      body1: `Ti ringraziamo davvero per aver raccontato la tua esperienza con <strong>${photographerName}</strong> sulla nostra piattaforma.`,
+      body2: `Abbiamo un piccolo favore da chiederti: per la nostra piccola impresa significherebbe moltissimo se lasciassi una breve recensione su Google o Trustpilot. Ci vuole meno di un minuto e aiuta altri viaggiatori a scoprire ${country.brand}:`,
+      googleCta: "Recensiscici su Google",
+      trustpilotCta: "Recensiscici su Trustpilot",
+      footer: `Anche poche parole fanno un'enorme differenza. Grazie per sostenere la fotografia indipendente in ${country.countryName.it}!`,
     },
   }, locale);
 
@@ -1044,6 +1119,13 @@ export async function sendNewMessageNotification(
       body: `Tiene nuevos mensajes de <strong>${senderName}</strong>.`,
       cta: "Leer mensajes",
     },
+    it: {
+      subject: `Hai nuovi messaggi da ${senderName}`,
+      h2: "Nuovi messaggi",
+      greeting: `Ciao ${firstName},`,
+      body: `Hai nuovi messaggi da <strong>${senderName}</strong>.`,
+      cta: "Leggi i messaggi",
+    },
   }, locale);
 
   await sendEmail(
@@ -1129,6 +1211,14 @@ export async function sendPasswordResetEmail(
       cta: "Restablecer contraseña",
       footer: "Este enlace caduca en 30 minutos. Si no solicitó el restablecimiento, puede ignorar este correo.",
     },
+    it: {
+      subject: `Reimposta la tua password ${country.brand}`,
+      h2: "Reimposta la tua password",
+      greeting: `Ciao ${firstName},`,
+      body: "Abbiamo ricevuto una richiesta di reimpostazione della password. Clicca sul pulsante qui sotto per sceglierne una nuova:",
+      cta: "Reimposta la password",
+      footer: "Questo link scade tra 30 minuti. Se non hai richiesto la reimpostazione, puoi ignorare questa email.",
+    },
   }, locale);
 
   await sendEmail(
@@ -1189,6 +1279,14 @@ export async function sendVerificationEmail(to: string, name: string, token: str
       body: "¡Gracias por registrarse! Verifique su dirección de correo para activar su cuenta:",
       cta: "Verificar dirección de correo",
       footer: "Este enlace caduca en 24 horas. Si no creó una cuenta, puede ignorar este correo.",
+    },
+    it: {
+      subject: `Verifica la tua email — ${country.brand}`,
+      h2: "Verifica la tua email",
+      greeting: `Ciao ${firstName},`,
+      body: "Grazie per esserti registrato! Verifica il tuo indirizzo email per attivare l'account:",
+      cta: "Verifica l'indirizzo email",
+      footer: "Questo link scade tra 24 ore. Se non hai creato un account, puoi ignorare questa email.",
     },
   }, locale);
 
@@ -2208,7 +2306,7 @@ export async function sendCalendarSyncBrokenEmail(
   photographerName: string,
   connectionLabel: string,
   brokenSinceDays: number,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/calendar-sync`;
@@ -2289,7 +2387,7 @@ export async function sendCalendarSyncBrokenEmail(
 export async function sendApprovalRequestedToPhotographer(
   to: string,
   photographerName: string,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const C = {
@@ -2385,7 +2483,7 @@ export async function sendExtrasBoughtToClient(
   clientName: string,
   count: number,
   galleryUrl: string,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (clientName || "").split(" ")[0] || clientName;
   const C = {
@@ -2445,7 +2543,7 @@ export async function sendExtrasBoughtToPhotographer(
   clientName: string,
   count: number,
   payoutEur: string,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const C = {
@@ -2497,7 +2595,7 @@ export async function sendApprovedConnectStripeEmail(
   to: string,
   photographerName: string,
   graceDays: number,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
@@ -2567,7 +2665,7 @@ export async function sendStripeDeadlineNudge(
   to: string,
   photographerName: string,
   daysLeft: number,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
@@ -2651,7 +2749,7 @@ export async function sendStripeDeadlineNudge(
 export async function sendPhotographerFullyLiveEmail(
   to: string,
   photographerName: string,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard`;
@@ -2737,7 +2835,7 @@ export async function sendAdminStripeOverdueNotification(
 export async function sendProfileHiddenNoStripeEmail(
   to: string,
   photographerName: string,
-  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+  locale: Locale = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
