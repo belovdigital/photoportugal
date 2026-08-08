@@ -1390,6 +1390,44 @@ async function sendToAllAdmins(subject: string, html: string, options?: { replyT
   await Promise.allSettled(emails.map((email) => sendEmail(email, subject, html, options)));
 }
 
+/**
+ * A client accepted their delivery AND gave permission to use a few of the
+ * photos on the platform's own social accounts.
+ *
+ * Separate from the ordinary acceptance notice on purpose: this is the one an
+ * admin has to act on while the gallery is still live, and it carries the
+ * archive link so nobody has to go hunting for the password. The link contains
+ * the gallery password, which is why this mail goes only to the admin
+ * addresses in platform_settings.
+ */
+export async function sendAdminSocialConsentNotification(args: {
+  clientName: string;
+  clientEmail: string;
+  photographerName: string;
+  bookingId: string;
+  photoCount: number;
+  archiveUrl: string;
+  galleryUrl: string;
+}) {
+  await sendToAllAdmins(
+    `[Photos OK to use] ${args.clientName} accepted delivery and said yes`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Permission granted</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#444;">
+        <strong>${args.clientName}</strong> (${args.clientEmail}) accepted the delivery from
+        <strong>${args.photographerName}</strong> and ticked the box allowing a few photos
+        from this shoot to be used on our social accounts.
+      </p>
+      <p style="margin:0 0 20px;font-size:15px;color:#444;">${args.photoCount} photos in the gallery.</p>
+      <p style="margin:0 0 12px;">
+        <a href="${args.archiveUrl}" style="display:inline-block;background:#C94536;color:#fff;padding:12px 22px;border-radius:10px;font-weight:600;text-decoration:none;">Download the archive</a>
+      </p>
+      <p style="margin:0 0 8px;font-size:14px;"><a href="${args.galleryUrl}" style="color:#C94536;">Open the gallery</a></p>
+      <p style="margin:16px 0 0;font-size:13px;color:#888;">Booking ${args.bookingId}</p>
+    `),
+  );
+}
+
 export async function sendAdminNewPhotographerNotification(
   photographerName: string,
   photographerEmail: string

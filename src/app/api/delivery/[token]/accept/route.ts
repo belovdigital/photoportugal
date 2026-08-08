@@ -14,7 +14,7 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
-  const { password } = await req.json();
+  const { password, socialConsent } = await req.json();
 
   // Find the booking by delivery token
   const booking = await queryOne<{
@@ -153,8 +153,17 @@ export async function POST(
 
     // Conditionally mark delivery as accepted — only if not already accepted
     const acceptResult = await client.query(
-      "UPDATE bookings SET delivery_accepted = TRUE, delivery_accepted_at = NOW() WHERE id = $1 AND delivery_accepted = FALSE RETURNING id",
-      [booking.id]
+      // The consent is written in the same statement that accepts the
+      // delivery, so it can never be recorded for a delivery that was not
+      // accepted, or accepted without a record of what the client agreed to.
+      `UPDATE bookings
+          SET delivery_accepted = TRUE,
+              delivery_accepted_at = NOW(),
+              social_consent = $2,
+              social_consent_at = CASE WHEN $2 THEN NOW() ELSE NULL END
+        WHERE id = $1 AND delivery_accepted = FALSE
+        RETURNING id`,
+      [booking.id, socialConsent === true]
     );
 
     if (acceptResult.rowCount === 0) {
@@ -398,6 +407,39 @@ export async function POST(
   import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
     buildDeliveryZip(booking.id).catch(err => console.error("[accept] zip build error:", err));
   });
+
+  // Permission to use a few of these photos on our own social accounts. It goes
+  // to the admins as its own message rather than a line inside the acceptance
+  // notice, because it is the one that needs acting on while the gallery is
+  // still live — and it carries the archive link so nobody has to look up the
+  // password. Both channels are admin-only; the link contains that password.
+  if (socialConsent === true) {
+    const galleryUrl = `${country.baseUrl}/delivery/${token}`;
+    const archiveUrl = booking.delivery_password_plain
+      ? `${country.baseUrl}/api/delivery/${token}/download?password=${encodeURIComponent(booking.delivery_password_plain)}`
+      : galleryUrl;
+    const photoCount = await queryOne<{ n: string }>(
+      "SELECT COUNT(*)::text AS n FROM delivery_photos WHERE booking_id = $1",
+      [booking.id]
+    ).then((r) => Number(r?.n ?? 0)).catch(() => 0);
+
+    import("@/lib/email").then(({ sendAdminSocialConsentNotification }) =>
+      sendAdminSocialConsentNotification({
+        clientName: booking.client_name,
+        clientEmail: booking.client_email,
+        photographerName: booking.photographer_name,
+        bookingId: booking.id,
+        photoCount,
+        archiveUrl,
+        galleryUrl,
+      })
+    ).catch((err) => console.error("[delivery/accept] social consent email error:", err));
+
+    import("@/lib/telegram").then(({ sendTelegram }) => sendTelegram(
+      `📸 <b>Photos OK to use</b>\n\n${booking.client_name} accepted the delivery from ${booking.photographer_name} and allowed us to use a few shots on social.\n${photoCount} photos.\n\n<a href="${archiveUrl}">Download the archive</a> · <a href="${galleryUrl}">gallery</a>`,
+      "bookings"
+    )).catch((err: unknown) => console.error("[delivery/accept] social consent telegram error:", err));
+  }
 
   // Acceptance moves the boundary between the two archives: everything owned
   // by now belongs to the main file, and the extras file becomes "bought

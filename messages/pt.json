@@ -2900,7 +2900,9 @@
     "acceptGiftsLeftTitle": "Tem {count} fotos grátis à sua espera",
     "acceptGiftsLeftBody": "{name} está a oferecer-lhe mais {count} fotos, e ainda não as escolheu. Pode levá-las depois, mas assim que aceitar já não poderá trocá-las por outras.",
     "acceptGiftsTakeFirst": "Levar as minhas fotos grátis",
-    "acceptAnyway": "Aceitar mesmo assim"
+    "acceptAnyway": "Aceitar mesmo assim",
+    "socialConsentTitle": "Podemos mostrar algumas destas?",
+    "socialConsentBody": "Gostaríamos de publicar 3–4 das suas fotos nas nossas redes sociais, com crédito ao fotógrafo. Somos uma plataforma nova e isso ajuda-nos mesmo a crescer. Desmarque se preferir que não — não muda mais nada."
   },
   "availability": {
     "pageTitle": "Disponibilidade",

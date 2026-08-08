@@ -448,7 +448,7 @@ export function DeliveryGalleryClient({
           {/* Two lines, not four. The decorative circle forced everything
               beside it to centre against a growing stack, and the boxed hint
               made a third band of colour on a page that already has two. */}
-          <div className="mt-10 border-b border-warm-200 pb-3">
+          <div id="delivery-yours" className="mt-10 scroll-mt-24 border-b border-warm-200 pb-3">
             <h3 className="font-display text-xl font-bold leading-tight text-gray-900 sm:text-2xl">
               {t("sectionYours", { count: ownedAll.length })}
             </h3>
@@ -463,7 +463,7 @@ export function DeliveryGalleryClient({
             {renderMasonry(ownedIndexed, canRearrange)}
           </SortableContext>
 
-          <div className="mt-12 rounded-2xl bg-amber-50/60 p-4 ring-1 ring-amber-200 sm:p-5">
+          <div id="delivery-extras" className="mt-12 scroll-mt-24 rounded-2xl bg-amber-50/60 p-4 ring-1 ring-amber-200 sm:p-5">
             <div className="border-b border-amber-200 pb-3">
               <h3 className="font-display text-xl font-bold leading-tight text-amber-900 sm:text-2xl">
                 {giftLeft > 0 ? "🎁 " : ""}{t("sectionOnOffer", { count: lockedAll.length })}

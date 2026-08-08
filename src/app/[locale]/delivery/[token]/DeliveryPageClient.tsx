@@ -11,6 +11,8 @@ import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import { useSession } from "next-auth/react";
 import { country } from "@/lib/country";
 
+const FILES_HOST = country.filesHost;
+
 interface Photo {
   id: string;
   url: string;
@@ -81,6 +83,8 @@ export function DeliveryPageClient({
   const [error, setError] = useState("");
   const [gallery, setGallery] = useState<GalleryData | null>(null);
   const [accepting, setAccepting] = useState(false);
+  // Default on, as asked. See the note in the accept route about what that means.
+  const [socialConsent, setSocialConsent] = useState(true);
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
   const { modal, confirm, notify } = useConfirmModal();
@@ -513,6 +517,13 @@ export function DeliveryPageClient({
     setLoading(false);
   }
 
+  // The gallery sections live in a child component, so this reaches them by id
+  // rather than a ref. `scroll-mt-24` on the targets keeps the heading clear of
+  // the sticky header.
+  function scrollToSection(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function handleAcceptDelivery() {
     // Use existing translation keys (acceptDelivery / accept). next-intl
     // returns the key itself when missing, not a falsy value, so the old
@@ -544,7 +555,7 @@ export function DeliveryPageClient({
       const res = await fetch(`/api/delivery/${token}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: password.trim() || cachedPw }),
+        body: JSON.stringify({ password: password.trim() || cachedPw, socialConsent }),
       });
 
       if (res.ok) {
@@ -668,10 +679,18 @@ export function DeliveryPageClient({
               sentence squeezed between two buttons. */}
           <div className="grid gap-3 rounded-2xl border border-warm-200 bg-white p-4">
             <div>
-              <p className="font-display text-2xl font-bold leading-none text-gray-900">
-                {gallery.photo_count - (gallery.extras_available ?? 0)}
-              </p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("railYours")}</p>
+              <button
+                type="button"
+                onClick={() => scrollToSection("delivery-yours")}
+                className="group block w-full text-left"
+              >
+                <p className="font-display text-2xl font-bold leading-none text-gray-900 group-hover:text-primary-700">
+                  {gallery.photo_count - (gallery.extras_available ?? 0)}
+                </p>
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 group-hover:text-primary-600">
+                  {t("railYours")} <span aria-hidden="true">↓</span>
+                </p>
+              </button>
               {/* "15 yours" hid the nicest fact on the page: five were paid
                   for and ten were a present. */}
               {(gallery.gifted_photos ?? 0) > 0 && (
@@ -685,12 +704,18 @@ export function DeliveryPageClient({
             </div>
             {(gallery.extras_available ?? 0) > 0 && (
               <div className="border-t border-warm-200 pt-3">
-                <p className="font-display text-2xl font-bold leading-none text-amber-800">{gallery.extras_available ?? 0}</p>
-                {/* "Buy" is only true once the gift is spent — until then some
-                    of these are free, and the label must not say otherwise. */}
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                  {(gallery?.gift_remaining ?? 0) > 0 ? t("railCanAdd") : t("railCanBuy")}
-                </p>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection("delivery-extras")}
+                  className="group block w-full text-left"
+                >
+                  <p className="font-display text-2xl font-bold leading-none text-amber-800 group-hover:text-amber-900">{gallery.extras_available ?? 0}</p>
+                  {/* "Buy" is only true once the gift is spent — until then some
+                      of these are free, and the label must not say otherwise. */}
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700 group-hover:text-amber-900">
+                    {(gallery?.gift_remaining ?? 0) > 0 ? t("railCanAdd") : t("railCanBuy")} <span aria-hidden="true">↓</span>
+                  </p>
+                </button>
                 {/* The only place this is explained now. It used to say the
                     same thing here, in a green banner above the grid, and
                     again in the section header below it. */}
@@ -825,6 +850,31 @@ export function DeliveryPageClient({
           ) : (
           <div className="rounded-2xl border border-warm-200 bg-white p-4">
             <p className="text-sm font-semibold text-gray-900">{t("happyWithPhotos")}</p>
+
+            {/* Permission to show a few of these on our own social accounts.
+                Deliberately above the button and not in a footnote: it is a
+                request, and a request the client cannot see is not one. */}
+            <label className="mt-3 flex cursor-pointer gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 transition hover:border-primary-300">
+              <input
+                type="checkbox"
+                checked={socialConsent}
+                onChange={(e) => setSocialConsent(e.target.checked)}
+                className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="flex gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://${FILES_HOST}/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg`}
+                  alt=""
+                  className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+                />
+                <span className="text-xs leading-snug text-gray-700">
+                  <span className="block font-semibold text-gray-900">{t("socialConsentTitle")}</span>
+                  <span className="mt-0.5 block">{t("socialConsentBody")}</span>
+                </span>
+              </span>
+            </label>
+
             <button
               onClick={handleAcceptDelivery}
               disabled={accepting}

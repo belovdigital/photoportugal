@@ -3373,7 +3373,9 @@
     "acceptGiftsLeftTitle": "Il vous reste {count} photos offertes",
     "acceptGiftsLeftBody": "{name} vous offre {count} photos de plus, et vous ne les avez pas encore choisies. Vous pourrez les prendre plus tard, mais une fois la livraison acceptée vous ne pourrez plus les échanger.",
     "acceptGiftsTakeFirst": "Prendre mes photos offertes",
-    "acceptAnyway": "Accepter quand même"
+    "acceptAnyway": "Accepter quand même",
+    "socialConsentTitle": "On peut en montrer quelques-unes ?",
+    "socialConsentBody": "Nous aimerions publier 3 ou 4 de vos photos sur nos propres réseaux, en créditant votre photographe. Nous sommes une plateforme récente et cela nous aide vraiment. Décochez si vous préférez que non — rien d'autre ne change."
   },
   "availability": {
     "pageTitle": "Disponibilités",

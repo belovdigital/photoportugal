@@ -3373,7 +3373,9 @@
     "acceptGiftsLeftTitle": "Tienes {count} fotos gratis esperando",
     "acceptGiftsLeftBody": "{name} te regala {count} fotos más y aún no las has elegido. Puedes cogerlas después, pero una vez que aceptes ya no podrás cambiarlas por otras.",
     "acceptGiftsTakeFirst": "Coger mis fotos gratis",
-    "acceptAnyway": "Aceptar igualmente"
+    "acceptAnyway": "Aceptar igualmente",
+    "socialConsentTitle": "¿Podemos enseñar algunas?",
+    "socialConsentBody": "Nos encantaría publicar 3 o 4 de tus fotos en nuestras redes, citando a tu fotógrafo. Somos una plataforma nueva y nos ayuda de verdad. Desmarca la casilla si prefieres que no: no cambia nada más."
   },
   "availability": {
     "pageTitle": "Disponibilidad",
