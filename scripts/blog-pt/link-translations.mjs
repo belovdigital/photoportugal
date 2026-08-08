@@ -21,10 +21,18 @@ const GROUPS = {
   "sintra-wedding-photographer": ["hochzeitsfotograf-sintra-guide", "fotografo-bodas-sintra-guia", "photographe-mariage-sintra-guide"],
   "photo-spots-algarve": ["best-photo-spots-algarve", "melhores-spots-fotos-algarve"],
   "shoot-cost": ["photoshoot-cost-portugal", "custo-sessao-fotografica-portugal"],
-  "couples-lisbon": ["couples-photoshoot-lisbon-ideas", "sessao-fotografica-casal-lisboa"],
+  "couples-lisbon": ["couples-photoshoot-lisbon-ideas", "sessao-fotografica-casal-lisboa", "seance-photo-couple-lisbonne"],
   "family-porto": ["family-photoshoot-porto", "sessao-fotografica-familia-porto-portugueses"],
   "elope-portugal": ["how-to-elope-in-portugal", "elopement-portugal-guia"],
   "family-algarve": ["family-photoshoot-algarve", "sesion-fotos-familia-algarve-residentes-espana"],
+
+  // Batch 1 (2026-08-08): the thin-category fills.
+  "photo-spots-porto": ["best-photo-spots-porto", "beste-fotospots-porto", "mejores-lugares-fotos-porto", "meilleurs-spots-photo-porto"],
+  "what-to-wear": ["what-to-wear-photoshoot-portugal", "was-anziehen-fotoshooting-portugal", "que-ponerse-sesion-fotos-portugal", "que-porter-seance-photo-portugal"],
+  "couples-porto": ["couples-photoshoot-porto", "sessao-fotografica-casal-porto"],
+  "family-lisbon": ["family-photoshoot-lisbon", "sessao-fotografica-familia-lisboa"],
+  "proposal-lisbon": ["surprise-proposal-lisbon-guide", "demande-en-mariage-lisbonne-lieux"],
+  "solo-travel": ["solo-travel-photoshoot-portugal", "voyager-seul-portugal-reserver-photographe"],
 };
 
 const client = new pg.Client({ connectionString: url });

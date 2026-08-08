@@ -39,6 +39,15 @@ const GROUPS = {
 
   "eloping": ["eloping-in-italy-what-it-takes", "elopement-in-italia-come-organizzarlo"],
   "corporate": ["corporate-photography-in-italy", "fotografia-aziendale-in-italia"],
+
+  // Batch 6-8 (2026-08-08): the thin-category fills.
+  "rome-proposal": ["planning-a-proposal-in-rome-spots-and-logistics", "proposta-di-matrimonio-a-roma-dove-e-come", "heiratsantrag-in-rom-orte-und-ablauf", "pedida-de-mano-en-roma-donde-y-como", "demande-en-mariage-a-rome-lieux-et-organisation"],
+  "wedding-questions": ["wedding-photographer-in-italy-questions-before-you-sign", "fotografo-di-matrimonio-le-domande-prima-di-firmare", "hochzeitsfotograf-italien-fragen-vor-vertrag", "fotografo-de-boda-en-italia-preguntas-antes-de-firmar", "photographe-mariage-italie-questions-avant-de-signer"],
+  "couples-hour": ["couples-photoshoot-in-italy-what-the-hour-looks-like", "servizio-di-coppia-in-italia-come-funziona-quell-ora"],
+  "where-to-elope": ["where-to-elope-in-italy-seven-settings-compared", "dove-sposarsi-in-due-in-italia-sette-scenari"],
+  "family-rome": ["family-photoshoot-in-rome-with-kids", "servizio-di-famiglia-a-roma-con-i-bambini"],
+  "booking-lead-time": ["how-far-ahead-to-book-a-photographer-in-italy", "con-quanto-anticipo-prenotare-un-fotografo-in-italia"],
+  "team-headshots": ["team-headshots-in-italy-office-event-or-studio", "foto-del-team-e-ritratti-aziendali-in-italia"],
 };
 
 const client = new pg.Client({ connectionString: url });

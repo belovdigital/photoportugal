@@ -41,12 +41,23 @@ const GROUPS = {
   "rain": ["what-happens-if-it-rains-on-your-photoshoot", "que-hacer-si-llueve-el-dia-de-la-sesion"],
   "what-to-wear": ["what-to-wear-for-a-photoshoot-in-spain", "que-ponerse-sesion-de-fotos", "was-anziehen-fotoshooting-spanien", "que-porter-seance-photo-espagne"],
   "where-to-marry": ["where-to-get-married-in-spain-by-region", "donde-casarse-en-espana-por-region", "wo-in-spanien-heiraten", "ou-se-marier-en-espagne"],
-  "small-wedding": ["boda-intima-en-espana-como-organizarla", "kleine-hochzeit-spanien-planen", "mariage-intime-espagne-organiser"],
-  "eloping-balearics": ["eloping-in-mallorca-and-the-balearics", "boda-intima-en-baleares"],
+  "small-wedding": ["planning-a-small-wedding-in-spain", "boda-intima-en-espana-como-organizarla", "kleine-hochzeit-spanien-planen", "mariage-intime-espagne-organiser"],
+  "eloping-balearics": ["eloping-in-mallorca-and-the-balearics", "boda-intima-en-baleares", "kleine-hochzeit-auf-den-balearen", "mariage-intime-aux-baleares"],
   "how-many-photos": ["cuantas-fotos-recibes-y-que-es-una-foto-editada", "wie-viele-fotos-bekomme-ich"],
   "how-to-pose": ["como-posar-en-una-sesion-de-fotos", "comment-poser-seance-photo"],
   "andalusia": ["fotoshooting-andalusien-guide", "seance-photo-andalousie-guide"],
   "balearics-islands": ["sesion-de-fotos-en-baleares-mallorca-ibiza-menorca", "seance-photo-baleares-guide"],
+
+  // Batch 1-2 (2026-08-08): the thin-category fills, grouped with the Spanish
+  // originals they were written alongside.
+  "event-photographer": ["hiring-an-event-photographer-in-spain-what-to-ask", "eventos-de-empresa-fotografo-que-pedir", "eventfotograf-spanien-briefing-und-fallstricke", "photographe-evenement-entreprise-espagne-brief"],
+  "seville-vs-granada": ["seville-or-granada-for-a-photoshoot", "sevilla-o-granada-para-una-sesion-de-fotos", "sevilla-oder-granada-fuer-ein-fotoshooting", "seville-ou-grenade-pour-une-seance-photo"],
+  "engagement-session": ["engagement-photoshoot-in-spain-what-it-is", "sesion-de-compromiso-engagement-en-espana", "verlobungsshooting-spanien-was-es-ist", "seance-engagement-espagne-ce-que-cest"],
+  "grandparents": ["multi-generation-family-photoshoot-in-spain", "sesion-de-fotos-con-abuelos-varias-generaciones", "familienshooting-mit-grosseltern-spanien", "seance-photo-famille-plusieurs-generations-espagne"],
+  "session-length": ["one-hour-or-two-how-long-should-your-photoshoot-be", "una-hora-o-dos-cuanto-debe-durar-la-sesion", "une-heure-ou-deux-duree-seance-photo-espagne"],
+  "where-to-propose": ["where-to-propose-in-spain-nine-places", "donde-pedir-matrimonio-en-espana", "wo-in-spanien-den-antrag-machen-neun-orte", "ou-demander-en-mariage-en-espagne-neuf-lieux"],
+  "solo-portraits": ["solo-portrait-session-in-spain-profile-photos", "retrato-individual-perfil-profesional-espana", "einzelportraets-spanien-profilfotos", "portrait-solo-espagne-photos-de-profil"],
+  "wedding-questions": ["wedding-photographer-in-spain-what-to-ask", "fotografo-de-boda-en-espana-que-preguntar", "hochzeitsfotograf-spanien-fragen-vor-vertrag", "photographe-mariage-espagne-questions-avant-signer"],
 };
 
 const client = new pg.Client({ connectionString: url });
