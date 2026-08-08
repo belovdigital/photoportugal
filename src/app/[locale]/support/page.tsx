@@ -4,7 +4,7 @@ import { country } from "@/lib/country";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { SupportContent } from "@/components/support/SupportContent";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                          */
@@ -22,6 +22,7 @@ export async function generateMetadata({
     title: t("metaTitle"),
     description: t("metaDescription"),
     alternates: localeAlternates("/support", locale),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), ...openGraphIdentity("/support", locale) },
   };
 }
 

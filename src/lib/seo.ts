@@ -167,6 +167,7 @@ const OG_LOCALES: Record<string, string> = {
   es: "es_ES",
   de: "de_DE",
   fr: "fr_FR",
+  it: "it_IT",
 };
 
 export function openGraphIdentity(path: string, locale: string) {
@@ -178,6 +179,9 @@ export function openGraphIdentity(path: string, locale: string) {
     // dropped the layout's. Carrying it in the helper puts it back everywhere
     // the helper is used.
     siteName: country.brand,
+    // Every page this helper serves is a website; blog posts override with
+    // type: "article" AFTER the spread, and the later key wins.
+    type: "website" as const,
     url: localizedUrl(path, safeLocale),
     locale: OG_LOCALES[safeLocale] ?? OG_LOCALES.en,
     alternateLocale: LOCALES.filter((l) => l !== safeLocale).map((l) => OG_LOCALES[l]),

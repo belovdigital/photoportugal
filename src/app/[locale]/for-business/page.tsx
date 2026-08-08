@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Cormorant_Garamond } from "next/font/google";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { getShootTypeBySlug, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { queryOne } from "@/lib/db";
 import { BusinessInquiryForm } from "./BusinessInquiryForm";
@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("metaTitle"),
     description: t("metaDescription"),
     alternates: localeAlternates("/for-business", locale),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), ...openGraphIdentity("/for-business", locale) },
   };
 }
 
