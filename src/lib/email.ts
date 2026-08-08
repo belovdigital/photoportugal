@@ -967,7 +967,7 @@ export async function sendTrustpilotFollowUpToClient(
   const firstName = clientName.split(" ")[0];
   const T = pickT({
     en: {
-      subject: `One last thing, ${clientName} — it means a lot to us`,
+      subject: `One last thing, ${firstName} — it means a lot to us`,
       h2: "Thank You for Your Review!",
       greeting: `Hi ${firstName},`,
       body1: `We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.`,
@@ -977,7 +977,7 @@ export async function sendTrustpilotFollowUpToClient(
       footer: `Even a few words make a huge difference. Thank you for supporting independent photography in ${country.countryName.en}!`,
     },
     pt: {
-      subject: `Mais uma coisa, ${clientName} — significa muito para nós`,
+      subject: `Mais uma coisa, ${firstName} — significa muito para nós`,
       h2: "Obrigado pela Sua Avaliação!",
       greeting: `Olá ${firstName},`,
       body1: `Agradecemos imenso por partilhar a sua experiência com <strong>${photographerName}</strong> na nossa plataforma.`,
@@ -987,7 +987,7 @@ export async function sendTrustpilotFollowUpToClient(
       footer: `Mesmo algumas palavras fazem uma enorme diferença. Obrigado por apoiar a fotografia independente em ${country.countryName.pt}!`,
     },
     de: {
-      subject: `Eine letzte Sache, ${clientName} — es bedeutet uns viel`,
+      subject: `Eine letzte Sache, ${firstName} — es bedeutet uns viel`,
       h2: "Vielen Dank für Ihre Bewertung!",
       greeting: `Hallo ${firstName},`,
       body1: `Wir freuen uns sehr, dass Sie Ihre Erfahrung mit <strong>${photographerName}</strong> auf unserer Plattform geteilt haben.`,
@@ -997,7 +997,7 @@ export async function sendTrustpilotFollowUpToClient(
       footer: `Schon ein paar Worte machen einen riesigen Unterschied. Vielen Dank, dass Sie unabhängige Fotografie in ${country.countryName.de} unterstützen!`,
     },
     fr: {
-      subject: `Une dernière chose, ${clientName} — cela compte beaucoup pour nous`,
+      subject: `Une dernière chose, ${firstName} — cela compte beaucoup pour nous`,
       h2: "Merci pour votre avis !",
       greeting: `Bonjour ${firstName},`,
       body1: `Nous apprécions vraiment que vous ayez partagé votre expérience avec <strong>${photographerName}</strong> sur notre plateforme.`,
@@ -1007,7 +1007,7 @@ export async function sendTrustpilotFollowUpToClient(
       footer: `Même quelques mots font une énorme différence. Merci de soutenir la photographie indépendante au ${country.countryName.fr} !`,
     },
     es: {
-      subject: `Una última cosa, ${clientName} — significa mucho para nosotros`,
+      subject: `Una última cosa, ${firstName} — significa mucho para nosotros`,
       h2: "¡Gracias por su reseña!",
       greeting: `Hola ${firstName},`,
       body1: `Apreciamos enormemente que haya compartido su experiencia con <strong>${photographerName}</strong> en nuestra plataforma.`,
@@ -1017,7 +1017,7 @@ export async function sendTrustpilotFollowUpToClient(
       footer: `Incluso unas pocas palabras marcan una gran diferencia. ¡Gracias por apoyar la fotografía independiente en ${country.countryName.es}!`,
     },
     it: {
-      subject: `Un'ultima cosa, ${clientName} — per noi conta molto`,
+      subject: `Un'ultima cosa, ${firstName} — per noi conta molto`,
       h2: "Grazie per la tua recensione!",
       greeting: `Ciao ${firstName},`,
       body1: `Ti ringraziamo davvero per aver raccontato la tua esperienza con <strong>${photographerName}</strong> sulla nostra piattaforma.`,
@@ -1992,7 +1992,7 @@ export function renderTrustpilotFollowUpToClient(
   clientName: string, photographerName: string
 ): { subject: string; html: string } {
   return {
-    subject: `One last thing, ${clientName} — it means a lot to us`,
+    subject: `One last thing, ${clientName.split(" ")[0]} — it means a lot to us`,
     html: emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Thank You for Your Review!</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
@@ -2307,7 +2307,7 @@ export async function sendSocialPermissionEmail(
     return;
   }
   const safeFirst = String(firstName || "there").replace(/[<>]/g, "");
-  const safePhotog = String(photographerName || "your photographer").replace(/[<>]/g, "");
+  const safePhotog = maskSurname(String(photographerName || "your photographer")).replace(/[<>]/g, "");
   const safeLoc = location ? String(location).replace(/[<>]/g, "") : null;
   const locationPhrase = safeLoc ? ` in <strong>${safeLoc}</strong>` : "";
 

@@ -515,12 +515,12 @@ async function runReminders(): Promise<NextResponse> {
         const { getUserLocaleByEmail: gulb, pickT: pkt } = await import("@/lib/email-locale");
         const cLoc = await gulb(booking.client_email);
         const Tcancel = pkt({
-          en: { subject: "Booking cancelled — payment not received", h2: "Booking Auto-Cancelled", greet: `Hi ${booking.client_name},`, body1: `Your booking with <strong>${maskSurname(booking.photographer_name)}</strong> has been automatically cancelled because payment was not received within 24 hours.`, body2: "If you'd still like to book, feel free to submit a new request.", cta: "Browse Photographers" },
-          pt: { subject: "Reserva cancelada — pagamento não recebido", h2: "Reserva cancelada automaticamente", greet: `Olá ${booking.client_name},`, body1: `A sua reserva com <strong>${maskSurname(booking.photographer_name)}</strong> foi cancelada automaticamente porque o pagamento não foi recebido em 24 horas.`, body2: "Se ainda desejar reservar, fique à vontade para enviar um novo pedido.", cta: "Ver fotógrafos" },
-          de: { subject: "Buchung storniert — Zahlung nicht erhalten", h2: "Buchung automatisch storniert", greet: `Hallo ${booking.client_name},`, body1: `Ihre Buchung mit <strong>${maskSurname(booking.photographer_name)}</strong> wurde automatisch storniert, da die Zahlung nicht innerhalb von 24 Stunden eingegangen ist.`, body2: "Wenn Sie weiterhin buchen möchten, senden Sie gerne eine neue Anfrage.", cta: "Fotografen ansehen" },
-          es: { subject: "Reserva cancelada — pago no recibido", h2: "Reserva cancelada automáticamente", greet: `Hola ${booking.client_name},`, body1: `Su reserva con <strong>${maskSurname(booking.photographer_name)}</strong> ha sido cancelada automáticamente porque no se recibió el pago en 24 horas.`, body2: "Si aún desea reservar, no dude en enviar una nueva solicitud.", cta: "Ver fotógrafos" },
-          fr: { subject: "Réservation annulée — paiement non reçu", h2: "Réservation annulée automatiquement", greet: `Bonjour ${booking.client_name},`, body1: `Votre réservation avec <strong>${maskSurname(booking.photographer_name)}</strong> a été automatiquement annulée car le paiement n'a pas été reçu dans les 24 heures.`, body2: "Si vous souhaitez toujours réserver, n'hésitez pas à envoyer une nouvelle demande.", cta: "Voir les photographes" },
-          it: { subject: "Prenotazione annullata — pagamento non ricevuto", h2: "Prenotazione annullata automaticamente", greet: `Ciao ${booking.client_name},`, body1: `La tua prenotazione con <strong>${maskSurname(booking.photographer_name)}</strong> è stata annullata automaticamente perché il pagamento non è arrivato entro 24 ore.`, body2: "Se vuoi ancora prenotare, mandaci pure una nuova richiesta.", cta: "Sfoglia i fotografi" },
+          en: { subject: "Booking cancelled — payment not received", h2: "Booking Auto-Cancelled", greet: `Hi ${booking.client_name.split(" ")[0]},`, body1: `Your booking with <strong>${maskSurname(booking.photographer_name)}</strong> has been automatically cancelled because payment was not received within 24 hours.`, body2: "If you'd still like to book, feel free to submit a new request.", cta: "Browse Photographers" },
+          pt: { subject: "Reserva cancelada — pagamento não recebido", h2: "Reserva cancelada automaticamente", greet: `Olá ${booking.client_name.split(" ")[0]},`, body1: `A sua reserva com <strong>${maskSurname(booking.photographer_name)}</strong> foi cancelada automaticamente porque o pagamento não foi recebido em 24 horas.`, body2: "Se ainda desejar reservar, fique à vontade para enviar um novo pedido.", cta: "Ver fotógrafos" },
+          de: { subject: "Buchung storniert — Zahlung nicht erhalten", h2: "Buchung automatisch storniert", greet: `Hallo ${booking.client_name.split(" ")[0]},`, body1: `Ihre Buchung mit <strong>${maskSurname(booking.photographer_name)}</strong> wurde automatisch storniert, da die Zahlung nicht innerhalb von 24 Stunden eingegangen ist.`, body2: "Wenn Sie weiterhin buchen möchten, senden Sie gerne eine neue Anfrage.", cta: "Fotografen ansehen" },
+          es: { subject: "Reserva cancelada — pago no recibido", h2: "Reserva cancelada automáticamente", greet: `Hola ${booking.client_name.split(" ")[0]},`, body1: `Su reserva con <strong>${maskSurname(booking.photographer_name)}</strong> ha sido cancelada automáticamente porque no se recibió el pago en 24 horas.`, body2: "Si aún desea reservar, no dude en enviar una nueva solicitud.", cta: "Ver fotógrafos" },
+          fr: { subject: "Réservation annulée — paiement non reçu", h2: "Réservation annulée automatiquement", greet: `Bonjour ${booking.client_name.split(" ")[0]},`, body1: `Votre réservation avec <strong>${maskSurname(booking.photographer_name)}</strong> a été automatiquement annulée car le paiement n'a pas été reçu dans les 24 heures.`, body2: "Si vous souhaitez toujours réserver, n'hésitez pas à envoyer une nouvelle demande.", cta: "Voir les photographes" },
+          it: { subject: "Prenotazione annullata — pagamento non ricevuto", h2: "Prenotazione annullata automaticamente", greet: `Ciao ${booking.client_name.split(" ")[0]},`, body1: `La tua prenotazione con <strong>${maskSurname(booking.photographer_name)}</strong> è stata annullata automaticamente perché il pagamento non è arrivato entro 24 ore.`, body2: "Se vuoi ancora prenotare, mandaci pure una nuova richiesta.", cta: "Sfoglia i fotografi" },
         }, cLoc);
         sendEmail(
           booking.client_email,
@@ -1465,6 +1465,13 @@ async function runReminders(): Promise<NextResponse> {
   // photos on Photo Portugal social?". Always English regardless of the
   // client's UI locale (Kate's call). One-time per booking — guarded by
   // bookings.social_permission_email_sent_at.
+  //
+  // The Accept Delivery screen now asks the same question as a checkbox,
+  // default on. TRUE means permission already exists — emailing them again
+  // would ask for something they already gave. The email survives only as
+  // the follow-up for people who UNTICKED it (Kate asking personally is the
+  // second, softer attempt) and for old bookings from before the checkbox
+  // existed, where social_consent is NULL.
   try {
     const needsSocialPermissionEmail = await query<{
       id: string; client_email: string | null; client_name: string;
@@ -1479,6 +1486,7 @@ async function runReminders(): Promise<NextResponse> {
        WHERE b.delivery_accepted = TRUE
          AND b.delivery_accepted_at < NOW() - INTERVAL '48 hours'
          AND b.social_permission_email_sent_at IS NULL
+         AND COALESCE(b.social_consent, FALSE) = FALSE
          AND cu.email IS NOT NULL`
     );
     const { sendSocialPermissionEmail } = await import("@/lib/email");

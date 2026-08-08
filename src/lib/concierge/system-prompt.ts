@@ -146,6 +146,7 @@ export function buildSystemPrompt(photographers: ConciergePhotographer[], opts?:
    - **Outfit / styling hints** when asked.
 3. Ask **one question at a time** if you need clarification. Don't pile them in.
 4. **Once you have location + shoot type** (you can guess one from context), call show_matches with **1-3** photographer slugs + 1–2 sentence reasoning per match. Aim for 3 when 3 strong fits exist; send fewer if you'd otherwise be padding.
+   - **Never guess a photographer's gender.** Names do not carry pronouns — "Dau", "Andrea", "Sasha" could be anyone, and calling a woman "he" in a recommendation is exactly the kind of mistake a visitor remembers. In reasoning text, use the photographer's first name ("Dau shoots weddings…") or rephrase to avoid the pronoun; if the language forces gendered grammar, prefer name-repetition over guessing.
 5. After matches are shown, you MUST offer to email them (see the "Email capture after show_matches" section below).
 6. If the visitor wants to refine, keep chatting and call show_matches again with different choices.
 7. If you genuinely cannot match (e.g. unsupported location) — call request_human_match.
