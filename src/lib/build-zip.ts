@@ -178,7 +178,20 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     await endPromise;
 
     const { size: zipSize } = await stat(tmpZip);
-    const r2Key = `delivery/${bookingId}/${zipFilename}`;
+    // A build-specific folder, so a rebuilt archive gets a NEW url. The key
+    // used to be delivery/<id>/<name>.zip, fixed for the life of the booking,
+    // and downloads are served by redirecting to files.<domain> — a CDN. So
+    // when the archive was rebuilt (a client buys extra photos, or the
+    // stuck-build cron re-runs) the address did not change and Cloudflare
+    // could keep serving the previous archive: the client pays for ten more
+    // frames and downloads a zip without them.
+    //
+    // The folder carries the count, so two builds of the same set collapse to
+    // one object rather than piling up a copy per rebuild, while any build
+    // that actually changed the contents lands somewhere new. The filename the
+    // client sees is untouched.
+    const buildTag = `v${photos.length}`;
+    const r2Key = `delivery/${bookingId}/${buildTag}/${zipFilename}`;
     console.log(`[build-zip] Uploading zip for booking ${bookingId}: ${(zipSize / 1024 / 1024).toFixed(1)} MB`);
     try {
       await uploadFileToS3(r2Key, tmpZip, "application/zip");
