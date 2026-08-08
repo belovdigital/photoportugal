@@ -52,10 +52,10 @@ function surfaceFromPath(pathname: string): string {
   const p = pathname.replace(LOCALE_PREFIX_RE, "") || "/";
   const seg = p.split("/").filter(Boolean);
   if (seg.length === 0) return "home";
-  const catalog = ["photographers", "fotografen", "fotografos", "photographes"];
-  const locations = ["locations", "orte", "lugares", "lieux"];
-  const shootTypes = ["photoshoots", "fotoshootings", "sesiones-de-fotos", "seances-photo"];
-  const weddings = ["weddings", "hochzeiten", "bodas", "mariages"];
+  const catalog = ["photographers", "fotografen", "fotografos", "photographes", "fotografi"];
+  const locations = ["locations", "orte", "lugares", "lieux", "luoghi"];
+  const shootTypes = ["photoshoots", "fotoshootings", "sesiones-de-fotos", "seances-photo", "servizi-fotografici"];
+  const weddings = ["weddings", "hochzeiten", "bodas", "mariages", "matrimoni"];
   if (catalog.includes(seg[0])) {
     if (seg.length === 1) return "catalog";
     if (seg[1] === "location") return "location";
