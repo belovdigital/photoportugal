@@ -1651,6 +1651,16 @@ export async function sendPaymentReminderToClient(
       payNow: `Payer maintenant — ${priceStr}`,
       viewBooking: "Voir la réservation",
     },
+    it: {
+      subject: `Restano ~18h per pagare — il tuo orario con ${photographerDisplay} è tenuto`,
+      h2: "Il tuo orario è tenuto — paga per bloccarlo",
+      greeting: `Ciao ${firstName},`,
+      body1: `<strong>${photographerDisplay}</strong> sta tenendo il tuo orario, ma non abbiamo ancora ricevuto il pagamento.`,
+      body2: `Il pagamento garantisce il tuo orario. Se non lo riceviamo entro le prossime ~18 ore, la prenotazione verrà annullata automaticamente e l'orario tornerà disponibile per altri clienti.`,
+      body3: `L'orario è ancora tenuto — paga per bloccarlo prima che lo faccia un altro cliente. La data si blocca in calendario solo a pagamento confermato.`,
+      payNow: `Paga ora — ${priceStr}`,
+      viewBooking: "Vedi la prenotazione",
+    },
   }, locale);
 
   const ctaSection = paymentUrl && totalPrice
@@ -1724,6 +1734,14 @@ export async function sendShootReminderToClient(
       body2: "Confirmez le point de rendez-vous et les derniers détails avec votre photographe.",
       cta: "Ouvrir les messages",
     },
+    it: {
+      subject: `Domani: la tua sessione con ${photographerName}!`,
+      h2: "Il tuo servizio fotografico è domani!",
+      greeting: `Ciao ${firstName},`,
+      body1: `Un promemoria: la tua sessione con <strong>${photographerName}</strong> è fissata per <strong>${shootDate}</strong>.`,
+      body2: "Conferma il punto d'incontro e gli ultimi dettagli con il tuo fotografo.",
+      cta: "Apri i messaggi",
+    },
   }, locale);
 
   await sendEmail(
@@ -1790,6 +1808,14 @@ export async function sendShootReminderToPhotographer(
       body2: "Confirmez le point de rendez-vous et les détails avec votre client.",
       cta: "Ouvrir les messages",
     },
+    it: {
+      subject: `Domani: servizio con ${clientFirstName}`,
+      h2: "Servizio fotografico domani!",
+      greeting: `Ciao ${photographerName},`,
+      body1: `Promemoria: hai un servizio con <strong>${clientFirstName}</strong> fissato per <strong>${shootDate}</strong>.`,
+      body2: "Conferma il punto d'incontro e i dettagli con il cliente.",
+      cta: "Apri i messaggi",
+    },
   }, locale);
 
   await sendEmail(
@@ -1853,6 +1879,14 @@ export async function sendDeliveryReminderToPhotographer(
       body1: `Votre client <strong>${clientFirstName}</strong> attend ses photos. Le délai de livraison prévu est dépassé.`,
       body2: "Veuillez téléverser et livrer les photos dès que possible.",
       cta: "Voir les réservations",
+    },
+    it: {
+      subject: `Promemoria: ${clientFirstName} sta aspettando le foto`,
+      h2: "Promemoria di consegna",
+      greeting: `Ciao ${photographerName},`,
+      body1: `Il tuo cliente <strong>${clientFirstName}</strong> sta aspettando le foto. Il termine di consegna previsto è passato.`,
+      body2: "Carica e consegna le foto il prima possibile.",
+      cta: "Vai alle prenotazioni",
     },
   }, locale);
 
@@ -2268,7 +2302,7 @@ export async function sendSocialPermissionEmail(
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">We're still a young platform, and the honest truth is that good photos are what bring new clients to our photographers. So: would you let us feature a few of yours on our Instagram and website?</p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;"><strong>${safePhotog}</strong> would pick the frames they're proudest of — the most natural and flattering ones, never anything personal or revealing. Nothing for you to approve; just reply <strong>"yes"</strong> and we'll handle it from there. And if there's a particular shot you'd rather keep to yourself, just tell me which and we'll leave it out.</p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">Prefer not to? Reply <strong>"no thanks"</strong> and that's the end of it — no hard feelings, and I won't ask twice.</p>
-    <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#2A2A2A;">Either way, thank you for choosing us. Every booking through our platform goes to an independent photographer here in Portugal, and that's the whole point of what we're building 🌸</p>
+    <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#2A2A2A;">Either way, thank you for choosing us. Every booking through our platform goes to an independent photographer here in ${country.countryName.en}, and that's the whole point of what we're building 🌸</p>
     <p style="margin:0;font-size:15px;line-height:1.55;color:#2A2A2A;">Warmly,</p>
     <p style="margin:4px 0 2px;font-size:15px;line-height:1.4;color:#1F1F1F;font-weight:600;">Kate</p>
     <p style="margin:0;font-size:13px;line-height:1.4;color:#9B8E82;">Founder · ${country.brand}</p>
@@ -2362,6 +2396,16 @@ export async function sendCalendarSyncBrokenEmail(
       cta: "Reconnecter mon agenda",
       p4: "Si vous l'avez déconnecté volontairement, ignorez cet e-mail — mais pensez à bloquer vos dates occupées manuellement dans Disponibilité pour éviter les doubles réservations.",
     },
+    it: {
+      subject: "Il tuo calendario ha smesso di sincronizzarsi — ricollegalo",
+      h2: "Il tuo calendario ha smesso di sincronizzarsi",
+      greet: `Ciao ${firstName},`,
+      p1: `Da ${brokenSinceDays} giorn${brokenSinceDays === 1 ? "o" : "i"} non riusciamo più a leggere <strong>${connectionLabel}</strong>.`,
+      p2: "È importante perché usiamo il tuo calendario per bloccare gli orari in cui sei già impegnato. Finché resta scollegato lavoriamo su una copia vecchia, quindi un cliente potrebbe prenotare un orario che in realtà non hai libero.",
+      p3: "Ricollegarlo richiede una decina di secondi.",
+      cta: "Ricollega il calendario",
+      p4: "Se l'hai scollegato di proposito puoi ignorare questa email — ma blocca a mano le date occupate in Disponibilità, così nessuno prenota due volte.",
+    },
   }[locale];
 
   await sendEmail(
@@ -2430,6 +2474,14 @@ export async function sendApprovalRequestedToPhotographer(
       p1: "Merci d'avoir complété votre profil : il est désormais dans la file d'attente.",
       p2: "Chaque candidature est examinée par une personne. Nous revenons vers vous sous deux jours en général, soit pour vous accueillir, soit pour vous demander d'abord une petite modification.",
       p3: "Vous n'avez rien à faire d'ici là.",
+    },
+    it: {
+      subject: `Abbiamo ricevuto la tua candidatura — ${country.brand}`,
+      h2: "Il tuo profilo è al vaglio del nostro team",
+      greet: `Ciao ${firstName},`,
+      p1: "Grazie per aver completato il profilo: ora è in coda di revisione.",
+      p2: "Ogni candidatura viene letta da una persona. Di solito rispondiamo entro un paio di giorni, per darti il benvenuto o per chiederti prima una piccola modifica.",
+      p3: "Fino ad allora non devi fare altro.",
     },
   }[locale];
 
@@ -2522,6 +2574,13 @@ export async function sendExtrasBoughtToClient(
       zip: "Elles sont aussi rassemblées dans un téléchargement à part ; pour les grandes sélections cela prend quelques minutes.",
       cta: "Ouvrir ma galerie",
     },
+    it: {
+      subject: `${count === 1 ? "La tua foto extra è tua" : `Le tue ${count} foto extra sono tue`}`,
+      greet: `Ciao ${firstName},`,
+      body: `Grazie — ${count} fotografi${count === 1 ? "a" : "e"} extra della tua sessione ${count === 1 ? "è ora sbloccata" : "sono ora sbloccate"} nella tua galleria, ad alta risoluzione.`,
+      zip: "Le stiamo anche preparando in un download a parte; con selezioni grandi ci vogliono alcuni minuti.",
+      cta: "Apri la mia galleria",
+    },
   }[locale];
 
   await sendEmail(
@@ -2576,6 +2635,12 @@ export async function sendExtrasBoughtToPhotographer(
       greet: `Bonjour ${firstName},`,
       body: `${clientName} a acheté ${count} des photographies que vous aviez retenues. €${payoutEur} partent vers votre compte de paiement — rien à faire de votre côté.`,
       tail: "Les photos que vous laissez hors d'une livraison restent proposées tant que la galerie est en ligne.",
+    },
+    it: {
+      subject: `${clientName} ha comprato ${count} foto extra — €${payoutEur} per te`,
+      greet: `Ciao ${firstName},`,
+      body: `${clientName} ha comprato ${count} delle fotografie che avevi tenuto da parte. €${payoutEur} sono in arrivo sul tuo conto per i pagamenti — non devi fare nulla.`,
+      tail: "Le foto che lasci fuori da una consegna restano in vendita finché la galleria è online.",
     },
   }[locale];
 
@@ -2644,6 +2709,15 @@ export async function sendApprovedConnectStripeEmail(
       p2: `Il reste une chose : connecter votre compte de paiement pour que nous puissions vous régler. Cela prend quelques minutes, et vous avez ${graceDays} jours.`,
       p3: "Vous pouvez recevoir des réservations avant : nous conservons l'argent et le versons dès que le compte est connecté. Mais c'est bien plus simple de le faire maintenant que le jour de votre première séance.",
       cta: "Connecter mon compte de paiement",
+    },
+    it: {
+      subject: `Ci sei — benvenuto su ${country.brand}`,
+      h2: "Ci sei",
+      greet: `Ciao ${firstName},`,
+      p1: "Abbiamo esaminato il tuo profilo e lo abbiamo accettato. È già online e i clienti possono trovarti e prenotare.",
+      p2: `Manca una cosa: collegare il conto per i pagamenti, così possiamo pagarti. Sono pochi minuti e hai ${graceDays} giorni di tempo.`,
+      p3: "Puoi ricevere prenotazioni anche prima: tratteniamo il denaro e te lo inviamo appena il conto è collegato. Ma è molto più comodo farlo adesso che il giorno del primo servizio.",
+      cta: "Collega il mio conto per i pagamenti",
     },
   }[locale];
 
@@ -2731,6 +2805,18 @@ export async function sendStripeDeadlineNudge(
         : `Il vous reste ${daysLeft} jour${daysLeft === 1 ? "" : "s"}. Cela prend quelques minutes : pièce d'identité, adresse et coordonnées bancaires.`,
       cta: "Connecter mon compte de paiement",
     },
+    it: {
+      subject: last
+        ? "Ultimo promemoria: collega il conto per i pagamenti"
+        : `Ti restano ${daysLeft} giorn${daysLeft === 1 ? "o" : "i"} per collegare il conto per i pagamenti`,
+      h2: "Non possiamo ancora pagarti",
+      greet: `Ciao ${firstName},`,
+      p1: "Il tuo profilo è online e riceve prenotazioni, ma il conto per i pagamenti non è ancora collegato: non abbiamo dove mandarti i soldi.",
+      p2: last
+        ? "Questo è l'ultimo promemoria automatico. Se ti sei bloccato in qualche passaggio del modulo, rispondi a questa email e ti aiuta una persona: preferiamo risolvere che perderti."
+        : `Ti restano ${daysLeft} giorn${daysLeft === 1 ? "o" : "i"}. Sono pochi minuti: documento, indirizzo e coordinate bancarie.`,
+      cta: "Collega il mio conto per i pagamenti",
+    },
   }[locale];
 
   await sendEmail(
@@ -2793,6 +2879,14 @@ export async function sendPhotographerFullyLiveEmail(
       p1: "Votre compte de paiement est connecté et vérifié. Il ne reste rien en suspens.",
       p2: "Désormais, dès qu'un client accepte votre galerie, l'argent part automatiquement vers vous : pas de facture à émettre, rien à nous demander.",
       cta: "Aller à mon tableau de bord",
+    },
+    it: {
+      subject: "Il tuo conto per i pagamenti è collegato — è tutto pronto",
+      h2: "È tutto pronto",
+      greet: `Ciao ${firstName},`,
+      p1: "Il tuo conto per i pagamenti è collegato e verificato. Non resta nulla in sospeso.",
+      p2: "Da ora, quando un cliente accetta la tua galleria il denaro parte automaticamente verso di te: non devi emettere nulla né chiedercelo.",
+      cta: "Vai alla mia dashboard",
     },
   }[locale];
 
@@ -2884,6 +2978,15 @@ export async function sendProfileHiddenNoStripeEmail(
       p2: "Votre compte est intact. Connectez-vous, reliez votre compte de paiement, et le profil est republié automatiquement en une quinzaine de minutes. Rien n'est perdu : photos, forfaits et lieux sont toujours là.",
       p3: "Si le formulaire vous bloque, répondez à cet e-mail et une personne vous aidera. Nous préférons de loin régler le problème.",
       cta: "Connecter mon compte de paiement",
+    },
+    it: {
+      subject: "Il tuo profilo non è più visibile ai clienti",
+      h2: "Abbiamo nascosto il tuo profilo",
+      greet: `Ciao ${firstName},`,
+      p1: "Abbiamo tolto il tuo profilo dal sito. Non è un giudizio sul tuo lavoro: è passata la settimana che avevi per collegare un conto per i pagamenti, e non possiamo mostrare un fotografo che non abbiamo modo di pagare.",
+      p2: "Il tuo account è intatto. Accedi, collega il conto e il profilo torna online automaticamente entro un quarto d'ora circa. Non hai perso nulla: foto, pacchetti e località sono ancora lì.",
+      p3: "Se qualcosa nel modulo ti sta bloccando, rispondi a questa email e ti aiuta una persona. Preferiamo di gran lunga risolvere.",
+      cta: "Collega il mio conto per i pagamenti",
     },
   }[locale];
 
