@@ -1038,7 +1038,7 @@ export async function sendTrustpilotFollowUpToClient(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", T.googleCta, "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", T.trustpilotCta, "#16A34A")}
+      ${emailButton(`https://www.trustpilot.com/evaluate/${country.host}`, T.trustpilotCta, "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">${T.footer}</p>
     `, locale)
   );
@@ -1052,11 +1052,12 @@ export async function sendTrustpilotFollowUpToPhotographer(
   const locale = await getUserLocaleByEmail(photographerEmail);
 
   const T = pickT({
-    en: { subject: `Quick favour, ${photographerName}?`, h2: "Help Us Grow!", greeting: `Hi ${photographerName},`, body1: "Thank you for being part of ${country.brand}. Your work is what makes this platform great.", body2: "We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:", googleCta: "Review Us on Google", trustpilotCta: "Review Us on Trustpilot", footer: "It takes less than a minute. Thank you for your support!" },
-    pt: { subject: `Pequeno favor, ${photographerName}?`, h2: "Ajude-nos a Crescer!", greeting: `Olá ${photographerName},`, body1: "Obrigado por fazer parte da ${country.brand}. O seu trabalho é o que torna esta plataforma especial.", body2: "Adorávamos que partilhasse a sua experiência como fotógrafo no Google ou Trustpilot. Uma avaliação genuína de um profissional como o(a) ajuda a construir confiança e atrai mais clientes — o que significa mais reservas para todos:", googleCta: "Avalie-nos no Google", trustpilotCta: "Avalie-nos no Trustpilot", footer: "Demora menos de um minuto. Obrigado pelo seu apoio!" },
-    de: { subject: `Kleiner Gefallen, ${photographerName}?`, h2: "Helfen Sie uns zu wachsen!", greeting: `Hallo ${photographerName},`, body1: "Vielen Dank, dass Sie Teil von ${country.brand} sind. Ihre Arbeit macht diese Plattform großartig.", body2: "Wir würden uns sehr freuen, wenn Sie Ihre Erfahrung als Fotograf auf Google oder Trustpilot teilen. Eine ehrliche Bewertung von einem Profi wie Ihnen schafft Vertrauen und bringt mehr Kunden auf die Plattform — was mehr Buchungen für alle bedeutet:", googleCta: "Bewerten Sie uns auf Google", trustpilotCta: "Bewerten Sie uns auf Trustpilot", footer: "Es dauert weniger als eine Minute. Danke für Ihre Unterstützung!" },
-    es: { subject: `Un pequeño favor, ${photographerName}`, h2: "¡Ayúdenos a crecer!", greeting: `Hola ${photographerName},`, body1: "Gracias por formar parte de ${country.brand}. Su trabajo es lo que hace que esta plataforma sea genial.", body2: "Nos encantaría que compartiera su experiencia como fotógrafo en Google o Trustpilot. Una reseña genuina de un profesional como usted genera confianza y atrae más clientes a la plataforma — lo que significa más reservas para todos:", googleCta: "Reséñenos en Google", trustpilotCta: "Reséñenos en Trustpilot", footer: "Lleva menos de un minuto. ¡Gracias por su apoyo!" },
-    fr: { subject: `Un petit service, ${photographerName} ?`, h2: "Aidez-nous à grandir !", greeting: `Bonjour ${photographerName},`, body1: "Merci de faire partie de ${country.brand}. Votre travail est ce qui fait la grandeur de cette plateforme.", body2: "Nous adorerions que vous partagiez votre expérience en tant que photographe sur Google ou Trustpilot. Un avis authentique d'un professionnel comme vous renforce la confiance et attire plus de clients — ce qui signifie plus de réservations pour tout le monde :", googleCta: "Évaluez-nous sur Google", trustpilotCta: "Évaluez-nous sur Trustpilot", footer: "Cela prend moins d'une minute. Merci de votre soutien !" },
+    en: { subject: `Quick favour, ${photographerName}?`, h2: "Help Us Grow!", greeting: `Hi ${photographerName},`, body1: `Thank you for being part of ${country.brand}. Your work is what makes this platform great.`, body2: "We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:", googleCta: "Review Us on Google", trustpilotCta: "Review Us on Trustpilot", footer: "It takes less than a minute. Thank you for your support!" },
+    pt: { subject: `Pequeno favor, ${photographerName}?`, h2: "Ajude-nos a Crescer!", greeting: `Olá ${photographerName},`, body1: `Obrigado por fazer parte da ${country.brand}. O seu trabalho é o que torna esta plataforma especial.`, body2: "Adorávamos que partilhasse a sua experiência como fotógrafo no Google ou Trustpilot. Uma avaliação genuína de um profissional como o(a) ajuda a construir confiança e atrai mais clientes — o que significa mais reservas para todos:", googleCta: "Avalie-nos no Google", trustpilotCta: "Avalie-nos no Trustpilot", footer: "Demora menos de um minuto. Obrigado pelo seu apoio!" },
+    de: { subject: `Kleiner Gefallen, ${photographerName}?`, h2: "Helfen Sie uns zu wachsen!", greeting: `Hallo ${photographerName},`, body1: `Vielen Dank, dass Sie Teil von ${country.brand} sind. Ihre Arbeit macht diese Plattform großartig.`, body2: "Wir würden uns sehr freuen, wenn Sie Ihre Erfahrung als Fotograf auf Google oder Trustpilot teilen. Eine ehrliche Bewertung von einem Profi wie Ihnen schafft Vertrauen und bringt mehr Kunden auf die Plattform — was mehr Buchungen für alle bedeutet:", googleCta: "Bewerten Sie uns auf Google", trustpilotCta: "Bewerten Sie uns auf Trustpilot", footer: "Es dauert weniger als eine Minute. Danke für Ihre Unterstützung!" },
+    es: { subject: `Un pequeño favor, ${photographerName}`, h2: "¡Ayúdenos a crecer!", greeting: `Hola ${photographerName},`, body1: `Gracias por formar parte de ${country.brand}. Su trabajo es lo que hace que esta plataforma sea genial.`, body2: "Nos encantaría que compartiera su experiencia como fotógrafo en Google o Trustpilot. Una reseña genuina de un profesional como usted genera confianza y atrae más clientes a la plataforma — lo que significa más reservas para todos:", googleCta: "Reséñenos en Google", trustpilotCta: "Reséñenos en Trustpilot", footer: "Lleva menos de un minuto. ¡Gracias por su apoyo!" },
+    fr: { subject: `Un petit service, ${photographerName} ?`, h2: "Aidez-nous à grandir !", greeting: `Bonjour ${photographerName},`, body1: `Merci de faire partie de ${country.brand}. Votre travail est ce qui fait la grandeur de cette plateforme.`, body2: "Nous adorerions que vous partagiez votre expérience en tant que photographe sur Google ou Trustpilot. Un avis authentique d'un professionnel comme vous renforce la confiance et attire plus de clients — ce qui signifie plus de réservations pour tout le monde :", googleCta: "Évaluez-nous sur Google", trustpilotCta: "Évaluez-nous sur Trustpilot", footer: "Cela prend moins d'une minute. Merci de votre soutien !" },
+    it: { subject: `Un piccolo favore, ${photographerName}?`, h2: "Aiutaci a crescere!", greeting: `Ciao ${photographerName},`, body1: `Grazie per far parte di ${country.brand}. È il tuo lavoro a rendere grande questa piattaforma.`, body2: "Ci farebbe molto piacere se raccontassi la tua esperienza da fotografo su Google o Trustpilot. Una recensione sincera da parte di un professionista come te crea fiducia e porta più clienti sulla piattaforma — cioè più prenotazioni per tutti:", googleCta: "Recensiscici su Google", trustpilotCta: "Recensiscici su Trustpilot", footer: "Ci vuole meno di un minuto. Grazie del supporto!" },
   }, locale);
 
   await sendEmail(
@@ -1069,7 +1070,7 @@ export async function sendTrustpilotFollowUpToPhotographer(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", T.googleCta, "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", T.trustpilotCta, "#16A34A")}
+      ${emailButton(`https://www.trustpilot.com/evaluate/${country.host}`, T.trustpilotCta, "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">${T.footer}</p>
     `, locale)
   );
@@ -1375,7 +1376,7 @@ export async function sendWelcomeEmail(
         subject: `Bem-vindo à ${country.brand}!`,
         h2: `Bem-vindo à ${country.brand}!`,
         greeting: `Olá ${firstName},`,
-        intro: "Está tudo pronto! Veja como reservar a sua sessão fotográfica perfeita em Portugal:",
+        intro: `Está tudo pronto! Veja como reservar a sua sessão fotográfica perfeita em ${country.areaServed}:`,
         s1Title: "Explore os fotógrafos",
         s1Body: `Encontre o seu estilo em ${TOP_CITIES} e mais`,
         s2Title: "Escolha um pacote",
@@ -1389,7 +1390,7 @@ export async function sendWelcomeEmail(
         subject: `Willkommen bei ${country.brand}!`,
         h2: `Willkommen bei ${country.brand}!`,
         greeting: `Hallo ${firstName},`,
-        intro: "Alles bereit! So buchen Sie Ihr perfektes Fotoshooting in Portugal:",
+        intro: `Alles bereit! So buchen Sie Ihr perfektes Fotoshooting in ${country.areaServed}:`,
         s1Title: "Fotografen entdecken",
         s1Body: `Finden Sie Ihren Stil in ${TOP_CITIES} und mehr`,
         s2Title: "Paket auswählen",
@@ -1403,7 +1404,7 @@ export async function sendWelcomeEmail(
         subject: `Bienvenue sur ${country.brand} !`,
         h2: `Bienvenue sur ${country.brand} !`,
         greeting: `Bonjour ${firstName},`,
-        intro: "Tout est prêt ! Voici comment réserver votre séance photo idéale au Portugal :",
+        intro: `Tout est prêt ! Voici comment réserver votre séance photo idéale en ${country.areaServed} :`,
         s1Title: "Parcourir les photographes",
         s1Body: `Trouvez votre style à ${TOP_CITIES} et plus`,
         s2Title: "Choisir un forfait",
@@ -1417,7 +1418,7 @@ export async function sendWelcomeEmail(
         subject: `¡Bienvenido a ${country.brand}!`,
         h2: `¡Bienvenido a ${country.brand}!`,
         greeting: `Hola ${firstName},`,
-        intro: "¡Todo listo! Así puede reservar su sesión fotográfica ideal en Portugal:",
+        intro: `¡Todo listo! Así puede reservar su sesión fotográfica ideal en ${country.areaServed}:`,
         s1Title: "Explorar fotógrafos",
         s1Body: `Encuentre su estilo en ${TOP_CITIES} y más`,
         s2Title: "Elegir un paquete",
@@ -1426,6 +1427,20 @@ export async function sendWelcomeEmail(
         s3Body: "Su pago queda en custodia hasta que apruebe las fotos",
         cta: "Explorar fotógrafos",
         footerHtml: `¿Preguntas? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visite nuestro Centro de ayuda</a> o <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">contáctenos</a>.`,
+      },
+      it: {
+        subject: `Benvenuto su ${country.brand}!`,
+        h2: `Benvenuto su ${country.brand}!`,
+        greeting: `Ciao ${firstName},`,
+        intro: `È tutto pronto! Ecco come prenotare il tuo servizio fotografico perfetto in ${country.areaServed}:`,
+        s1Title: "Sfoglia i fotografi",
+        s1Body: `Trova il tuo stile a ${TOP_CITIES} e altrove`,
+        s2Title: "Scegli un pacchetto",
+        s2Body: "Scegli la durata della sessione e il numero di foto",
+        s3Title: "Prenota e paga in sicurezza",
+        s3Body: "Il pagamento resta vincolato finché non approvi le foto",
+        cta: "Sfoglia i fotografi",
+        footerHtml: `Domande? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visita il nostro Centro assistenza</a> oppure <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">scrivici</a>.`,
       },
     }, locale);
 
@@ -1985,7 +2000,7 @@ export function renderTrustpilotFollowUpToClient(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover ${country.brand}:</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", "Review Us on Trustpilot", "#16A34A")}
+      ${emailButton(`https://www.trustpilot.com/evaluate/${country.host}`, "Review Us on Trustpilot", "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!</p>
     `),
   };
@@ -2003,7 +2018,7 @@ export function renderTrustpilotFollowUpToPhotographer(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", "Review Us on Trustpilot", "#16A34A")}
+      ${emailButton(`https://www.trustpilot.com/evaluate/${country.host}`, "Review Us on Trustpilot", "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">It takes less than a minute. Thank you for your support!</p>
     `),
   };

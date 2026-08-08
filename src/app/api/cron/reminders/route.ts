@@ -117,6 +117,7 @@ async function runReminders(): Promise<NextResponse> {
               de: `${country.brand}: Ihr Termin mit ${maskedPhotog}${priceStr} ist noch nicht gesperrt — jetzt sichern. Auto-Storno in ~18h: ${country.baseUrl}/dashboard/bookings`,
               es: `${country.brand}: Su sesión con ${maskedPhotog}${priceStr} aún no está bloqueada — asegúrela ahora. Cancelación automática en ~18h: ${country.baseUrl}/dashboard/bookings`,
               fr: `${country.brand} : Votre créneau avec ${maskedPhotog}${priceStr} n'est pas encore verrouillé — réservez-le maintenant. Annulation automatique dans ~18h : ${country.baseUrl}/dashboard/bookings`,
+              it: `${country.brand}: il tuo orario con ${maskedPhotog}${priceStr} non è ancora bloccato — bloccalo ora. Annullamento automatico tra ~18h se non pagato: ${country.baseUrl}/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -187,6 +188,7 @@ async function runReminders(): Promise<NextResponse> {
           de: { subject: "Letzte Chance — Ihre Buchung wird in 6 Stunden storniert", h2: "Ihre Buchung wird bald storniert", greet: `Hallo ${firstName},`, body1: `Ihr Fotoshooting mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in 6 Stunden automatisch storniert</strong>, wenn keine Zahlung eingeht.`, body2: `${booking.photographer_name} hält diesen Termin für Sie frei — verpassen Sie ihn nicht!`, fomo: `Hinweis: Ihr Termin ist noch nicht im Kalender gesperrt — nur bezahlte Buchungen sind es. Ein anderer Kunde könnte für dieses Datum noch zuerst bezahlen.`, cta: "Jetzt bezahlen und Buchung sichern", footer: "Wenn Sie nicht mehr fortfahren möchten, wird die Buchung automatisch storniert. Keine Aktion erforderlich." },
           es: { subject: "Última oportunidad — su reserva se cancelará en 6 horas", h2: "Su reserva se cancelará pronto", greet: `Hola ${firstName},`, body1: `Su sesión con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en 6 horas</strong> si no se recibe el pago.`, body2: `${booking.photographer_name} está reservando este horario para usted — ¡no lo pierda!`, fomo: `Recordatorio: su plaza aún no está bloqueada en el calendario — solo las reservas pagadas lo están. Otro cliente todavía podría pagar primero por esta fecha.`, cta: "Pagar ahora y asegurar la reserva", footer: "Si ya no desea continuar, la reserva se cancelará automáticamente. No es necesario hacer nada." },
           fr: { subject: "Dernière chance — votre réservation sera annulée dans 6 heures", h2: "Votre réservation sera bientôt annulée", greet: `Bonjour ${firstName},`, body1: `Votre séance photo avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans 6 heures</strong> si le paiement n'est pas reçu.`, body2: `${booking.photographer_name} réserve ce créneau pour vous — ne le manquez pas !`, fomo: `Rappel : votre créneau n'est pas encore bloqué dans le calendrier — seules les réservations payées le sont. Un autre client pourrait encore payer en premier pour cette date.`, cta: "Payer maintenant et sécuriser la réservation", footer: "Si vous ne souhaitez plus continuer, la réservation sera annulée automatiquement. Aucune action requise." },
+          it: { subject: "Ultima possibilità — la tua prenotazione verrà annullata tra 6 ore", h2: "La tua prenotazione sta per essere annullata", greet: `Ciao ${firstName},`, body1: `Il tuo servizio fotografico con <strong>${booking.photographer_name}</strong>${priceStr} verrà <strong>annullato automaticamente tra 6 ore</strong> se non riceviamo il pagamento.`, body2: `${booking.photographer_name} sta tenendo questo orario per te — non lasciartelo scappare!`, fomo: `Promemoria: il tuo orario non è ancora bloccato nel nostro calendario — lo sono solo le prenotazioni pagate. Un altro cliente potrebbe pagare prima di te per questa data.`, cta: "Paga ora e blocca la prenotazione", footer: "Se hai cambiato idea, la prenotazione verrà annullata automaticamente. Non devi fare nulla." },
         }, cLocale);
         await sendEmail(
           booking.client_email,
@@ -216,6 +218,7 @@ async function runReminders(): Promise<NextResponse> {
               de: `${country.brand}: Letzte Chance! Buchung mit ${maskedPhotog1b} storniert in 6h, wenn unbezahlt — Termin noch nicht gesperrt. Zahlen: ${country.baseUrl}/dashboard/bookings`,
               es: `${country.brand}: ¡Última oportunidad! Reserva con ${maskedPhotog1b} se cancela en 6h si no se paga — plaza no bloqueada aún. Pague: ${country.baseUrl}/dashboard/bookings`,
               fr: `${country.brand} : Dernière chance ! Réservation avec ${maskedPhotog1b} annulée dans 6h si non payée — créneau pas encore verrouillé. Payez : ${country.baseUrl}/dashboard/bookings`,
+              it: `${country.brand}: ultima possibilità! La prenotazione con ${maskedPhotog1b} si annulla tra 6h se non pagata — l'orario non è ancora bloccato. Paga: ${country.baseUrl}/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -277,6 +280,7 @@ async function runReminders(): Promise<NextResponse> {
           de: { subject: "🚨 LETZTE WARNUNG — 30 Minuten zum Bezahlen", h2: "30 Minuten verbleibend — Letzte Chance", greet: `Hallo ${firstName},`, body1: `Dies ist die LETZTE Warnung. Ihre Buchung mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in etwa 30 Minuten automatisch storniert</strong>.`, body2: `Jetzt bezahlen oder den Termin verlieren — es wird keine weiteren Warnungen geben.`, fomo: `Sobald Ihre Buchung storniert ist, wird der Termin wieder für andere Kunden freigegeben — und der Kalender sperrt das Datum erst nach Zahlungseingang.`, cta: "Jetzt bezahlen — Letzte Chance" },
           es: { subject: "🚨 AVISO FINAL — quedan 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidad", greet: `Hola ${firstName},`, body1: `Este es el aviso FINAL. Su reserva con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en aproximadamente 30 minutos</strong>.`, body2: `Pague ahora o pierda su horario — no habrá más avisos.`, fomo: `En cuanto se cancele la reserva, el horario volverá a estar disponible para otros clientes — y el calendario solo bloquea la fecha tras confirmar el pago.`, cta: "Pagar ahora — Última oportunidad" },
           fr: { subject: "🚨 DERNIER AVERTISSEMENT — 30 minutes pour payer", h2: "30 Minutes Restantes — Dernière Chance", greet: `Bonjour ${firstName},`, body1: `Ceci est le DERNIER avertissement. Votre réservation avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans environ 30 minutes</strong>.`, body2: `Payez maintenant ou perdez votre créneau — il n'y aura plus d'avertissement.`, fomo: `Dès que votre réservation est annulée, le créneau redevient disponible pour d'autres clients — et l'agenda ne bloque la date qu'après confirmation du paiement.`, cta: "Payer maintenant — Dernière chance" },
+          it: { subject: "🚨 ULTIMO AVVISO — 30 minuti per pagare", h2: "Restano 30 minuti — ultima possibilità", greet: `Ciao ${firstName},`, body1: `Questo è l'ULTIMO avviso. La tua prenotazione con <strong>${booking.photographer_name}</strong>${priceStr} verrà <strong>annullata automaticamente tra circa 30 minuti</strong>.`, body2: `Paga ora o perdi l'orario — non ci saranno altri avvisi.`, fomo: `Appena la prenotazione viene annullata, l'orario torna disponibile per altri clienti — e il calendario blocca la data solo a pagamento confermato.`, cta: "Paga ora — ultima possibilità" },
         }, cLocale);
         await sendEmail(
           booking.client_email,
@@ -306,6 +310,7 @@ async function runReminders(): Promise<NextResponse> {
               de: `🚨 ${country.brand}: LETZTE WARNUNG — Buchung mit ${maskedPhotog30} storniert in ~30 Min, wenn unbezahlt, und der Termin wird für andere Kunden freigegeben. JETZT zahlen: ${country.baseUrl}/dashboard/bookings`,
               es: `🚨 ${country.brand}: AVISO FINAL — reserva con ${maskedPhotog30} se cancela en ~30 min si no se paga, y el horario vuelve a estar disponible. Pague YA: ${country.baseUrl}/dashboard/bookings`,
               fr: `🚨 ${country.brand} : DERNIER AVERTISSEMENT — réservation avec ${maskedPhotog30} annulée dans ~30 min si non payée, et le créneau redevient disponible. Payez MAINTENANT : ${country.baseUrl}/dashboard/bookings`,
+              it: `🚨 ${country.brand}: ULTIMO AVVISO — la prenotazione con ${maskedPhotog30} si annulla tra ~30 min se non pagata e l'orario torna disponibile ad altri. Paga ORA: ${country.baseUrl}/dashboard/bookings`,
             }, cLocale);
             sendSMS(booking.client_phone, smsBody).catch(err => console.error("[cron] critical sms error:", err));
           }
@@ -515,6 +520,7 @@ async function runReminders(): Promise<NextResponse> {
           de: { subject: "Buchung storniert — Zahlung nicht erhalten", h2: "Buchung automatisch storniert", greet: `Hallo ${booking.client_name},`, body1: `Ihre Buchung mit <strong>${maskSurname(booking.photographer_name)}</strong> wurde automatisch storniert, da die Zahlung nicht innerhalb von 24 Stunden eingegangen ist.`, body2: "Wenn Sie weiterhin buchen möchten, senden Sie gerne eine neue Anfrage.", cta: "Fotografen ansehen" },
           es: { subject: "Reserva cancelada — pago no recibido", h2: "Reserva cancelada automáticamente", greet: `Hola ${booking.client_name},`, body1: `Su reserva con <strong>${maskSurname(booking.photographer_name)}</strong> ha sido cancelada automáticamente porque no se recibió el pago en 24 horas.`, body2: "Si aún desea reservar, no dude en enviar una nueva solicitud.", cta: "Ver fotógrafos" },
           fr: { subject: "Réservation annulée — paiement non reçu", h2: "Réservation annulée automatiquement", greet: `Bonjour ${booking.client_name},`, body1: `Votre réservation avec <strong>${maskSurname(booking.photographer_name)}</strong> a été automatiquement annulée car le paiement n'a pas été reçu dans les 24 heures.`, body2: "Si vous souhaitez toujours réserver, n'hésitez pas à envoyer une nouvelle demande.", cta: "Voir les photographes" },
+          it: { subject: "Prenotazione annullata — pagamento non ricevuto", h2: "Prenotazione annullata automaticamente", greet: `Ciao ${booking.client_name},`, body1: `La tua prenotazione con <strong>${maskSurname(booking.photographer_name)}</strong> è stata annullata automaticamente perché il pagamento non è arrivato entro 24 ore.`, body2: "Se vuoi ancora prenotare, mandaci pure una nuova richiesta.", cta: "Sfoglia i fotografi" },
         }, cLoc);
         sendEmail(
           booking.client_email,
@@ -696,6 +702,7 @@ async function runReminders(): Promise<NextResponse> {
                   pt: `${country.brand}: Lembrete — a sua sessão fotográfica com ${booking.photographer_name} é amanhã! Veja os detalhes no seu painel.`,
                   de: `${country.brand}: Erinnerung — Ihr Fotoshooting mit ${booking.photographer_name} ist morgen! Details im Dashboard.`,
                   fr: `${country.brand} : Rappel — votre séance photo avec ${booking.photographer_name} est demain ! Détails sur votre tableau de bord.`,
+                  it: `${country.brand}: promemoria — il tuo servizio fotografico con ${booking.photographer_name} è domani! I dettagli sono nella tua dashboard.`,
                 }, cLocale);
                 queueNotification({
                   channel: "sms",
@@ -1590,6 +1597,7 @@ async function runReminders(): Promise<NextResponse> {
           pt: `Olá ${firstName}! Gostaríamos de saber como correu a sua sessão com ${booking.photographer_name}. Uma avaliação rápida ajuda outros viajantes: ${url}`,
           de: `Hallo ${firstName}! Wir würden gerne hören, wie Ihr Fotoshooting mit ${booking.photographer_name} war. Eine kurze Bewertung hilft anderen Reisenden: ${url}`,
           fr: `Bonjour ${firstName} ! Nous serions ravis de connaître votre avis sur la séance avec ${booking.photographer_name}. Un court avis aide d'autres voyageurs : ${url}`,
+          it: `Ciao ${firstName}! Ci farebbe piacere sapere com'è andato il servizio con ${booking.photographer_name}. Una breve recensione aiuta altri viaggiatori: ${url}`,
         }, cLocale);
         await queueNotification({
           channel: "sms",
@@ -2869,6 +2877,7 @@ async function runReminders(): Promise<NextResponse> {
             pt: `Olá ${firstName}! ${maskedPhotog} respondeu à sua mensagem na ${country.brand} e está à sua espera. Veja: ${url}`,
             de: `Hallo ${firstName}! ${maskedPhotog} hat Ihrer Nachricht auf ${country.brand} geantwortet und wartet auf Sie. Hier ansehen: ${url}`,
             fr: `Bonjour ${firstName} ! ${maskedPhotog} a répondu à votre message sur ${country.brand} et vous attend. À voir : ${url}`,
+            it: `Ciao ${firstName}! ${maskedPhotog} ha risposto al tuo messaggio su ${country.brand} e ti sta aspettando. Guarda qui: ${url}`,
           }, cLocale);
           await queueNotification({
             channel: "sms",
