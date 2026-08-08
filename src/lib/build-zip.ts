@@ -180,11 +180,15 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     const { size: zipSize } = await stat(tmpZip);
     // A build-specific folder, so a rebuilt archive gets a NEW url. The key
     // used to be delivery/<id>/<name>.zip, fixed for the life of the booking,
-    // and downloads are served by redirecting to files.<domain> — a CDN. So
-    // when the archive was rebuilt (a client buys extra photos, or the
-    // stuck-build cron re-runs) the address did not change and Cloudflare
-    // could keep serving the previous archive: the client pays for ten more
-    // frames and downloads a zip without them.
+    // and downloads are served by redirecting to files.<domain> — a CDN.
+    //
+    // The archive that actually changes under a fixed key is the EXTRAS one.
+    // The main archive is built once at acceptance and is not rebuilt when
+    // more photos are bought — that is the whole reason the extras archive
+    // exists. But every new purchase resets delivery_extras_zip.ready and
+    // rebuilds it (extras/route.ts, and the Stripe webhook), so a client who
+    // buys three more frames, downloads, then buys three more would have been
+    // handed the cached first archive on the second download.
     //
     // The folder carries the count, so two builds of the same set collapse to
     // one object rather than piling up a copy per rebuild, while any build
