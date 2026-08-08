@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { country } from "@/lib/country";
+import { country, prefixedLocales } from "@/lib/country";
 
 // Route handler instead of the metadata robots.ts convention because
 // MetadataRoute.Robots can't emit Content-Signal directives
@@ -11,7 +11,7 @@ import { country } from "@/lib/country";
 // disallow saves Google's crawl budget on URLs that will never return
 // indexable content.
 const PRIVATE_PATHS = ["/dashboard/", "/api/", "/auth/", "/book/", "/delivery/", "/gift/claim", "/gift-card/claim", "/gift-cards/success"];
-const LOCALES = ["pt", "de", "es", "fr"];
+const LOCALES = prefixedLocales;
 
 const disallow = [
   ...PRIVATE_PATHS,

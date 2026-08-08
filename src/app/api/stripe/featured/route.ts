@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
-import { country } from "@/lib/country";
+import { country, localePathPrefix } from "@/lib/country";
 
 const FEATURED_PRICE = 1900; // €19.00
 
@@ -47,7 +47,7 @@ async function getFeaturedPriceId(): Promise<string> {
 export async function POST(req: NextRequest) {
   let locale = "en";
   try { const b = await req.clone().json(); locale = b.locale || "en"; } catch {}
-  const lp = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
+  const lp = localePathPrefix(locale);
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
-import { country } from "@/lib/country";
+import { country, localePathPrefix } from "@/lib/country";
 
 // Create Stripe Connect Express account for photographer
 export async function POST(req: NextRequest) {
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
     // Create onboarding link
     const accountLink = await stripeClient.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.AUTH_URL}${locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : ""}/dashboard/subscriptions?stripe=refresh`,
-      return_url: `${process.env.AUTH_URL}${locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : ""}/dashboard/subscriptions?stripe=success`,
+      refresh_url: `${process.env.AUTH_URL}${localePathPrefix(locale)}/dashboard/subscriptions?stripe=refresh`,
+      return_url: `${process.env.AUTH_URL}${localePathPrefix(locale)}/dashboard/subscriptions?stripe=success`,
       type: "account_onboarding",
     });
 

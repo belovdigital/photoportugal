@@ -371,3 +371,30 @@ export const siblingMarkets: CountryPack[] = (["pt", "es", "it"] as const)
  * left switched off, because a dormant second payout path is exactly the kind
  * of code that drifts out of sync and then fails silently the day it is used.
  */
+
+/**
+ * `/it` for a locale this market ships, `""` for English or anything it does
+ * not serve.
+ *
+ * Six Stripe routes carried a hardcoded `["pt","de","es","fr"]` list, written
+ * when Portugal was the only market. Italy ships `en/it/de/fr/es`, so an
+ * Italian photographer finishing Stripe onboarding was returned to the English
+ * dashboard, and a Portuguese locale that Italy does not serve would have been
+ * honoured. Read the market's own list instead.
+ */
+export function localePathPrefix(locale: string | null | undefined): string {
+  if (!locale || locale === "en") return "";
+  return country.locales.includes(locale) ? `/${locale}` : "";
+}
+
+/**
+ * The language Stripe should render its own pages in. `"auto"` lets Stripe
+ * read the browser, which is the right answer for English and for anything
+ * this market does not ship.
+ */
+export function stripeLocale(locale: string | null | undefined): string {
+  return locale && locale !== "en" && country.locales.includes(locale) ? locale : "auto";
+}
+
+/** The market's locales minus English — the set that appears as a URL prefix. */
+export const prefixedLocales: readonly string[] = country.locales.filter((l) => l !== "en");

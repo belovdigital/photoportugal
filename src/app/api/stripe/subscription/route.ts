@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
-import { country } from "@/lib/country";
+import { country, localePathPrefix, stripeLocale } from "@/lib/country";
 
 // No hardcoded fallback. Each instance has its OWN Stripe account, so a
 // baked-in price ID is guaranteed wrong on every instance but the one it was
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const userId = (session.user as { id?: string }).id;
   const { plan, action, locale } = await req.json();
-  const lp = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
+  const lp = localePathPrefix(locale);
 
   try {
     // Gate: only approved + non-banned photographers may subscribe. A
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
         customer: customerId,
         mode: "subscription",
-        locale: ["pt","de","es","fr"].includes(locale) ? locale : "auto",
+        locale: stripeLocale(locale),
         adaptive_pricing: { enabled: true },
         allow_promotion_codes: true,
         line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],

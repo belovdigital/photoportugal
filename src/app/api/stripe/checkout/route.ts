@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
-import { country } from "@/lib/country";
+import { country, localePathPrefix, stripeLocale } from "@/lib/country";
 
 export async function POST(req: NextRequest) {
   // Accept both NextAuth (web) and Bearer JWT (mobile) — mobile booking flow
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { booking_id, locale } = await req.json();
-    const localePrefix = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
+    const localePrefix = localePathPrefix(locale);
 
     if (!booking_id) return NextResponse.json({ error: "Booking ID required" }, { status: 400 });
 
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
     const stripeSessionParams: any = {
       customer: customerId,
       mode: "payment",
-      locale: ["pt","de","es","fr"].includes(locale) ? locale : "auto",
+      locale: stripeLocale(locale),
       adaptive_pricing: { enabled: true },
       allow_promotion_codes: true,
       line_items: [{

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { prefixedLocales } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,8 @@ export const dynamic = "force-dynamic";
 // revalidatePath() themselves — this exists for everything that bypasses
 // them. Revalidates the bare path AND all locale variants, mirroring how
 // profile pages are cached per locale (ISR 24h).
-const LOCALES = ["pt", "de", "es", "fr"];
+// Each market ships its own set — Italy has no /pt pages and Portugal no /it.
+const LOCALES = prefixedLocales;
 
 export async function POST(req: NextRequest) {
   if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
