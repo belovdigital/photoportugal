@@ -902,27 +902,36 @@ export function DeliveryPageClient({
 
             {/* Permission to show a few of these on our own social accounts.
                 Deliberately above the button and not in a footnote: it is a
-                request, and a request the client cannot see is not one. */}
-            <label className="mt-3 flex cursor-pointer gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 transition hover:border-primary-300">
-              <input
-                type="checkbox"
-                checked={socialConsent}
-                onChange={(e) => setSocialConsent(e.target.checked)}
-                className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="flex gap-2.5">
+                request, and a request the client cannot see is not one.
+
+                Rows, not columns. This block lives in the 300px rail, and one
+                flex row of checkbox + avatar + text left the paragraph about
+                half the card's width, running down the page in a ribbon four
+                words wide. The avatar now shares a line with the question, the
+                paragraph gets the full width, and the checkbox is its own
+                labelled control at the bottom where it reads as the decision
+                rather than as a bullet. */}
+            <div className="mt-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3">
+              <div className="flex items-center gap-2.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://${FILES_HOST}/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg`}
                   alt=""
-                  className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+                  className="h-8 w-8 shrink-0 rounded-full object-cover"
                 />
-                <span className="text-xs leading-snug text-gray-700">
-                  <span className="block font-semibold text-gray-900">{t("socialConsentTitle")}</span>
-                  <span className="mt-0.5 block">{t("socialConsentBody")}</span>
-                </span>
-              </span>
-            </label>
+                <p className="text-xs font-semibold leading-snug text-gray-900">{t("socialConsentTitle")}</p>
+              </div>
+              <p className="mt-2 text-xs leading-snug text-gray-700">{t("socialConsentBody")}</p>
+              <label className="mt-2.5 flex cursor-pointer items-center gap-2.5 rounded-lg border border-primary-200 bg-white px-3 py-2.5 transition hover:border-primary-400">
+                <input
+                  type="checkbox"
+                  checked={socialConsent}
+                  onChange={(e) => setSocialConsent(e.target.checked)}
+                  className="h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-xs font-semibold leading-snug text-gray-900">{t("socialConsentOptIn")}</span>
+              </label>
+            </div>
 
             <button
               onClick={handleAcceptDelivery}
