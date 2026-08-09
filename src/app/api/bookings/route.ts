@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification, replyToAddress } from "@/lib/email";
@@ -320,8 +321,9 @@ export async function POST(req: NextRequest) {
       if (existing) {
         giftRecipientUserId = existing.id;
       } else {
-        const firstName = recipName.split(" ")[0];
-        const lastName = recipName.split(" ").slice(1).join(" ");
+        const cleanRecipName = capitalizeName(recipName);
+        const firstName = cleanRecipName.split(" ")[0];
+        const lastName = cleanRecipName.split(" ").slice(1).join(" ");
         // Inherit buyer's locale so the reveal email is in their language.
         const buyerLocale = await queryOne<{ locale: string | null }>(
           "SELECT locale FROM users WHERE id = $1",
@@ -335,7 +337,7 @@ export async function POST(req: NextRequest) {
           `INSERT INTO users (email, name, first_name, last_name, role, locale, email_verified, password_hash)
            VALUES ($1, $2, $3, $4, 'client', $5, TRUE, NULL)
            RETURNING id`,
-          [recipEmailRaw, recipName, firstName, lastName, dormantLocale]
+          [recipEmailRaw, cleanRecipName, firstName, lastName, dormantLocale]
         );
         giftRecipientUserId = created?.id || null;
         if (giftRecipientUserId) {

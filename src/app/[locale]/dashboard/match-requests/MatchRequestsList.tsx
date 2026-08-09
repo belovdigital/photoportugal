@@ -1,6 +1,7 @@
 "use client";
 
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -194,7 +195,7 @@ export function MatchRequestsList({ matchRequests }: { matchRequests: MatchReque
                           <StarRating rating={p.rating} reviewCount={p.review_count} />
                           <ActiveBadge lastSeenAt={p.last_seen_at} />
                           {p.price && (
-                            <p className="mt-1 text-lg font-bold text-warm-900">€{p.price}</p>
+                            <p className="mt-1 text-lg font-bold text-warm-900">€{clientPriceWithFee(Number(p.price))}</p>
                           )}
                         </div>
                       </div>

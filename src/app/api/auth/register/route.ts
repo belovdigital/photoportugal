@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { country } from "@/lib/country";
 import { hash } from "bcryptjs";
 import crypto from "crypto";
@@ -20,8 +21,11 @@ export async function POST(req: NextRequest) {
     const acceptLocale = accept.match(/^([a-z]{2})/)?.[1];
     const SUPPORTED_LOCALES = country.locales as readonly string[];
     const locale = SUPPORTED_LOCALES.includes(bodyLocale) ? bodyLocale : SUPPORTED_LOCALES.includes(acceptLocale || "") ? acceptLocale : "en";
-    const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
-    const lastName = (last_name || legacyName?.split(" ").slice(1).join(" ") || "").trim();
+    // Plenty of people type their own name in lower case at signup; it is
+    // then their name in the admin, in chat, in Telegram and at the top of
+    // every email we send them.
+    const firstName = capitalizeName(first_name || legacyName?.split(" ")[0] || "");
+    const lastName = capitalizeName(last_name || legacyName?.split(" ").slice(1).join(" ") || "");
     const name = lastName ? `${firstName} ${lastName}` : firstName;
 
     if (!firstName || !email || !password) {

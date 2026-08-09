@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { COMMISSION_RATES, SERVICE_FEE_RATE, PLAN_PRICES } from "@/lib/stripe";
+import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
 import { StripeLogo } from "@/components/ui/StripeLogo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
@@ -246,7 +246,7 @@ export default async function PricingPage({
           <div>
             <p className="text-sm font-semibold text-gray-900">{t("howPaymentsWork.forClients.title")}</p>
             <p className="mt-1 text-sm text-gray-500">
-              {t("howPaymentsWork.forClients.description", { rate: SERVICE_FEE_RATE * 100 })}
+              {t("howPaymentsWork.forClients.description")}
             </p>
           </div>
           <div>
@@ -267,8 +267,10 @@ export default async function PricingPage({
               </tr>
             </thead>
             <tbody className="text-gray-600">
-              <tr><td className="py-1">{t("howPaymentsWork.table.clientPays")}</td><td className="py-1 text-right">&euro;330</td><td className="py-1 text-right">&euro;330</td><td className="py-1 text-right">&euro;330</td></tr>
-              <tr><td className="py-1">{t("howPaymentsWork.table.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</td><td className="py-1 text-right">&euro;{300 * SERVICE_FEE_RATE}</td><td className="py-1 text-right">&euro;{300 * SERVICE_FEE_RATE}</td><td className="py-1 text-right">&euro;{300 * SERVICE_FEE_RATE}</td></tr>
+              {/* Photographer-side numbers only — the client's all-in total
+                  is not their money and does not appear here (2026-08-09).
+                  (The old first row still said €330: the 10% era.) */}
+              <tr><td className="py-1">{t("howPaymentsWork.table.yourPrice")}</td><td className="py-1 text-right">&euro;300</td><td className="py-1 text-right">&euro;300</td><td className="py-1 text-right">&euro;300</td></tr>
               <tr><td className="py-1">{t("howPaymentsWork.table.platformCommission")}</td><td className="py-1 text-right text-red-500">-&euro;{300 * COMMISSION_RATES.free / 100} ({COMMISSION_RATES.free}%)</td><td className="py-1 text-right text-red-500">-&euro;{300 * COMMISSION_RATES.pro / 100} ({COMMISSION_RATES.pro}%)</td><td className="py-1 text-right text-red-500">-&euro;{300 * COMMISSION_RATES.premium / 100} ({COMMISSION_RATES.premium}%)</td></tr>
               <tr className="border-t border-warm-200 font-semibold text-gray-900"><td className="pt-2">{t("howPaymentsWork.table.youReceive")}</td><td className="pt-2 text-right text-accent-600">&euro;{300 - 300 * COMMISSION_RATES.free / 100}</td><td className="pt-2 text-right text-accent-600">&euro;{300 - 300 * COMMISSION_RATES.pro / 100}</td><td className="pt-2 text-right text-accent-600">&euro;{300 - 300 * COMMISSION_RATES.premium / 100}</td></tr>
             </tbody>

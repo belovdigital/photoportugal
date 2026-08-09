@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
+import { photographerPayoutFor } from "@/lib/stripe";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ReviewForm } from "@/components/ui/ReviewForm";
@@ -127,11 +128,15 @@ export default async function BookingsPage() {
   }[] = [];
   const stripePaymentSelect = await bookingStripePaymentSelect("b");
   const groupSizeEstimateSelect = await bookingGroupSizeEstimateSelect("b");
+  // Current plan — projects the payout on bookings that are not paid yet.
+  // Paid bookings render their stored payout_amount and never touch this.
+  let photographerPlan: string | null = null;
 
   try {
     if (isPhotographer) {
-      const profile = await queryOne<{ id: string }>("SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]);
+      const profile = await queryOne<{ id: string; plan: string }>("SELECT id, plan FROM photographer_profiles WHERE user_id = $1", [userId]);
       if (profile) {
+        photographerPlan = profile.plan;
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, p.duration_minutes, p.num_photos as package_num_photos, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
@@ -501,15 +506,23 @@ export default async function BookingsPage() {
                             🖼️ {t("extrasLine", { count: Number(booking.extras_sold) || 0 })}: &euro;{(Number(booking.extras_payout_cents) / 100).toFixed(2)}
                           </p>
                         )}
-                        <p className="text-[10px] font-medium text-gray-400">{t("sessionPrice") || "Session price"}: &euro;{Math.round(Number(booking.total_price))}</p>
+                      </>
+                    ) : isPhotographer ? (
+                      /* Unpaid booking: project the payout from the CURRENT
+                         plan — the base price is never shown to photographers
+                         (2026-08-09). Once paid, the branch above renders the
+                         stored payout_amount, which never gets recomputed. */
+                      <>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("yourPayout") || "Your payout"}</p>
+                        <p className="text-sm font-medium text-green-700">&euro;{Math.round(photographerPayoutFor(Number(booking.total_price), photographerPlan))}</p>
                       </>
                     ) : (
                       <>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
-                        {/* Blind summer offer: the CLIENT saw the all-inclusive
+                        {/* Blind summer offer: the client saw the all-inclusive
                             number (base / 0.85) — never show them the internal
-                            base. Photographers keep seeing the base (their rate). */}
-                        <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price) / (booking.blind_booking && !isPhotographer ? 0.85 : 1))}</p>
+                            base. */}
+                        <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price) / (booking.blind_booking ? 0.85 : 1))}</p>
                         {booking.stripe_amount_paid_cents !== null && !isPhotographer && (
                           <p className="text-[10px] font-medium text-green-700">
                             Paid: {formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)}

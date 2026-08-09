@@ -52,6 +52,18 @@ export function largeGroupMultiplier(groupSize: number): number {
 /**
  * Calculate payment breakdown
  */
+/**
+ * What the photographer receives for a base price on a given plan — the ONLY
+ * number a photographer should ever see for a booking (2026-08-09). Display
+ * projection for UNPAID bookings; once paid, always show the stored
+ * payout_amount instead — the plan may have changed since.
+ */
+export function photographerPayoutFor(basePrice: number, plan: string | null | undefined): number {
+  const pct = COMMISSION_RATES[plan ?? "free"] ?? COMMISSION_RATES.free;
+  const base = Number(basePrice);
+  return Math.round((base - (base * pct) / 100) * 100) / 100;
+}
+
 export function calculatePayment(packagePrice: number | string, plan: string) {
   const price = Number(packagePrice);
   // All-in charge, €5-rounded — MUST equal what every client surface shows

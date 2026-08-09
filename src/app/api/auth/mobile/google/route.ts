@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { query, queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -88,9 +89,9 @@ export async function POST(req: NextRequest) {
          VALUES ($1, $2, $3, $4, $5, $6, 'client', $7)
          RETURNING id`,
         [
-          googleUser.name,
-          googleUser.given_name || googleUser.name.split(" ")[0],
-          googleUser.family_name || null,
+          capitalizeName(googleUser.name),
+          capitalizeName(googleUser.given_name || googleUser.name.split(" ")[0]),
+          googleUser.family_name ? capitalizeName(googleUser.family_name) : null,
           googleUser.email,
           googleUser.sub,
           avatarUrl,

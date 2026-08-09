@@ -1063,7 +1063,7 @@
       },
       "cost": {
         "question": "Combien coûte une séance photo ?",
-        "answer": "Les prix varient selon le photographe et le forfait, généralement de 299 € pour une séance d'une heure à 500 €+ pour une expérience d'une journée complète. Chaque photographe fixe ses propres prix et forfaits, visibles sur sa page de profil. Consultez notre <a href=\"/for-photographers/pricing\">page tarifs</a> pour un aperçu."
+        "answer": "Tous les prix affichés sont tout compris — rien n'est ajouté au paiement. Notre réservation express avec photographe sélectionné par nos soins démarre à €279 pour une séance d'une heure ; choisir soi-même son photographe démarre généralement autour de €345, avec des expériences demi-journée et journée complète à partir de €575. Les forfaits exacts de chaque photographe figurent sur son profil."
       },
       "howToBook": {
         "question": "Comment réserver un photographe ?",
@@ -1323,7 +1323,7 @@
       "title": "Comment fonctionnent les paiements",
       "forClients": {
         "title": "Pour les clients",
-        "description": "Payez le prix du forfait + frais de service de {rate}%. Paiement sécurisé via Stripe avec support pour cartes, Apple Pay et Google Pay."
+        "description": "Les clients paient un prix unique tout compris, affiché d'emblée — votre travail plus notre service de réservation, rien d'ajouté au paiement. Vous ne touchez jamais à leur paiement."
       },
       "forPhotographers": {
         "title": "Pour les photographes",
@@ -1334,7 +1334,8 @@
         "clientPays": "Le client paie",
         "serviceFee": "Frais de service ({rate}%)",
         "platformCommission": "Commission plateforme",
-        "youReceive": "Vous recevez"
+        "youReceive": "Vous recevez",
+        "yourPrice": "Votre prix affiché"
       }
     },
     "helpCenterLink": "En savoir plus sur le fonctionnement des paiements",
@@ -1785,7 +1786,7 @@
         "averageSession": "Séance moyenne",
         "averageSessionValue": "1 à 2 heures",
         "startingFrom": "À partir de",
-        "startingFromValue": "299 € / séance"
+        "startingFromValue": "€279 / séance"
       },
       "cta": {
         "title": "Prêt pour votre séance photo à {location} ?",
@@ -2813,7 +2814,9 @@
     "extrasPriceYouGet": "Vous recevez",
     "extrasPriceHint": "S'applique à tous les forfaits. Chaque réservation conserve le prix en vigueur au moment où elle a été faite : le modifier n'affecte jamais une galerie que votre client consulte déjà.",
     "save": "Enregistrer",
-    "extrasPricePerPhoto": "par photo"
+    "extrasPricePerPhoto": "par photo",
+    "youReceiveLabel": "vous recevez",
+    "youReceiveHint": "Vous recevez €{payout} par réservation avec votre plan actuel — c'est ce montant que vous facturez."
   },
   "subscriptions": {
     "title": "Abonnements",
@@ -2849,7 +2852,7 @@
     "networkError": "Erreur réseau. Vérifiez votre connexion et réessayez.",
     "failedStripeOnboarding": "Échec du démarrage de l'onboarding Stripe. Veuillez réessayer.",
     "howPaymentsWork": "Comment fonctionnent les paiements",
-    "paymentStep1": "Le client paie le prix du forfait + {fee}% de frais de service à la confirmation de la réservation",
+    "paymentStep1": "Le client paie un prix tout compris à la confirmation de la réservation",
     "paymentStep2": "Le paiement est conservé en sécurité jusqu'à ce que la séance soit marquée comme livrée",
     "paymentStep3": "La commission plateforme dépend de votre plan (Free : {free}%, Pro : {pro}%, Premium : {premium}%)",
     "paymentStep4": "Les virements sont traités automatiquement vers votre compte bancaire connecté",

@@ -1315,7 +1315,7 @@
         "averageSession": "Sesión media",
         "averageSessionValue": "1-2 horas",
         "startingFrom": "Desde",
-        "startingFromValue": "299 € / sesión"
+        "startingFromValue": "€279 / sesión"
       },
       "cta": {
         "title": "¿Listo para su sesión de fotos en {location}?",
@@ -1685,7 +1685,7 @@
       },
       "cost": {
         "question": "¿Cuánto cuesta una sesión de fotos?",
-        "answer": "Los precios varían según el fotógrafo y el paquete, normalmente desde 299 € por una sesión de una hora hasta 500 €+ por una experiencia de día completo. Cada fotógrafo fija sus propios precios y paquetes, visibles en su página de perfil. Consulte nuestra <a href=\"/for-photographers/pricing\">página de precios</a> para una visión general."
+        "answer": "Todos los precios que ves son con todo incluido: no se añade nada al pagar. Nuestra reserva exprés con fotógrafo seleccionado por nosotros empieza en €279 por una sesión de una hora; elegir tu propio fotógrafo empieza normalmente alrededor de €345, con experiencias de medio día y día completo desde €575. Los paquetes exactos de cada fotógrafo están en su perfil."
       },
       "howToBook": {
         "question": "¿Cómo reservo un fotógrafo?",
@@ -1857,7 +1857,7 @@
       "title": "Cómo funcionan los pagos",
       "forClients": {
         "title": "Para clientes",
-        "description": "Pague el precio del paquete + tarifa de servicio del {rate}%. Pago seguro vía Stripe con soporte para tarjetas, Apple Pay y Google Pay."
+        "description": "Los clientes pagan un único precio con todo incluido, mostrado desde el principio: tu trabajo más nuestro servicio de reserva, sin añadidos al pagar. Tú nunca gestionas su pago."
       },
       "forPhotographers": {
         "title": "Para fotógrafos",
@@ -1868,7 +1868,8 @@
         "clientPays": "El cliente paga",
         "serviceFee": "Tarifa de servicio ({rate}%)",
         "platformCommission": "Comisión de plataforma",
-        "youReceive": "Usted recibe"
+        "youReceive": "Usted recibe",
+        "yourPrice": "Tu precio de lista"
       }
     },
     "helpCenterLink": "Aprenda más sobre cómo funcionan los pagos",
@@ -2813,7 +2814,9 @@
     "extrasPriceYouGet": "Tú recibes",
     "extrasPriceHint": "Se aplica a todos los paquetes. Cada reserva conserva el precio vigente cuando se hizo, así que cambiarlo nunca afecta a una galería que tu cliente ya está viendo.",
     "save": "Guardar",
-    "extrasPricePerPhoto": "por foto"
+    "extrasPricePerPhoto": "por foto",
+    "youReceiveLabel": "recibes",
+    "youReceiveHint": "Recibes €{payout} por reserva en tu plan actual — este es el importe que facturas."
   },
   "subscriptions": {
     "title": "Suscripciones",
@@ -2849,7 +2852,7 @@
     "networkError": "Error de red. Compruebe su conexión e inténtelo de nuevo.",
     "failedStripeOnboarding": "Error al iniciar el onboarding de Stripe. Por favor inténtelo de nuevo.",
     "howPaymentsWork": "Cómo funcionan los pagos",
-    "paymentStep1": "El cliente paga el precio del paquete + tarifa de servicio del {fee}% al confirmar la reserva",
+    "paymentStep1": "El cliente paga un precio con todo incluido cuando se confirma la reserva",
     "paymentStep2": "El pago se conserva de forma segura hasta que la sesión se marque como entregada",
     "paymentStep3": "La comisión de plataforma depende de su plan (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Los pagos se procesan automáticamente a su cuenta bancaria conectada",

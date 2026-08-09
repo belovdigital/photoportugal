@@ -634,7 +634,9 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                     </p>
                   </div>
                 </div>
-                <span className="text-lg font-bold text-gray-900 shrink-0">&euro;{Math.round(Number(pkg.price))}</span>
+                {/* All-in — must equal the Total in the summary rail, or the
+                    page argues with itself (€380 selector vs €440 total). */}
+                <span className="text-lg font-bold text-gray-900 shrink-0">&euro;{clientPriceWithFee(Number(pkg.price))}</span>
               </div>
             </label>
           );

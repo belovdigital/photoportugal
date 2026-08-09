@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { firstName as toFirstName } from "@/lib/format-name";
 import { type Locale } from "@/lib/email-locale";
 import { queryOne } from "@/lib/db";
 import { formatShootDate } from "@/lib/format-shoot-date";
@@ -264,7 +265,7 @@ export async function sendBookingNotification(
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
   shootDate = formatShootDate(shootDate, locale);
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
 
   // Concierge attribution — when the booking came from a Lens chat, we
   // surface what the visitor originally asked for so the photographer's
@@ -339,7 +340,7 @@ export async function sendBookingRequestToClient(
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
   shootDate = formatShootDate(shootDate, locale);
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const photographerDisplay = maskSurname(photographerName);
   const T = pickT({
     en: {
@@ -427,7 +428,7 @@ export async function sendBookingConfirmation(
     en: {
       subject: `Booking confirmed with ${photographerName}!`,
       h2: "Booking Confirmed!",
-      greeting: `Hi ${clientName.split(" ")[0]},`,
+      greeting: `Hi ${toFirstName(clientName)},`,
       confirmed: `<strong>${photographerName}</strong> has confirmed your photoshoot${shootDate ? ` on ${shootDate}` : ""}.`,
       msgPrompt: "You can message your photographer to discuss the details.",
       nextStepLabel: "Next step:",
@@ -437,7 +438,7 @@ export async function sendBookingConfirmation(
     pt: {
       subject: `Reserva confirmada com ${photographerName}!`,
       h2: "Reserva Confirmada!",
-      greeting: `Olá ${clientName.split(" ")[0]},`,
+      greeting: `Olá ${toFirstName(clientName)},`,
       confirmed: `<strong>${photographerName}</strong> confirmou a sua sessão fotográfica${shootDate ? ` a ${shootDate}` : ""}.`,
       msgPrompt: "Pode enviar mensagens ao seu fotógrafo para combinar os detalhes.",
       nextStepLabel: "Próximo passo:",
@@ -447,7 +448,7 @@ export async function sendBookingConfirmation(
     de: {
       subject: `Buchung mit ${photographerName} bestätigt!`,
       h2: "Buchung bestätigt!",
-      greeting: `Hallo ${clientName.split(" ")[0]},`,
+      greeting: `Hallo ${toFirstName(clientName)},`,
       confirmed: `<strong>${photographerName}</strong> hat Ihr Fotoshooting${shootDate ? ` am ${shootDate}` : ""} bestätigt.`,
       msgPrompt: "Sie können Ihrem Fotografen Nachrichten senden, um Details zu besprechen.",
       nextStepLabel: "Nächster Schritt:",
@@ -457,7 +458,7 @@ export async function sendBookingConfirmation(
     fr: {
       subject: `Réservation confirmée avec ${photographerName} !`,
       h2: "Réservation confirmée !",
-      greeting: `Bonjour ${clientName.split(" ")[0]},`,
+      greeting: `Bonjour ${toFirstName(clientName)},`,
       confirmed: `<strong>${photographerName}</strong> a confirmé votre séance photo${shootDate ? ` le ${shootDate}` : ""}.`,
       msgPrompt: "Vous pouvez envoyer un message à votre photographe pour discuter des détails.",
       nextStepLabel: "Prochaine étape :",
@@ -467,7 +468,7 @@ export async function sendBookingConfirmation(
     es: {
       subject: `¡Reserva confirmada con ${photographerName}!`,
       h2: "¡Reserva confirmada!",
-      greeting: `Hola ${clientName.split(" ")[0]},`,
+      greeting: `Hola ${toFirstName(clientName)},`,
       confirmed: `<strong>${photographerName}</strong> ha confirmado su sesión fotográfica${shootDate ? ` el ${shootDate}` : ""}.`,
       msgPrompt: "Puede enviar un mensaje a su fotógrafo para acordar los detalles.",
       nextStepLabel: "Siguiente paso:",
@@ -477,7 +478,7 @@ export async function sendBookingConfirmation(
     it: {
       subject: `Prenotazione confermata con ${photographerName}!`,
       h2: "Prenotazione confermata!",
-      greeting: `Ciao ${clientName.split(" ")[0]},`,
+      greeting: `Ciao ${toFirstName(clientName)},`,
       confirmed: `<strong>${photographerName}</strong> ha confermato il tuo servizio fotografico${shootDate ? ` il ${shootDate}` : ""}.`,
       msgPrompt: "Puoi scrivere al tuo fotografo per concordare i dettagli.",
       nextStepLabel: "Prossimo passo:",
@@ -515,7 +516,7 @@ export async function sendBookingConfirmationWithPayment(
   const locale = await getUserLocaleByEmail(clientEmail);
   shootDate = formatShootDate(shootDate, locale);
   const price = totalPrice ? Math.round(Number(totalPrice)) : null;
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const photographerDisplay = maskSurname(photographerName);
 
   const T = pickT({
@@ -652,7 +653,7 @@ export async function sendPaymentReceivedToPhotographer(
   amount: number,
   clientPhone?: string | null
 ) {
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const contactSection = clientPhone
     ? `<div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
         <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong style="color:#16A34A;">Client phone:</strong> ${clientPhone}</p>
@@ -687,7 +688,7 @@ export async function sendPaymentConfirmedToClient(
   const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT, localizedUrl, formatPrice } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const priceStr = formatPrice(amount, locale);
   const T = pickT({
     en: {
@@ -769,7 +770,7 @@ export async function sendDeliveryAcceptedToPhotographer(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   const amount = `&euro;${payoutAmount.toFixed(2)}`;
 
   const b = breakdown;
@@ -851,8 +852,8 @@ export async function sendDeliveryAcceptedToClient(
   const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
-  const firstName = clientName.split(" ")[0];
-  const photogFirst = photographerName.split(" ")[0];
+  const firstName = toFirstName(clientName);
+  const photogFirst = toFirstName(photographerName);
   const TIP = pickT({
     en: { tipIntro: `Loved ${photogFirst}'s work? You can add an optional tip — it goes to ${photogFirst}, minus a small processing fee.`, tipCta: `💛 Leave a tip for ${photogFirst}` },
     pt: { tipIntro: `Adorou o trabalho de ${photogFirst}? Pode deixar uma gorjeta opcional — vai para ${photogFirst}, menos uma pequena taxa de processamento.`, tipCta: `💛 Deixar uma gorjeta para ${photogFirst}` },
@@ -965,7 +966,7 @@ export async function sendTrustpilotFollowUpToClient(
   const photographerName = maskSurname(photographerNameRaw);
   const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const T = pickT({
     en: {
       subject: `One last thing, ${firstName} — it means a lot to us`,
@@ -1084,7 +1085,7 @@ export async function sendNewMessageNotification(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(recipientEmail);
-  const firstName = recipientName.split(" ")[0];
+  const firstName = toFirstName(recipientName);
   const T = pickT({
     en: {
       subject: `You have new messages from ${senderName}`,
@@ -1149,7 +1150,7 @@ export async function sendReviewNotification(
   rating: number
 ) {
   const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   await sendEmail(
     photographerEmail,
     `New ${rating}-star review from ${clientFirstName}`,
@@ -1170,7 +1171,7 @@ export async function sendPasswordResetEmail(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(to);
-  const firstName = name.split(" ")[0];
+  const firstName = toFirstName(name);
   const resetUrl = `${localizedUrl("/auth/reset-password", locale, BASE_URL)}?token=${token}`;
   const T = pickT({
     en: {
@@ -1240,7 +1241,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
   const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(to);
   const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${token}`;
-  const firstName = name.split(" ")[0];
+  const firstName = toFirstName(name);
   const T = pickT({
     en: {
       subject: `Verify your email — ${country.brand}`,
@@ -1318,7 +1319,7 @@ export async function sendWelcomeEmail(
       `Welcome to ${country.brand} — Let's get you started!`,
       emailLayout(`
         <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Welcome to ${country.brand}!</h2>
-        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${name.split(" ")[0]},</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(name)},</p>
         <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for joining ${country.brand}! We're excited to have you on the platform. Here's how to get your profile live and start receiving bookings:</p>
 
         <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
@@ -1357,7 +1358,7 @@ export async function sendWelcomeEmail(
   } else {
     const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
     const locale = await getUserLocaleByEmail(to);
-    const firstName = name.split(" ")[0];
+    const firstName = toFirstName(name);
     const T = pickT({
       en: {
         subject: `Welcome to ${country.brand}!`,
@@ -1487,7 +1488,7 @@ export async function sendSubscriptionEmail(
   await sendEmail(email, subjects[action],
     emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Plan ${action === "cancelled" ? "Cancelled" : "Updated"}</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${name.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(name)},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${messages[action]}</p>
       ${emailButton(`${BASE_URL}/dashboard/subscriptions`, "View Subscription")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Invoices are available in your Stripe billing portal.</p>
@@ -1613,7 +1614,7 @@ export async function sendPaymentReminderToClient(
 ) {
   const { getUserLocaleByEmail, pickT, formatPrice } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const photographerDisplay = maskSurname(photographerName);
   const priceStr = totalPrice ? formatPrice(Number(totalPrice), locale) : "";
   const T = pickT({
@@ -1708,7 +1709,7 @@ export async function sendShootReminderToClient(
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
   shootDate = formatShootDate(shootDate, locale) || shootDate;
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const T = pickT({
     en: {
       subject: `Tomorrow: Your photoshoot with ${photographerName}!`,
@@ -1782,7 +1783,7 @@ export async function sendShootReminderToPhotographer(
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
   shootDate = formatShootDate(shootDate, locale) || shootDate;
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   const T = pickT({
     en: {
       subject: `Tomorrow: Photoshoot with ${clientFirstName}`,
@@ -1854,7 +1855,7 @@ export async function sendDeliveryReminderToPhotographer(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   const T = pickT({
     en: {
       subject: `Reminder: ${clientFirstName} is waiting for their photos`,
@@ -1932,7 +1933,7 @@ export function renderPaymentReminderToClient(
     subject: `Reminder: Complete your payment for the session with ${photographerDisplay}`,
     html: emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Payment Reminder</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(clientName)},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Your booking with <strong>${photographerDisplay}</strong> has been confirmed, but we haven't received your payment yet.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Please complete your payment to secure your photoshoot session.</p>
       ${ctaSection}
@@ -1948,7 +1949,7 @@ export function renderShootReminderToClient(
     subject: `Tomorrow: Your photoshoot with ${photographerName}!`,
     html: emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Your Photoshoot is Tomorrow!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(clientName)},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Just a reminder that your photoshoot with <strong>${photographerName}</strong> is scheduled for <strong>${shootDate}</strong>.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Make sure to confirm the meeting point and any last-minute details with your photographer.</p>
       ${emailButton(`${BASE_URL}/dashboard/messages`, "Open Messages")}
@@ -1960,7 +1961,7 @@ export function renderShootReminderToPhotographer(
   photographerName: string, clientName: string, shootDate: string
 ): { subject: string; html: string } {
   shootDate = formatShootDate(shootDate, "en") || shootDate;
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   return {
     subject: `Tomorrow: Photoshoot with ${clientFirstName}`,
     html: emailLayout(`
@@ -1976,7 +1977,7 @@ export function renderShootReminderToPhotographer(
 export function renderDeliveryReminderToPhotographer(
   photographerName: string, clientName: string
 ): { subject: string; html: string } {
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   return {
     subject: `Reminder: ${clientFirstName} is waiting for their photos`,
     html: emailLayout(`
@@ -1993,10 +1994,10 @@ export function renderTrustpilotFollowUpToClient(
   clientName: string, photographerName: string
 ): { subject: string; html: string } {
   return {
-    subject: `One last thing, ${clientName.split(" ")[0]} — it means a lot to us`,
+    subject: `One last thing, ${toFirstName(clientName)} — it means a lot to us`,
     html: emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Thank You for Your Review!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(clientName)},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover ${country.brand}:</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
@@ -2197,7 +2198,7 @@ export async function sendPaymentFailedToClient(
     `Payment failed for your booking with ${photographerDisplay}`,
     emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Payment Failed</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(clientName)},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Your payment for the photoshoot with <strong>${photographerDisplay}</strong> could not be processed.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Please try again with a different payment method or contact your bank for details.</p>
       ${emailButton(`${BASE_URL}/dashboard/bookings`, "Retry Payment")}
@@ -2213,7 +2214,7 @@ export async function sendAbandonedBookingReminder(
   clientName: string,
   photographers: { name: string; slug: string }[]
 ) {
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   const single = photographers.length === 1;
   const display0 = maskSurname(photographers[0].name);
   const subject = single
@@ -2239,7 +2240,7 @@ export async function sendNoBookingNudge(
   clientEmail: string,
   clientName: string
 ) {
-  const firstName = clientName.split(" ")[0];
+  const firstName = toFirstName(clientName);
   await sendEmail(
     clientEmail,
     `Need help finding a photographer in Portugal?`,
@@ -2265,7 +2266,7 @@ export async function sendReviewApprovedToPhotographer(
   const filledStar = "\u2605";
   const emptyStar = "\u2606";
   const stars = filledStar.repeat(rating) + emptyStar.repeat(5 - rating);
-  const clientFirstName = clientName.split(" ")[0];
+  const clientFirstName = toFirstName(clientName);
   const safeTitle = title ? String(title).replace(/</g, "&lt;") : "";
   const safeText = text ? String(text).replace(/</g, "&lt;").replace(/\n/g, "<br>") : "";
 
@@ -2274,7 +2275,7 @@ export async function sendReviewApprovedToPhotographer(
     `You have a new ${rating}-star review`,
     emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">You have a new review</h2>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName.split(" ")[0]},</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${toFirstName(photographerName)},</p>
       <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${clientFirstName}</strong> left you a review.</p>
 
       <div style="margin:16px 0;padding:20px;background:#FAF8F5;border-radius:12px;border:1px solid #F3EDE6;">
@@ -2358,7 +2359,7 @@ export async function sendCalendarSyncBrokenEmail(
   brokenSinceDays: number,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/calendar-sync`;
 
   const C = {
@@ -2449,7 +2450,7 @@ export async function sendApprovalRequestedToPhotographer(
   photographerName: string,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const C = {
     en: {
       subject: `We've got your application — ${country.brand}`,
@@ -2553,7 +2554,7 @@ export async function sendExtrasBoughtToClient(
   galleryUrl: string,
   locale: Locale = "en",
 ) {
-  const firstName = (clientName || "").split(" ")[0] || clientName;
+  const firstName = toFirstName(clientName, clientName);
   const C = {
     en: {
       subject: `Your ${count} extra photo${count === 1 ? "" : "s"} ${count === 1 ? "is" : "are"} yours`,
@@ -2620,7 +2621,7 @@ export async function sendExtrasBoughtToPhotographer(
   payoutEur: string,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const C = {
     en: {
       subject: `${clientName} bought ${count} extra photo${count === 1 ? "" : "s"} — €${payoutEur} to you`,
@@ -2678,7 +2679,7 @@ export async function sendApprovedConnectStripeEmail(
   graceDays: number,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
   const C = {
     en: {
@@ -2757,7 +2758,7 @@ export async function sendStripeDeadlineNudge(
   daysLeft: number,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
   const last = daysLeft <= 0;
   const C = {
@@ -2853,7 +2854,7 @@ export async function sendPhotographerFullyLiveEmail(
   photographerName: string,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard`;
   const C = {
     en: {
@@ -2947,7 +2948,7 @@ export async function sendProfileHiddenNoStripeEmail(
   photographerName: string,
   locale: Locale = "en",
 ) {
-  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const firstName = toFirstName(photographerName, photographerName);
   const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
   const C = {
     en: {

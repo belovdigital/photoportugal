@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { queryOne } from "@/lib/db";
 import { hash } from "bcryptjs";
 import crypto from "crypto";
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     const holdId = String(body.hold_id || "").trim();
     const chatId = String(body.chat_id || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
-    const name = String(body.name || "").trim().slice(0, 100);
+    const name = capitalizeName(String(body.name || "").slice(0, 100));
     const phone = String(body.phone || "").trim().slice(0, 30);
     const meetingHint = String(body.meeting_hint || "").trim().slice(0, 500);
     const rawLocale = typeof body.locale === "string" ? body.locale : "";

@@ -15,6 +15,7 @@ import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import imageCompression from "browser-image-compression";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { clientPriceWithFee } from "@/lib/service-fee";
+import { photographerPayoutFor } from "@/lib/stripe";
 import nextDynamic from "next/dynamic";
 import { country } from "@/lib/country";
 
@@ -193,8 +194,21 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   const searchParams = useSearchParams();
   const initialChat = initialChatId || searchParams.get("chat");
   const userId = (session?.user as { id?: string })?.id;
+  const viewerRole = (session?.user as { role?: string })?.role;
+
+  useEffect(() => {
+    if (viewerRole !== "photographer") return;
+    fetch("/api/dashboard/profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.plan) setMyPlan(d.plan); })
+      .catch(() => {});
+  }, [viewerRole]);
+
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  // Photographer viewers see their PAYOUT on offer cards, never the base
+  // (2026-08-09). Needs their current plan — fetched once, photographers only.
+  const [myPlan, setMyPlan] = useState<string | null>(null);
   const [activeChat, setActiveChatRaw] = useState<string | null>(initialChat);
   function setActiveChat(chatId: string | null) {
     setActiveChatRaw(chatId);
@@ -1663,13 +1677,14 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             // Catalog-package cards keep the base price for
                             // consistency with profile/catalog surfaces.
                             // Photographers keep seeing their own base price.
-                            // Clients see the all-in number on EVERY card —
-                            // catalog packages went all-in on 2026-08-09, so a
-                            // base price here would undercut what /book shows.
-                            // Photographers keep seeing their own base.
+                            // Clients see the all-in number on EVERY card;
+                            // photographers see their projected PAYOUT at the
+                            // current plan — nobody ever sees the base
+                            // (2026-08-09). Paid bookings elsewhere show the
+                            // stored payout_amount instead of this projection.
                             const displayPrice = viewerIsClient
                               ? clientPriceWithFee(Number(card.price))
-                              : Math.round(card.price);
+                              : Math.round(photographerPayoutFor(Number(card.price), myPlan));
                             return (
                               <div key={msg.id} className="flex justify-center my-3">
                                 <div className={`max-w-[90%] sm:max-w-[70%] rounded-2xl border p-5 shadow-sm ${
@@ -2357,7 +2372,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                       <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
                                     </div>
                                     <span className="text-sm font-bold text-gray-700">
-                                      {sharingPackageId === pkg.id ? t("customProposalSending") : <>&euro;{Math.round(pkg.price)}</>}
+                                      {sharingPackageId === pkg.id ? t("customProposalSending") : <>&euro;{Math.round(photographerPayoutFor(Number(pkg.price), myPlan))}</>}
                                     </span>
                                   </button>
                                 ))

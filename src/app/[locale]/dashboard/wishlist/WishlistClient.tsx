@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
@@ -113,7 +114,7 @@ export default function WishlistClient() {
                   {item.min_price && (
                     <span className="text-sm">
                       <span className="text-gray-400">{t("from")} </span>
-                      <span className="font-bold text-gray-900">&euro;{Math.round(item.min_price)}</span>
+                      <span className="font-bold text-gray-900">&euro;{clientPriceWithFee(Number(item.min_price))}</span>
                     </span>
                   )}
                 </div>

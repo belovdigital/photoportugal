@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Email required for new account" }, { status: 400 });
       }
 
+      name = capitalizeName(name) || name;
       const nameParts = name.split(" ");
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(" ") || null;

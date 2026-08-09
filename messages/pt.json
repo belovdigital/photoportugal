@@ -639,7 +639,7 @@
       },
       "cost": {
         "question": "Quanto custa uma sessão fotográfica?",
-        "answer": "Os preços variam conforme o fotógrafo e o pacote, tipicamente entre €299 para uma sessão de uma hora e mais de €500 para uma experiência de dia inteiro. Cada fotógrafo define os seus próprios preços e pacotes, que pode consultar na página de perfil. Veja a nossa <a href=\"/for-photographers/pricing\">página de preços</a> para uma visão geral."
+        "answer": "Todos os preços que vê são com tudo incluído — nada é acrescentado no checkout. A reserva expresso com fotógrafo escolhido por nós começa em €279 para uma sessão de uma hora; escolher o seu próprio fotógrafo começa tipicamente à volta de €345, com experiências de meio dia e dia inteiro a partir de €575. Os pacotes exatos de cada fotógrafo estão no perfil."
       },
       "howToBook": {
         "question": "Como reservo um fotógrafo?",
@@ -899,7 +899,7 @@
       "title": "Como funcionam os pagamentos",
       "forClients": {
         "title": "Para clientes",
-        "description": "Pague o preço do pacote + taxa de serviço de {rate}%. Pagamento seguro via Stripe com suporte para cartões, Apple Pay e Google Pay."
+        "description": "Os clientes pagam um preço único com tudo incluído, mostrado à partida — o seu trabalho mais o nosso serviço de reserva, sem acréscimos no checkout. Nunca lida com o pagamento deles."
       },
       "forPhotographers": {
         "title": "Para fotógrafos",
@@ -910,7 +910,8 @@
         "clientPays": "O cliente paga",
         "serviceFee": "Taxa de serviço ({rate}%)",
         "platformCommission": "Comissão da plataforma",
-        "youReceive": "Recebe"
+        "youReceive": "Recebe",
+        "yourPrice": "O seu preço de tabela"
       }
     },
     "helpCenterLink": "Saiba mais sobre como funcionam os pagamentos",
@@ -1361,7 +1362,7 @@
         "averageSession": "Sessão Média",
         "averageSessionValue": "1-2 horas",
         "startingFrom": "A Partir De",
-        "startingFromValue": "€299 / sessão"
+        "startingFromValue": "€279 / sessão"
       },
       "cta": {
         "title": "Pronto para a Sua Sessão Fotográfica em {location}?",
@@ -2567,7 +2568,9 @@
     "extrasPriceYouGet": "Recebe",
     "extrasPriceHint": "Aplica-se a todos os pacotes. Cada marcação guarda o preço em vigor quando foi feita, por isso alterá-lo nunca afeta uma galeria que o cliente já está a ver.",
     "save": "Guardar",
-    "extrasPricePerPhoto": "por fotografia"
+    "extrasPricePerPhoto": "por fotografia",
+    "youReceiveLabel": "recebe",
+    "youReceiveHint": "Recebe €{payout} por reserva no seu plano atual — é este o valor que fatura."
   },
   "subscriptions": {
     "title": "Subscrições",
@@ -2603,7 +2606,7 @@
     "networkError": "Erro de rede. Por favor verifique a sua ligação e tente novamente.",
     "failedStripeOnboarding": "Falha ao iniciar a configuração do Stripe. Por favor tente novamente.",
     "howPaymentsWork": "Como funcionam os pagamentos",
-    "paymentStep1": "O cliente paga o preço do pacote + {fee}% de taxa de serviço na confirmação da reserva",
+    "paymentStep1": "O cliente paga um preço com tudo incluído quando a reserva é confirmada",
     "paymentStep2": "O pagamento é retido em segurança até a sessão ser marcada como entregue",
     "paymentStep3": "A comissão da plataforma depende do seu plano (Gratuito: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Os pagamentos são processados automaticamente para a sua conta bancária conectada",

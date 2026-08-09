@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
@@ -114,10 +115,12 @@ export async function PUT(req: NextRequest) {
 
     // Update user's first/last name if provided
     if (first_name) {
-      const fullName = last_name ? `${first_name} ${last_name}` : first_name;
+      const first = capitalizeName(first_name);
+      const last = capitalizeName(last_name || "");
+      const fullName = last ? `${first} ${last}` : first;
       await queryOne(
         "UPDATE users SET name = $1, first_name = $2, last_name = $3, phone = $4 WHERE id = $5",
-        [fullName, first_name.trim(), (last_name || "").trim(), phone || null, userId]
+        [fullName, first, last, phone || null, userId]
       );
     } else if (phone !== undefined) {
       await queryOne("UPDATE users SET phone = $1 WHERE id = $2", [phone || null, userId]);

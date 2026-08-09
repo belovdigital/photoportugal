@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { capitalizeName } from "@/lib/format-name";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
@@ -97,12 +98,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               [account.providerAccountId, avatarUrl, email]
             );
           } else {
-            const nameParts = (user.name || "").split(" ");
+            const cleanName = capitalizeName(user.name || "");
+            const nameParts = cleanName.split(" ");
             const firstName = nameParts[0] || "";
             const lastName = nameParts.slice(1).join(" ") || "";
             await query(
               "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, NULL, TRUE)",
-              [email, user.name, firstName, lastName, account.providerAccountId, avatarUrl]
+              [email, cleanName, firstName, lastName, account.providerAccountId, avatarUrl]
             );
             // Welcome email + admin notification fire IMMEDIATELY now (used
             // to wait for set-role to avoid client→photographer dupes, but

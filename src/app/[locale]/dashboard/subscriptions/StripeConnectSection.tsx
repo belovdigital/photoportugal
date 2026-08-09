@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { COMMISSION_RATES, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { COMMISSION_RATES } from "@/lib/stripe";
 import { useTranslations, useLocale } from "next-intl";
 
 type StripeRequirements = {
@@ -199,7 +199,7 @@ export function StripeConnectSection() {
       <div className="mt-4 rounded-lg bg-warm-50 p-4">
         <h3 className="text-sm font-semibold text-gray-900">{t("howPaymentsWork")}</h3>
         <ul className="mt-2 space-y-1 text-xs text-gray-500">
-          <li>{t("paymentStep1", { fee: SERVICE_FEE_RATE * 100 })}</li>
+          <li>{t("paymentStep1")}</li>
           <li>{t("paymentStep2")}</li>
           <li>{t("paymentStep3", { free: COMMISSION_RATES.free, pro: COMMISSION_RATES.pro, premium: COMMISSION_RATES.premium })}</li>
           <li>{t("paymentStep4")}</li>

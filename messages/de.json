@@ -639,7 +639,7 @@
       },
       "cost": {
         "question": "Wie viel kostet ein Fotoshooting?",
-        "answer": "Die Preise variieren je nach Fotograf und Paket und reichen typischerweise von 299 € für eine einstündige Session bis 500 €+ für ein ganztägiges Erlebnis. Jeder Fotograf legt seine eigenen Preise und Pakete fest, die Sie auf seiner Profilseite einsehen können. Sehen Sie sich unsere <a href=\"/for-photographers/pricing\">Preisseite</a> für einen Überblick an."
+        "answer": "Jeder angezeigte Preis ist all-inclusive — an der Kasse kommt nichts hinzu. Unsere Express-Buchung mit handverlesener Fotografin oder handverlesenem Fotografen beginnt bei €279 für eine einstündige Session; die eigene Wahl beginnt typischerweise um €345, Halbtages- und Ganztageserlebnisse ab €575. Die genauen Pakete stehen im jeweiligen Profil."
       },
       "howToBook": {
         "question": "Wie buche ich einen Fotografen?",
@@ -899,7 +899,7 @@
       "title": "So funktionieren Zahlungen",
       "forClients": {
         "title": "Für Kunden",
-        "description": "Zahlen Sie den Paketpreis + {rate} % Servicegebühr. Sichere Zahlung über Stripe mit Unterstützung für Karten, Apple Pay und Google Pay."
+        "description": "Kundinnen und Kunden zahlen einen einzigen All-inclusive-Preis, der von Anfang an angezeigt wird — Ihre Arbeit plus unser Buchungsservice, ohne Aufschlag an der Kasse. Mit der Zahlung haben Sie nie zu tun."
       },
       "forPhotographers": {
         "title": "Für Fotografen",
@@ -910,7 +910,8 @@
         "clientPays": "Kunde zahlt",
         "serviceFee": "Servicegebühr ({rate} %)",
         "platformCommission": "Plattform-Provision",
-        "youReceive": "Sie erhalten"
+        "youReceive": "Sie erhalten",
+        "yourPrice": "Ihr Listenpreis"
       }
     },
     "helpCenterLink": "Erfahren Sie mehr darüber, wie Zahlungen funktionieren",
@@ -1361,7 +1362,7 @@
         "averageSession": "Durchschnittliche Session",
         "averageSessionValue": "1-2 Stunden",
         "startingFrom": "Ab",
-        "startingFromValue": "299 € / Session"
+        "startingFromValue": "€279 / Session"
       },
       "cta": {
         "title": "Bereit für Ihr {location}-Fotoshooting?",
@@ -2567,7 +2568,9 @@
     "extrasPriceYouGet": "Sie erhalten",
     "extrasPriceHint": "Gilt für alle Pakete. Jede Buchung behält den Preis, der bei ihrer Erstellung galt — eine Änderung betrifft nie eine Galerie, die Ihre Kundschaft bereits ansieht.",
     "save": "Speichern",
-    "extrasPricePerPhoto": "pro Foto"
+    "extrasPricePerPhoto": "pro Foto",
+    "youReceiveLabel": "Sie erhalten",
+    "youReceiveHint": "Sie erhalten €{payout} pro Buchung in Ihrem aktuellen Plan — genau diesen Betrag stellen Sie in Rechnung."
   },
   "subscriptions": {
     "title": "Abonnements",
@@ -2603,7 +2606,7 @@
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     "failedStripeOnboarding": "Stripe-Einrichtung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
     "howPaymentsWork": "So funktionieren Zahlungen",
-    "paymentStep1": "Der Kunde zahlt bei der Buchungsbestätigung den Paketpreis + {fee}% Servicegebühr",
+    "paymentStep1": "Die Kundschaft zahlt bei Bestätigung der Buchung einen All-inclusive-Preis",
     "paymentStep2": "Die Zahlung wird sicher hinterlegt, bis die Session als geliefert markiert wird",
     "paymentStep3": "Die Plattformprovision hängt von Ihrem Tarif ab (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Auszahlungen werden automatisch auf Ihr verbundenes Bankkonto verarbeitet",

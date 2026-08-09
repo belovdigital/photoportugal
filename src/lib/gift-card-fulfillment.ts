@@ -1,4 +1,5 @@
 import { queryOne } from "@/lib/db";
+import { capitalizeName } from "@/lib/format-name";
 import { sendGiftCardEmail, sendGiftCardBuyerReceipt, buildGiftCardSms } from "@/lib/gift-card-email";
 import { sendSMS } from "@/lib/sms";
 import { isGiftCardTier } from "@/lib/gift-card";
@@ -63,8 +64,9 @@ export async function handleGiftCardPaymentSuccess(giftCardId: string, paymentIn
     if (existing) {
       recipientUserId = existing.id;
     } else {
-      const firstName = card.recipient_name.split(" ")[0];
-      const lastName = card.recipient_name.split(" ").slice(1).join(" ");
+      const cleanName = capitalizeName(card.recipient_name);
+      const firstName = cleanName.split(" ")[0];
+      const lastName = cleanName.split(" ").slice(1).join(" ");
       // Inherit the buyer's locale when we can — falls back to en otherwise.
       const buyerLocale = card.buyer_user_id
         ? await queryOne<{ locale: string | null }>("SELECT locale FROM users WHERE id = $1", [card.buyer_user_id])
@@ -76,7 +78,7 @@ export async function handleGiftCardPaymentSuccess(giftCardId: string, paymentIn
         `INSERT INTO users (email, name, first_name, last_name, role, locale, email_verified, password_hash)
          VALUES ($1, $2, $3, $4, 'client', $5, TRUE, NULL)
          RETURNING id`,
-        [card.recipient_email.toLowerCase(), card.recipient_name, firstName, lastName, buyerLocale?.locale || "en"]
+        [card.recipient_email.toLowerCase(), cleanName, firstName, lastName, buyerLocale?.locale || "en"]
       );
       recipientUserId = created?.id || null;
       if (recipientUserId) {

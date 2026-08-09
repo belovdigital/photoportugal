@@ -639,7 +639,7 @@
       },
       "cost": {
         "question": "How much does a photoshoot cost?",
-        "answer": "Prices vary by photographer and package, typically ranging from €299 for a one-hour session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href=\"/for-photographers/pricing\">pricing page</a> for an overview."
+        "answer": "Every price you see is all-inclusive — nothing is added at checkout. Our hand-picked express booking starts at €279 for a one-hour session; choosing your own photographer typically starts around €345, with half-day and full-day experiences from €575. Each photographer's exact packages are on their profile."
       },
       "howToBook": {
         "question": "How do I book a photographer?",
@@ -899,7 +899,7 @@
       "title": "How payments work",
       "forClients": {
         "title": "For clients",
-        "description": "Pay the package price + {rate}% service fee. Secure payment via Stripe with support for cards, Apple Pay, and Google Pay."
+        "description": "Clients pay one all-inclusive price, shown upfront — your work plus our booking service, nothing added at checkout. You never handle their payment."
       },
       "forPhotographers": {
         "title": "For photographers",
@@ -910,7 +910,8 @@
         "clientPays": "Client pays",
         "serviceFee": "Service fee ({rate}%)",
         "platformCommission": "Platform commission",
-        "youReceive": "You receive"
+        "youReceive": "You receive",
+        "yourPrice": "Your listed price"
       }
     },
     "helpCenterLink": "Learn more about how payments work",
@@ -1361,7 +1362,7 @@
         "averageSession": "Average Session",
         "averageSessionValue": "1-2 hours",
         "startingFrom": "Starting From",
-        "startingFromValue": "€299 / session"
+        "startingFromValue": "€279 / session"
       },
       "cta": {
         "title": "Ready for Your {location} Photoshoot?",
@@ -2567,7 +2568,9 @@
     "extrasPriceYouGet": "You receive",
     "extrasPriceHint": "Applies to every package. Bookings keep the price that was set when they were made, so changing it never affects a gallery your client is already looking at.",
     "save": "Save",
-    "extrasPricePerPhoto": "per photo"
+    "extrasPricePerPhoto": "per photo",
+    "youReceiveLabel": "you receive",
+    "youReceiveHint": "You receive €{payout} per booking on your current plan — this is the amount you invoice."
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -2603,7 +2606,7 @@
     "networkError": "Network error. Please check your connection and try again.",
     "failedStripeOnboarding": "Failed to start Stripe onboarding. Please try again.",
     "howPaymentsWork": "How payments work",
-    "paymentStep1": "Client pays package price + {fee}% service fee at booking confirmation",
+    "paymentStep1": "The client pays an all-inclusive price when the booking is confirmed",
     "paymentStep2": "Payment is held securely until the session is marked as delivered",
     "paymentStep3": "Platform commission depends on your plan (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Payouts are processed automatically to your connected bank account",

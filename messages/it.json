@@ -639,7 +639,7 @@
       },
       "cost": {
         "question": "Quanto costa un servizio fotografico?",
-        "answer": "I prezzi variano in base al fotografo e al pacchetto scelto: in genere si parte da €299 per una sessione di un'ora e si arriva a €500+ per un'esperienza di un'intera giornata. Ogni fotografo stabilisce i propri prezzi e pacchetti, visibili nella pagina del suo profilo. Consulta la nostra <a href=\"/for-photographers/pricing\">pagina dei prezzi</a> per una panoramica."
+        "answer": "Ogni prezzo che vedi è tutto compreso — nulla viene aggiunto al checkout. La prenotazione express con fotografo selezionato da noi parte da €279 per una sessione di un'ora; scegliere il proprio fotografo parte in genere da circa €345, con esperienze di mezza giornata e giornata intera da €575. I pacchetti esatti di ogni fotografo sono sul profilo."
       },
       "howToBook": {
         "question": "Come posso prenotare un fotografo?",
@@ -899,7 +899,7 @@
       "title": "Come funzionano i pagamenti",
       "forClients": {
         "title": "Per i clienti",
-        "description": "Paghi il prezzo del pacchetto + {rate}% di commissione di servizio. Pagamento sicuro tramite Stripe con carte, Apple Pay e Google Pay."
+        "description": "I clienti pagano un unico prezzo tutto compreso, mostrato fin dall'inizio: il tuo lavoro più il nostro servizio di prenotazione, senza aggiunte al checkout. Tu non gestisci mai il loro pagamento."
       },
       "forPhotographers": {
         "title": "Per i fotografi",
@@ -910,7 +910,8 @@
         "clientPays": "Il cliente paga",
         "serviceFee": "Commissione di servizio ({rate}%)",
         "platformCommission": "Commissione della piattaforma",
-        "youReceive": "Tu ricevi"
+        "youReceive": "Tu ricevi",
+        "yourPrice": "Il tuo prezzo di listino"
       }
     },
     "helpCenterLink": "Scopri di più su come funzionano i pagamenti",
@@ -1361,7 +1362,7 @@
         "averageSession": "Durata media del servizio",
         "averageSessionValue": "1-2 ore",
         "startingFrom": "A partire da",
-        "startingFromValue": "€299 / servizio"
+        "startingFromValue": "€279 / sessione"
       },
       "cta": {
         "title": "Pronto per il tuo servizio fotografico a {location}?",
@@ -2567,7 +2568,9 @@
     "extrasPriceYouGet": "Ricevi",
     "extrasPriceHint": "Si applica a tutti i pacchetti. Le prenotazioni mantengono il prezzo impostato al momento della conferma, quindi modificarlo non influisce mai su una galleria che il cliente sta già visualizzando.",
     "save": "Salva",
-    "extrasPricePerPhoto": "per foto"
+    "extrasPricePerPhoto": "per foto",
+    "youReceiveLabel": "ricevi",
+    "youReceiveHint": "Ricevi €{payout} per prenotazione con il tuo piano attuale — è questo l'importo che fatturi."
   },
   "subscriptions": {
     "title": "Abbonamenti",
@@ -2603,7 +2606,7 @@
     "networkError": "Errore di rete. Controlla la connessione e riprova.",
     "failedStripeOnboarding": "Impossibile avviare la configurazione di Stripe. Riprova.",
     "howPaymentsWork": "Come funzionano i pagamenti",
-    "paymentStep1": "Alla conferma della prenotazione, il cliente paga il prezzo del pacchetto + una commissione di servizio del {fee}%",
+    "paymentStep1": "Il cliente paga un prezzo tutto compreso alla conferma della prenotazione",
     "paymentStep2": "Il pagamento viene custodito in modo sicuro finché la sessione non viene contrassegnata come consegnata",
     "paymentStep3": "La commissione della piattaforma dipende dal tuo piano (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "I pagamenti vengono trasferiti automaticamente sul conto bancario collegato",

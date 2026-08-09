@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
@@ -28,8 +29,8 @@ export async function PUT(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { first_name, last_name, name: legacyName, phone: rawPhone } = await req.json();
-  const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
-  const lastName = (last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "").trim();
+  const firstName = capitalizeName(first_name || legacyName?.split(" ")[0] || "");
+  const lastName = capitalizeName(last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "");
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
   if (!firstName) return NextResponse.json({ error: "First name required" }, { status: 400 });

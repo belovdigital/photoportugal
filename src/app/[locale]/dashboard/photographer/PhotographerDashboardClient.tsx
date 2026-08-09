@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { photographerPayoutFor } from "@/lib/stripe";
 import Cropper from "react-easy-crop";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -1558,6 +1559,7 @@ export function PhotographerDashboardClient({
                 pkgDuration={pkgDuration} setPkgDuration={setPkgDuration}
                 pkgPhotos={pkgPhotos} setPkgPhotos={setPkgPhotos}
                 pkgPrice={pkgPrice} setPkgPrice={setPkgPrice}
+                plan={profile.plan}
                 pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
                 pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
                 pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
@@ -1595,6 +1597,7 @@ export function PhotographerDashboardClient({
                         pkgDuration={pkgDuration} setPkgDuration={setPkgDuration}
                         pkgPhotos={pkgPhotos} setPkgPhotos={setPkgPhotos}
                         pkgPrice={pkgPrice} setPkgPrice={setPkgPrice}
+                        plan={profile.plan}
                         pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
                         pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
                         pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
@@ -1611,6 +1614,7 @@ export function PhotographerDashboardClient({
                       <SortablePackageCard
                         key={pkg.id}
                         pkg={pkg}
+                        plan={profile.plan}
                         onEdit={openEditPackage}
                         onDelete={deletePackage}
                       />
@@ -1664,7 +1668,7 @@ function PackageFormInline({
   pkgPopular, setPkgPopular, pkgPublic, setPkgPublic,
   pkgIsGroup, setPkgIsGroup,
   pkgFeatures, setPkgFeatures,
-  saving, isEdit, onSubmit, onCancel, t, locale, className = "",
+  saving, plan, isEdit, onSubmit, onCancel, t, locale, className = "",
 }: {
   title: string;
   pkgName: string; setPkgName: (v: string) => void;
@@ -1678,6 +1682,7 @@ function PackageFormInline({
   pkgIsGroup: boolean; setPkgIsGroup: (v: boolean) => void;
   pkgFeatures: string[]; setPkgFeatures: (v: string[]) => void;
   saving: boolean; isEdit: boolean;
+  plan: string;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1764,6 +1769,11 @@ function PackageFormInline({
                 ? "border-red-400 focus:border-red-500 focus:ring-red-200"
                 : "border-gray-300 focus:border-primary-500 focus:ring-primary-200"
             }`} />
+          {pkgPrice && parseFloat(pkgPrice) > 0 && (
+            <p className="mt-1 text-xs font-medium text-green-700">
+              {t("youReceiveHint", { payout: Math.round(photographerPayoutFor(parseFloat(pkgPrice), plan)) })}
+            </p>
+          )}
           {pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && (
             <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
               <span className="text-amber-600 text-sm font-medium">Min &euro;{getPricingForDuration(parseInt(pkgDuration))!.minPrice}</span>
@@ -1830,10 +1840,14 @@ function PackageFormInline({
 
 function SortablePackageCard({
   pkg,
+  plan,
   onEdit,
   onDelete,
 }: {
   pkg: Package;
+  /** Current plan — the card shows the payout, not the listed base
+   *  (photographers see only their own money, 2026-08-09). */
+  plan: string;
   onEdit: (pkg: Package) => void;
   onDelete: (id: string) => void;
 }) {
@@ -1885,7 +1899,13 @@ function SortablePackageCard({
 
         {/* Price + actions */}
         <div className="flex shrink-0 items-center gap-3">
-          <p className={`text-lg font-bold ${belowMin ? "text-red-600" : "text-gray-900"}`}>&euro;{Math.round(Number(pkg.price))}</p>
+          <div className="text-right">
+            {/* The payout, not the listed price — the one number that is
+                theirs. The base stays visible only inside the edit form,
+                where it is the thing being set. */}
+            <p className={`text-lg font-bold ${belowMin ? "text-red-600" : "text-green-700"}`}>&euro;{Math.round(photographerPayoutFor(Number(pkg.price), plan))}</p>
+            <p className="text-[10px] font-medium text-gray-400">{t("youReceiveLabel")}</p>
+          </div>
           <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title={t("editTooltip")}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
           </button>

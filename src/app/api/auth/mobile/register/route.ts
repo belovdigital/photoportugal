@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { capitalizeName } from "@/lib/format-name";
 import { queryOne, withTransaction } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -42,7 +43,8 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const nameParts = name.trim().split(" ");
+    const cleanName = capitalizeName(name);
+    const nameParts = cleanName.split(" ");
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ") || null;
 
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO users (name, first_name, last_name, email, password_hash, role, email_verified)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [name.trim(), firstName, lastName, email.toLowerCase().trim(), passwordHash, validRole, validRole === "client"]
+      [cleanName, firstName, lastName, email.toLowerCase().trim(), passwordHash, validRole, validRole === "client"]
     );
 
     if (!user) {
@@ -69,7 +71,7 @@ export async function POST(req: NextRequest) {
         "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE id = $3",
         [verificationToken, verificationExpires.toISOString(), user.id]
       );
-      sendVerificationEmail(email.toLowerCase().trim(), name.trim(), verificationToken + "&source=mobile").catch(err =>
+      sendVerificationEmail(email.toLowerCase().trim(), cleanName, verificationToken + "&source=mobile").catch(err =>
         console.error("[mobile/register] verification email error:", err)
       );
     }
@@ -141,7 +143,7 @@ export async function POST(req: NextRequest) {
       user: {
         id: user.id,
         email: email.toLowerCase().trim(),
-        name: name.trim(),
+        name: cleanName,
         role: validRole,
         avatar_url: null,
       },

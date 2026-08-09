@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -1386,7 +1387,7 @@ function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected
         <div className="mt-0.5 flex items-center justify-between gap-2 text-[12px] text-gray-500">
           <span className="min-w-0 truncate">{locationLabel}</span>
           {p.min_price && (
-            <span className="shrink-0 font-semibold text-gray-900">€{p.min_price}+</span>
+            <span className="shrink-0 font-semibold text-gray-900">€{clientPriceWithFee(Number(p.min_price))}+</span>
           )}
         </div>
         {(p.style_label || (p.badges && p.badges.length > 0) || p.availability) && (
