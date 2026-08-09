@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendAdminNewClientNotification } from "@/lib/email";
+import { verifyGoogleIdToken, OAuthTokenInvalid } from "@/lib/mobile-oauth";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -23,20 +24,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Google ID token required" }, { status: 400 });
     }
 
-    // Verify Google ID token
-    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${id_token}`);
-    if (!googleRes.ok) {
-      return NextResponse.json({ error: "Invalid Google token" }, { status: 401 });
+    // Verify the token locally against Google's public keys, checking the
+    // audience is one of OUR client ids. The previous `tokeninfo` call proved
+    // the token was signed by Google but not that it was issued for this app —
+    // so a valid Google id_token minted for any other app in the world was
+    // accepted, and its `sub`/`email` trusted to find or create an account.
+    let claims;
+    try {
+      claims = await verifyGoogleIdToken(id_token);
+    } catch (err) {
+      if (err instanceof OAuthTokenInvalid) {
+        return NextResponse.json({ error: "Invalid Google token" }, { status: 401 });
+      }
+      throw err;
     }
 
-    const googleUser = await googleRes.json() as {
-      sub: string; email: string; name: string; picture: string;
-      given_name?: string; family_name?: string;
+    const googleUser = {
+      sub: claims.sub,
+      email: claims.email,
+      // Google omits `name` for some accounts; fall back so downstream
+      // .split(" ") never throws.
+      name: claims.name || claims.email.split("@")[0],
+      picture: claims.picture || "",
+      given_name: claims.given_name,
+      family_name: claims.family_name,
     };
-
-    if (!googleUser.email) {
-      return NextResponse.json({ error: "No email in Google token" }, { status: 400 });
-    }
 
     // Find or create user
     let user = await queryOne<{ id: string; email: string; name: string; role: string; avatar_url: string | null }>(

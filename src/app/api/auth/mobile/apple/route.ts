@@ -3,6 +3,7 @@ import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendAdminNewClientNotification } from "@/lib/email";
+import { verifyAppleIdentityToken, OAuthTokenInvalid } from "@/lib/mobile-oauth";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -23,26 +24,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Identity token required" }, { status: 400 });
     }
 
-    // Decode the Apple identity token (JWT) to get user info
-    // Apple tokens are signed JWTs - we decode to get sub (Apple user ID) and email
-    const decoded = jwt.decode(identityToken) as {
-      sub: string; // Apple user ID
-      email?: string;
-      email_verified?: string;
-      iss?: string;
-    } | null;
-
-    if (!decoded?.sub) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
-    }
-
-    // Verify issuer
-    if (decoded.iss !== "https://appleid.apple.com") {
-      return NextResponse.json({ error: "Invalid token issuer" }, { status: 400 });
+    // Cryptographically verify the token against Apple's public keys —
+    // signature, issuer, audience (our bundle id) and expiry. Anything that
+    // fails is a forgery or a token minted for another app; either way it must
+    // not reach the account lookup below, which trusts `sub`/`email`.
+    let decoded;
+    try {
+      decoded = await verifyAppleIdentityToken(identityToken);
+    } catch (err) {
+      if (err instanceof OAuthTokenInvalid) {
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      }
+      throw err;
     }
 
     const appleId = decoded.sub;
-    const email = decoded.email || clientEmail;
+    // Only adopt the token's email when Apple says it verified it. An
+    // unverified email must never match an existing account by email below —
+    // that is the link-to-anyone path the signature check now closes, and
+    // this keeps it closed for the edge where Apple omits verification.
+    const tokenEmail = decoded.email_verified ? decoded.email : undefined;
+    const email = tokenEmail || clientEmail;
 
     // Build name from fullName (Apple only sends name on FIRST sign-in)
     let name = "Apple User";
@@ -57,14 +59,18 @@ export async function POST(req: NextRequest) {
       [appleId]
     );
 
-    if (!user && email) {
-      // Check by email
+    if (!user && tokenEmail) {
+      // Link to an existing account ONLY on the email Apple itself verified —
+      // never on `clientEmail`, which the app sends unverified. Matching an
+      // existing account on a caller-supplied address and attaching this
+      // apple_id to it is exactly the takeover the signature check closes;
+      // using `email` (which falls back to clientEmail) here would leave a
+      // narrower version of it open for tokens whose email_verified is false.
       user = await queryOne<{ id: string; email: string; name: string; role: string; is_banned: boolean }>(
         "SELECT id, email, name, role, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
-        [email.toLowerCase()]
+        [tokenEmail.toLowerCase()]
       );
       if (user) {
-        // Link Apple ID to existing account
         await queryOne("UPDATE users SET apple_id = $1 WHERE id = $2", [appleId, user.id]);
       }
     }
