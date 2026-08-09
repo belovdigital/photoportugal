@@ -1,4 +1,4 @@
-import { country, byCountry, siblingMarkets } from "@/lib/country";
+import { country, byCountry, referralMarkets } from "@/lib/country";
 import { ConciergePhotographer, photographersToSystemPromptBlock } from "./photographer-context";
 import { LOCATION_TREE, type LocationNode } from "@/lib/location-hierarchy";
 import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
@@ -403,7 +403,7 @@ ${byCountry({
 
 If they insist on that country, it matters WHICH country it is:
 
-${siblingMarkets.map((m) => `- **${m.areaServed}** — we do cover it, through our sister site
+${referralMarkets.map((m) => `- **${m.areaServed}** — we do cover it, through our sister site
   ${m.host}. Send them there by name rather than turning them away. Say we have
   a sister site for ${m.areaServed} and give them the address. This is a real
   booking we would otherwise lose, and telling a visitor "we don't operate

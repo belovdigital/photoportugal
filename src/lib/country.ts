@@ -137,6 +137,16 @@ export interface CountryPack {
    * booking.
    */
   listedInSiblings: boolean;
+  /**
+   * Whether the concierge may send a live booking lead to this market's site.
+   *
+   * Separate from `listedInSiblings` on purpose: a footer link is an
+   * invitation to look around, and costs nothing if the catalogue is still
+   * filling up. Telling someone mid-conversation "we have a sister site for
+   * Italy, go there" spends a real lead — and spends it on an empty results
+   * page if the roster is not live yet.
+   */
+  referralsWelcome: boolean;
 }
 
 const PACKS: Record<CountryCode, CountryPack> = {
@@ -191,6 +201,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     foundedYear: 2024,
     hasOwnLocationImagery: true,
     listedInSiblings: true,
+    referralsWelcome: true,
   },
   es: {
     code: "es",
@@ -243,6 +254,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     foundedYear: 2026,
     hasOwnLocationImagery: false,
     listedInSiblings: true,
+    referralsWelcome: true,
   },
   it: {
     code: "it",
@@ -297,10 +309,13 @@ const PACKS: Record<CountryCode, CountryPack> = {
     timezone: "Europe/Rome",
     foundedYear: 2026,
     hasOwnLocationImagery: false,
-    // ⛔ No approved photographers yet — linking here from a working market
-    // spends traffic on an empty catalogue. Flip when the roster can take a
-    // booking.
-    listedInSiblings: false,
+    // Alex's call on 2026-08-09: the site is finished and the roster is
+    // imminent, so the sister-market links go up now rather than waiting for
+    // the first approved photographer.
+    listedInSiblings: true,
+    // Footer links go up now; the concierge holds off until Italy has a
+    // roster, so no live lead is sent to an empty catalogue.
+    referralsWelcome: false,
     // The operating company is Portuguese and is not registered in Spain, so
     // Stripe Connect onboarding is not available to Spanish photographers.
     // They are paid by bank transfer after the money clears. See docs/SPAIN.md §6.2.
@@ -358,6 +373,9 @@ export const siblingMarkets: CountryPack[] = (["pt", "es", "it"] as const)
   .filter((code) => code !== country.code)
   .map((code) => PACKS[code])
   .filter((pack) => pack.listedInSiblings);
+
+/** The subset the concierge may hand a live booking lead to. */
+export const referralMarkets: CountryPack[] = siblingMarkets.filter((p) => p.referralsWelcome);
 
 /**
  * Every market pays photographers through Stripe Connect.

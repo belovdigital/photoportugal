@@ -190,7 +190,10 @@ export function Footer() {
                         href={m.baseUrl}
                         className="transition hover:text-primary-600"
                       >
-                        {m.brand}
+                        {/* The heading already says "Also in" — repeating
+                            "Photo Spain" under it reads as a brand list, not
+                            as places. The country is the useful word. */}
+                        {m.countryName[locale as keyof typeof m.countryName] ?? m.areaServed}
                       </a>
                     </li>
                   ))}
