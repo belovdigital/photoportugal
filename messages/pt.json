@@ -827,7 +827,7 @@
   },
   "pricing": {
     "metaTitle": "Pacotes e preços de fotografia",
-    "metaDescription": "Pacotes de sessões fotográficas de férias em Portugal a partir de 299 EUR. Fotografia de casais, família, individual e pedidos de casamento.",
+    "metaDescription": "Pacotes de sessões fotográficas de férias em Portugal a partir de 279 EUR. Fotografia de casais, família, individual e pedidos de casamento.",
     "title": "Preços simples e transparentes",
     "subtitle": "Comece gratuitamente, faça upgrade quando estiver pronto para crescer",
     "plans": {
@@ -906,7 +906,7 @@
         "description": "Receba o preço do pacote menos a comissão da plataforma. Pagamentos automáticos para a sua conta bancária."
       },
       "table": {
-        "examplePackage": "Exemplo: pacote de €299",
+        "examplePackage": "Exemplo: pacote de €300",
         "clientPays": "O cliente paga",
         "serviceFee": "Taxa de serviço ({rate}%)",
         "platformCommission": "Comissão da plataforma",
@@ -1659,9 +1659,9 @@
     "groupSizeLabel": "Tamanho do Grupo",
     "budgetLabel": "Orçamento",
     "budgetPlaceholder": "Selecione o orçamento",
-    "budget150": "€150 – €299",
-    "budget300": "€300 – €599",
-    "budget600": "€600+",
+    "budget150": "Até €350",
+    "budget300": "€350 – €690",
+    "budget600": "€690+",
     "messageLabel": "Pedidos Especiais ou Detalhes",
     "messagePlaceholder": "Conte-nos sobre a sua visão, momentos especiais que quer capturar, preferências...",
     "submit": "Encontrar o Meu Fotógrafo",
@@ -1904,9 +1904,9 @@
   },
   "photographersMeta": {
     "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve",
-    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e mais de 40 localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €299.",
+    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e mais de 40 localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €279.",
     "locationTitle": "Encontre Fotógrafos em {location} — Portfólios e Preços",
-    "locationDescription": "Encontre e reserve fotógrafos verificados em {location}, Portugal. Veja portfólios, leia avaliações, compare pacotes. Desde €299.",
+    "locationDescription": "Encontre e reserve fotógrafos verificados em {location}, Portugal. Veja portfólios, leia avaliações, compare pacotes. Desde €279.",
     "ogAlt": "Fotógrafos em {location}, Portugal",
     "browseByCity": "Fotógrafos por cidade",
     "browseByCitySub": "Explore fotógrafos verificados nas principais cidades de Portugal."

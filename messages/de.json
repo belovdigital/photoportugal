@@ -906,7 +906,7 @@
         "description": "Erhalten Sie den Paketpreis abzüglich Plattform-Provision. Automatische Auszahlungen auf Ihr Bankkonto."
       },
       "table": {
-        "examplePackage": "Beispiel: 299 €-Paket",
+        "examplePackage": "Beispiel: 300 €-Paket",
         "clientPays": "Kunde zahlt",
         "serviceFee": "Servicegebühr ({rate} %)",
         "platformCommission": "Plattform-Provision",
@@ -1659,9 +1659,9 @@
     "groupSizeLabel": "Gruppengröße",
     "budgetLabel": "Budget-Bereich",
     "budgetPlaceholder": "Budget auswählen",
-    "budget150": "150 € - 299 €",
-    "budget300": "300 € - 599 €",
-    "budget600": "600 €+",
+    "budget150": "Bis €350",
+    "budget300": "€350 – €690",
+    "budget600": "€690+",
     "messageLabel": "Besondere Wünsche oder Details",
     "messagePlaceholder": "Erzählen Sie uns von Ihrer Vision, besonderen Momenten, die Sie festgehalten haben möchten, Vorlieben...",
     "submit": "Meinen Fotografen finden",
@@ -1904,9 +1904,9 @@
   },
   "photographersMeta": {
     "title": "Fotograf in Portugal buchen – Lissabon, Porto, Algarve",
-    "description": "Finden und buchen Sie einen professionellen Fotografen in Lissabon, Porto, Sintra, Algarve und über 40 weiteren Orten in Portugal. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 299 €.",
+    "description": "Finden und buchen Sie einen professionellen Fotografen in Lissabon, Porto, Sintra, Algarve und über 40 weiteren Orten in Portugal. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 279 €.",
     "locationTitle": "Fotografen in {location} finden — Portfolios & Preise",
-    "locationDescription": "Finden und buchen Sie verifizierte Fotografen in {location}, Portugal. Portfolios ansehen, Bewertungen lesen, Pakete vergleichen. Ab 299 €. Sofortbuchung.",
+    "locationDescription": "Finden und buchen Sie verifizierte Fotografen in {location}, Portugal. Portfolios ansehen, Bewertungen lesen, Pakete vergleichen. Ab 279 €. Sofortbuchung.",
     "ogAlt": "Fotografen in {location}, Portugal",
     "browseByCity": "Fotografen nach Stadt durchsuchen",
     "browseByCitySub": "Entdecken Sie verifizierte Fotografen in den schönsten Städten Portugals."

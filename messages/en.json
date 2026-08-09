@@ -827,7 +827,7 @@
   },
   "pricing": {
     "metaTitle": "Photography Packages & Pricing",
-    "metaDescription": "Vacation photoshoot packages in Portugal from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews.",
+    "metaDescription": "Vacation photoshoot packages in Portugal from EUR279. Couples, family, solo & proposal photography. Compare photographers, read verified reviews.",
     "title": "Simple, transparent pricing",
     "subtitle": "Start for free, upgrade when you're ready to grow",
     "plans": {
@@ -906,7 +906,7 @@
         "description": "Receive the package price minus platform commission. Automatic payouts to your bank account."
       },
       "table": {
-        "examplePackage": "Example: €299 package",
+        "examplePackage": "Example: €300 package",
         "clientPays": "Client pays",
         "serviceFee": "Service fee ({rate}%)",
         "platformCommission": "Platform commission",
@@ -1659,9 +1659,9 @@
     "groupSizeLabel": "Group Size",
     "budgetLabel": "Budget Range",
     "budgetPlaceholder": "Select your budget",
-    "budget150": "€150 – €299",
-    "budget300": "€300 – €599",
-    "budget600": "€600+",
+    "budget150": "Up to €350",
+    "budget300": "€350 – €690",
+    "budget600": "€690+",
     "messageLabel": "Special Requests or Details",
     "messagePlaceholder": "Tell us about your vision, special moments you want captured, any preferences...",
     "submit": "Find My Photographer",
@@ -1904,9 +1904,9 @@
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve",
-    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 40+ places across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €299.",
+    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 40+ places across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €279.",
     "locationTitle": "Find Photographers in {location} — Portfolios & Prices",
-    "locationDescription": "Find and book verified photographers in {location}, Portugal. Browse portfolios, read reviews, compare packages. From €299. Instant booking.",
+    "locationDescription": "Find and book verified photographers in {location}, Portugal. Browse portfolios, read reviews, compare packages. From €279. Instant booking.",
     "ogAlt": "Photographers in {location}, Portugal",
     "browseByCity": "Browse photographers by city",
     "browseByCitySub": "Explore verified photographers in Portugal's top destinations."

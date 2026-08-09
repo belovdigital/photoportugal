@@ -625,9 +625,9 @@
     "groupSizeLabel": "Tamaño del grupo",
     "budgetLabel": "Presupuesto",
     "budgetPlaceholder": "Seleccione su presupuesto",
-    "budget150": "150 € – 299 €",
-    "budget300": "300 € – 599 €",
-    "budget600": "600 €+",
+    "budget150": "Hasta €350",
+    "budget300": "€350 – €690",
+    "budget600": "€690+",
     "messageLabel": "Peticiones especiales o detalles",
     "messagePlaceholder": "Cuéntenos sobre su visión, momentos especiales que quiere capturar, preferencias...",
     "submit": "Encontrar mi fotógrafo",
@@ -1666,9 +1666,9 @@
   },
   "photographersMeta": {
     "title": "Contrate un fotógrafo en Portugal — Lisboa, Oporto, Algarve",
-    "description": "Encuentre y contrate un fotógrafo profesional en Lisboa, Oporto, Sintra, Algarve y más de 40 lugares de Portugal. Explore portafolios, compare precios, lea reseñas verificadas. Reserve su sesión de vacaciones online — pareja, familia, boda, boda íntima. Desde 299 €.",
+    "description": "Encuentre y contrate un fotógrafo profesional en Lisboa, Oporto, Sintra, Algarve y más de 40 lugares de Portugal. Explore portafolios, compare precios, lea reseñas verificadas. Reserve su sesión de vacaciones online — pareja, familia, boda, boda íntima. Desde 279 €.",
     "locationTitle": "Encuentre fotógrafos en {location} — Portafolios y precios",
-    "locationDescription": "Encuentre y reserve fotógrafos verificados en {location}, Portugal. Vea portafolios, lea reseñas, compare paquetes. Desde 299 €. Reserva al instante.",
+    "locationDescription": "Encuentre y reserve fotógrafos verificados en {location}, Portugal. Vea portafolios, lea reseñas, compare paquetes. Desde 279 €. Reserva al instante.",
     "ogAlt": "Fotógrafos en {location}, Portugal",
     "browseByCity": "Fotógrafos por ciudad",
     "browseByCitySub": "Explore fotógrafos verificados en las principales ciudades de Portugal."
@@ -1785,7 +1785,7 @@
   },
   "pricing": {
     "metaTitle": "Paquetes y precios de fotografía",
-    "metaDescription": "Paquetes de sesiones de fotos en Portugal desde 299 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas.",
+    "metaDescription": "Paquetes de sesiones de fotos en Portugal desde 279 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas.",
     "title": "Precios simples y transparentes",
     "subtitle": "Empiece gratis, suba de nivel cuando esté listo para crecer",
     "plans": {
@@ -1864,7 +1864,7 @@
         "description": "Reciba el precio del paquete menos la comisión de la plataforma. Transferencias automáticas a su cuenta bancaria."
       },
       "table": {
-        "examplePackage": "Ejemplo: paquete de 299 €",
+        "examplePackage": "Ejemplo: paquete de 300 €",
         "clientPays": "El cliente paga",
         "serviceFee": "Tarifa de servicio ({rate}%)",
         "platformCommission": "Comisión de plataforma",

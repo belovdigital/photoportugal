@@ -1,8 +1,20 @@
 import { Pool } from "pg";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// One pool per process, not one per bundle. Next splits the server build into
+// ~126 chunks, and every chunk that imports this module used to construct its
+// own Pool — each with pg's default of 10 connections. A single next-server
+// process was holding 82 of Postgres's 100 slots, so anything else that wanted
+// the database (a cron script, psql, the superuser) was refused outright.
+const globalForDb = globalThis as unknown as { __pgPool?: Pool };
+
+const pool =
+  globalForDb.__pgPool ??
+  new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+  });
+
+globalForDb.__pgPool = pool;
 
 export async function query<T = Record<string, unknown>>(
   text: string,

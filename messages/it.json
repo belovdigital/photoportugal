@@ -827,7 +827,7 @@
   },
   "pricing": {
     "metaTitle": "Pacchetti fotografici e prezzi",
-    "metaDescription": "Servizi fotografici per le vacanze in Italia a partire da EUR299. Foto di coppia, famiglia, individuali e proposte di matrimonio. Confronta i fotografi e leggi le recensioni verificate.",
+    "metaDescription": "Servizi fotografici per le vacanze in Italia a partire da EUR279. Foto di coppia, famiglia, individuali e proposte di matrimonio. Confronta i fotografi e leggi le recensioni verificate.",
     "title": "Prezzi semplici e trasparenti",
     "subtitle": "Inizia gratis e passa a un piano superiore quando vuoi far crescere la tua attività",
     "plans": {
@@ -906,7 +906,7 @@
         "description": "Ricevi il prezzo del pacchetto meno la commissione della piattaforma. Gli accrediti sul tuo conto bancario sono automatici."
       },
       "table": {
-        "examplePackage": "Esempio: pacchetto da €299",
+        "examplePackage": "Esempio: pacchetto da €300",
         "clientPays": "Il cliente paga",
         "serviceFee": "Commissione di servizio ({rate}%)",
         "platformCommission": "Commissione della piattaforma",
@@ -1659,9 +1659,9 @@
     "groupSizeLabel": "Numero di partecipanti",
     "budgetLabel": "Fascia di budget",
     "budgetPlaceholder": "Seleziona il tuo budget",
-    "budget150": "€150 – €299",
-    "budget300": "€300 – €599",
-    "budget600": "€600+",
+    "budget150": "Fino a €350",
+    "budget300": "€350 – €690",
+    "budget600": "€690+",
     "messageLabel": "Richieste speciali o dettagli",
     "messagePlaceholder": "Raccontaci la tua idea, i momenti speciali che desideri immortalare ed eventuali preferenze...",
     "submit": "Trova il mio fotografo",
@@ -1904,9 +1904,9 @@
   },
   "photographersMeta": {
     "title": "Ingaggia un fotografo in Italia — Roma, Firenze, Costiera Amalfitana",
-    "description": "Trova e ingaggia un fotografo professionista a Roma, Firenze, in Toscana, in Costiera Amalfitana e in oltre 40 località in tutta Italia. Sfoglia i portfolio, confronta i prezzi e leggi le recensioni verificate. Prenota online il tuo servizio fotografico in vacanza — per coppie, famiglie, matrimoni e cerimonie intime. A partire da €299.",
+    "description": "Trova e ingaggia un fotografo professionista a Roma, Firenze, in Toscana, in Costiera Amalfitana e in oltre 40 località in tutta Italia. Sfoglia i portfolio, confronta i prezzi e leggi le recensioni verificate. Prenota online il tuo servizio fotografico in vacanza — per coppie, famiglie, matrimoni e cerimonie intime. A partire da €279.",
     "locationTitle": "Trova fotografi a {location} — Portfolio e prezzi",
-    "locationDescription": "Trova e prenota fotografi verificati a {location}, Italia. Sfoglia i portfolio, leggi le recensioni e confronta i pacchetti. A partire da €299. Prenotazione immediata.",
+    "locationDescription": "Trova e prenota fotografi verificati a {location}, Italia. Sfoglia i portfolio, leggi le recensioni e confronta i pacchetti. A partire da €279. Prenotazione immediata.",
     "ogAlt": "Fotografi a {location}, Italia",
     "browseByCity": "Cerca fotografi per città",
     "browseByCitySub": "Scopri fotografi verificati nelle destinazioni più amate d’Italia."

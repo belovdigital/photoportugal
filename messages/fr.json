@@ -625,9 +625,9 @@
     "groupSizeLabel": "Taille du groupe",
     "budgetLabel": "Budget",
     "budgetPlaceholder": "Sélectionnez votre budget",
-    "budget150": "150 € – 299 €",
-    "budget300": "300 € – 599 €",
-    "budget600": "600 €+",
+    "budget150": "Jusqu'à €350",
+    "budget300": "€350 – €690",
+    "budget600": "€690+",
     "messageLabel": "Demandes spéciales ou détails",
     "messagePlaceholder": "Parlez-nous de votre vision, des moments spéciaux à immortaliser, vos préférences...",
     "submit": "Trouver mon photographe",
@@ -1251,7 +1251,7 @@
   },
   "pricing": {
     "metaTitle": "Forfaits et tarifs photographie",
-    "metaDescription": "Forfaits de séances photo au Portugal à partir de 299 €. Couples, famille, solo et demande en mariage. Comparez les photographes, lisez les avis vérifiés.",
+    "metaDescription": "Forfaits de séances photo au Portugal à partir de 279 €. Couples, famille, solo et demande en mariage. Comparez les photographes, lisez les avis vérifiés.",
     "title": "Tarifs simples et transparents",
     "subtitle": "Commencez gratuitement, passez au niveau supérieur quand vous êtes prêt à grandir",
     "plans": {
@@ -1330,7 +1330,7 @@
         "description": "Recevez le prix du forfait moins la commission plateforme. Virements automatiques sur votre compte bancaire."
       },
       "table": {
-        "examplePackage": "Exemple : forfait 299 €",
+        "examplePackage": "Exemple : forfait 300 €",
         "clientPays": "Le client paie",
         "serviceFee": "Frais de service ({rate}%)",
         "platformCommission": "Commission plateforme",
@@ -2150,9 +2150,9 @@
   },
   "photographersMeta": {
     "title": "Engagez un photographe au Portugal — Lisbonne, Porto, Algarve",
-    "description": "Trouvez et engagez un photographe professionnel à Lisbonne, Porto, Sintra, Algarve et plus de 40 lieux au Portugal. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 299 €.",
+    "description": "Trouvez et engagez un photographe professionnel à Lisbonne, Porto, Sintra, Algarve et plus de 40 lieux au Portugal. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 279 €.",
     "locationTitle": "Trouvez des photographes à {location} — Portfolios et tarifs",
-    "locationDescription": "Trouvez et réservez des photographes vérifiés à {location}, Portugal. Parcourez les portfolios, lisez les avis, comparez les forfaits. À partir de 299 €. Réservation immédiate.",
+    "locationDescription": "Trouvez et réservez des photographes vérifiés à {location}, Portugal. Parcourez les portfolios, lisez les avis, comparez les forfaits. À partir de 279 €. Réservation immédiate.",
     "ogAlt": "Photographes à {location}, Portugal",
     "browseByCity": "Photographes par ville",
     "browseByCitySub": "Explorez les photographes vérifiés dans les plus belles villes du Portugal."
