@@ -19,16 +19,18 @@
 # the backup key can write there but cannot touch the live files. Neither key
 # alone can both read the originals and overwrite the copies.
 #
-# INSTALL (per market, daily)
-#   0 4 * * * /usr/local/bin/backup-files.sh /var/www/<app>/.env >> /var/log/db-backup.log 2>&1
+# INSTALL (per market, every three hours)
+#   0 */3 * * * /usr/local/bin/backup-files.sh /var/www/<app>/.env >> /var/log/db-backup.log 2>&1
 #
 # The first run moves everything and took three hours on Portugal's 121GB;
 # later runs list what is already there and transfer only what is new.
 #
-# Daily rather than weekly: three new photographs appeared in the three hours
-# after the first copy finished, so a week between runs is a week of fresh
-# deliveries with one copy. Listing 26000 objects a day costs cents a month —
-# far less than the gap it closes.
+# Every three hours rather than daily: a shoot uploaded at 09:00 waited until
+# 04:00 the next morning for its second copy, and 493 of Portugal's files were
+# sitting in that window when it was measured. The run is cheap because rclone
+# lists in pages of 1000 rather than asking about each object — roughly fifty
+# requests a run, pennies a month — so the only reason to run it rarely would
+# be a cost that does not exist.
 
 set -uo pipefail
 
