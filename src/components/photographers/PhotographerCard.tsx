@@ -9,6 +9,7 @@ import { trackViewPhotographer, trackCTAClick } from "@/lib/analytics";
 import { trackCardClick } from "@/lib/track-events";
 import { normalizeName } from "@/lib/format-name";
 import { maskSurname } from "@/lib/photographer-name";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
@@ -202,8 +203,10 @@ export function PhotographerCard({
           ) : minPrice ? (
             <>
               <span className="text-sm text-gray-400">{t("from")} </span>
+              {/* All-in: what checkout will actually charge. Base prices are
+                  photographer-facing only (2026-08-09, no fee lines anywhere). */}
               <span className="text-lg font-bold text-gray-900">
-                &euro;{Math.round(Number(minPrice))}
+                &euro;{clientPriceWithFee(Number(minPrice))}
               </span>
             </>
           ) : (

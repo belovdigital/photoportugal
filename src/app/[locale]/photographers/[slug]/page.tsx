@@ -3,6 +3,7 @@ import { redirect, permanentRedirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
 import { maskSurname } from "@/lib/photographer-name";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { auth } from "@/lib/auth";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
@@ -288,7 +289,7 @@ export async function generateMetadata({
   // Locale-aware "from €X" hint up front — Google sometimes lifts this
   // into the SERP price line (Casamentos.pt-style "Preço desde 750€").
   const minPackagePrice = (p.packages && p.packages.length > 0)
-    ? Math.round(Math.min(...p.packages.map((pkg: { price: number }) => Number(pkg.price))))
+    ? clientPriceWithFee(Math.min(...p.packages.map((pkg: { price: number }) => Number(pkg.price))))
     : null;
   const PRICE_PHRASES: Record<string, string> = {
     en: "From €{price}.",
@@ -657,7 +658,7 @@ export default async function PhotographerProfilePage({
           },
         }
       : {}),
-    priceRange: photographer.packages?.length > 0 ? `From €${Math.round(Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price))))}` : undefined,
+    priceRange: photographer.packages?.length > 0 ? `From €${clientPriceWithFee(Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price))))}` : undefined,
     aggregateRating: photographer.review_count > 0
       ? {
           "@type": "AggregateRating",
@@ -751,7 +752,7 @@ export default async function PhotographerProfilePage({
         "@type": "Offer",
         name: pkg.name,
         priceCurrency: "EUR",
-        price: String(pkg.price),
+        price: String(clientPriceWithFee(Number(pkg.price))),
         description: pkg.description || `${pkg.duration_minutes} min session, ${pkg.num_photos} photos`,
       })),
     }),
@@ -796,7 +797,7 @@ export default async function PhotographerProfilePage({
       "@type": "Offer",
       name: pkg.name,
       priceCurrency: "EUR",
-      price: String(pkg.price),
+      price: String(clientPriceWithFee(Number(pkg.price))),
       url: profileUrl,
       availability: "https://schema.org/InStock",
       description: pkg.description || `${pkg.duration_minutes} min session, ${pkg.num_photos} photos`,
@@ -835,7 +836,7 @@ export default async function PhotographerProfilePage({
         position: i + 1,
         name: pkg.name,
         priceCurrency: "EUR",
-        price: String(pkg.price),
+        price: String(clientPriceWithFee(Number(pkg.price))),
       })),
     },
   } : null;
@@ -1239,7 +1240,7 @@ export default async function PhotographerProfilePage({
       {/* Sticky book bar — mobile only */}
       {result.type === "db" && (
         <StickyBookBar
-          minPrice={photographer.packages?.length > 0 ? Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price))) : null}
+          minPrice={photographer.packages?.length > 0 ? clientPriceWithFee(Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price)))) : null}
           photographerName={normalizeName(visibleName)}
         />
       )}

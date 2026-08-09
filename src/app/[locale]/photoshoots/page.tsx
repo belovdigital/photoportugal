@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { shootTypes, shootTypeLocalized } from "@/lib/shoot-types-data";
@@ -81,20 +82,26 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
     shootTypes.map(async (st) => {
       const aliases = st.photographerShootTypeNames || [st.name];
       try {
-        const row = await queryOne<{ count: string; min_price: string | null }>(
+        const row = await queryOne<{ count: string; pkg_min_price: string | null; region_min_price: string | null }>(
           `SELECT COUNT(DISTINCT pp.id)::text as count,
-                  GREATEST((SELECT MIN(pk.price) FROM packages pk
+                  (SELECT MIN(pk.price) FROM packages pk
                    JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
                    WHERE pp2.is_approved = TRUE AND pk.is_public = TRUE
-                     AND pp2.shoot_types && $1::text[]), (SELECT MIN(price_eur) FROM region_pricing)) as min_price
+                     AND pp2.shoot_types && $1::text[]) as pkg_min_price,
+                  (SELECT MIN(price_eur) FROM region_pricing) as region_min_price
            FROM photographer_profiles pp
            WHERE pp.is_approved = TRUE AND pp.shoot_types && $1::text[]`,
           [aliases]
         );
-        stats[st.slug] = {
-          count: parseInt(row?.count || "0"),
-          minPrice: row?.min_price ? parseFloat(row.min_price) : null,
-        };
+        {
+          const pkgMin = row?.pkg_min_price ? clientPriceWithFee(parseFloat(row.pkg_min_price)) : null;
+          const regionMin = row?.region_min_price ? parseFloat(row.region_min_price) : null;
+          stats[st.slug] = {
+            count: parseInt(row?.count || "0"),
+            // GREATEST semantics kept; package floor made all-in first.
+            minPrice: pkgMin !== null || regionMin !== null ? Math.max(pkgMin ?? 0, regionMin ?? 0) : null,
+          };
+        }
       } catch {
         stats[st.slug] = { count: 0, minPrice: null };
       }

@@ -8,7 +8,7 @@
 import { locations as ALL_LOCATIONS } from "@/lib/locations-data";
 import { shootTypes as ALL_SHOOT_TYPES } from "@/lib/shoot-types-data";
 import { photoSpots, spotSlug as makeSpotSlug } from "@/lib/photo-spots-data";
-import { country } from "@/lib/country";
+import { country, prefixedLocales } from "@/lib/country";
 
 export type PageContextType =
   | "homepage"
@@ -37,8 +37,13 @@ export interface PageContext {
   blogTopic?: { locationSlug?: string; locationName?: string; shootTypeSlug?: string; shootTypeName?: string };
 }
 
+// Derived from the active country pack, never a literal: a hardcoded
+// (pt|de|es|fr) leaves /it/… unstripped on the Italian site, so every branch
+// below misses and the concierge loses page context for that whole market.
+const LOCALE_PREFIX_RE = new RegExp(`^/(${prefixedLocales.join("|")})(?=/|$)`);
+
 function stripLocale(pathname: string): string {
-  return pathname.replace(/^\/(pt|de|es|fr)(?=\/|$)/, "") || "/";
+  return pathname.replace(LOCALE_PREFIX_RE, "") || "/";
 }
 
 export function derivePageContext(pathname: string): PageContext {

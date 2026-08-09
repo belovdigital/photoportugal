@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -130,15 +131,16 @@ export default async function ShootTypePage({
   try {
     const row = await queryOne<{
       count: string; avg_rating: string | null; total_reviews: string;
-      min_price: string | null; min_duration: string | null; max_duration: string | null;
+      pkg_min_price: string | null; region_min_price: string | null; min_duration: string | null; max_duration: string | null;
     }>(
       `SELECT COUNT(DISTINCT pp.id) as count,
               AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
               COALESCE(SUM(pp.review_count), 0) as total_reviews,
-              GREATEST((SELECT MIN(pk.price) FROM packages pk
+              (SELECT MIN(pk.price) FROM packages pk
                JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
                WHERE pp2.is_approved = TRUE AND pk.is_public = TRUE
-                 AND pp2.shoot_types && $1::text[]), (SELECT MIN(price_eur) FROM region_pricing)) as min_price,
+                 AND pp2.shoot_types && $1::text[]) as pkg_min_price,
+              (SELECT MIN(price_eur) FROM region_pricing) as region_min_price,
               (SELECT MIN(pk.duration_minutes) FROM packages pk
                JOIN photographer_profiles pp3 ON pp3.id = pk.photographer_id
                WHERE pp3.is_approved = TRUE AND pk.is_public = TRUE
@@ -157,7 +159,13 @@ export default async function ShootTypePage({
     photographerCount = parseInt(row?.count || "0");
     avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
     totalReviews = parseInt(row?.total_reviews || "0");
-    minPrice = row?.min_price ? parseFloat(row.min_price) : null;
+    {
+      // GREATEST semantics kept; package floor converted to the all-in client
+      // price first (region_pricing is already all-in).
+      const pkgMin = row?.pkg_min_price ? clientPriceWithFee(parseFloat(row.pkg_min_price)) : null;
+      const regionMin = row?.region_min_price ? parseFloat(row.region_min_price) : null;
+      minPrice = pkgMin !== null || regionMin !== null ? Math.max(pkgMin ?? 0, regionMin ?? 0) : null;
+    }
     minDuration = row?.min_duration ? parseInt(row.min_duration) : null;
     maxDuration = row?.max_duration ? parseInt(row.max_duration) : null;
   } catch {}

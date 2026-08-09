@@ -388,7 +388,6 @@ export async function POST(req: NextRequest) {
     // top. The 15% platform cut + photographer base are carved out of it
     // (see blindBaseFromTotal); commission split lands at admin-assign.
     const totalClientPaysCents = Math.round(hold.price_eur * 100);
-    const serviceFeeEur = Math.round(blindServiceFeeFromTotal(hold.price_eur));
 
     const session = await requireStripe().checkout.sessions.create(
       {
@@ -407,7 +406,7 @@ export async function POST(req: NextRequest) {
               currency: "eur",
               product_data: {
                 name: `${country.brand} photoshoot — handpicked photographer`,
-                description: `${hold.region.replace(/-/g, " ")} · ${hold.duration_minutes} min · ${hold.occasion} · ${hold.date}. Includes €${serviceFeeEur} platform service fee. Authorised now, charged only when your photographer is confirmed (within 24h). Auto-refund otherwise.`,
+                description: `${hold.region.replace(/-/g, " ")} · ${hold.duration_minutes} min · ${hold.occasion} · ${hold.date}. All-inclusive price. Authorised now, charged only when your photographer is confirmed (within 24h). Auto-refund otherwise.`,
               },
               unit_amount: totalClientPaysCents,
             },

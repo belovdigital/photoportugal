@@ -3,6 +3,7 @@ import { type Locale } from "@/lib/email-locale";
 import { queryOne } from "@/lib/db";
 import { formatShootDate } from "@/lib/format-shoot-date";
 import { maskSurname } from "@/lib/photographer-name";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { country } from "@/lib/country";
 import { locations } from "@/lib/locations-data";
 
@@ -171,7 +172,7 @@ export async function sendSaveForLaterEmail(
     : "";
 
   const priceLine = photographer.min_price
-    ? `<p style="margin:4px 0 0;font-size:14px;color:#4A4A4A;">${T.from} <strong>€${Math.round(photographer.min_price)}</strong></p>`
+    ? `<p style="margin:4px 0 0;font-size:14px;color:#4A4A4A;">${T.from} <strong>€${clientPriceWithFee(Number(photographer.min_price))}</strong></p>`
     : "";
 
   const tagline = photographer.tagline
@@ -2047,7 +2048,7 @@ export function renderConciergeMatchesFollowUp(
       ? `<img src="${p.cover_url}" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px 12px 0 0;" />`
       : "";
     const loc = p.top_locations.slice(0, 2).join(" · ");
-    const price = p.min_price ? `From €${Math.round(p.min_price)}` : "";
+    const price = p.min_price ? `From €${clientPriceWithFee(Number(p.min_price))}` : "";
     return `
       <table width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0;border:1px solid #F3EDE6;border-radius:12px;overflow:hidden;">
         <tr><td>${cover}</td></tr>

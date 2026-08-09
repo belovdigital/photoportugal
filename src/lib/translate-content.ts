@@ -2,6 +2,8 @@
 // Only invoked at save time via fire-and-forget; if it fails, the original text
 // remains as fallback (COALESCE(_loc, original) handles it).
 
+import { titleCasePackageName } from "@/lib/format-package-name";
+
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 // gpt-5.6-terra: the balanced tier. This copy is user-visible in four
 // languages and gets written once per save, so quality beats per-call cost.
@@ -138,7 +140,8 @@ export async function translatePackage(packageId: string, name: string, descript
   for (const loc of TARGET_LOCALES) {
     if (translated[loc].name) {
       cols.push(`name_${loc} = $${params.length + 1}`);
-      params.push(translated[loc].name);
+      // The model returns "sesión sorpresa"; the heading wants "Sesión Sorpresa".
+      params.push(titleCasePackageName(translated[loc].name));
     }
     if (description && translated[loc].description) {
       cols.push(`description_${loc} = $${params.length + 1}`);

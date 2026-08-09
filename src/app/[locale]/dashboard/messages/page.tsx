@@ -1663,7 +1663,11 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             // Catalog-package cards keep the base price for
                             // consistency with profile/catalog surfaces.
                             // Photographers keep seeing their own base price.
-                            const displayPrice = isCustom && viewerIsClient
+                            // Clients see the all-in number on EVERY card —
+                            // catalog packages went all-in on 2026-08-09, so a
+                            // base price here would undercut what /book shows.
+                            // Photographers keep seeing their own base.
+                            const displayPrice = viewerIsClient
                               ? clientPriceWithFee(Number(card.price))
                               : Math.round(card.price);
                             return (
@@ -1697,9 +1701,6 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                   <p className={`mt-2 text-xl font-bold ${isRevoked ? "text-gray-400 line-through" : "text-gray-900"}`}>
                                     &euro;{typeof displayPrice === "number" && !Number.isInteger(displayPrice) ? displayPrice.toFixed(2) : displayPrice}
                                   </p>
-                                  {isCustom && viewerIsClient && !isRevoked && (
-                                    <p className="text-[11px] text-gray-400">{t("inclServiceFee")}</p>
-                                  )}
                                   {isRevoked && (
                                     <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("offerWithdrawn")}</p>
                                   )}

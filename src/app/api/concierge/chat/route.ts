@@ -6,7 +6,7 @@ import { loadPhotographersForConcierge } from "@/lib/concierge/photographer-cont
 import { buildSystemPrompt } from "@/lib/concierge/system-prompt";
 import { computeBadges } from "@/lib/concierge/match-badges";
 import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
-import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock, extractStructuredSignals, type RankedCandidate } from "@/lib/concierge/candidate-ranker";
+import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock, extractStructuredSignals, coverageMatchScore, type RankedCandidate } from "@/lib/concierge/candidate-ranker";
 import { checkPhotographersAvailability } from "@/lib/concierge/availability-check";
 import { classifyTrafficSegment, logRecommendations, type RecommendationSnapshot, type RecommendationStrategy, logConciergeExclusions } from "@/lib/concierge/recommendation-events";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
@@ -594,7 +594,10 @@ export async function POST(req: NextRequest) {
     const eligibleSlugs = new Set(languageEligible.map((p) => p.slug));
     for (const p of photographers) {
       if (eligibleSlugs.has(p.slug)) continue;
-      const inScope = !intent.locationSlug || (p.locations || []).includes(intent.locationSlug);
+      // Same coverage rule the ranker scores with — a plain includes() here
+      // would call a region-covering photographer out of scope and silently
+      // drop their "you weren't shown because of language" row.
+      const inScope = !intent.locationSlug || coverageMatchScore(p.locations || [], intent.locationSlug) > 0;
       if (inScope) rankerExclusions.push({ photographerId: p.id, reason: "language" });
     }
   }

@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { country } from "@/lib/country";
+import { SERVICE_FEE_RATE } from "@/lib/service-fee";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -83,11 +84,15 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
           <h2 className="text-xl font-bold text-gray-900">{t("sections.paymentsEscrow.title")}</h2>
           <p className="mt-3">{t("sections.paymentsEscrow.intro")}</p>
           <ul className="mt-3 list-disc pl-6 space-y-1">
-            <li>{t("sections.paymentsEscrow.items.clientPays")}</li>
+            {/* Rate comes from the constant the checkout charges, not a number
+                typed into six locale files — it has already moved twice
+                (10 → 12.5 → 15) and the Terms must not be the copy that lags. */}
+            <li>{t("sections.paymentsEscrow.items.clientPays", { brand: country.brand, rate: SERVICE_FEE_RATE * 100 })}</li>
             <li>{t("sections.paymentsEscrow.items.fundsHeld")}</li>
             <li>{t("sections.paymentsEscrow.items.released")}</li>
             <li dangerouslySetInnerHTML={{ __html: t.raw("sections.paymentsEscrow.items.autoRelease") }} />
             <li>{t("sections.paymentsEscrow.items.support")}</li>
+            <li>{t("sections.paymentsEscrow.items.invoicing", { brand: country.brand })}</li>
           </ul>
         </section>
 
@@ -101,6 +106,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
             <li dangerouslySetInnerHTML={{ __html: t.raw("sections.commission.items.premium") }} />
           </ul>
           <p className="mt-3">{t("sections.commission.details")}</p>
+          <p className="mt-3">{t("sections.commission.documents", { brand: country.brand })}</p>
         </section>
 
         {/* 7. Cancellation by Client */}

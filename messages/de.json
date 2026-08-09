@@ -2060,7 +2060,7 @@
   },
   "terms": {
     "title": "Nutzungsbedingungen",
-    "lastUpdated": "Zuletzt aktualisiert: 13. Mai 2026",
+    "lastUpdated": "Zuletzt aktualisiert: 9. August 2026",
     "metaDescription": "Nutzungsbedingungen von Photo Portugal – Buchung, Zahlungen, Stornierungen, Erstattungen und Plattformregeln.",
     "sections": {
       "overview": {
@@ -2102,12 +2102,13 @@
         "title": "5. Zahlungen & Treuhand",
         "intro": "Alle Zahlungen werden sicher über Stripe abgewickelt. Wenn ein Kunde ein Fotoshooting bucht, wird der volle Betrag belastet und von Photo Portugal treuhänderisch verwahrt. Der Zahlungsablauf ist wie folgt:",
         "items": {
-          "clientPays": "Der Kunde zahlt zum Zeitpunkt der Buchung den vollen Paketpreis",
+          "clientPays": "Die Kundschaft zahlt bei der Buchung den Session-Preis der Fotografin oder des Fotografen zuzüglich einer {brand}-Servicegebühr von {rate} %. Beide Beträge werden vor jeder Zahlung getrennt in der Buchungsübersicht ausgewiesen.",
           "fundsHeld": "Die Gelder werden sicher hinterlegt, bis der Fotograf die Fotos übermittelt und der Kunde die Übermittlung akzeptiert",
           "released": "Sobald der Kunde die Übermittlung akzeptiert, wird der Anteil des Fotografen (abzüglich Plattformprovision) an ihn ausgezahlt",
           "autoRelease": "Wenn der Kunde nicht innerhalb von <strong>14 Tagen</strong> nach der Übermittlung reagiert, wird die Zahlung automatisch an den Fotografen freigegeben",
           "support": "Wenn der Kunde innerhalb von 7 Tagen weder akzeptiert noch eine Reklamation erhebt, kann sich der Fotograf an unser Support-Team wenden, um die Situation zu klären",
-          "autoCancellation": "Nachdem der Fotograf die Buchung bestätigt hat, muss die Zahlung innerhalb von <strong>24 Stunden</strong> eingehen, um den Termin zu sichern. Geht die Zahlung nicht rechtzeitig ein, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben"
+          "autoCancellation": "Nachdem der Fotograf die Buchung bestätigt hat, muss die Zahlung innerhalb von <strong>24 Stunden</strong> eingehen, um den Termin zu sichern. Geht die Zahlung nicht rechtzeitig ein, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben",
+          "invoicing": "Rechnungen kommen aus zwei Quellen. Die Fotografin oder der Fotograf stellt der Kundschaft das Shooting in Rechnung; {brand} stellt der Kundschaft die Servicegebühr in Rechnung. Jede Seite stellt ihr eigenes Dokument aus, und keine stellt das der anderen aus."
         }
       },
       "commission": {
@@ -2118,7 +2119,8 @@
           "pro": "<strong>Pro-Tarif</strong> (29 €/Monat): 15 % Provision",
           "premium": "<strong>Premium-Tarif</strong> (59 €/Monat): 10 % Provision"
         },
-        "details": "Die Provision wird bei Abschluss der Buchung von der Auszahlung des Fotografen abgezogen. Wenn eine Buchung vom Kunden 7 oder mehr Tage vor dem Shooting storniert wird, fällt keine Provision an. Bei kurzfristigen Stornierungen, bei denen der Fotograf eine Teilzahlung einbehält, gilt die Provision auf den einbehaltenen Betrag."
+        "details": "Die Provision wird bei Abschluss der Buchung von der Auszahlung des Fotografen abgezogen. Wenn eine Buchung vom Kunden 7 oder mehr Tage vor dem Shooting storniert wird, fällt keine Provision an. Bei kurzfristigen Stornierungen, bei denen der Fotograf eine Teilzahlung einbehält, gilt die Provision auf den einbehaltenen Betrag.",
+        "documents": "{brand} stellt diese Provision der Fotografin oder dem Fotografen gesondert in Rechnung. Die Fotografin oder der Fotograf verkauft das Shooting und stellt der Kundschaft die entsprechende Rechnung aus, wie es im Land ihrer bzw. seiner Registrierung vorgeschrieben ist; {brand} ist nicht Partei dieser Rechnung und stellt sie auch nicht im Namen der Fotografin oder des Fotografen aus."
       },
       "cancellationByClient": {
         "title": "7. Stornierung durch den Kunden",
@@ -2351,7 +2353,11 @@
     "bankConfirmTitle": "Bevor Sie sich bewerben",
     "bankConfirmBody": "Mit dem Fortfahren bestätigen Sie, dass Sie ein Bankkonto in {country} auf Ihren eigenen Namen besitzen und es verifizieren können. Auszahlungen laufen automatisch über Stripe — ohne ein solches Konto können wir Sie nicht bezahlen und Ihr Profil daher nicht freigeben. Wenn Sie noch keines haben, bewerben Sie sich bitte erst später.",
     "bankConfirmCheckbox": "Ich habe ein Bankkonto in {country} auf meinen Namen und kann es verifizieren",
-    "bankConfirmRequired": "Bitte bestätigen Sie dies vor dem Absenden."
+    "bankConfirmRequired": "Bitte bestätigen Sie dies vor dem Absenden.",
+    "sidebarInvoicing": "Rechnungen",
+    "invoicingBannerTitle": "Neu: Sie stellen jetzt für jedes Shooting eine Fatura aus",
+    "invoicingBannerBody": "Das portugiesische Recht verlangt für jedes Shooting eine Rechnung, innerhalb von 5 Werktagen. Lesen Sie, was zu tun ist — drei Minuten.",
+    "invoicingBannerCta": "Anleitung lesen"
   },
   "matchRequests": {
     "title": "Meine Vermittlungen",
@@ -4359,5 +4365,51 @@
     "s8body": "Push-Nachrichten erreichen Sie in Sekunden, viel schneller als E-Mail. Antworten Sie vom Strand, aus dem Gym, von überall. Suchen Sie \"{brand}\" im App Store oder Play Store, oder tippen Sie unten auf die Badges.",
     "s9title": "Verkaufen Sie die Aufnahmen, die Sie sonst löschen",
     "s9body": "Sie fotografieren immer mehr, als das Paket zusagt. Auf dem Lieferbildschirm liegen diese Aufnahmen in einer zweiten Gruppe, **Zusätzliche Fotos**, und Ihre Kundschaft kann jedes davon zum von Ihrem Fotografen festgelegten Preis kaufen — Sie erhalten Ihren Preis pro Foto, in jedem Tarif, ausgezahlt sobald die Zahlung durch ist und nicht erst bei der Abnahme.\n\nVerschenken Sie zuerst ein paar. Legen Sie auf demselben Bildschirm eine Anzahl kostenloser Fotos fest, Ihre Kundschaft wählt selbst aus — es kostet Sie nichts, so erfährt sie überhaupt, dass es mehr gibt, und es ist der Unterschied zwischen Verkauf und Geschenk. Laden Sie genau das Zugesagte hoch, erscheint nichts davon."
+  },
+  "invoicing": {
+    "eyebrow": "Rechnungsstellung in Portugal",
+    "title": "Ab sofort stellen Sie für jedes Shooting eine Fatura aus",
+    "intro": "Ab dem {date} ist {brand} als registriertes portugiesisches Gewerbe tätig. Damit wird formalisiert, was ohnehin immer galt: Sie sind selbstständige Fotografin oder selbstständiger Fotograf und verkaufen Ihre eigene Leistung — und das muss künftig auch auf dem Papier stehen. Hier steht genau, was zu tun ist.",
+    "unchangedTitle": "Was sich nicht ändert",
+    "unchangedBody": "Ihre Preise, Ihre Auszahlungen, Ihr Stripe-Konto und der Weg, auf dem Buchungen bei Ihnen ankommen, bleiben exakt gleich. Nichts auf dieser Seite ändert etwas daran, wie oder wann Sie Ihr Geld bekommen.",
+    "s1title": "Sie verkaufen das Shooting",
+    "s1body": "{brand} ist ein Marktplatz. Der Vertrag über das Shooting besteht zwischen Ihnen und der Kundschaft — wir stellen den Kontakt her, wickeln die Zahlung ab und unterstützen beide Seiten, sind aber nicht Partei des Shootings selbst. Deshalb stellen Sie die Rechnung an die Kundschaft, nicht wir.",
+    "s1note": "Das ist nicht neu — es ist Abschnitt 15 der AGB, denen Sie beim Beitritt zugestimmt haben. Neu ist nur, dass es jetzt auf dem Papier sichtbar sein muss.",
+    "s2title": "Prüfen Sie, ob Ihre Tätigkeit beim Finanzamt angemeldet ist",
+    "s2body": "Um überhaupt eine Rechnung ausstellen zu können, brauchen Sie eine angemeldete Tätigkeit (início de atividade) als Fotograf. Wenn Sie bereits selbstständig arbeiten und recibos verdes ausstellen, ist alles erledigt. Falls Sie nie angemeldet waren, müssen Sie das vor Ihrem nächsten Shooting nachholen — es ist kostenlos und geht online im Portal das Finanças oder an jedem Finanças-Schalter.",
+    "s2note": "Welchen Tätigkeitscode Sie wählen, ist eine Frage für die Steuerberatung, nicht für uns — davon hängt ab, wie viel Steuer Sie zahlen. Sprechen Sie vorher mit einem contabilista.",
+    "s2cta": "Fragen Sie uns, wenn Sie unsicher sind",
+    "s3title": "Stellen Sie nach jedem Shooting eine Fatura aus",
+    "s3body": "Das geht kostenlos im Portal das Finanças, ganz ohne Software. Der Weg:",
+    "s3p1": "Melden Sie sich auf portaldasfinancas.gov.pt mit NIF und Passwort an.",
+    "s3p2": "Gehen Sie zu Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
+    "s3p3": "Wählen Sie Fatura-Recibo — die Kundschaft hat bereits bezahlt, bei einer einfachen Fatura würden Sie zusätzlich noch eine Quittung schulden.",
+    "s3p4": "Tragen Sie die Kundschaft ein. Die meisten unserer Kundinnen und Kunden sind Reisende ohne portugiesische NIF: Nehmen Sie das angegebene Land und lassen Sie die NIF als consumidor final (999999990) stehen.",
+    "s3p5": "Betrag eingeben, bestätigen, PDF herunterladen. Die Meldung an die AT erfolgt automatisch.",
+    "s3deadline": "Die Frist beträgt 5 Werktage ab dem Tag des Shootings — nicht ab dem Tag, an dem das Geld bei Ihnen ankommt. Stellen Sie die Rechnung direkt nach dem Shooting aus, dann sind Sie nie zu spät.",
+    "s4title": "Der Betrag auf der Rechnung",
+    "s4body": "Stellen Sie Ihr eigenes Honorar für die Session in Rechnung — den «Session-Preis», der bei der Buchung steht. Nicht Ihre Auszahlung: Unsere Provision ist eine eigene Rechnung in die andere Richtung, und sie hier abzuziehen würde die Kundschaft zu niedrig berechnen. Und auch nicht den Gesamtbetrag, den die Kundschaft gezahlt hat: darin steckt unsere Servicegebühr, die wir selbst in Rechnung stellen.",
+    "s4boxTitle": "Achtung — es ist nicht die große grüne Zahl",
+    "s4boxBody": "Auf der Buchungskarte steht «Ihre Auszahlung» groß und in Grün, denn das ist der Betrag, der auf Ihrem Konto landet. Das ist nicht der Rechnungsbetrag. Wir kennzeichnen den zu fakturierenden Betrag künftig ausdrücklich an jeder Buchung, damit beides nie verwechselt werden kann — bis dahin lesen Sie die kleine Zeile «Session-Preis».",
+    "s5title": "Unsere Rechnung an Sie, einmal im Monat",
+    "s5body": "Zu Monatsbeginn schicken wir Ihnen eine einzige Rechnung über die Provision für alles, was im Vormonat abgeschlossen wurde. Sie kommt von {entity}. Heben Sie sie auf — sie ist eine Betriebsausgabe und Ihre Steuerberatung wird sie brauchen.",
+    "s5note": "Sie behalten davon nichts ein. Unsere Rechnung trägt die dispensa de retenção na fonte nach Artikel 101.º-B CIRS und weist das auf dem Dokument selbst aus.",
+    "s6title": "Schicken Sie uns Ihre NIF",
+    "s6body": "Ohne Ihre NIF können wir Ihnen diese Provisionsrechnung nicht ausstellen. Tragen Sie sie in Ihrem Profil ein — das dauert zehn Sekunden, und wir verwenden sie ausschließlich für die Rechnung.",
+    "s6note": "Wenn Sie als Gesellschaft und nicht als Einzelperson registriert sind, geben Sie uns die NIF der Gesellschaft und deren exakten Firmennamen, nicht Ihre persönlichen Daten.",
+    "s6cta": "NIF eintragen",
+    "ivaTitle": "IVA — die Grenze, die viele übersehen",
+    "ivaBody": "Bleibt Ihr Gesamtumsatz aus der Tätigkeit in einem Kalenderjahr unter 15.000 €, sind Sie nach Artikel 53.º CIVA von der IVA befreit. Ihre Rechnungen enthalten dann keine IVA und müssen den Hinweis «IVA – regime de isenção, artigo 53.º do CIVA» tragen. Oberhalb dieser Grenze müssen Sie sich für die IVA registrieren und auf Ihre Shootings 23 % berechnen.",
+    "ivaWarning": "Für die Grenze zählt alles, was Sie mit Fotografie verdienen, nicht nur das, was Sie hier verdienen. Wenn Sie nebenbei Hochzeiten fotografieren oder andere Kundschaft haben, zählt die Summe — und sie mitten im Jahr zu überschreiten, hat Folgen für den Rest des Jahres. Klären Sie das mit Ihrer Steuerberatung, bevor Sie in die Nähe kommen.",
+    "backlogTitle": "Bereits durchgeführte Shootings",
+    "backlogBody": "Auch alles, was Sie am oder nach dem {date} fotografiert haben, braucht eine Rechnung, und die Frist von 5 Werktagen läuft bereits — bei den ältesten ist sie schon abgelaufen. Gehen Sie Ihre abgeschlossenen Buchungen durch und stellen Sie diese Rechnungen zuerst aus, noch vor allem anderen auf dieser Seite.",
+    "backlogCta": "Meine Buchungen öffnen",
+    "limitsTitle": "Was wir nicht tun",
+    "l1": "Wir stellen keine Rechnungen in Ihrem Namen aus. Jede Rechnung an die Kundschaft stellen Sie selbst, in Ihrem Namen.",
+    "l2": "Wir melden, erklären und zahlen nichts für Sie beim Finanzamt, und wir können auch nicht prüfen, ob Sie es getan haben.",
+    "l3": "Wir sind nicht Ihre Steuerberatung, und nichts hiervon ist Steuerberatung. Wenn etwas für Ihren Fall unklar ist, sprechen Sie mit einem contabilista — das kostet weit weniger, als es hinterher zu reparieren.",
+    "helpTitle": "Irgendwo hängen geblieben?",
+    "helpBody": "Sagen Sie uns, wo es klemmt, und wir gehen es gemeinsam mit Ihnen durch. Uns ist es viel lieber, dieselbe Frage dreißig Mal zu beantworten, als dass jemand rät. — Kate und das {brand}-Team",
+    "helpCta": "Support kontaktieren"
   }
 }

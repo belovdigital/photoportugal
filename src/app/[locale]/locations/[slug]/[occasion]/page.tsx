@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -524,7 +525,8 @@ export default async function OccasionPage({
     photographerCount = parseInt(row?.count || "0");
     avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
     totalReviews = parseInt(row?.total_reviews || "0");
-    minPrice = row?.min_price ? parseFloat(row.min_price) : null;
+    // All-in client price — the SQL min is the photographer base.
+    minPrice = row?.min_price ? clientPriceWithFee(parseFloat(row.min_price)) : null;
     minDuration = row?.min_duration ? parseInt(row.min_duration) : null;
     maxDuration = row?.max_duration ? parseInt(row.max_duration) : null;
   } catch {}

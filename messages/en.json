@@ -2060,7 +2060,7 @@
   },
   "terms": {
     "title": "Terms of Service",
-    "lastUpdated": "Last updated: May 13, 2026",
+    "lastUpdated": "Last updated: August 9, 2026",
     "metaDescription": "Photo Portugal terms of service — booking, payments, cancellations, refunds, and platform rules.",
     "sections": {
       "overview": {
@@ -2102,12 +2102,13 @@
         "title": "5. Payments & Escrow",
         "intro": "All payments are processed securely through Stripe. When a client books a photoshoot, the full amount is charged and held in escrow by Photo Portugal. The payment flow works as follows:",
         "items": {
-          "clientPays": "Client pays the full package price at the time of booking",
+          "clientPays": "Client pays the photographer's session price plus a {rate}% {brand} service fee at the time of booking. Both amounts are itemised separately in the booking summary before any payment is taken.",
           "fundsHeld": "Funds are held securely until the photographer delivers the photos and the client accepts the delivery",
           "released": "Once the client accepts the delivery, the photographer's share (minus platform commission) is released to them",
           "autoRelease": "If the client does not respond within <strong>14 days</strong> after delivery, the payment is automatically released to the photographer",
           "support": "If the client does not accept or dispute within 7 days, the photographer may contact our support team to resolve the situation",
-          "autoCancellation": "Once the photographer confirms the booking, payment must be received within <strong>24 hours</strong> to secure the slot. If payment is not received in time, the booking is automatically cancelled and the slot released to other clients"
+          "autoCancellation": "Once the photographer confirms the booking, payment must be received within <strong>24 hours</strong> to secure the slot. If payment is not received in time, the booking is automatically cancelled and the slot released to other clients",
+          "invoicing": "Invoices come from two places. The photographer invoices the client for the photoshoot itself; {brand} invoices the client for its service fee. Each party issues its own document, and neither issues the other's."
         }
       },
       "commission": {
@@ -2118,7 +2119,8 @@
           "pro": "<strong>Pro plan</strong> (€29/month): 15% commission",
           "premium": "<strong>Premium plan</strong> (€59/month): 10% commission"
         },
-        "details": "Commission is deducted from the photographer's payout when the booking is completed. If a booking is cancelled by the client 7+ days before the shoot, no commission is charged. For late cancellations where a partial payment is retained by the photographer, commission applies to the retained amount."
+        "details": "Commission is deducted from the photographer's payout when the booking is completed. If a booking is cancelled by the client 7+ days before the shoot, no commission is charged. For late cancellations where a partial payment is retained by the photographer, commission applies to the retained amount.",
+        "documents": "{brand} invoices the photographer separately for this commission. The photographer is the seller of the photoshoot and issues the client's invoice for it, as required where they are registered; {brand} is not a party to that invoice and does not issue it on the photographer's behalf."
       },
       "cancellationByClient": {
         "title": "7. Cancellation by Client",
@@ -2351,7 +2353,11 @@
     "bankConfirmTitle": "Before you apply",
     "bankConfirmBody": "By continuing you confirm that you hold a bank account in {country}, registered in your own name, and that you can verify it. Payouts are automatic and go through Stripe — without such an account we cannot pay you, so we will not be able to approve your profile. If you don't have one yet, please don't apply until you do.",
     "bankConfirmCheckbox": "I have a bank account in {country} in my own name and I can verify it",
-    "bankConfirmRequired": "Please confirm this before submitting."
+    "bankConfirmRequired": "Please confirm this before submitting.",
+    "sidebarInvoicing": "Invoicing",
+    "invoicingBannerTitle": "New: you now issue a fatura for every shoot",
+    "invoicingBannerBody": "Portuguese law requires an invoice for each photoshoot, within 5 working days. Read what to do — it takes three minutes.",
+    "invoicingBannerCta": "Read the instructions"
   },
   "matchRequests": {
     "title": "My Matches",
@@ -4358,5 +4364,51 @@
     "s8body": "Push notifications hit you within seconds — way faster than email. You can reply from a beach, the gym, anywhere. Search \"{brand}\" on App Store or Play Store, or tap the badges below.",
     "s9title": "Sell the frames you'd have deleted",
     "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for the price your photographer set — you get your own price for it on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Upload exactly what you promised and none of this appears to anyone."
+  },
+  "invoicing": {
+    "eyebrow": "Invoicing in Portugal",
+    "title": "You now issue a fatura for every shoot",
+    "intro": "From {date}, {brand} operates as a registered Portuguese business. That formalises something that was always true: you are an independent photographer selling your own service, and the paperwork now has to say so. Here is exactly what you need to do.",
+    "unchangedTitle": "What is not changing",
+    "unchangedBody": "Your prices, your payouts, your Stripe account and the way bookings reach you all stay exactly as they are. Nothing on this page affects how or when you get paid.",
+    "s1title": "You are the one selling the photoshoot",
+    "s1body": "{brand} is a marketplace. The contract for the photoshoot is between you and the client — we introduce you, handle the payment and support you both, but we are not a party to the shoot itself. That is why the invoice to the client is yours to issue, not ours.",
+    "s1note": "This is not new — it is section 15 of the Terms you agreed to when you joined. What is new is that it now has to be visible on paper.",
+    "s2title": "Make sure your activity is open with the Finanças",
+    "s2body": "To issue an invoice at all you need an open activity (início de atividade) as a photographer. If you already work as a freelancer and issue recibos verdes, you are set. If you have never registered, you must do it before your next shoot — it is free, and you can do it on the Portal das Finanças or at any Finanças desk.",
+    "s2note": "Which activity code to register under is a question for an accountant, not for us — it changes how much tax you pay. Talk to a contabilista before you pick one.",
+    "s2cta": "Ask us if you are unsure",
+    "s3title": "Issue a fatura to the client after every shoot",
+    "s3body": "You can do this for free on the Portal das Finanças — no software required. The path is:",
+    "s3p1": "Sign in at portaldasfinancas.gov.pt with your NIF and password.",
+    "s3p2": "Go to Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
+    "s3p3": "Choose Fatura-Recibo — the client has already paid, so a plain fatura would leave you owing a receipt as well.",
+    "s3p4": "Fill in the client. Most of our clients are tourists with no Portuguese NIF: use the country they gave you and leave the NIF as consumidor final (999999990).",
+    "s3p5": "Enter the amount, confirm, and download the PDF. It is communicated to the AT automatically.",
+    "s3deadline": "The deadline is 5 working days from the day of the shoot — not from the day the money reaches you. Issue it as soon as the shoot is done and you will never be late.",
+    "s4title": "The amount to put on the invoice",
+    "s4body": "Invoice your own rate for the session — the «Session price» shown on the booking. Not your payout: our commission is a separate invoice going the other way, and subtracting it here would leave the client under-invoiced. And not the total the client paid: that includes our service fee, which we invoice the client for ourselves.",
+    "s4boxTitle": "Careful — it is not the big green number",
+    "s4boxBody": "The booking card shows «Your payout» in large green type, because that is what lands in your bank account. That is not the figure to invoice. We are labelling the amount to invoice explicitly on every booking so the two can never be mixed up — until that lands, read the small «Session price» line.",
+    "s5title": "Our invoice to you, once a month",
+    "s5body": "At the start of each month we send you a single invoice covering the commission on everything completed the month before. It comes from {entity}. Keep it — it is a business expense and your accountant will want it.",
+    "s5note": "You do not withhold anything from it. Our invoice carries the dispensa de retenção na fonte under article 101.º-B of the CIRS, and says so on the document itself.",
+    "s6title": "Send us your NIF",
+    "s6body": "We cannot issue you that commission invoice without your NIF. Add it to your profile — it takes ten seconds and we only use it for the invoice.",
+    "s6note": "If you are registered as a company rather than as an individual, give us the company NIF and its exact registered name, not your personal ones.",
+    "s6cta": "Add your NIF",
+    "ivaTitle": "IVA — the threshold that catches people out",
+    "ivaBody": "If your total turnover from the activity stays under €15,000 in a calendar year, you are exempt from IVA under article 53.º of the CIVA. Your invoices carry no IVA and must state «IVA – regime de isenção, artigo 53.º do CIVA». Above that threshold you have to register for IVA and charge 23% on your shoots.",
+    "ivaWarning": "The threshold counts everything you earn from photography, not only what you earn here. If you shoot weddings on the side or have other clients, it is the total that matters — and crossing it mid-year has consequences for the rest of it. Check with your accountant before you get close.",
+    "backlogTitle": "Shoots you have already done",
+    "backlogBody": "Anything you shot on or after {date} needs an invoice too, and its 5-working-day deadline has already started — for the earliest ones it has passed. Go through your completed bookings and issue those first, before anything else on this page.",
+    "backlogCta": "Open my bookings",
+    "limitsTitle": "What we do not do",
+    "l1": "We do not issue invoices on your behalf. Every invoice to a client is issued by you, in your name.",
+    "l2": "We do not file, declare or pay anything to the Finanças for you, and we have no way of checking whether you did.",
+    "l3": "We are not your accountant and nothing here is tax advice. If any of this is unclear for your situation, talk to a contabilista — it costs far less than fixing it afterwards.",
+    "helpTitle": "Stuck on any of this?",
+    "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
+    "helpCta": "Message support"
   }
 }

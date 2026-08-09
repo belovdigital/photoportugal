@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useTranslations } from "next-intl";
+import { showsInvoicingAnnouncement } from "@/lib/invoicing-announcement";
 
 interface TabItem {
   href: string;
@@ -35,6 +36,11 @@ const PHOTOGRAPHER_MORE: MoreItem[] = [
   { href: "/dashboard/availability", labelKey: "sidebarAvailability", icon: "clock" },
   { href: "/dashboard/subscriptions", labelKey: "sidebarSubscriptions", icon: "credit-card" },
   { href: "/dashboard/payouts", labelKey: "sidebarPayouts", icon: "banknotes" },
+  // Mirrors the desktop sidebar — directly after Payouts. Two separate arrays,
+  // so an entry added to one and not the other is invisible on half the devices.
+  ...(showsInvoicingAnnouncement
+    ? [{ href: "/dashboard/invoicing", labelKey: "sidebarInvoicing", icon: "document-text" }]
+    : []),
   { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings" },
   { href: "/dashboard/support", labelKey: "sidebarSupport", icon: "help-circle" },
 ];
@@ -241,6 +247,8 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
     case "chart-bar":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
+    case "document-text":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
     case "dots":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01" /></svg>;
     case "external":

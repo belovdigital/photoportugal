@@ -2060,7 +2060,7 @@
   },
   "terms": {
     "title": "Termini di servizio",
-    "lastUpdated": "Ultimo aggiornamento: 13 maggio 2026",
+    "lastUpdated": "Ultimo aggiornamento: 9 agosto 2026",
     "metaDescription": "Termini di servizio di Photo Italy — prenotazioni, pagamenti, cancellazioni, rimborsi e regole della piattaforma.",
     "sections": {
       "overview": {
@@ -2102,12 +2102,13 @@
         "title": "5. Pagamenti e deposito a garanzia",
         "intro": "Tutti i pagamenti vengono elaborati in modo sicuro tramite Stripe. Quando un cliente prenota un servizio fotografico, Photo Italy addebita l'intero importo e lo trattiene in un deposito a garanzia. Il flusso di pagamento funziona come segue:",
         "items": {
-          "clientPays": "Il cliente paga il prezzo totale del pacchetto al momento della prenotazione",
+          "clientPays": "Il cliente paga il prezzo della sessione del fotografo più una commissione di servizio {brand} del {rate}%, al momento della prenotazione. Entrambi gli importi sono indicati separatamente nel riepilogo della prenotazione prima di qualsiasi pagamento.",
           "fundsHeld": "I fondi vengono custoditi in modo sicuro finché il fotografo non consegna le foto e il cliente non accetta la consegna",
           "released": "Quando il cliente accetta la consegna, la quota del fotografo, al netto della commissione della piattaforma, gli viene versata",
           "autoRelease": "Se il cliente non risponde entro <strong>14 giorni</strong> dalla consegna, il pagamento viene automaticamente versato al fotografo",
           "support": "Se il cliente non accetta né contesta la consegna entro 7 giorni, il fotografo può contattare il nostro team di assistenza per risolvere la situazione",
-          "autoCancellation": "Dopo la conferma della prenotazione da parte del fotografo, il pagamento deve essere ricevuto entro <strong>24 ore</strong> per riservare la fascia oraria. Se il pagamento non viene ricevuto in tempo, la prenotazione viene annullata automaticamente e la fascia oraria torna disponibile per altri clienti"
+          "autoCancellation": "Dopo la conferma della prenotazione da parte del fotografo, il pagamento deve essere ricevuto entro <strong>24 ore</strong> per riservare la fascia oraria. Se il pagamento non viene ricevuto in tempo, la prenotazione viene annullata automaticamente e la fascia oraria torna disponibile per altri clienti",
+          "invoicing": "Le fatture provengono da due fonti. Il fotografo fattura al cliente la sessione fotografica; {brand} fattura al cliente la propria commissione di servizio. Ciascuna parte emette il proprio documento e nessuna emette quello dell'altra."
         }
       },
       "commission": {
@@ -2118,7 +2119,8 @@
           "pro": "<strong>Piano Pro</strong> (€29/mese): commissione del 15%",
           "premium": "<strong>Piano Premium</strong> (€59/mese): commissione del 10%"
         },
-        "details": "La commissione viene detratta dal compenso del fotografo al completamento della prenotazione. Se il cliente annulla una prenotazione almeno 7 giorni prima del servizio fotografico, non viene applicata alcuna commissione. In caso di cancellazione tardiva, se il fotografo trattiene una parte del pagamento, la commissione si applica all'importo trattenuto."
+        "details": "La commissione viene detratta dal compenso del fotografo al completamento della prenotazione. Se il cliente annulla una prenotazione almeno 7 giorni prima del servizio fotografico, non viene applicata alcuna commissione. In caso di cancellazione tardiva, se il fotografo trattiene una parte del pagamento, la commissione si applica all'importo trattenuto.",
+        "documents": "{brand} fattura questa commissione al fotografo con un documento separato. Il fotografo è il venditore della sessione ed emette al cliente la relativa fattura, secondo quanto richiesto nel paese in cui è registrato; {brand} non è parte di tale fattura e non la emette per conto del fotografo."
       },
       "cancellationByClient": {
         "title": "7. Cancellazione da parte del cliente",
@@ -2351,7 +2353,11 @@
     "bankConfirmTitle": "Prima di candidarti",
     "bankConfirmBody": "Proseguendo, confermi di essere titolare di un conto bancario in {country}, intestato a tuo nome, e di poterlo verificare. I pagamenti sono automatici e vengono gestiti tramite Stripe: senza un conto di questo tipo non possiamo corrisponderti i compensi e, pertanto, non potremo approvare il tuo profilo. Se non ne hai ancora uno, attendi di averlo prima di candidarti.",
     "bankConfirmCheckbox": "Ho un conto bancario in {country}, intestato a mio nome, e posso verificarlo",
-    "bankConfirmRequired": "Conferma questo requisito prima di inviare la candidatura."
+    "bankConfirmRequired": "Conferma questo requisito prima di inviare la candidatura.",
+    "sidebarInvoicing": "Invoicing",
+    "invoicingBannerTitle": "New: you now issue a fatura for every shoot",
+    "invoicingBannerBody": "Portuguese law requires an invoice for each photoshoot, within 5 working days. Read what to do — it takes three minutes.",
+    "invoicingBannerCta": "Read the instructions"
   },
   "matchRequests": {
     "title": "I miei abbinamenti",
@@ -4358,5 +4364,51 @@
     "s8body": "Le notifiche push ti raggiungono in pochi secondi, molto più rapidamente delle email. Puoi rispondere dalla spiaggia, dalla palestra o da qualsiasi altro luogo. Cerca \"{brand}\" sull'App Store o sul Play Store, oppure tocca i badge qui sotto.",
     "s9title": "Vendi gli scatti che avresti eliminato",
     "s9body": "Scatti sempre più foto di quante ne preveda il pacchetto. Nella schermata di consegna, le immagini in più vengono raccolte in un secondo gruppo, **Foto extra**, e il cliente può acquistarle al prezzo che hai impostato. Con qualsiasi piano riceverai l'intero importo da te stabilito, che ti verrà accreditato non appena il pagamento con carta sarà confermato, senza dover attendere l'accettazione.\n\nInizia regalandone qualcuna. Nella stessa schermata, imposta un numero di foto gratuite e lascia che sia il cliente a scegliere quali: per te non ha alcun costo, permette al cliente di scoprire tutte le altre immagini e trasforma una semplice vendita aggiuntiva in un regalo. Se carichi esattamente il numero di foto promesso, questa opzione non verrà mostrata a nessuno."
+  },
+  "invoicing": {
+    "eyebrow": "Invoicing in Portugal",
+    "title": "You now issue a fatura for every shoot",
+    "intro": "From {date}, {brand} operates as a registered Portuguese business. That formalises something that was always true: you are an independent photographer selling your own service, and the paperwork now has to say so. Here is exactly what you need to do.",
+    "unchangedTitle": "What is not changing",
+    "unchangedBody": "Your prices, your payouts, your Stripe account and the way bookings reach you all stay exactly as they are. Nothing on this page affects how or when you get paid.",
+    "s1title": "You are the one selling the photoshoot",
+    "s1body": "{brand} is a marketplace. The contract for the photoshoot is between you and the client — we introduce you, handle the payment and support you both, but we are not a party to the shoot itself. That is why the invoice to the client is yours to issue, not ours.",
+    "s1note": "This is not new — it is section 15 of the Terms you agreed to when you joined. What is new is that it now has to be visible on paper.",
+    "s2title": "Make sure your activity is open with the Finanças",
+    "s2body": "To issue an invoice at all you need an open activity (início de atividade) as a photographer. If you already work as a freelancer and issue recibos verdes, you are set. If you have never registered, you must do it before your next shoot — it is free, and you can do it on the Portal das Finanças or at any Finanças desk.",
+    "s2note": "Which activity code to register under is a question for an accountant, not for us — it changes how much tax you pay. Talk to a contabilista before you pick one.",
+    "s2cta": "Ask us if you are unsure",
+    "s3title": "Issue a fatura to the client after every shoot",
+    "s3body": "You can do this for free on the Portal das Finanças — no software required. The path is:",
+    "s3p1": "Sign in at portaldasfinancas.gov.pt with your NIF and password.",
+    "s3p2": "Go to Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
+    "s3p3": "Choose Fatura-Recibo — the client has already paid, so a plain fatura would leave you owing a receipt as well.",
+    "s3p4": "Fill in the client. Most of our clients are tourists with no Portuguese NIF: use the country they gave you and leave the NIF as consumidor final (999999990).",
+    "s3p5": "Enter the amount, confirm, and download the PDF. It is communicated to the AT automatically.",
+    "s3deadline": "The deadline is 5 working days from the day of the shoot — not from the day the money reaches you. Issue it as soon as the shoot is done and you will never be late.",
+    "s4title": "The amount to put on the invoice",
+    "s4body": "Invoice your own rate for the session — the «Session price» shown on the booking. Not your payout: our commission is a separate invoice going the other way, and subtracting it here would leave the client under-invoiced. And not the total the client paid: that includes our service fee, which we invoice the client for ourselves.",
+    "s4boxTitle": "Careful — it is not the big green number",
+    "s4boxBody": "The booking card shows «Your payout» in large green type, because that is what lands in your bank account. That is not the figure to invoice. We are labelling the amount to invoice explicitly on every booking so the two can never be mixed up — until that lands, read the small «Session price» line.",
+    "s5title": "Our invoice to you, once a month",
+    "s5body": "At the start of each month we send you a single invoice covering the commission on everything completed the month before. It comes from {entity}. Keep it — it is a business expense and your accountant will want it.",
+    "s5note": "You do not withhold anything from it. Our invoice carries the dispensa de retenção na fonte under article 101.º-B of the CIRS, and says so on the document itself.",
+    "s6title": "Send us your NIF",
+    "s6body": "We cannot issue you that commission invoice without your NIF. Add it to your profile — it takes ten seconds and we only use it for the invoice.",
+    "s6note": "If you are registered as a company rather than as an individual, give us the company NIF and its exact registered name, not your personal ones.",
+    "s6cta": "Add your NIF",
+    "ivaTitle": "IVA — the threshold that catches people out",
+    "ivaBody": "If your total turnover from the activity stays under €15,000 in a calendar year, you are exempt from IVA under article 53.º of the CIVA. Your invoices carry no IVA and must state «IVA – regime de isenção, artigo 53.º do CIVA». Above that threshold you have to register for IVA and charge 23% on your shoots.",
+    "ivaWarning": "The threshold counts everything you earn from photography, not only what you earn here. If you shoot weddings on the side or have other clients, it is the total that matters — and crossing it mid-year has consequences for the rest of it. Check with your accountant before you get close.",
+    "backlogTitle": "Shoots you have already done",
+    "backlogBody": "Anything you shot on or after {date} needs an invoice too, and its 5-working-day deadline has already started — for the earliest ones it has passed. Go through your completed bookings and issue those first, before anything else on this page.",
+    "backlogCta": "Open my bookings",
+    "limitsTitle": "What we do not do",
+    "l1": "We do not issue invoices on your behalf. Every invoice to a client is issued by you, in your name.",
+    "l2": "We do not file, declare or pay anything to the Finanças for you, and we have no way of checking whether you did.",
+    "l3": "We are not your accountant and nothing here is tax advice. If any of this is unclear for your situation, talk to a contabilista — it costs far less than fixing it afterwards.",
+    "helpTitle": "Stuck on any of this?",
+    "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
+    "helpCta": "Message support"
   }
 }

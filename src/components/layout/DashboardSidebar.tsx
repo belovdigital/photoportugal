@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useTranslations } from "next-intl";
+import { showsInvoicingAnnouncement } from "@/lib/invoicing-announcement";
 
 interface NavItem {
   href: string;
@@ -37,6 +38,11 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
     { href: "/dashboard/availability", labelKey: "sidebarAvailability", icon: "clock", roles: ["photographer"] },
     { href: "/dashboard/subscriptions", labelKey: "sidebarSubscriptions", icon: "credit-card", roles: ["photographer"] },
     { href: "/dashboard/payouts", labelKey: "sidebarPayouts", icon: "banknotes", roles: ["photographer"] },
+    // Next to Payouts: both answer "what happens to the money on this booking",
+    // and someone looking up an amount to invoice is already on Payouts. The
+    // urgency lives in the dashboard banner, not in the nav position.
+    // Portugal only — see invoicing-announcement.ts.
+    { href: "/dashboard/invoicing", labelKey: "sidebarInvoicing", icon: "document-text", roles: showsInvoicingAnnouncement ? ["photographer"] : [] },
     { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings", roles: ["client", "photographer"] },
     { href: "/dashboard/support", labelKey: "sidebarSupport", icon: "help-circle", roles: ["photographer"] },
   ];
@@ -155,6 +161,8 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>;
     case "chart-bar":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
+    case "document-text":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
     default:
       return null;
   }

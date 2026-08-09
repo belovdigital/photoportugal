@@ -14,6 +14,7 @@ import type { ConciergePhotographer } from "@/lib/concierge/photographer-context
 import type { PageContext } from "@/lib/concierge/page-context";
 import { LOCATION_TREE, type LocationNode } from "@/lib/location-hierarchy";
 import { shootTypes as ALL_SHOOT_TYPES } from "@/lib/shoot-types-data";
+import { canonicalizeShootType } from "@/lib/shoot-type-labels";
 
 export interface ResolvedIntent {
   /** The most specific location slug we've inferred — could be a city,
@@ -196,8 +197,12 @@ export function scoreCandidate(
     score += cov * 100;
   }
   if (intent.occasionSlug) {
-    const types = p.shoot_types || [];
-    if (types.includes(intent.occasionSlug)) score += 30;
+    // Profiles store shoot_types as canonical labels ("Solo Portrait") while
+    // the intent carries a slug ("solo"), so both sides must be canonicalized
+    // before comparing — a raw includes() never matches.
+    const wanted = canonicalizeShootType(intent.occasionSlug);
+    const types = (p.shoot_types || []).map((t) => canonicalizeShootType(t));
+    if (wanted && types.includes(wanted)) score += 30;
     else score -= 5; // soft penalty for missing occasion specialty (don't kill — they may still be a strong fit)
   }
   // Featured photographers paid for prominent placement — bump to +80

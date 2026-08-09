@@ -7,6 +7,7 @@ import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { getTranslations, getLocale } from "next-intl/server";
 import { formatDuration } from "@/lib/package-pricing";
+import { clientPriceWithFee } from "@/lib/service-fee";
 
 export interface PhotographerCardCompactData {
   slug: string;
@@ -184,7 +185,8 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  <span className="font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
+                  {/* All-in — must equal the /book total this row links to. */}
+                  <span className="font-bold text-gray-900">&euro;{clientPriceWithFee(Number(pkg.price))}</span>
                   <svg className="h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
@@ -210,7 +212,7 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
             {p.min_price ? (
               <span className="text-sm">
                 <span className="text-gray-400">{tc("from")} </span>
-                <span className="font-bold text-gray-900">&euro;{Math.round(Number(p.min_price))}</span>
+                <span className="font-bold text-gray-900">&euro;{clientPriceWithFee(Number(p.min_price))}</span>
               </span>
             ) : (
               <span className="text-xs text-gray-400">{tc("contactForPricing")}</span>

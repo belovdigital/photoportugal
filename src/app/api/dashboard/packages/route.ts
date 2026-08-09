@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { titleCasePackageName } from "@/lib/format-package-name";
 import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
@@ -98,8 +99,12 @@ export async function POST(req: NextRequest) {
 
     // Slugify + ensure uniqueness within this photographer's packages
     // (suffixes -2/-3/... if the name collides with an existing one).
+    // Photographers type package titles in running case ("surprise proposal");
+    // they render as card headings, so they get title case on the way in.
+    const cleanName = titleCasePackageName(name);
+
     const { slugifyPackage } = await import("@/lib/package-slug");
-    const baseSlug = slugifyPackage(name);
+    const baseSlug = slugifyPackage(cleanName);
     let slug = baseSlug;
     {
       let suffix = 2;
@@ -112,7 +117,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public, is_group_package, features, slug)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id, slug`,
-      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, !!is_group_package, cleanFeatures, slug]
+      [profile.id, cleanName, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, !!is_group_package, cleanFeatures, slug]
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
@@ -216,7 +221,7 @@ export async function PUT(req: NextRequest) {
     // Compute translations_dirty in JS so the SQL doesn't need to compare the
     // same potentially-null parameter against a column twice (postgres 42P08:
     // 'inconsistent types deduced for parameter $1' when both sides are null).
-    const newName = name || "";
+    const newName = titleCasePackageName(name || "");
     const newDesc = description || null;
     const translationsDirty =
       (prev?.name ?? "") !== newName ||

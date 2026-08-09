@@ -6,7 +6,8 @@ import { useSearchParams, usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
-import { SERVICE_FEE_RATE, LARGE_GROUP_SURCHARGE_RATE, LARGE_GROUP_THRESHOLD } from "@/lib/stripe";
+import { LARGE_GROUP_SURCHARGE_RATE, LARGE_GROUP_THRESHOLD } from "@/lib/stripe";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
 import { todayLocalISO, localISOPlusDays } from "@/lib/date-utils";
@@ -1021,30 +1022,30 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           const applySurcharge = !selectedPkg.is_group_package && !selectedPkg.is_custom && effectiveGroup >= LARGE_GROUP_THRESHOLD;
           const basePrice = Number(selectedPkg.price);
           const surcharge = applySurcharge ? basePrice * LARGE_GROUP_SURCHARGE_RATE : 0;
-          const subtotal = basePrice + surcharge;
-          const fee = subtotal * SERVICE_FEE_RATE;
-          const total = subtotal + fee;
+          // All-in lines, no fee row (2026-08-09). Package line and total both
+          // come from clientPriceWithFee so they match the Stripe charge; the
+          // surcharge line is the DIFFERENCE of the two all-in numbers, so the
+          // visible rows always sum exactly to the visible total.
+          const total = clientPriceWithFee(basePrice + surcharge);
+          const pkgAllIn = clientPriceWithFee(basePrice);
+          const surchargeAllIn = total - pkgAllIn;
           return (
           <div className="rounded-xl border border-warm-200 bg-white p-5 lg:hidden">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{selectedPkg.name}</span>
-                <span className="text-gray-900">&euro;{Math.round(basePrice)}</span>
+                <span className="text-gray-900">&euro;{pkgAllIn}</span>
               </div>
               {applySurcharge && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">{t("summary.largeGroupSurcharge", { rate: LARGE_GROUP_SURCHARGE_RATE * 100 })}</span>
-                  <span className="text-gray-900">&euro;{Math.round(surcharge)}</span>
+                  <span className="text-gray-900">&euro;{surchargeAllIn}</span>
                 </div>
               )}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">{t("summary.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</span>
-                <span className="text-gray-900">&euro;{fee.toFixed(2)}</span>
-              </div>
               <hr className="border-warm-200" />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
-                <span className="text-xl font-bold text-gray-900">&euro;{total.toFixed(2)}</span>
+                <span className="text-xl font-bold text-gray-900">&euro;{total}</span>
               </div>
             </div>
             <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5">
@@ -1232,9 +1233,10 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               const applySurcharge = !selectedPkg.is_group_package && !selectedPkg.is_custom && effectiveGroup >= LARGE_GROUP_THRESHOLD;
               const basePrice = Number(selectedPkg.price);
               const surcharge = applySurcharge ? basePrice * LARGE_GROUP_SURCHARGE_RATE : 0;
-              const subtotal = basePrice + surcharge;
-              const fee = subtotal * SERVICE_FEE_RATE;
-              const total = subtotal + fee;
+              // Same all-in decomposition as the mobile block above.
+              const total = clientPriceWithFee(basePrice + surcharge);
+              const pkgAllIn = clientPriceWithFee(basePrice);
+              const surchargeAllIn = total - pkgAllIn;
               return (
               <>
                 <div className="mt-4 rounded-lg bg-warm-50 p-3 space-y-1">
@@ -1247,23 +1249,19 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <div className="mt-3 space-y-1.5 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">{selectedPkg.name}</span>
-                    <span className="text-gray-900">€{Math.round(basePrice)}</span>
+                    <span className="text-gray-900">€{pkgAllIn}</span>
                   </div>
                   {applySurcharge && (
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">{t("summary.largeGroupSurcharge", { rate: LARGE_GROUP_SURCHARGE_RATE * 100 })}</span>
-                      <span className="text-gray-900">€{Math.round(surcharge)}</span>
+                      <span className="text-gray-900">€{surchargeAllIn}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">{t("summary.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</span>
-                    <span className="text-gray-900">€{fee.toFixed(2)}</span>
-                  </div>
                 </div>
                 <hr className="my-3 border-warm-200" />
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
-                  <span className="text-xl font-bold text-gray-900">€{total.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-gray-900">€{total}</span>
                 </div>
                 <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-2">
                   <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

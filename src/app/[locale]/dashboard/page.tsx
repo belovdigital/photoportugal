@@ -16,6 +16,7 @@ import { getPhotographerTasks } from "@/lib/photographer-tasks";
 import { syncStripeOnboardingIfStale } from "@/lib/stripe-sync";
 import { getLocale } from "next-intl/server";
 import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
+import { showsInvoicingAnnouncement } from "@/lib/invoicing-announcement";
 
 
 // Popular-destination chips, per market. These are links to /locations/<slug>,
@@ -298,6 +299,32 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
               className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-red-700"
             >
               {t("calendarBrokenCta")}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* A legal obligation with a five-working-day clock, so it sits above the
+          onboarding checklist rather than inside it — a checklist item is a
+          suggestion, and this one is not. Gated in invoicing-announcement.ts:
+          Portugal only, and only once the announcement is released. */}
+      {showsInvoicingAnnouncement && (
+        <div className="mt-6 rounded-xl border-2 border-amber-400 bg-amber-50 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <div className="min-w-0">
+                <p className="text-base font-bold text-amber-900">{t("invoicingBannerTitle")}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-amber-900">{t("invoicingBannerBody")}</p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/invoicing"
+              className="shrink-0 rounded-lg bg-amber-600 px-5 py-2.5 text-center text-sm font-bold text-white transition hover:bg-amber-700"
+            >
+              {t("invoicingBannerCta")}
             </Link>
           </div>
         </div>

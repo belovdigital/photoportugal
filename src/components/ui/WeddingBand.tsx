@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { TrackedCTALink } from "@/components/ui/TrackedCTALink";
 import { unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
@@ -118,7 +119,8 @@ export async function WeddingBand({ locale }: { locale: string }) {
       [WEDDING_DB_NAMES]
     );
     photographerCount = parseInt(stats?.count || "0");
-    minPrice = stats?.min_price ? parseFloat(stats.min_price) : null;
+    // All-in client price — the SQL min is the photographer base.
+    minPrice = stats?.min_price ? clientPriceWithFee(parseFloat(stats.min_price)) : null;
 
     const rows = await query<{ url: string }>(
       `SELECT pi.url

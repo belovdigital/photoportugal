@@ -4,6 +4,7 @@ import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 import { normalizeName } from "@/lib/format-name";
 import { maskSurname } from "@/lib/photographer-name";
 import { getTranslations } from "next-intl/server";
+import { clientPriceWithFee } from "@/lib/service-fee";
 
 export interface PackageCardWithCarouselData {
   id: string;
@@ -121,8 +122,9 @@ export async function PackageCardWithCarousel({
         </p>
 
         <div className="mt-auto pt-4 flex items-baseline justify-between">
+          {/* All-in client price — matches the /book total this links to. */}
           <span className="text-2xl font-bold text-gray-900">
-            €{Math.round(Number(pkg.price))}
+            €{clientPriceWithFee(Number(pkg.price))}
           </span>
           <span className="text-sm font-semibold text-primary-600 group-hover:underline">
             {bookCtaLabel} →

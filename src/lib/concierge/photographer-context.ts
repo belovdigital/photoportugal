@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 import { maskSurname } from "@/lib/photographer-name";
 
@@ -135,7 +136,8 @@ export function photographersToSystemPromptBlock(list: ConciergePhotographer[]):
       p.languages.length
         ? `languages=[${p.languages.join(",")}]${p.languages.some((l) => l.trim().toLowerCase() === "english") ? "" : " ⚠️NO-ENGLISH"}`
         : "languages=[NONE DECLARED] ⚠️NO-ENGLISH",
-      p.min_price ? `from=€${p.min_price}` : null,
+      // All-in client price — the concierge speaks to clients, never base.
+      p.min_price ? `from=€${clientPriceWithFee(p.min_price)}` : null,
       p.review_count > 0 ? `rating=${p.rating.toFixed(1)} (${p.review_count} reviews)` : `rating=new`,
       p.tagline ? `tagline="${p.tagline.replace(/"/g, "'").slice(0, 120)}"` : null,
     ].filter(Boolean);

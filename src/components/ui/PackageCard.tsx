@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatDuration } from "@/lib/package-pricing";
+import { clientPriceWithFee } from "@/lib/service-fee";
 
 interface PackageProps {
   pkg: {
@@ -102,7 +103,10 @@ export function PackageCard({ pkg, photographerSlug, giftMode = null, extrasPric
             🎁 Covered
           </span>
         ) : (
-          <span className="shrink-0 text-2xl font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
+          /* All-in client price — this card renders on public surfaces only
+             (profile, landers); the photographer's own dashboard uses
+             SortablePackageCard, which keeps showing their base. */
+          <span className="shrink-0 text-2xl font-bold text-gray-900">&euro;{clientPriceWithFee(Number(pkg.price))}</span>
         )}
       </div>
 

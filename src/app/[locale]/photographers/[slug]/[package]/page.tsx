@@ -13,7 +13,8 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
 import { maskSurname } from "@/lib/photographer-name";
-import { LARGE_GROUP_SURCHARGE_RATE, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { LARGE_GROUP_SURCHARGE_RATE } from "@/lib/stripe";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { inferPackageTags, locationDisplayName } from "@/lib/package-photo-matching";
 import { PackageHeroCarousel } from "./PackageHeroCarousel";
 import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
@@ -245,10 +246,10 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
   const heroPhotos = portfolio.slice(0, 8).map((p) => ({ url: p.url, alt: p.caption || `${pkg.name} — ${photographer.display_name}` }));
   const galleryPhotos = portfolio.slice(0, 12);
   const where = locations.slice(0, 3).map((l) => l.name).filter(Boolean).join(" · ");
-  // Two-decimal display to match Stripe (which always shows cents).
-  // Stale integer rendering caused "Pay €248" vs Stripe page "€247.50" gap.
-  const totalPriceRaw = Number(pkg.price) * (1 + SERVICE_FEE_RATE);
-  const totalPrice = totalPriceRaw.toFixed(2);
+  // All-in client price, €5-rounded — the ONE number this page shows. It is
+  // exactly what Stripe will charge (calculatePayment uses the same function),
+  // so the old "Pay €248" vs "€247.50" mismatch can't come back.
+  const totalPrice = clientPriceWithFee(Number(pkg.price));
   const ratingNum = Number(photographer.rating || 5);
 
   // ─── Schema.org Product JSON-LD ───────────────────────────────────────
@@ -269,7 +270,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     offers: {
       "@type": "Offer",
       priceCurrency: "EUR",
-      price: String(Math.round(Number(pkg.price))),
+      price: String(totalPrice),
       availability: "https://schema.org/InStock",
       url: `${country.baseUrl}/book/${slug}?package=${pkg.id}`,
       seller: { "@type": "Person", name: photographer.display_name },
@@ -371,8 +372,8 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <div className="rounded-2xl bg-white/95 px-5 py-3 shadow-lg backdrop-blur-sm">
-                <span className="text-2xl font-bold text-gray-900 sm:text-3xl">€{Math.round(Number(pkg.price))}</span>
-                <span className="ml-1.5 text-sm text-gray-500">{T("plusFee", "+ {rate}% fee", { rate: SERVICE_FEE_RATE * 100 })}</span>
+                {/* One all-in number, no fee suffix (2026-08-09). */}
+                <span className="text-2xl font-bold text-gray-900 sm:text-3xl">€{totalPrice}</span>
               </div>
               <Link
                 href={`/book/${slug}?package=${pkg.id}` as never}
@@ -605,7 +606,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
                     <div className="mt-auto flex items-end justify-between gap-3 pt-5">
                       <div>
                         <p className="text-xs uppercase tracking-wider text-gray-400">{T("from", "From")}</p>
-                        <p className="font-display text-3xl font-bold text-gray-900">€{Math.round(Number(op.price))}</p>
+                        <p className="font-display text-3xl font-bold text-gray-900">€{clientPriceWithFee(Number(op.price))}</p>
                       </div>
                       <span className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition group-hover:bg-primary-600">
                         {T("viewDetails", "View details")}

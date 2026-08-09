@@ -37,8 +37,8 @@ export const PLAN_PRICES: Record<string, number> = {
 // Single source of truth lives in lib/service-fee (client-safe module —
 // chat cards etc. must not import this stripe-SDK file). Re-exported here
 // so existing server imports keep working.
-export { SERVICE_FEE_RATE } from "@/lib/service-fee";
-import { SERVICE_FEE_RATE } from "@/lib/service-fee";
+export { SERVICE_FEE_RATE, clientPriceWithFee } from "@/lib/service-fee";
+import { SERVICE_FEE_RATE, clientPriceWithFee } from "@/lib/service-fee";
 
 // Large-group surcharge: 9+ people pay an extra 50% on the package base
 // price. Applied before service fee. Smaller groups (≤8) pay the package
@@ -54,8 +54,11 @@ export function largeGroupMultiplier(groupSize: number): number {
  */
 export function calculatePayment(packagePrice: number | string, plan: string) {
   const price = Number(packagePrice);
-  const serviceFee = Math.round(price * SERVICE_FEE_RATE * 100) / 100;
-  const totalClientPays = price + serviceFee;
+  // All-in charge, €5-rounded — MUST equal what every client surface shows
+  // (they all render clientPriceWithFee). serviceFee absorbs the rounding
+  // remainder, so it is ≥15% of base; payout math below never touches it.
+  const totalClientPays = clientPriceWithFee(price);
+  const serviceFee = Math.round((totalClientPays - price) * 100) / 100;
   const commissionPct = COMMISSION_RATES[plan] ?? COMMISSION_RATES.free;
   const commissionRate = commissionPct / 100;
   const platformFee = Math.round(price * commissionRate * 100) / 100;

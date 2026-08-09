@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { titleCasePackageName } from "@/lib/format-package-name";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 
@@ -453,7 +454,7 @@ export async function PUT(req: NextRequest) {
                            is_public, is_popular, delivery_days, sort_order, custom_for_user_id)
      VALUES ($1, $2, $3, $4, $5, $6, FALSE, FALSE, 7, 0, $7)
      RETURNING id`,
-    [booking.photographer_id, name, description, Math.round(durationMinutes), Math.round(numPhotos), Math.round(price), booking.client_id]
+    [booking.photographer_id, titleCasePackageName(name), description, Math.round(durationMinutes), Math.round(numPhotos), Math.round(price), booking.client_id]
   );
   if (!pkg) return NextResponse.json({ error: "Failed to create proposal" }, { status: 500 });
 

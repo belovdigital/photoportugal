@@ -183,7 +183,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     contactLanguages: ["English", "Portuguese"],
     seo: {
       title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-      description: `Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR299.`,
+      description: `Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR279 all-in.`,
       ogDescription: `Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places.`,
       keywords: [
         "photographer portugal",

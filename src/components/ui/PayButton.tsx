@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { SERVICE_FEE_RATE } from "@/lib/stripe";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { StripeLogo } from "@/components/ui/StripeLogo";
 
 export function PayButton({ bookingId, amount, blind = false }: {
@@ -47,16 +47,12 @@ export function PayButton({ bookingId, amount, blind = false }: {
     setLoading(false);
   }
 
-  // Render with 2 decimals to match Stripe's display exactly. Earlier
-  // we Math.round'ed which produced "€248" while Stripe charged €247.50
-  // — confusing the client. Always show cents now.
-  // Blind: charge = base / 0.85 (all-inclusive summer offer) — must match
-  // the checkout blind branch exactly, or the button promises one number
-  // and Stripe charges another.
-  const serviceFee = (Number(amount) * SERVICE_FEE_RATE).toFixed(2);
+  // Must equal the Stripe charge exactly ("Pay €248" vs "€247.50" burned us
+  // once). Regular: clientPriceWithFee — same function checkout charges, a
+  // whole €5 multiple, so no cents. Blind: base / 0.85, may carry cents.
   const total = blind
     ? (Math.round((Number(amount) / 0.85) * 100) / 100).toFixed(2)
-    : (Number(amount) * (1 + SERVICE_FEE_RATE)).toFixed(2);
+    : String(clientPriceWithFee(Number(amount)));
 
   return (
     <div className="flex items-center gap-2">
@@ -83,8 +79,6 @@ export function PayButton({ bookingId, amount, blind = false }: {
         )}
       </button>
       <div className="flex flex-col gap-0.5">
-        {/* Blind summer offer is all-inclusive — no fee breakdown. */}
-        {!blind && <span className="text-xs text-gray-400">{t("serviceFee", { fee: serviceFee })}</span>}
         <span className="inline-flex items-center gap-1 text-[10px] text-gray-400">
           <StripeLogo className="h-[10px] w-auto text-gray-400" />
           {t("securePayment")}

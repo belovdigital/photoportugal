@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, locField } from "@/lib/locations-data";
@@ -214,21 +215,27 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
   // numbers without N+1 queries.
   let perLocation: Record<string, { count: number; minPrice: number | null }> = {};
   try {
-    const rows = await query<{ location_slug: string; count: string; min_price: string | null }>(
+    const rows = await query<{ location_slug: string; count: string; pkg_min_price: string | null; region_min_price: string | null }>(
       `SELECT pl.location_slug,
               COUNT(DISTINCT pp.id)::text as count,
-              GREATEST((SELECT MIN(pk.price) FROM packages pk
+              (SELECT MIN(pk.price) FROM packages pk
                  JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
-                 WHERE pl2.location_slug = pl.location_slug AND pk.is_public = TRUE), (SELECT MIN(price_eur) FROM region_pricing))::text as min_price
+                 WHERE pl2.location_slug = pl.location_slug AND pk.is_public = TRUE)::text as pkg_min_price,
+              (SELECT MIN(price_eur) FROM region_pricing)::text as region_min_price
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
        GROUP BY pl.location_slug`
     );
-    perLocation = Object.fromEntries(rows.map((r) => [r.location_slug, {
-      count: parseInt(r.count),
-      minPrice: r.min_price ? parseFloat(r.min_price) : null,
-    }]));
+    perLocation = Object.fromEntries(rows.map((r) => {
+      // Same GREATEST semantics as before (clamp the outlier package floor to
+      // at least the blind-booking floor), but the package side is converted
+      // to the ALL-IN client price first — region_pricing is already all-in.
+      const pkgMin = r.pkg_min_price ? clientPriceWithFee(parseFloat(r.pkg_min_price)) : null;
+      const regionMin = r.region_min_price ? parseFloat(r.region_min_price) : null;
+      const minPrice = pkgMin !== null || regionMin !== null ? Math.max(pkgMin ?? 0, regionMin ?? 0) : null;
+      return [r.location_slug, { count: parseInt(r.count), minPrice }];
+    }));
   } catch {}
 
   // Reviews from across all locations (no slug filter) for the global strip.

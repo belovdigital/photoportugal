@@ -2060,7 +2060,7 @@
   },
   "terms": {
     "title": "Termos de Serviço",
-    "lastUpdated": "Última atualização: 13 de maio de 2026",
+    "lastUpdated": "Última atualização: 9 de agosto de 2026",
     "metaDescription": "Termos de serviço da Photo Portugal — reservas, pagamentos, cancelamentos, reembolsos e regras da plataforma.",
     "sections": {
       "overview": {
@@ -2102,12 +2102,13 @@
         "title": "5. Pagamentos e Custódia",
         "intro": "Todos os pagamentos são processados de forma segura através do Stripe. Quando um cliente reserva uma sessão fotográfica, o valor integral é cobrado e retido em custódia pela Photo Portugal. O fluxo de pagamento funciona da seguinte forma:",
         "items": {
-          "clientPays": "O cliente paga o preço integral do pacote no momento da reserva",
+          "clientPays": "O cliente paga o preço da sessão do fotógrafo mais uma taxa de serviço {brand} de {rate}%, no momento da reserva. Os dois valores aparecem discriminados em separado no resumo da reserva, antes de qualquer pagamento.",
           "fundsHeld": "Os fundos são retidos em segurança até o fotógrafo entregar as fotos e o cliente aceitar a entrega",
           "released": "Assim que o cliente aceitar a entrega, a parte do fotógrafo (menos a comissão da plataforma) é-lhe libertada",
           "autoRelease": "Se o cliente não responder no prazo de <strong>14 dias</strong> após a entrega, o pagamento é automaticamente libertado para o fotógrafo",
           "support": "Se o cliente não aceitar nem contestar no prazo de 7 dias, o fotógrafo pode contactar a nossa equipa de apoio para resolver a situação",
-          "autoCancellation": "Após o fotógrafo confirmar a reserva, o pagamento deve ser recebido em <strong>24 horas</strong> para garantir o horário. Se o pagamento não for recebido a tempo, a reserva é automaticamente cancelada e o horário libertado para outros clientes"
+          "autoCancellation": "Após o fotógrafo confirmar a reserva, o pagamento deve ser recebido em <strong>24 horas</strong> para garantir o horário. Se o pagamento não for recebido a tempo, a reserva é automaticamente cancelada e o horário libertado para outros clientes",
+          "invoicing": "As faturas vêm de duas origens. O fotógrafo fatura ao cliente a sessão fotográfica; a {brand} fatura ao cliente a sua taxa de serviço. Cada parte emite o seu próprio documento, e nenhuma emite o da outra."
         }
       },
       "commission": {
@@ -2118,7 +2119,8 @@
           "pro": "<strong>Plano Pro</strong> (€29/mês): comissão de 15%",
           "premium": "<strong>Plano Premium</strong> (€59/mês): comissão de 10%"
         },
-        "details": "A comissão é deduzida do pagamento do fotógrafo quando a reserva é concluída. Se uma reserva for cancelada pelo cliente com mais de 7 dias de antecedência da sessão, não é cobrada comissão. Para cancelamentos tardios em que um pagamento parcial é retido pelo fotógrafo, a comissão aplica-se ao montante retido."
+        "details": "A comissão é deduzida do pagamento do fotógrafo quando a reserva é concluída. Se uma reserva for cancelada pelo cliente com mais de 7 dias de antecedência da sessão, não é cobrada comissão. Para cancelamentos tardios em que um pagamento parcial é retido pelo fotógrafo, a comissão aplica-se ao montante retido.",
+        "documents": "A {brand} fatura esta comissão ao fotógrafo em documento separado. O fotógrafo é quem vende a sessão e é quem emite ao cliente a fatura correspondente, nos termos exigidos no país onde está registado; a {brand} não é parte nessa fatura nem a emite em nome do fotógrafo."
       },
       "cancellationByClient": {
         "title": "7. Cancelamento pelo Cliente",
@@ -2351,7 +2353,11 @@
     "bankConfirmTitle": "Antes de se candidatar",
     "bankConfirmBody": "Ao continuar, confirma que tem uma conta bancária em {country}, registada em seu nome, e que a consegue verificar. Os pagamentos são automáticos e passam pela Stripe — sem essa conta não lhe conseguimos pagar, por isso não poderemos aprovar o seu perfil. Se ainda não tem, por favor não se candidate até ter.",
     "bankConfirmCheckbox": "Tenho uma conta bancária em {country} em meu nome e consigo verificá-la",
-    "bankConfirmRequired": "Confirme isto antes de enviar."
+    "bankConfirmRequired": "Confirme isto antes de enviar.",
+    "sidebarInvoicing": "Faturação",
+    "invoicingBannerTitle": "Novo: passa a emitir fatura em cada sessão",
+    "invoicingBannerBody": "A lei portuguesa exige uma fatura por cada sessão, no prazo de 5 dias úteis. Veja o que fazer — leva três minutos.",
+    "invoicingBannerCta": "Ler as instruções"
   },
   "matchRequests": {
     "title": "As Minhas Sugestões",
@@ -4359,5 +4365,51 @@
     "s8body": "As notificações push chegam em segundos, muito antes de um email. Pode responder da praia, do ginásio ou de onde estiver. Procure \"{brand}\" na App Store ou Play Store, ou toque nos botões abaixo.",
     "s9title": "Venda as fotografias que ia apagar",
     "s9body": "Fotografa sempre mais do que o pacote promete. No ecrã de entrega essas fotografias a mais ficam num segundo grupo, **Fotografias extra**, e o seu cliente pode comprar qualquer uma delas pelo preço definido pelo seu fotógrafo — recebe o seu preço por cada, em qualquer plano, assim que o pagamento é confirmado e não só na aceitação.\n\nOfereça algumas primeiro. Defina no mesmo ecrã quantas fotografias quer dar e o cliente escolhe quais — não lhe custa nada, é assim que ele descobre que existem mais, e é a diferença entre uma venda e um presente. Se carregar exatamente o que prometeu, nada disto aparece."
+  },
+  "invoicing": {
+    "eyebrow": "Faturação em Portugal",
+    "title": "A partir de agora emite fatura em cada sessão",
+    "intro": "A partir de {date}, a {brand} passa a operar como atividade registada em Portugal. Isso formaliza algo que sempre foi verdade: é um fotógrafo independente a vender o seu próprio serviço, e a papelada passa a ter de o dizer. Aqui fica exatamente o que tem de fazer.",
+    "unchangedTitle": "O que não muda",
+    "unchangedBody": "Os seus preços, os seus pagamentos, a sua conta Stripe e a forma como as reservas lhe chegam ficam exatamente iguais. Nada nesta página afeta como ou quando recebe.",
+    "s1title": "É o fotógrafo quem vende a sessão",
+    "s1body": "A {brand} é um marketplace. O contrato da sessão é entre si e o cliente — nós apresentamos, tratamos do pagamento e damos apoio aos dois, mas não somos parte na sessão em si. É por isso que a fatura ao cliente é emitida por si, e não por nós.",
+    "s1note": "Isto não é novo — é o ponto 15 dos Termos que aceitou ao entrar. O que é novo é que agora tem de ficar visível no papel.",
+    "s2title": "Confirme que tem atividade aberta nas Finanças",
+    "s2body": "Para poder emitir fatura precisa de ter início de atividade aberto como fotógrafo. Se já trabalha como independente e emite recibos verdes, está tratado. Se nunca se registou, tem de o fazer antes da próxima sessão — é gratuito e pode fazê-lo no Portal das Finanças ou em qualquer balcão.",
+    "s2note": "Qual o código de atividade a escolher é pergunta para um contabilista, não para nós — muda o imposto que paga. Fale com um contabilista antes de escolher.",
+    "s2cta": "Fale connosco se tiver dúvidas",
+    "s3title": "Emita a fatura ao cliente depois de cada sessão",
+    "s3body": "Pode fazê-lo gratuitamente no Portal das Finanças, sem software nenhum. O caminho é:",
+    "s3p1": "Entre em portaldasfinancas.gov.pt com o seu NIF e senha.",
+    "s3p2": "Vá a Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
+    "s3p3": "Escolha Fatura-Recibo — o cliente já pagou, por isso uma fatura simples deixá-lo-ia ainda a dever o recibo.",
+    "s3p4": "Preencha o cliente. A maioria dos nossos clientes são turistas sem NIF português: use o país que lhe indicaram e deixe o NIF como consumidor final (999999990).",
+    "s3p5": "Introduza o valor, confirme e descarregue o PDF. A comunicação à AT é automática.",
+    "s3deadline": "O prazo é de 5 dias úteis a contar do dia da sessão — não do dia em que o dinheiro lhe chega. Emita assim que a sessão termina e nunca ficará atrasado.",
+    "s4title": "O valor a colocar na fatura",
+    "s4body": "Fature a sua própria tarifa da sessão — o «Preço da sessão» que aparece na reserva. Não o seu pagamento: a nossa comissão é uma fatura separada, em sentido contrário, e descontá-la aqui deixaria o cliente sub-faturado. E também não o total que o cliente pagou: esse inclui a nossa taxa de serviço, que somos nós a faturar ao cliente.",
+    "s4boxTitle": "Atenção — não é o número grande a verde",
+    "s4boxBody": "A ficha da reserva mostra «O seu pagamento» em verde e em destaque, porque é o que entra na sua conta. Não é esse o valor a faturar. Estamos a identificar explicitamente o valor a faturar em cada reserva para que os dois nunca se confundam — até lá, veja a linha pequena «Preço da sessão».",
+    "s5title": "A nossa fatura para si, uma vez por mês",
+    "s5body": "No início de cada mês enviamos-lhe uma única fatura com a comissão de tudo o que ficou concluído no mês anterior. Vem de {entity}. Guarde-a — é um gasto da atividade e o seu contabilista vai precisar dela.",
+    "s5note": "Não retém nada sobre ela. A nossa fatura tem dispensa de retenção na fonte ao abrigo do artigo 101.º-B do CIRS, e di-lo no próprio documento.",
+    "s6title": "Envie-nos o seu NIF",
+    "s6body": "Sem o seu NIF não conseguimos emitir essa fatura de comissão. Adicione-o ao seu perfil — demora dez segundos e só o usamos para a fatura.",
+    "s6note": "Se está registado como empresa e não como individual, dê-nos o NIF da empresa e a denominação exata, e não os seus pessoais.",
+    "s6cta": "Adicionar o NIF",
+    "ivaTitle": "IVA — o limite que apanha muita gente",
+    "ivaBody": "Se o total faturado na sua atividade ficar abaixo de 15 000 € num ano civil, está isento de IVA ao abrigo do artigo 53.º do CIVA. As suas faturas não levam IVA e têm de indicar «IVA – regime de isenção, artigo 53.º do CIVA». Acima desse limite tem de se registar para IVA e cobrar 23% nas sessões.",
+    "ivaWarning": "O limite conta tudo o que ganha em fotografia, não só o que ganha aqui. Se faz casamentos por fora ou tem outros clientes, o que conta é o total — e ultrapassá-lo a meio do ano tem consequências para o resto dele. Confirme com o seu contabilista antes de chegar perto.",
+    "backlogTitle": "Sessões que já fez",
+    "backlogBody": "Tudo o que fotografou a partir de {date} também precisa de fatura, e o prazo de 5 dias úteis já começou a correr — nas mais antigas já passou. Percorra as reservas concluídas e emita essas primeiro, antes de tudo o resto nesta página.",
+    "backlogCta": "Abrir as minhas reservas",
+    "limitsTitle": "O que não fazemos",
+    "l1": "Não emitimos faturas em seu nome. Todas as faturas ao cliente são emitidas por si, em seu nome.",
+    "l2": "Não entregamos, declaramos nem pagamos nada às Finanças por si, e não temos forma de verificar se o fez.",
+    "l3": "Não somos o seu contabilista e nada aqui é aconselhamento fiscal. Se alguma coisa não for clara para o seu caso, fale com um contabilista — fica muito mais barato do que corrigir depois.",
+    "helpTitle": "Ficou preso nalgum ponto?",
+    "helpBody": "Diga-nos onde ficou preso e acompanhamos o processo consigo. Preferimos muito mais responder trinta vezes à mesma pergunta do que deixar alguém adivinhar. — Kate e a equipa {brand}",
+    "helpCta": "Falar com o apoio"
   }
 }
