@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     const googleUser = {
       sub: claims.sub,
       email: claims.email,
+      email_verified: claims.email_verified,
       // Google omits `name` for some accounts; fall back so downstream
       // .split(" ") never throws.
       name: claims.name || claims.email.split("@")[0],
@@ -50,11 +51,26 @@ export async function POST(req: NextRequest) {
       family_name: claims.family_name,
     };
 
-    // Find or create user
+    // Match by google_id first — that only ever matches an account that has
+    // already linked THIS Google sub, so it is safe even for an unverified
+    // token. Fall back to email ONLY when Google verified the address.
+    //
+    // Google signs id_tokens with email_verified=false for accounts on a
+    // Workspace domain whose ownership was never proven, and it lets you
+    // create those accounts before proving it — so matching a pre-existing
+    // account on an unverified address would hand anyone that address's
+    // account with a single request. This is the Google twin of the Apple
+    // gate: link on an email only if the provider says it verified it.
     let user = await queryOne<{ id: string; email: string; name: string; role: string; avatar_url: string | null }>(
-      "SELECT id, email, name, role, avatar_url FROM users WHERE email = $1 OR google_id = $2",
-      [googleUser.email, googleUser.sub]
+      "SELECT id, email, name, role, avatar_url FROM users WHERE google_id = $1",
+      [googleUser.sub]
     );
+    if (!user && googleUser.email_verified) {
+      user = await queryOne<{ id: string; email: string; name: string; role: string; avatar_url: string | null }>(
+        "SELECT id, email, name, role, avatar_url FROM users WHERE email = $1",
+        [googleUser.email]
+      );
+    }
 
     // Upgrade Google's default 96-pixel avatar to a 500-pixel version so
     // it doesn't look pixelated when we zoom or show it large.
@@ -69,7 +85,7 @@ export async function POST(req: NextRequest) {
       // /api/auth/mobile/set-role within the 5-minute fresh window)
       const newUser = await queryOne<{ id: string }>(
         `INSERT INTO users (name, first_name, last_name, email, google_id, avatar_url, role, email_verified)
-         VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)
+         VALUES ($1, $2, $3, $4, $5, $6, 'client', $7)
          RETURNING id`,
         [
           googleUser.name,
@@ -78,6 +94,10 @@ export async function POST(req: NextRequest) {
           googleUser.email,
           googleUser.sub,
           avatarUrl,
+          // Write the real claim, not a hardcoded TRUE — an unverified Google
+          // address must not be stamped verified in our own database, where a
+          // later email-based link would then trust it.
+          googleUser.email_verified,
         ]
       );
 
