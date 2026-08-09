@@ -3281,7 +3281,7 @@
     "titleHelp": "Se muestra como el título encima de la galería. Corto y personal — p. ej. \"Tu mágica noche en Lisboa\".",
     "messageHelp": "Una nota cálida encima de las fotos — agradece, recuerda un momento, añade un consejo. 2–4 frases (unos 200–400 caracteres) es perfecto. Opcional.",
     "tipHeading": "¿Te encantaron las fotos de {name}?",
-    "tipSub": "Deja un pequeño agradecimiento. Va para {name}, menos una pequeña tarifa de procesamiento.",
+    "tipSub": "Deja un pequeño agradecimiento. Cada céntimo va para {name}.",
     "tipCustom": "Otro importe",
     "tipSend": "Enviar propina de €{amount}",
     "tipSendDisabled": "Enviar propina",

@@ -3281,7 +3281,7 @@
     "titleHelp": "Affiché comme titre en haut de la galerie. Court et personnel — ex. : « Votre soirée magique à Lisbonne ».",
     "messageHelp": "Un petit mot chaleureux au-dessus des photos — remerciez, évoquez un moment, ajoutez un conseil. 2 à 4 phrases (environ 200–400 caractères) est parfait. Facultatif.",
     "tipHeading": "Vous avez adoré les photos de {name} ?",
-    "tipSub": "Laissez un petit merci. Il va à {name}, moins de petits frais de traitement.",
+    "tipSub": "Laissez un petit merci. Chaque centime va à {name}.",
     "tipCustom": "Autre montant",
     "tipSend": "Envoyer €{amount} de pourboire",
     "tipSendDisabled": "Envoyer un pourboire",

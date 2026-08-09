@@ -496,8 +496,8 @@ export default async function BookingsPage() {
                       <>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("yourPayout") || "Your payout"}</p>
                         <p className="text-sm font-medium text-green-700">&euro;{Math.round(Number(booking.payout_amount))}</p>
-                        {/* Tip payout (their 90% share) — separate line, never
-                            folded into payout_amount. */}
+                        {/* Tip payout (100% theirs since 2026-08-09) — separate
+                            line, never folded into payout_amount. */}
                         {Number(booking.tip_payout_cents) > 0 && (
                           <p className="text-[11px] font-semibold text-amber-700">💛 {t("tipLine")}: &euro;{(Number(booking.tip_payout_cents) / 100).toFixed(2)}</p>
                         )}

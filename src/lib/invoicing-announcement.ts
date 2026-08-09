@@ -16,13 +16,14 @@ import { country, type CountryCode } from "./country";
  * sidebar entry). The page itself is always reachable by URL for photographers
  * and admins, so a market can be reviewed before its entrances open.
  *
- * PT went live 2026-08-09 (Kate notified the roster the same day). ES and IT
- * stay hidden until Alex releases them — flipping the flag is the release.
+ * All three went live 2026-08-09 (PT with Kate's roster notification; ES/IT
+ * released the same evening on Alex's "делай всё что осталось" — their rosters
+ * are a handful of people and the page carries its own not-tax-advice limits).
  */
 const LIVE_BY_MARKET: Record<CountryCode, boolean> = {
   pt: true,
-  es: false,
-  it: false,
+  es: true,
+  it: true,
 };
 
 /**

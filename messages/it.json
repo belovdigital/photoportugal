@@ -3034,7 +3034,7 @@
     "titleHelp": "Appare come titolo sopra la galleria. Scegli una frase breve e personale, ad esempio: \"La tua magica serata a Roma\".",
     "messageHelp": "Un messaggio caloroso mostrato sopra le foto: ringrazia il cliente, ricorda un momento speciale o aggiungi un consiglio. L'ideale è scrivere 2–4 frasi (circa 200–400 caratteri). Facoltativo.",
     "tipHeading": "Ti sono piaciute le foto di {name}?",
-    "tipSub": "Aggiungi un piccolo ringraziamento. Andrà a {name}, al netto di una piccola commissione di elaborazione.",
+    "tipSub": "Lascia un piccolo ringraziamento. Ogni centesimo va a {name}.",
     "tipCustom": "Altro importo",
     "tipSend": "Invia una mancia di €{amount}",
     "tipSendDisabled": "Invia una mancia",

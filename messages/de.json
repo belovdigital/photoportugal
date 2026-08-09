@@ -3035,7 +3035,7 @@
     "titleHelp": "Erscheint als Überschrift über der Galerie. Kurz und persönlich — z. B. \"Ihr magischer Abend in Lissabon\".",
     "messageHelp": "Eine herzliche Notiz über den Fotos — bedanken Sie sich, erinnern Sie an einen Moment, geben Sie einen Tipp. 2–4 Sätze (etwa 200–400 Zeichen) sind ideal. Optional.",
     "tipHeading": "Haben Ihnen die Fotos von {name} gefallen?",
-    "tipSub": "Ein kleines Dankeschön. Es geht an {name}, abzüglich einer kleinen Bearbeitungsgebühr.",
+    "tipSub": "Ein kleines Dankeschön. Jeder Cent geht an {name}.",
     "tipCustom": "Anderer Betrag",
     "tipSend": "€{amount} Trinkgeld senden",
     "tipSendDisabled": "Trinkgeld senden",

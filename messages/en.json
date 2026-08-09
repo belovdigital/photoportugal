@@ -3034,7 +3034,7 @@
     "titleHelp": "Shown as the headline above your gallery. Keep it short and personal — e.g. \"Your magical Lisbon evening\".",
     "messageHelp": "A warm note shown above the photos — thank the client, recall a favourite moment, add a tip. 2–4 sentences (around 200–400 characters) is perfect. Optional.",
     "tipHeading": "Loved {name}’s photos?",
-    "tipSub": "Add a little thank-you. It goes to {name}, minus a small processing fee.",
+    "tipSub": "Add a little thank-you. Every cent goes to {name}.",
     "tipCustom": "Custom",
     "tipSend": "Send €{amount} tip",
     "tipSendDisabled": "Send a tip",

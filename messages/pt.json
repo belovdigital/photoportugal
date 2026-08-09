@@ -2809,7 +2809,7 @@
     "titleHelp": "Aparece como o título grande no topo da galeria. Curto e pessoal — ex.: \"A sua noite mágica em Lisboa\".",
     "messageHelp": "Uma nota calorosa acima das fotos — agradeça, recorde um momento, deixe uma dica. 2 a 4 frases (cerca de 200–400 caracteres) fica perfeito. Opcional.",
     "tipHeading": "Adorou as fotos de {name}?",
-    "tipSub": "Deixe um pequeno agradecimento. Vai para {name}, menos uma pequena taxa de processamento.",
+    "tipSub": "Deixe um pequeno agradecimento. Cada cêntimo vai para {name}.",
     "tipCustom": "Outro valor",
     "tipSend": "Enviar gorjeta de €{amount}",
     "tipSendDisabled": "Enviar gorjeta",

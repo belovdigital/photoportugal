@@ -15,13 +15,15 @@ export const dynamic = "force-dynamic";
 // password OR a signed-in booking owner (client / gift recipient).
 //
 // Money model (user decision 2026-07-02): the client pays the tip amount
-// straight; the platform keeps 10% (covers Stripe processing + margin),
-// the photographer receives 90% via a Connect transfer fired from the
+// straight; the photographer receives 100% via a Connect transfer fired from the
 // checkout.session.completed webhook. One PAID tip per booking (partial
 // unique index) — the UI hides the card once tipped.
 const MIN_TIP_EUR = 5;
 const MAX_TIP_EUR = 500;
-const TIP_PLATFORM_RATE = 0.10;
+// 0 since 2026-08-09 (Alex: "пусть все уходит фотографам") — the platform
+// keeps nothing and eats the Stripe processing cost. Also keeps the invoicing
+// model clean: a cut here would be the one charge we levy on photographers.
+const TIP_PLATFORM_RATE = 0;
 
 export async function POST(
   req: NextRequest,
@@ -132,7 +134,7 @@ export async function POST(
         currency: "eur",
         product_data: {
           name: `Tip for ${firstName} — Photo Portugal`,
-          description: "A thank-you for your photographer. Goes to them, minus a small processing fee.",
+          description: "A thank-you for your photographer. Every cent goes to them.",
         },
         unit_amount: amountCents,
       },
