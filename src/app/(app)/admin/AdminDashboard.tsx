@@ -37,7 +37,7 @@ function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "t
   return (
     <div>
       <h2 className="text-lg font-bold text-gray-900 mb-1">{title}</h2>
-      <p className="text-xs text-gray-400 mb-4">{channel === "sms" ? "Live from Twilio API" : "From notification logs"} · Last {logs.length} entries</p>
+      <p className="text-xs text-gray-400 mb-4">{channel === "sms" ? "This market's SMS, delivery status live from Twilio" : "From notification logs"} · Last {logs.length} entries</p>
       {logs.length === 0 ? (
         <p className="text-gray-400 text-center py-8">No logs found</p>
       ) : (
