@@ -402,9 +402,19 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                       {p.early_bird_tier === "early50" ? "Early Bird" : "First 100"}
                     </span>
                   )}
-                  {!p.is_approved && !p.is_banned && p.checklist_complete && !p.revision_status && (
+                  {/* "Ready" means the photographer pressed Submit for review —
+                      the same condition the Ready for Review filter counts.
+                      A finished checklist alone is not a request: the row used
+                      to wear a green Ready badge while the filter above still
+                      counted it under Not Ready. */}
+                  {!p.is_approved && !p.is_banned && p.checklist_complete && !p.revision_status && p.approval_requested_at && (
                     <span className="shrink-0 animate-pulse rounded-full bg-green-100 px-1.5 py-0.5 text-[9px] font-bold text-green-700">
                       Ready
+                    </span>
+                  )}
+                  {!p.is_approved && !p.is_banned && p.checklist_complete && !p.revision_status && !p.approval_requested_at && (
+                    <span className="shrink-0 rounded-full bg-orange-100 px-1.5 py-0.5 text-[9px] font-bold text-orange-700">
+                      Not Ready
                     </span>
                   )}
                   {p.revision_status === "pending" && (
