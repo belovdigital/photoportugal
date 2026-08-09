@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { prefixedLocales } from "@/lib/country";
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       ),
       seg AS (
         SELECT path,
-               lower(regexp_replace(regexp_replace(path, '^/(pt|de|es|fr)(/|$)', '/', 'i'), '^.*/([^/]+)/?$', '\\1')) AS last_seg
+               lower(regexp_replace(regexp_replace(path, $3, '/', 'i'), '^.*/([^/]+)/?$', '\\1')) AS last_seg
           FROM p
       ),
       candidates AS (
@@ -92,7 +93,7 @@ export async function GET(req: NextRequest) {
         FROM p
         LEFT JOIN best b ON b.path = p.path
        ORDER BY p.hits DESC, p.last_seen_at DESC`,
-      [minHits, showIgnored]
+      [minHits, showIgnored, `^/(${prefixedLocales.join("|")})(/|$)`]
     );
 
     return NextResponse.json(rows);

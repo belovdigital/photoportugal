@@ -270,7 +270,8 @@ export interface PriceLookup {
 /** Pre-offer all-in totals (base €299/€500/€700 × 1.15) — shown struck
  *  through next to the summer-offer price so the saving is visible. */
 export const BLIND_COMPARE_AT_EUR: Record<number, number> = {
-  60: 344,
+  // €5-rounded like every other client price since 2026-08-09 (was 344).
+  60: 345,
   120: 575,
   180: 805,
 };

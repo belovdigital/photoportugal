@@ -33,6 +33,10 @@ function raiseFirstLetter(word: string): string {
   // "iPhone" must not become "IPhone", "eBook" must not become "EBook".
   if (/\p{Lu}/u.test(word)) return word;
 
+  // A word opening with a digit is a measurement, and its letters are a unit:
+  // "4h", "30min", "2x". Raising them gives "4H".
+  if (/^\d/.test(word)) return word;
+
   // Walk past anything that cannot carry a case — "(golden" and "«sunset"
   // should still capitalise the letter, not give up at the bracket.
   for (let i = 0; i < word.length; i++) {

@@ -1,34 +1,38 @@
 /**
- * The one-time announcement that tells Portuguese photographers they now have
- * to issue a fatura for every shoot.
+ * Photographer invoicing instructions — release state and shared constants.
  *
- * Everything that decides WHO sees it and WHICH dates it quotes lives here, so
- * flipping the announcement live is a one-line change rather than a hunt
- * through three components.
+ * The model is the same in every market (decided 2026-08-09): the photographer
+ * invoices the CLIENT for their payout; the platform invoices the client for
+ * the remainder of the all-inclusive price; the platform NEVER invoices the
+ * photographer. Only the local mechanics differ (Finanças / AEAT / SdI), which
+ * is why /dashboard/invoicing renders a per-market subtree of the `invoicing`
+ * namespace.
  */
 
-import { country } from "./country";
+import { country, type CountryCode } from "./country";
 
 /**
- * Has the announcement been released to photographers?
+ * Per-market release switch for the in-product entrances (dashboard banner,
+ * sidebar entry). The page itself is always reachable by URL for photographers
+ * and admins, so a market can be reviewed before its entrances open.
  *
- * Released on 2026-08-09, once Alex settled which amount the photographer
- * invoices: the platform invoices the client for its service fee and the
- * photographer for its commission, so the photographer invoices only their own
- * session rate. Kate notifies the roster the same day.
+ * PT went live 2026-08-09 (Kate notified the roster the same day). ES and IT
+ * stay hidden until Alex releases them — flipping the flag is the release.
  */
-export const INVOICING_ANNOUNCEMENT_LIVE = true;
+const LIVE_BY_MARKET: Record<CountryCode, boolean> = {
+  pt: true,
+  es: false,
+  it: false,
+};
 
 /**
  * The day the platform's Portuguese activity starts, as declared to the AT.
- *
- * Quoted on the page, in the banner and in the "shoots you have already done"
- * warning. If Kate's início de atividade lands on another date, change it here
- * and every surface follows.
+ * Drives the PT page's intro and its "shoots you have already done" warning;
+ * ES/IT copy is date-free until those markets get a release date of their own.
  */
 export const ACTIVITY_START_ISO = "2026-08-01";
 
-/** The operating entity, as it must appear on documents photographers receive. */
+/** The operating entity behind every market, as it appears on client invoices. */
 export const OPERATING_ENTITY = {
   name: "Ekaterina Belova",
   form: "Empresária em Nome Individual",
@@ -36,24 +40,8 @@ export const OPERATING_ENTITY = {
   city: "Lisboa",
 } as const;
 
-/**
- * Only Portugal. The instructions are Portuguese tax law end to end — Finanças,
- * ATCUD, artigo 53.º — and shipping them to a Spanish or Italian photographer
- * would be worse than showing nothing: it reads as authoritative and is wrong
- * for their country.
- */
-export const invoicingAnnouncementApplies = country.code === "pt";
-
-/**
- * Should the in-product entrances (sidebar entry, dashboard banner) be shown?
- *
- * No admin escape hatch on purpose: the admin role renders neither the
- * photographer sidebar nor the photographer overview, so a branch for it would
- * look like a preview path and never fire. Review the page at its URL instead —
- * `/dashboard/invoicing` is reachable for photographer and admin alike.
- */
-export const showsInvoicingAnnouncement =
-  invoicingAnnouncementApplies && INVOICING_ANNOUNCEMENT_LIVE;
+/** Should this market show the in-product entrances to the announcement? */
+export const showsInvoicingAnnouncement = LIVE_BY_MARKET[country.code];
 
 /** e.g. "1 August 2026" in the reader's language. */
 export function activityStartLabel(locale: string): string {

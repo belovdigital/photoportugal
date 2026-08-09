@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { locations as curatedLocations } from "@/lib/locations-data";
+import { prefixedLocales } from "@/lib/country";
 
 // Aggregate 404 hits + return a "Did you mean?" suggestion in one
 // round trip. Called fire-and-forget from the 404 page client.
@@ -41,9 +42,11 @@ function shouldSkip(path: string): boolean {
 
 // Strip locale prefix + trailing slash so we can compare a suggested
 // URL against the user's actual path without false negatives from
-// locale or slash differences.
+// locale or slash differences. The prefix list comes from the active
+// country pack — a literal drops whichever locales that market added.
+const LOCALE_PREFIX_RE = new RegExp(`^/(${prefixedLocales.join("|")})(/|$)`);
 function canonicalisePath(p: string): string {
-  return p.replace(/^\/(pt|de|es|fr)(\/|$)/, "/").replace(/\/+$/, "") || "/";
+  return p.replace(LOCALE_PREFIX_RE, "/").replace(/\/+$/, "") || "/";
 }
 
 // Suggest the closest existing URL by matching the last URL segment

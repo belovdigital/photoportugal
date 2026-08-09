@@ -9,7 +9,7 @@ import {
   getPhotographerCoverageNodeSlugs,
   savePhotographerCoverageNodeSlugs,
 } from "@/lib/photographer-location-coverage";
-import { normalizeCoverageNodeSlugs } from "@/lib/location-hierarchy";
+import { collapseCoverageToParents } from "@/lib/location-hierarchy";
 
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -218,9 +218,11 @@ export async function PUT(req: NextRequest) {
     // during the migration.
     if (Array.isArray(coverageNodeSlugs) || Array.isArray(locationSlugs)) {
       const maxLocations = profile.plan === "premium" ? Infinity : profile.plan === "pro" ? 5 : 1;
-      const requestedCoverageNodes = Array.isArray(coverageNodeSlugs)
-        ? normalizeCoverageNodeSlugs(coverageNodeSlugs)
-        : normalizeCoverageNodeSlugs(locationSlugs || []);
+      // Collapse before the plan limit so a fully-covered region costs one
+      // slot, exactly as ticking the region row itself does.
+      const requestedCoverageNodes = collapseCoverageToParents(
+        Array.isArray(coverageNodeSlugs) ? coverageNodeSlugs : (locationSlugs || [])
+      );
       const limitedCoverageNodes = requestedCoverageNodes.slice(
         0,
         maxLocations === Infinity ? requestedCoverageNodes.length : maxLocations

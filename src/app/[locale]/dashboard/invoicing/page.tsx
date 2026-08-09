@@ -5,11 +5,7 @@ import { queryOne } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { country } from "@/lib/country";
 import { getTranslations } from "next-intl/server";
-import {
-  OPERATING_ENTITY,
-  activityStartLabel,
-  invoicingAnnouncementApplies,
-} from "@/lib/invoicing-announcement";
+import { activityStartLabel } from "@/lib/invoicing-announcement";
 
 export const dynamic = "force-dynamic";
 
@@ -17,16 +13,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// What a Portuguese photographer has to do now that every shoot needs a fatura.
+// What a photographer has to do about invoicing, in THIS market's terms.
 //
-// Written as a page rather than a paragraph on /dashboard/payouts because the
-// answer is genuinely six steps long and half of it happens on a government
-// site we do not control. Portugal only — see invoicing-announcement.ts.
+// One model everywhere (2026-08-09): the photographer invoices the client for
+// their payout — the green number on the booking — and the platform invoices
+// the client for the rest. We never invoice the photographer, so there is no
+// commission paperwork, no NIF collection, and no cross-border VAT machinery.
 //
-// One thing is deliberately NOT stated: the exact amount to invoice. That
-// depends on whether the photographer bills the client the all-in price or
-// only their own rate, which is an open decision. Rather than guess, the page
-// points at the booking page, which is where the figure belongs anyway.
+// Content comes from `invoicing.{pt|es|it}` — same key schema per market, so
+// the skeleton below is shared; only PT has the Finanças portal walkthrough
+// (s3p1..p5) and the backdated-start warning (backlog*), because only PT has a
+// declared activity start date.
 
 export default async function InvoicingPage({
   params,
@@ -41,16 +38,12 @@ export default async function InvoicingPage({
     "SELECT role, name FROM users WHERE id = $1",
     [userId]
   );
-  // Clients have no business here, and neither does a market this does not
-  // apply to — Spanish and Italian photographers answer to a different tax
-  // authority and would read Portuguese rules as their own.
   if (user?.role !== "photographer" && user?.role !== "admin") redirect("/dashboard");
-  if (!invoicingAnnouncementApplies) redirect("/dashboard");
 
   const { locale } = await params;
-  const t = await getTranslations("invoicing");
+  const market = country.code;
+  const t = await getTranslations(`invoicing.${market}`);
   const startDate = activityStartLabel(locale);
-  const entity = `${OPERATING_ENTITY.name} — ${OPERATING_ENTITY.form}, NIF ${OPERATING_ENTITY.nif}`;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
@@ -93,77 +86,83 @@ export default async function InvoicingPage({
         />
 
         <Step n={3} title={t("s3title")} body={t("s3body")}>
-          <ol className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-gray-700">
-            {["p1", "p2", "p3", "p4", "p5"].map((k, i) => (
-              <li key={k} className="flex gap-3">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-warm-100 text-[11px] font-bold text-gray-600">
-                  {i + 1}
-                </span>
-                <span>{t(`s3${k}`)}</span>
-              </li>
-            ))}
-          </ol>
+          {market === "pt" && (
+            <ol className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-gray-700">
+              {["p1", "p2", "p3", "p4", "p5"].map((k, i) => (
+                <li key={k} className="flex gap-3">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-warm-100 text-[11px] font-bold text-gray-600">
+                    {i + 1}
+                  </span>
+                  <span>{t(`s3${k}`)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
           <p className="mt-4 rounded-lg bg-warm-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
             {t("s3deadline")}
           </p>
         </Step>
 
-        {/* The amount is the one number they cannot get from this page. Say so
-            plainly instead of offering a formula that may not survive the week. */}
+        {/* The amount: the ONE thing people will get wrong. The green payout,
+            not the client total — say it, then repeat it in the box. */}
         <Step n={4} title={t("s4title")} body={t("s4body")}>
-          <div className="mt-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
-            <p className="text-sm font-bold text-amber-900">{t("s4boxTitle")}</p>
-            <p className="mt-1.5 text-[15px] leading-relaxed text-amber-900">
-              {t("s4boxBody")}
+          <div className="mt-4 space-y-2">
+            <p className="rounded-lg bg-warm-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
+              {t("extrasNote")}
+            </p>
+            <p className="rounded-lg bg-warm-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
+              {t("tipsNote")}
             </p>
           </div>
+          <Link
+            href="/dashboard/bookings"
+            className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700"
+          >
+            {t("s4cta")} →
+          </Link>
         </Step>
-
-        <Step
-          n={5}
-          title={t("s5title")}
-          body={t("s5body", { entity })}
-          note={t("s5note")}
-        />
-
-        <Step
-          n={6}
-          title={t("s6title")}
-          body={t("s6body")}
-          note={t("s6note")}
-          cta={{ href: "/dashboard/profile", label: t("s6cta") }}
-        />
       </div>
 
-      {/* IVA gets its own block: it is the one thing that silently becomes
-          wrong later, long after the photographer stopped reading. */}
-      <section className="mt-10 rounded-2xl border border-warm-200 bg-white p-6 shadow-sm sm:p-8">
+      {/* "You will never get an invoice from us" — the strongest simplifier of
+          the whole model; a photographer who misses it will sit waiting for a
+          commission invoice that is never coming. */}
+      <section className="mt-10 rounded-2xl border border-primary-100 bg-primary-50/60 p-6 sm:p-8">
         <h2 className="font-display text-xl font-bold text-gray-900 sm:text-2xl">
-          {t("ivaTitle")}
+          {t("nothingTitle")}
         </h2>
-        <p className="mt-3 text-[15px] leading-relaxed text-gray-600">{t("ivaBody")}</p>
+        <p className="mt-3 text-[15px] leading-relaxed text-gray-700">{t("nothingBody")}</p>
+      </section>
+
+      {/* VAT gets its own block: it is the one thing that silently becomes
+          wrong later, long after the photographer stopped reading. */}
+      <section className="mt-6 rounded-2xl border border-warm-200 bg-white p-6 shadow-sm sm:p-8">
+        <h2 className="font-display text-xl font-bold text-gray-900 sm:text-2xl">
+          {t("vatTitle")}
+        </h2>
+        <p className="mt-3 text-[15px] leading-relaxed text-gray-600">{t("vatBody")}</p>
         <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-800">
-          {t("ivaWarning")}
+          {t("vatWarning")}
         </p>
       </section>
 
-      {/* Shoots already delivered under the new activity still need documents,
-          and their five-day clock is already running. Saying nothing here would
-          leave people quietly late. */}
-      <section className="mt-6 rounded-2xl border-2 border-red-300 bg-red-50 p-6 sm:p-8">
-        <h2 className="font-display text-xl font-bold text-red-900">
-          {t("backlogTitle")}
-        </h2>
-        <p className="mt-3 text-[15px] leading-relaxed text-red-900">
-          {t("backlogBody", { date: startDate })}
-        </p>
-        <Link
-          href="/dashboard/bookings"
-          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
-        >
-          {t("backlogCta")}
-        </Link>
-      </section>
+      {/* PT only: activity is backdated to Aug 1, so shoots done since then
+          already have their issue-deadline running. */}
+      {market === "pt" && (
+        <section className="mt-6 rounded-2xl border-2 border-red-300 bg-red-50 p-6 sm:p-8">
+          <h2 className="font-display text-xl font-bold text-red-900">
+            {t("backlogTitle")}
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-red-900">
+            {t("backlogBody", { date: startDate })}
+          </p>
+          <Link
+            href="/dashboard/bookings"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+          >
+            {t("backlogCta")}
+          </Link>
+        </section>
+      )}
 
       <section className="mt-6 rounded-2xl border border-warm-200 bg-warm-50 p-6 sm:p-8">
         <h2 className="font-display text-lg font-bold text-gray-900">

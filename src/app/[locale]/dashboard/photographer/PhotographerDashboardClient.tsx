@@ -36,6 +36,7 @@ import { DURATION_OPTIONS, getPricingForDuration, formatDuration } from "@/lib/p
 import { country } from "@/lib/country";
 import {
   LOCATION_TREE,
+  collapseCoverageToParents,
   expandLocationCoverageToLegacySlugs,
   getAncestorNodeSlugs,
   getDescendantNodeSlugs,
@@ -310,7 +311,12 @@ export function PhotographerDashboardClient({
 
       const descendants = new Set(node ? getDescendantNodeSlugs(node) : []);
       const ancestors = new Set(getAncestorNodeSlugs(slug));
-      return [...current.filter((item) => !descendants.has(item) && !ancestors.has(item)), slug];
+      // Ticking the last city of a region turns the region itself on, so the
+      // count against the plan limit matches what the checkbox already shows.
+      return collapseCoverageToParents([
+        ...current.filter((item) => !descendants.has(item) && !ancestors.has(item)),
+        slug,
+      ]);
     });
     setSaved(false);
     setIsDirty(true);

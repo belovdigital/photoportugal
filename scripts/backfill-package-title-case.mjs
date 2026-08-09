@@ -19,9 +19,11 @@ import pg from "pg";
 const APPLY = process.argv.includes("--apply");
 
 // Compile the shared helper rather than keeping a second copy of the rules.
+// --skipLibCheck because a stray unrelated .d.ts in node_modules (mapbox-gl
+// referencing tweakpane) makes tsc exit non-zero even though it emits fine.
 const outDir = mkdtempSync(join(tmpdir(), "pkgcase-"));
 execSync(
-  `npx tsc src/lib/format-package-name.ts --outDir ${outDir} --module esnext --target es2022 --moduleResolution bundler`,
+  `npx tsc src/lib/format-package-name.ts --outDir ${outDir} --module esnext --target es2022 --moduleResolution bundler --skipLibCheck`,
   { stdio: "inherit" },
 );
 const { titleCasePackageName } = await import(join(outDir, "format-package-name.js"));
@@ -32,7 +34,7 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 await client.connect();
 
 const { rows } = await client.query(
-  `SELECT id, name, ${LOCALE_COLS.join(", ")} FROM packages ORDER BY created_at`,
+  `SELECT id, name, ${LOCALE_COLS.join(", ")} FROM packages ORDER BY photographer_id, sort_order`,
 );
 
 const changes = [];

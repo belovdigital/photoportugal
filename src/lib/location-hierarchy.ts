@@ -206,6 +206,27 @@ export function normalizeCoverageNodeSlugs(slugs: string[]): string[] {
   return Array.from(new Set(slugs.filter((slug) => nodeBySlug.has(slug))));
 }
 
+function collapseNode(node: LocationNode, selected: Set<string>): { covered: boolean; slugs: string[] } {
+  if (selected.has(node.slug)) return { covered: true, slugs: [node.slug] };
+  const children = node.children || [];
+  if (children.length === 0) return { covered: false, slugs: [] };
+  const results = children.map((child) => collapseNode(child, selected));
+  if (results.every((r) => r.covered)) return { covered: true, slugs: [node.slug] };
+  return { covered: false, slugs: results.flatMap((r) => r.slugs) };
+}
+
+/** Replace a complete set of children with the parent node itself.
+ *  The picker already DISPLAYS a region as fully checked once every city
+ *  under it is ticked, but without this the stored selection stays a list of
+ *  cities and the region's own slug is never written — and that slug is what
+ *  the region's location page and the concierge's exact-coverage match key on.
+ *  Partial selections are left untouched. */
+export function collapseCoverageToParents(slugs: string[]): string[] {
+  const selected = new Set(normalizeCoverageNodeSlugs(slugs));
+  if (selected.size === 0) return [];
+  return Array.from(new Set(LOCATION_TREE.flatMap((node) => collapseNode(node, selected).slugs)));
+}
+
 export function expandLocationCoverageToLegacySlugs(slugs: string[]): string[] {
   const legacySlugs = slugs.flatMap((slug) => {
     const node = nodeBySlug.get(slug);

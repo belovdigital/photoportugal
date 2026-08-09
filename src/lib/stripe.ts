@@ -38,7 +38,7 @@ export const PLAN_PRICES: Record<string, number> = {
 // chat cards etc. must not import this stripe-SDK file). Re-exported here
 // so existing server imports keep working.
 export { SERVICE_FEE_RATE, clientPriceWithFee } from "@/lib/service-fee";
-import { SERVICE_FEE_RATE, clientPriceWithFee } from "@/lib/service-fee";
+import { clientPriceWithFee } from "@/lib/service-fee";
 
 // Large-group surcharge: 9+ people pay an extra 50% on the package base
 // price. Applied before service fee. Smaller groups (≤8) pay the package
