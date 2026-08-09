@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     // then their name in the admin, in chat, in Telegram and at the top of
     // every email we send them.
     const firstName = capitalizeName(first_name || legacyName?.split(" ")[0] || "");
-    const lastName = capitalizeName(last_name || legacyName?.split(" ").slice(1).join(" ") || "");
+    const lastName = capitalizeName(last_name || legacyName?.split(" ").slice(1).join(" ") || "", { fragment: true });
     const name = lastName ? `${firstName} ${lastName}` : firstName;
 
     if (!firstName || !email || !password) {

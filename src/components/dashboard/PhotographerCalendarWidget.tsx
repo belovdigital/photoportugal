@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { photographerPayoutFor } from "@/lib/stripe";
 import { Link } from "@/i18n/navigation";
 
 type Shoot = {
@@ -10,6 +11,8 @@ type Shoot = {
   status: string;
   payment_status: string;
   total_price: number | null;
+  payout_amount: number | null;
+  plan: string;
   client_name: string;
   package_name: string | null;
   duration_minutes: number | null;
@@ -248,7 +251,10 @@ export function PhotographerCalendarWidget() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {s.total_price && (
-                          <span className="text-sm font-semibold text-gray-900">€{Math.round(s.total_price)}</span>
+                          /* The photographer's money, never the base: stored
+                             payout once paid, projection at the current plan
+                             before that (2026-08-09). */
+                          <span className="text-sm font-semibold text-green-700">€{Math.round(Number(s.payout_amount) > 0 ? Number(s.payout_amount) : photographerPayoutFor(Number(s.total_price), s.plan))}</span>
                         )}
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
                           s.payment_status === "paid" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"

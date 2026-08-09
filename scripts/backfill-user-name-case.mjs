@@ -44,7 +44,9 @@ for (const row of rows) {
   for (const col of COLS) {
     const before = row[col];
     if (!before) continue;
-    const after = capitalizeName(before);
+    // last_name is a fragment: "de Oliveira" keeps its lowercase particle,
+    // where the same word inside a full name is already handled by position.
+    const after = capitalizeName(before, { fragment: col === "last_name" });
     if (after !== before) patch[col] = { before, after };
   }
   if (Object.keys(patch).length) changes.push({ id: row.id, email: row.email, patch });

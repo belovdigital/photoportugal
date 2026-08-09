@@ -1626,7 +1626,7 @@ export function PhotographerDashboardClient({
                 {activePkgDragItem && (
                   <div className="rounded-xl border-2 border-primary-400 bg-white p-4 shadow-2xl ring-4 ring-primary-200/50">
                     <span className="font-bold">{activePkgDragItem.name}</span>
-                    <span className="ml-2 text-gray-500">&euro;{activePkgDragItem.price}</span>
+                    <span className="ml-2 text-gray-500">&euro;{Math.round(photographerPayoutFor(Number(activePkgDragItem.price), profile.plan))}</span>
                   </div>
                 )}
               </DragOverlay>

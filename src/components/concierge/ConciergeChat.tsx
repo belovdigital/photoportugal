@@ -1583,7 +1583,7 @@ function CompareColumn({ p, locale }: { p: MatchPhotographer; locale: string }) 
 
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("comparePrice")}</p>
-          <p className="text-gray-800">{p.min_price ? `€${p.min_price}+` : t("compareNoData")}</p>
+          <p className="text-gray-800">{p.min_price ? `€${clientPriceWithFee(Number(p.min_price))}+` : t("compareNoData")}</p>
         </div>
 
         {p.reasoning && (

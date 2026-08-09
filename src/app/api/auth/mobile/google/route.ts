@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         [
           capitalizeName(googleUser.name),
           capitalizeName(googleUser.given_name || googleUser.name.split(" ")[0]),
-          googleUser.family_name ? capitalizeName(googleUser.family_name) : null,
+          googleUser.family_name ? capitalizeName(googleUser.family_name, { fragment: true }) : null,
           googleUser.email,
           googleUser.sub,
           avatarUrl,

@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest) {
 
   const { first_name, last_name, name: legacyName, phone: rawPhone } = await req.json();
   const firstName = capitalizeName(first_name || legacyName?.split(" ")[0] || "");
-  const lastName = capitalizeName(last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "");
+  const lastName = capitalizeName(last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "", { fragment: true });
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
   if (!firstName) return NextResponse.json({ error: "First name required" }, { status: 400 });

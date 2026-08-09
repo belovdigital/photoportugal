@@ -116,7 +116,7 @@ export async function PUT(req: NextRequest) {
     // Update user's first/last name if provided
     if (first_name) {
       const first = capitalizeName(first_name);
-      const last = capitalizeName(last_name || "");
+      const last = capitalizeName(last_name || "", { fragment: true });
       const fullName = last ? `${first} ${last}` : first;
       await queryOne(
         "UPDATE users SET name = $1, first_name = $2, last_name = $3, phone = $4 WHERE id = $5",

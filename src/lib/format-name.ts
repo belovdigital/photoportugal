@@ -11,7 +11,15 @@ function raiseFirstLetter(part: string): string {
   // DeSanto, DesaiPatel are how those people spell their own names. Lowering
   // them was this function's worst habit.
   if (/\p{Lu}/u.test(part.slice(1))) return part;
-  return part.charAt(0).toUpperCase() + part.slice(1);
+  // Walk past anything that cannot carry a case, so a name that arrives
+  // wrapped in a bracket or a quote still gets its letter raised.
+  for (let i = 0; i < part.length; i++) {
+    const ch = part[i];
+    if (ch.toLowerCase() !== ch.toUpperCase()) {
+      return part.slice(0, i) + ch.toUpperCase() + part.slice(i + 1);
+    }
+  }
+  return part;
 }
 
 /**
@@ -32,7 +40,9 @@ function capitalizePart(part: string, flatten: boolean): string {
     return part.split(sep).map((p) => capitalizePart(p, flatten)).join(sep);
   }
   if (part.length === 0) return part;
-  if (flatten) return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+  // Two letters in caps is an initialism, not shouting — "AJ" is how that
+  // person writes their name, and "Aj" is not their name.
+  if (flatten && part.length > 2) return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
   return raiseFirstLetter(part);
 }
 
@@ -42,7 +52,7 @@ function capitalizePart(part: string, flatten: boolean): string {
  * somebody's identity, so the database keeps their characters and we correct
  * "kim zenglein" to "Kim Zenglein" and "MARIA SILVA" to "Maria Silva".
  */
-export function capitalizeName(name: string): string {
+export function capitalizeName(name: string, opts?: { fragment?: boolean }): string {
   if (!name) return "";
 
   const cleaned = name.trim().replace(/\s+/g, " ");
@@ -50,11 +60,22 @@ export function capitalizeName(name: string): string {
 
   const isShouted = cleaned === cleaned.toUpperCase() && cleaned !== cleaned.toLowerCase();
 
+  // A surname column holds a fragment, not a whole name: "de Oliveira" and
+  // "van Mil" open with a particle that stays lowercase there, even though
+  // the same word would be capitalised at the start of a full name.
+  const firstIsStart = !opts?.fragment;
+
   return cleaned
     .split(" ")
     .map((part, i) => {
       const lower = part.toLowerCase();
-      if (i > 0 && LOWERCASE_PARTICLES.has(lower)) return lower;
+      // Particles are only pushed down when the person did not capitalise
+      // them themselves. "Enny Das" and "Nelia De Oliveira" are surnames as
+      // their owners write them; a name in caps lock carries no such intent,
+      // so "MARIA DA SILVA" still becomes "Maria da Silva".
+      if ((i > 0 || !firstIsStart) && LOWERCASE_PARTICLES.has(lower) && (isShouted || part === lower)) {
+        return lower;
+      }
       return capitalizePart(part, isShouted);
     })
     .join(" ");

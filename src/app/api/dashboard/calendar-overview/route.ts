@@ -38,17 +38,21 @@ export async function GET(req: NextRequest) {
     status: string;
     payment_status: string;
     total_price: number | null;
+    payout_amount: number | null;
+    plan: string;
     client_name: string;
     package_name: string | null;
     duration_minutes: number | null;
     location_slug: string | null;
   }>(
     `SELECT b.id, b.shoot_date::text, b.shoot_time, b.status, b.payment_status, b.total_price,
+            b.payout_amount, pp.plan,
             cu.name AS client_name, p.name AS package_name,
             COALESCE(p.duration_minutes, NULL) AS duration_minutes,
             b.location_slug
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
        LEFT JOIN packages p ON p.id = b.package_id
       WHERE b.photographer_id = $1
         AND b.shoot_date IS NOT NULL
