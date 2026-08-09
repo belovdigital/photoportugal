@@ -7,7 +7,7 @@ import { COMMISSION_RATES } from "@/lib/stripe";
 export function EarningsCalculator() {
   const t = useTranslations("join.calculator");
   const [sessionsPerMonth, setSessionsPerMonth] = useState(4);
-  const [avgPrice, setAvgPrice] = useState(200);
+  const [avgPrice, setAvgPrice] = useState(299);
   // Default to Premium — that's what First 100 photographers actually get
   // (free for 6 months → 3 years for early birds), so the calculator should
   // surface those net earnings first.

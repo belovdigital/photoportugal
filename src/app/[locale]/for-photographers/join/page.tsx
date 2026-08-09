@@ -36,6 +36,14 @@ const TIER_CONFIG = [
   { key: "first100" as const, spots: 100, color: "from-accent-500 to-accent-700", textColor: "text-accent-700", bgColor: "bg-accent-50", borderColor: "border-accent-200" },
 ];
 
+// The example booking in the pricing table. The photographer sets this price;
+// the commission comes off it, and the header interpolates the same constant —
+// header and cells used to be computed from different numbers (€299 vs €200),
+// which read as a 40% cut and cost us a trust question from a candidate.
+const EXAMPLE_BASE = 299;
+const earns = (plan: "free" | "pro" | "premium") =>
+  (EXAMPLE_BASE - (EXAMPLE_BASE * COMMISSION_RATES[plan]) / 100).toFixed(2);
+
 export default async function JoinPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -313,7 +321,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
                 <th className="px-6 py-4 text-left font-semibold text-gray-900">{t("transparentPricing.table.plan")}</th>
                 <th className="px-6 py-4 text-left font-semibold text-gray-900">{t("transparentPricing.table.monthly")}</th>
                 <th className="px-6 py-4 text-left font-semibold text-gray-900">{t("transparentPricing.table.commission")}</th>
-                <th className="px-6 py-4 text-left font-semibold text-gray-900">{t("transparentPricing.table.youEarn")}</th>
+                <th className="px-6 py-4 text-left font-semibold text-gray-900">{t("transparentPricing.table.youEarn", { price: EXAMPLE_BASE })}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
@@ -321,19 +329,19 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
                 <td className="px-6 py-4 font-medium text-gray-900">Free</td>
                 <td className="px-6 py-4 text-gray-500">&euro;{PLAN_PRICES.free}</td>
                 <td className="px-6 py-4 text-gray-500">{COMMISSION_RATES.free}%</td>
-                <td className="px-6 py-4 font-semibold text-gray-900">&euro;{200 - 200 * COMMISSION_RATES.free / 100}</td>
+                <td className="px-6 py-4 font-semibold text-gray-900">&euro;{earns("free")}</td>
               </tr>
               <tr className="bg-primary-50/50">
                 <td className="px-6 py-4 font-medium text-primary-700">Pro</td>
                 <td className="px-6 py-4 text-gray-500">&euro;{PLAN_PRICES.pro}</td>
                 <td className="px-6 py-4 text-gray-500">{COMMISSION_RATES.pro}%</td>
-                <td className="px-6 py-4 font-semibold text-primary-700">&euro;{200 - 200 * COMMISSION_RATES.pro / 100}</td>
+                <td className="px-6 py-4 font-semibold text-primary-700">&euro;{earns("pro")}</td>
               </tr>
               <tr>
                 <td className="px-6 py-4 font-medium text-gray-900">Premium</td>
                 <td className="px-6 py-4 text-gray-500">&euro;{PLAN_PRICES.premium}</td>
                 <td className="px-6 py-4 text-gray-500">{COMMISSION_RATES.premium}%</td>
-                <td className="px-6 py-4 font-semibold text-gray-900">&euro;{200 - 200 * COMMISSION_RATES.premium / 100}</td>
+                <td className="px-6 py-4 font-semibold text-gray-900">&euro;{earns("premium")}</td>
               </tr>
             </tbody>
           </table>

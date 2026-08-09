@@ -1001,7 +1001,7 @@
         "plan": "Plan",
         "monthly": "Monthly",
         "commission": "Commission",
-        "youEarn": "You earn on €200 booking"
+        "youEarn": "You earn on a €{price} booking"
       },
       "earlyBirdNote": "Early bird photographers get their plan upgrade free — you still benefit from lower commission rates."
     },

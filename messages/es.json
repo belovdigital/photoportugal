@@ -1958,7 +1958,7 @@
         "plan": "Plan",
         "monthly": "Mensual",
         "commission": "Comisión",
-        "youEarn": "Usted gana en una reserva de 200 €"
+        "youEarn": "Recibes en una reserva de €{price}"
       },
       "earlyBirdNote": "Los fotógrafos Early Bird obtienen su upgrade de plan gratis — aún se benefician de tasas de comisión más bajas."
     },

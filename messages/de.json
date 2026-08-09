@@ -1001,7 +1001,7 @@
         "plan": "Plan",
         "monthly": "Monatlich",
         "commission": "Provision",
-        "youEarn": "Sie verdienen bei einer 200 €-Buchung"
+        "youEarn": "Sie erhalten bei einer Buchung von €{price}"
       },
       "earlyBirdNote": "Early-Bird-Fotografen erhalten ihr Plan-Upgrade kostenlos — Sie profitieren weiterhin von niedrigeren Provisionssätzen."
     },

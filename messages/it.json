@@ -1001,7 +1001,7 @@
         "plan": "Piano",
         "monthly": "Costo mensile",
         "commission": "Commissione",
-        "youEarn": "Il tuo guadagno su una prenotazione da €200"
+        "youEarn": "Ricevi su una prenotazione da €{price}"
       },
       "earlyBirdNote": "I fotografi Early Bird ricevono gratuitamente l'upgrade del piano, continuando a beneficiare di commissioni più basse."
     },
