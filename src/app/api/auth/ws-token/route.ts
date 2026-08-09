@@ -33,8 +33,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // typ:"ws" scopes this token to the websocket handshake. authFromRequest
+  // rejects it, so even though it is signed with the same secret it cannot be
+  // replayed as an API session — which matters because it is sent to a
+  // websocket server on a box shared with a third party.
   const token = jwt.sign(
-    { id: userId, name: userName, email: userEmail },
+    { id: userId, name: userName, email: userEmail, typ: "ws" },
     getJwtSecret(),
     { expiresIn: "24h" }
   );

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { applyUserRole } from "@/lib/apply-user-role";
+import { checkRateLimit } from "@/lib/rate-limit";
 import jwt from "jsonwebtoken";
 
 // POST { role: "photographer" | "client" } — the app's role-choice screen
@@ -14,6 +15,13 @@ import jwt from "jsonwebtoken";
 export async function POST(req: NextRequest) {
   const user = await authFromRequest(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Cap role toggles per account. Without this an account could flip
+  // client↔photographer in a loop inside the 5-minute fresh window, and each
+  // photographer transition fired a welcome email and an admin Telegram.
+  if (!checkRateLimit(`mobile-set-role:${user.id}`, 5, 60000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
 
   let body: { role?: string };
   try { body = await req.json(); } catch {

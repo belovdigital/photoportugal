@@ -34,23 +34,26 @@ export async function POST(req: NextRequest) {
       [email.toLowerCase().trim()]
     );
 
-    if (!user) {
+    // Always run a bcrypt compare — against the real hash, or a throwaway one
+    // when the account is absent or OAuth-only — so response time does not
+    // reveal which case it is. Previously an absent account and an
+    // OAuth-account answered before any hashing, and the banned/verify checks
+    // fired before the password was even checked, so an unauthenticated caller
+    // could enumerate which emails exist, use Google, or are banned.
+    const DUMMY_HASH = "$2b$10$JrjzIQc7TjXCcfVNNZ0pdeFWUlG/20bD3f82c1DrZL0EBpf.M/VuG";
+    const valid = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH);
+
+    if (!user || !user.password_hash || !valid) {
+      // One answer for absent / OAuth-only / wrong-password. The sign-in
+      // screen's recovery card after repeated failures covers the "you have a
+      // Google account" case without leaking it to an anonymous prober.
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
+    // The credential is now proven, so revealing account state is safe.
     if (user.is_banned) {
       return NextResponse.json({ error: "Account is suspended" }, { status: 403 });
     }
-
-    if (!user.password_hash) {
-      return NextResponse.json({ error: "Please sign in with Google" }, { status: 400 });
-    }
-
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
-    }
-
     if (!user.email_verified) {
       return NextResponse.json({ error: "Please verify your email first" }, { status: 403 });
     }

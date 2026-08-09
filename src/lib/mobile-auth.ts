@@ -37,7 +37,12 @@ export async function authFromRequest(req?: NextRequest): Promise<MobileUser | n
     if (authHeader?.startsWith("Bearer ")) {
       try {
         const token = authHeader.replace("Bearer ", "");
-        const decoded = jwt.verify(token, getJwtSecret()) as MobileUser;
+        const decoded = jwt.verify(token, getJwtSecret()) as MobileUser & { typ?: string };
+        // A ws-token carries typ:"ws". It is signed with the same secret but
+        // is minted to be handed to the websocket/meet server — a box shared
+        // with a third party. Refusing it here stops anyone who observes it
+        // there from replaying it as a general-purpose API session.
+        if (decoded.typ === "ws") return null;
         if (decoded.id) {
           // Re-check ban status from DB — JWT lives 30 days, ban must be instant
           const user = await queryOne<{ is_banned: boolean; role: string }>(

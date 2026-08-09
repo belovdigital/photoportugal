@@ -120,6 +120,16 @@ export async function POST(req: NextRequest) {
       [user.id]
     );
 
+    // Photographers are created unverified and login already refuses them
+    // until they confirm their email. Handing them a 30-day session straight
+    // from register bypassed exactly that gate — you could operate as a
+    // photographer on an address you don't control. So issue no token: the
+    // app shows its "check your email" screen and clears the empty response.
+    // Clients are verified from birth and get their session as before.
+    if (validRole === "photographer") {
+      return NextResponse.json({ needs_verification: true });
+    }
+
     const token = jwt.sign(
       { id: user.id, email: email.toLowerCase().trim(), role: validRole },
       getJwtSecret(),

@@ -94,6 +94,12 @@ export async function applyUserRole(
       );
     });
 
+    // Fires only on a real role change — line 34 short-circuits when the role
+    // is unchanged. Repeat client↔photographer toggling is bounded by the
+    // per-user rate limit on the route rather than gated here, so the genuine
+    // "signed up with Google, then chose photographer" path (whose
+    // admin_notified is already set by the OAuth client creation) still gets
+    // its welcome.
     sendWelcomeEmail(email, name, "photographer").catch((err) =>
       console.error("[apply-role] photographer welcome email:", err)
     );
