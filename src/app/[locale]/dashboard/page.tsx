@@ -319,17 +319,22 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
           explicit button so the photographer sees where their work went. */}
       {stage === "building" && allStepsComplete && (
         <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-start gap-3">
-              <svg className="mt-0.5 h-5 w-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <p className="text-sm font-semibold text-green-800">{t("readyToSubmitTitle")}</p>
-                <p className="mt-1 text-sm text-green-700">{t("readyToSubmitBody")}</p>
-              </div>
+          {/* Stacked, not side by side. The right-hand slot used to hold a
+              small button and now holds a whole attestation card — with
+              `shrink-0` it refused to narrow, squeezed the message into a
+              column four characters wide and pushed its own edge outside the
+              banner. A card belongs under the sentence that introduces it. */}
+          <div className="flex items-start gap-3">
+            <svg className="mt-0.5 h-5 w-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-green-800">{t("readyToSubmitTitle")}</p>
+              <p className="mt-1 text-sm text-green-700">{t("readyToSubmitBody")}</p>
             </div>
-            <div className="shrink-0"><RequestApprovalButton countryName={country.countryName[locale as keyof typeof country.countryName] ?? country.areaServed} /></div>
+          </div>
+          <div className="mt-3">
+            <RequestApprovalButton countryName={country.countryName[locale as keyof typeof country.countryName] ?? country.areaServed} />
           </div>
         </div>
       )}

@@ -101,7 +101,12 @@ function matchesStatus(p: AdminPhotographer, s: StatusKey): boolean {
     // Grace week ran out — pulled from the public site, account intact.
     case "hidden_no_stripe": return !p.is_approved && !p.is_banned && !!p.stripe_hidden_at;
     case "needs_revision": return !p.is_approved && !p.is_banned && p.revision_status === "pending";
-    case "not_ready": return !p.is_approved && !p.stripe_hidden_at && !p.approval_requested_at && !p.checklist_complete && !p.is_banned && !p.revision_status;
+    // Everyone who has not asked us for anything yet: the half-built profiles
+    // AND the ones that finished the checklist but never pressed Submit. The
+    // second group used to fall through every bucket and vanish from the
+    // board — the people closest to going live were the ones nobody could
+    // see. `Missing steps` on the card still shows what each one lacks.
+    case "not_ready": return !p.is_approved && !p.stripe_hidden_at && !p.approval_requested_at && !p.is_banned && !p.revision_status;
   }
 }
 
@@ -153,7 +158,12 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusKey>("active");
+  // Open on whatever is waiting for a decision. The board exists to be acted
+  // on, and an admin who lands on "Active" has to notice a badge before they
+  // can act; landing on the queue means the work is already on screen.
+  const [statusFilter, setStatusFilter] = useState<StatusKey>(() =>
+    photographers.some((p) => matchesStatus(p, "ready_review")) ? "ready_review" : "active"
+  );
   const [planFilter, setPlanFilter] = useState<PlanKey>("all");
   const [badgeFilter, setBadgeFilter] = useState<BadgeKey>("all");
   const [addonFilter, setAddonFilter] = useState<AddonKey>("all");
