@@ -692,7 +692,6 @@
     "blindBookingOccasion": "Occasion",
     "blindBookingDuration": "Durée",
     "blindBookingTotal": "Total",
-    "blindBookingPhotographerRate": "tarif du photographe",
     "blindBookingLargeGroupSurcharge": "supplément grand groupe (9+ personnes)",
     "blindBookingHoldNote": "Autorisé maintenant — débité uniquement quand votre photographe est confirmé sous 24h. Remboursement automatique sinon.",
     "blindBookingYes": "Oui, réserver",
@@ -1331,8 +1330,6 @@
       },
       "table": {
         "examplePackage": "Exemple : forfait 300 €",
-        "clientPays": "Le client paie",
-        "serviceFee": "Frais de service ({rate}%)",
         "platformCommission": "Commission plateforme",
         "youReceive": "Vous recevez",
         "yourPrice": "Votre prix affiché"
@@ -1427,7 +1424,7 @@
         "plan": "Plan",
         "monthly": "Mensuel",
         "commission": "Commission",
-        "youEarn": "Vous gagnez sur une réservation de 299 €"
+        "youEarn": "Vous gagnez sur une réservation de 200 €"
       },
       "earlyBirdNote": "Les photographes Early Bird obtiennent leur upgrade de plan gratuit — vous bénéficiez quand même de taux de commission plus bas."
     },
@@ -3106,7 +3103,7 @@
         },
         "extrasEarnings": {
           "question": "Combien me rapporte une photo supplémentaire ?",
-          "answer": "votre prix par photo, à chaque fois. Votre client paie le prix fixé par votre photographe et c'est son prix final — aucun frais de service en plus, aucune surprise au moment de payer.\n\nVotre plan n'y change rien. Free, Pro ou Premium : une photo supplémentaire vous rapporte votre prix.\n\nUn client qui achète 10 photos supplémentaires ajoute donc 20,00 € à cette réservation, en plus du forfait."
+          "answer": "Vous fixez votre propre prix par photo supplémentaire — c'est exactement ce que vous recevez. Le client voit un prix tout compris légèrement supérieur qui couvre déjà notre part ; rien n'est jamais déduit du vôtre."
         },
         "extrasWhenPaid": {
           "question": "Quand l'argent des photos supplémentaires arrive-t-il ?",
@@ -3908,9 +3905,7 @@
     "hours": "heures",
     "partySize": "Nombre de personnes",
     "total": "Total",
-    "photographerRate": "tarif du photographe",
     "largeGroupSurcharge": "supplément grand groupe (9+ personnes)",
-    "platformFee": "frais de plateforme",
     "noPrice": "Pas de prix disponible pour cette combinaison pour le moment.",
     "holdNote": "Autorisé maintenant — débité uniquement quand votre photographe est confirmé sous 24h. Remboursement intégral sinon.",
     "name": "Votre nom",
@@ -4003,7 +3998,6 @@
   "packagePage": {
     "mostPopular": "Le plus populaire",
     "byPhotographerInLocation": "par {photographer}{locText}",
-    "plusFee": "+ {rate}% de frais",
     "bookNow": "Réserver cette séance",
     "photos": "photos",
     "review": "avis",
@@ -4019,7 +4013,7 @@
     "reviewsHeading": "Ce que disent les clients de {photographer}",
     "privateClient": "Voyageur vérifié",
     "otherPackagesHeading": "Autres séances avec {photographer}",
-    "totalIncl": "Total avec frais",
+    "totalIncl": "Total — tout compris",
     "backToPhotographer": "Retour au profil de {photographer}",
     "noPaymentNow": "Aucun paiement maintenant — payez uniquement après la confirmation du photographe",
     "otherPackagesSubtitle": "Autres façons de travailler avec {photographer} — choisissez ce qui correspond à votre histoire.",
@@ -4045,7 +4039,7 @@
     "notSpecified": "Langues non confirmées"
   },
   "promoTopbar": {
-    "text": "Super Offre d’Été : séance photo <strong>dès {price} tout compris</strong> <was>344 €</was> — nous réservons un photographe top pour vous",
+    "text": "Super Offre d’Été : séance photo <strong>dès {price} tout compris</strong> <was>345 €</was> — nous réservons un photographe top pour vous",
     "cta": "Réserver en 60 s",
     "dismiss": "Fermer"
   },

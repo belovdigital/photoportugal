@@ -74,12 +74,12 @@ async function runReminders(): Promise<NextResponse> {
       client_id: string;
       photographer_name: string;
       payment_url: string | null;
-      total_price: number | null;
+      total_price: number | null; blind_booking: boolean | null;
     }>(
       `SELECT b.id, u.email as client_email, u.name as client_name,
               u.phone as client_phone, u.id as client_id,
               pu.name as photographer_name,
-              b.payment_url, b.total_price
+              b.payment_url, b.total_price, b.blind_booking
        FROM bookings b
        JOIN users u ON u.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -98,7 +98,8 @@ async function runReminders(): Promise<NextResponse> {
           booking.client_name,
           booking.photographer_name,
           null,
-          booking.total_price
+          // The client pays the all-in number (blind stores base = all-in×0.85)
+          booking.blind_booking ? Math.round(Number(booking.total_price) / 0.85) : clientPriceWithFee(Number(booking.total_price))
         );
         // SMS reminder
         if (booking.client_phone) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { photographerPayoutFor } from "@/lib/stripe";
 import { capitalizeName } from "@/lib/format-name";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
@@ -744,23 +745,33 @@ export async function GET(req: NextRequest) {
          ORDER BY b.created_at DESC`,
         [profile.id]
       );
-      // Strip the client-side money columns the photographer must NEVER see:
-      // the 15% service fee we add ON TOP (charged to the client), the gross
-      // the client actually paid, and the promo/coupon details. They keep
-      // total_price (their base rate), payout_amount (their take-home), and
-      // platform_fee (our commission from them). `SELECT b.*` leaked all of
-      // these into the JSON even though the UI only rendered total_price.
+      // Strip everything that is the CLIENT's money story: the fee, the
+      // gross, promo details, and the checkout link (opening it renders the
+      // client's all-in price). Photographers keep payout_amount — their one
+      // number since 2026-08-09 — plus total_price for the mobile app's
+      // legacy `payout_amount ?? total_price` fallback; when payout isn't
+      // computed yet we fill it with the current-plan projection so no
+      // surface ever needs the base.
+      const planRow = await queryOne<{ plan: string }>(
+        "SELECT plan FROM photographer_profiles WHERE id = $1", [profile.id]
+      );
       for (const b of bookings as Array<Record<string, unknown>>) {
         delete b.service_fee;
-      // The client's price for an extra photo is the client's business.
-      // extra_photo_payout_cents stays — that one IS the photographer's rate.
-      delete b.extra_photo_price_cents;
+        // The client's price for an extra photo is the client's business.
+        // extra_photo_payout_cents stays — that one IS the photographer's rate.
+        delete b.extra_photo_price_cents;
         delete b.stripe_amount_subtotal_cents;
         delete b.stripe_amount_paid_cents;
         delete b.stripe_amount_discount_cents;
         delete b.stripe_promo_code;
         delete b.stripe_coupon_name;
         delete b.stripe_coupon_percent_off;
+        delete b.stripe_payment_intent_id;
+        delete b.stripe_currency;
+        delete b.payment_url;
+        if (b.payout_amount == null && b.total_price != null) {
+          b.payout_amount = photographerPayoutFor(Number(b.total_price), planRow?.plan);
+        }
       }
     } else {
       // Bookings where the user is either the buyer (client_id) or the
@@ -784,6 +795,15 @@ export async function GET(req: NextRequest) {
          ORDER BY b.created_at DESC`,
         [userId]
       );
+      // The photographer's money story is not the client's: strip the payout,
+      // our commission and the fee split. The client keeps their own Stripe
+      // actuals and payment_url — that IS their payment (2026-08-09 audit).
+      for (const b of bookings as Array<Record<string, unknown>>) {
+        delete b.payout_amount;
+        delete b.platform_fee;
+        delete b.service_fee;
+        delete b.extra_photo_payout_cents;
+      }
     }
 
     // Anti-disintermediation: a client never sees a photographer's surname,

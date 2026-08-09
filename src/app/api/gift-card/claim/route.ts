@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
     has_password: !!user.password_hash,
     gift_card_id: card.id,
     tier: card.tier,
-    tier_meta: GIFT_CARD_TIERS[card.tier],
+    // Recipient must not learn what the gift cost — label/perks only.
+    tier_meta: (({ label, duration_minutes, num_photos }) => ({ label, duration_minutes, num_photos }))(GIFT_CARD_TIERS[card.tier] as Record<string, unknown> as { label: string; duration_minutes?: number; num_photos?: number }),
     buyer_name: card.buyer_name,
     personal_message: card.personal_message,
     expires_at: card.expires_at,

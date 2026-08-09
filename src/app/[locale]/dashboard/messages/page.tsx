@@ -87,7 +87,9 @@ function formatLastMessagePreview(text: string | null, deleted = false): string 
     try {
       const card = JSON.parse(text.slice("BOOKING_CARD:".length));
       const icon = card.is_custom ? "✨" : "📦";
-      return `${icon} ${card.name} — €${Math.round(card.price)}`;
+      // No price in the preview: the right number differs per viewer
+      // (client all-in vs photographer payout) — the opened card shows it.
+      return `${icon} ${card.name}`;
     } catch {
       return "📦 Package offer";
     }
@@ -1682,9 +1684,14 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             // current plan — nobody ever sees the base
                             // (2026-08-09). Paid bookings elsewhere show the
                             // stored payout_amount instead of this projection.
+                            // Photographer side waits for the real plan —
+                            // a null-plan projection would show the free-tier
+                            // 20% cut to pro/premium photographers.
                             const displayPrice = viewerIsClient
                               ? clientPriceWithFee(Number(card.price))
-                              : Math.round(photographerPayoutFor(Number(card.price), myPlan));
+                              : myPlan
+                              ? Math.round(photographerPayoutFor(Number(card.price), myPlan))
+                              : null;
                             return (
                               <div key={msg.id} className="flex justify-center my-3">
                                 <div className={`max-w-[90%] sm:max-w-[70%] rounded-2xl border p-5 shadow-sm ${
@@ -1713,9 +1720,11 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                     <span className="text-gray-300">&middot;</span>
                                     <span>{card.num_photos} photos</span>
                                   </div>
-                                  <p className={`mt-2 text-xl font-bold ${isRevoked ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                                    &euro;{typeof displayPrice === "number" && !Number.isInteger(displayPrice) ? displayPrice.toFixed(2) : displayPrice}
-                                  </p>
+                                  {displayPrice !== null && (
+                                    <p className={`mt-2 text-xl font-bold ${isRevoked ? "text-gray-400 line-through" : "text-gray-900"}`}>
+                                      &euro;{typeof displayPrice === "number" && !Number.isInteger(displayPrice) ? displayPrice.toFixed(2) : displayPrice}
+                                    </p>
+                                  )}
                                   {isRevoked && (
                                     <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("offerWithdrawn")}</p>
                                   )}
@@ -2372,7 +2381,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                       <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
                                     </div>
                                     <span className="text-sm font-bold text-gray-700">
-                                      {sharingPackageId === pkg.id ? t("customProposalSending") : <>&euro;{Math.round(photographerPayoutFor(Number(pkg.price), myPlan))}</>}
+                                      {sharingPackageId === pkg.id ? t("customProposalSending") : myPlan ? <>&euro;{Math.round(photographerPayoutFor(Number(pkg.price), myPlan))}</> : <>…</>}
                                     </span>
                                   </button>
                                 ))

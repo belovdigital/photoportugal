@@ -284,7 +284,12 @@ export default async function BookingsPage() {
     }
   }
 
-  const bookingAmounts = Object.fromEntries(bookings.map((b) => [b.id, Number(b.total_price) || 0]));
+  // GA4 purchase value = what the client is actually charged, not the base:
+  // recorded Stripe cents when paid, else the all-in the checkout will charge.
+  const bookingAmounts = Object.fromEntries(bookings.map((b) => [b.id,
+    b.stripe_amount_paid_cents != null ? b.stripe_amount_paid_cents / 100
+      : b.blind_booking ? Math.round((Number(b.total_price) || 0) / 0.85)
+      : clientPriceWithFee(Number(b.total_price) || 0)]));
 
   return (
     <div className="p-6 sm:p-8">
@@ -488,7 +493,9 @@ export default async function BookingsPage() {
                     )}
                   </div>
                 )}
-                {booking.total_price && (
+                {/* Gift recipients never see money: not what the buyer paid,
+                    not the package price (2026-08-09 audit). */}
+                {booking.total_price && booking.viewer_role !== "gift_recipient" && !(booking.gift_card_id && booking.stripe_amount_paid_cents == null) && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     {isPhotographer && Number(booking.payout_amount) > 0 ? (
                       /* Photographers see their PAYOUT (what they receive),

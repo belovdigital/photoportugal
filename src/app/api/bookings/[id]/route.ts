@@ -74,6 +74,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       delete b.stripe_promo_code;
       delete b.stripe_coupon_name;
       delete b.stripe_coupon_percent_off;
+      // The checkout link renders the client's all-in gross when opened,
+      // and the PI id opens the same door via Stripe (2026-08-09 audit).
+      delete b.payment_url;
+      delete b.stripe_payment_intent_id;
+      delete b.stripe_currency;
+    } else {
+      // Client viewer: the photographer's money story is not theirs.
+      delete b.payout_amount;
+      delete b.platform_fee;
+      delete b.service_fee;
+      delete b.extra_photo_payout_cents;
     }
 
     return NextResponse.json(booking);
@@ -484,8 +495,12 @@ export async function PATCH(
                 m.sendPushNotification(
                   recipientId,
                   `❌ ${otherFirst} cancelled the booking`,
-                  refundPercent > 0
+                  // Amount only for the client — the refund is THEIR money;
+                  // the photographer gets the fact, not the client's gross.
+                  refundPercent > 0 && cancelledBy === "photographer"
                     ? `Refund of €${refundAmount.toFixed(2)} processed.`
+                    : refundPercent > 0
+                    ? `The client was refunded per the cancellation policy.`
                     : "Tap to view details.",
                   { type: "booking", bookingId: id, channelId: "bookings", categoryId: "BOOKING" }
                 )
@@ -500,7 +515,7 @@ export async function PATCH(
           import("@/lib/notify-photographer").then(m =>
             m.notifyPhotographerViaTelegram(
               cancelInfo!.photographer_profile_id,
-              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)\n\nView: ${country.baseUrl}/dashboard/bookings`
+              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\nRefund to client: ${refundPercent}%\n\nView: ${country.baseUrl}/dashboard/bookings`
             )
           ).catch((err) => console.error("[bookings] telegram photographer cancel error:", err));
         }

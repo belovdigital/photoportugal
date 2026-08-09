@@ -62,9 +62,8 @@ export async function GET(req: NextRequest) {
     occasion: priced.occasion,
     duration_minutes: priced.duration_minutes,
     party_size: partySize,
-    regional_base_eur: regionalTotalEur,
-    base_eur: baseEur,
-    service_fee_eur: serviceFeeEur,
+    // base_eur / service_fee_eur deliberately NOT returned: the split is
+    // internal (photographer-side numbers) and no client UI renders it.
     total_eur: totalEur,
     compare_at_eur: compareAtEur,
     savings_eur: savingsEur,

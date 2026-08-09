@@ -175,10 +175,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { pkg, photographer, locations, portfolio } = data;
   const where = locations.slice(0, 2).map((l) => l.name).filter(Boolean).join(" & ") || "Portugal";
-  const title = `${pkg.name} by ${photographer.display_name} in ${where} — €${Math.round(Number(pkg.price))} | ${country.brand}`;
+  const title = `${pkg.name} by ${photographer.display_name} in ${where} — €${clientPriceWithFee(Number(pkg.price))} | ${country.brand}`;
   const description = pkg.description
     ? pkg.description.slice(0, 160).replace(/\s+/g, " ").trim()
-    : `Book ${pkg.name} (${pkg.duration_minutes} min · ${pkg.num_photos} photos) with ${photographer.display_name} in ${where}. From €${Math.round(Number(pkg.price))}.`;
+    : `Book ${pkg.name} (${pkg.duration_minutes} min · ${pkg.num_photos} photos) with ${photographer.display_name} in ${where}. From €${clientPriceWithFee(Number(pkg.price))}.`;
   const ogImage = portfolio[0]?.url || photographer.cover_url || photographer.avatar_url || `${country.baseUrl}${country.ogImage}`;
   const ogImageAbs = ogImage.startsWith("http") ? ogImage : `${country.baseUrl}${ogImage}`;
 

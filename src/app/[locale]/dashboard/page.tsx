@@ -306,8 +306,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
 
       {/* A legal obligation with a five-working-day clock, so it sits above the
           onboarding checklist rather than inside it — a checklist item is a
-          suggestion, and this one is not. Gated in invoicing-announcement.ts:
-          Portugal only, and only once the announcement is released. */}
+          suggestion, and this one is not. Gated per market in invoicing-announcement.ts (LIVE_BY_MARKET). */}
       {showsInvoicingAnnouncement && (
         <div className="mt-6 rounded-xl border-2 border-amber-400 bg-amber-50 p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -1645,7 +1645,7 @@ export function PhotographerDashboardClient({
             {bookings.length > 0 ? (
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} onUpdate={() => router.refresh()} />
+                  <BookingCard key={booking.id} booking={booking} plan={profile.plan} onUpdate={() => router.refresh()} />
                 ))}
               </div>
             ) : (
@@ -2066,7 +2066,7 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   cancelled: "statusCancelled",
 };
 
-function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => void }) {
+function BookingCard({ booking, plan, onUpdate }: { booking: Booking; plan: string; onUpdate: () => void }) {
   const t = useTranslations("photographerDashboard");
   const locale = useLocale();
   const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
@@ -2115,11 +2115,10 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
           <span>{new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}</span>
         )}
         {booking.shoot_time && <span>{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</span>}
-        {/* Photographer sees their PAYOUT (earnings), not the session base
-            or the client's gross. Falls back to session price only when the
-            payout isn't computed yet (e.g. unpaid booking). */}
+        {/* Photographer sees their PAYOUT only: stored once paid, projected
+            at the current plan before that — never the base (2026-08-09). */}
         {(booking.payout_amount ?? booking.total_price) != null && (
-          <span>&euro;{Math.round(Number(booking.payout_amount ?? booking.total_price))}</span>
+          <span>&euro;{Math.round(Number(booking.payout_amount) > 0 ? Number(booking.payout_amount) : photographerPayoutFor(Number(booking.total_price), plan))}</span>
         )}
       </div>
 

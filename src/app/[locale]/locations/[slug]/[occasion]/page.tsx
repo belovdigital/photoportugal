@@ -249,7 +249,7 @@ const L = {
   en: {
     metaTitle: (occ: string, loc: string) => `${occ} in ${loc} — Book a Photoshoot`,
     metaDesc: (desc: string, occLower: string, loc: string) =>
-      `${desc} Book your ${occLower} in ${loc}. Verified portfolios, instant booking. From €299.`,
+      `${desc} Book your ${occLower} in ${loc}. Verified portfolios, instant booking. From €279.`,
     home: "Home",
     locations: "Locations",
     aboutLocation: (loc: string) => `About ${loc}`,
@@ -267,7 +267,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographer" : "photographers"} ready to shoot in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ} packages in ${loc}`,
-    packagesSub: "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 15% platform service fee is added at checkout.",
+    packagesSub: "Pick a package, book it directly. Every price is all-inclusive — the photographer's time, edited photos, secure payment and our support.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",
@@ -354,7 +354,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo listo" : "fotógrafos listos"} para sesiones en ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Paquetes de ${occ.toLowerCase()} en ${loc}`,
-    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 15% al pagar.",
+    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Todos los precios son con todo incluido.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -383,7 +383,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographe prêt" : "photographes prêts"} pour des séances à ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Forfaits ${occ.toLowerCase()} à ${loc}`,
-    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 15 % sont ajoutés au paiement.",
+    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Tous les prix sont tout compris.",
     packagePopular: "Populaire",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",

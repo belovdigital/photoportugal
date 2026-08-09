@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ConciergeChat } from "@/components/concierge/ConciergeChat";
@@ -28,19 +29,23 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
 
   const [reviews, stats] = await Promise.all([
     getHomepageReviews(6, locale).catch(() => []),
-    queryOne<{ photographer_count: string; total_reviews: string; avg_rating: string; min_price: string | null }>(
+    queryOne<{ photographer_count: string; total_reviews: string; avg_rating: string; pkg_min_price: string | null; region_min_price: string | null }>(
       `SELECT
          (SELECT COUNT(*)::text FROM photographer_profiles WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE) AS photographer_count,
          (SELECT COUNT(*)::text FROM reviews WHERE is_approved = TRUE) AS total_reviews,
          (SELECT COALESCE(ROUND(AVG(rating)::numeric, 1)::text, '5.0') FROM reviews WHERE is_approved = TRUE) AS avg_rating,
-         GREATEST((SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp ON pp.id = pk.photographer_id WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL), (SELECT MIN(price_eur) FROM region_pricing))::text AS min_price`
+         (SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp ON pp.id = pk.photographer_id WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL)::text AS pkg_min_price,
+         (SELECT MIN(price_eur) FROM region_pricing)::text AS region_min_price`
     ).catch(() => null),
   ]);
 
   const photographerCount = parseInt(stats?.photographer_count || "30");
   const totalReviews = parseInt(stats?.total_reviews || "0");
   const avgRating = stats?.avg_rating || "5.0";
-  const minPrice = stats?.min_price ? parseInt(stats.min_price) : 90;
+    const pkgMin = stats?.pkg_min_price ? clientPriceWithFee(parseFloat(stats.pkg_min_price)) : null;
+  const regionMin = stats?.region_min_price ? parseFloat(stats.region_min_price) : null;
+  // GREATEST semantics kept; package floor made all-in first.
+  const minPrice = pkgMin !== null || regionMin !== null ? Math.max(pkgMin ?? 0, regionMin ?? 0) : null;
 
   return (
     <div className="bg-warm-50 concierge-page">

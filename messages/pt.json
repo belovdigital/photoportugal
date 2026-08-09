@@ -907,8 +907,6 @@
       },
       "table": {
         "examplePackage": "Exemplo: pacote de €300",
-        "clientPays": "O cliente paga",
-        "serviceFee": "Taxa de serviço ({rate}%)",
         "platformCommission": "Comissão da plataforma",
         "youReceive": "Recebe",
         "yourPrice": "O seu preço de tabela"
@@ -1003,7 +1001,7 @@
         "plan": "Plano",
         "monthly": "Mensal",
         "commission": "Comissão",
-        "youEarn": "Ganha numa reserva de €299"
+        "youEarn": "Ganha numa reserva de €200"
       },
       "earlyBirdNote": "Fotógrafos early bird recebem o upgrade de plano gratuitamente — ainda beneficia de taxas de comissão mais baixas."
     },
@@ -3436,9 +3434,7 @@
     "hours": "horas",
     "partySize": "Número de pessoas",
     "total": "Total",
-    "photographerRate": "tarifa do fotógrafo",
     "largeGroupSurcharge": "sobretaxa de grupo grande (9+ pessoas)",
-    "platformFee": "taxa da plataforma",
     "noPrice": "Ainda não há preços disponíveis para esta combinação.",
     "holdNote": "Autorizado agora — só cobrado quando o seu fotógrafo for confirmado em 24h. Reembolso total se não conseguirmos encontrar.",
     "name": "O seu nome",
@@ -3650,7 +3646,7 @@
         },
         "extrasEarnings": {
           "question": "Quanto recebo por cada fotografia extra?",
-          "answer": "o seu preço por fotografia, sempre. O cliente pagao preço definido pelo seu fotógrafo e esse é o preço final para ele — sem taxa de serviço por cima, sem surpresas no pagamento.\n\nO seu plano não muda nada aqui. Gratuito, Pro ou Premium: cada fotografia extra rende-lhe o seu preço.\n\nOu seja, um cliente que compre 10 fotografias extra acrescenta 20,00 € a essa reserva, além do pacote."
+          "answer": "Define o seu próprio preço por foto extra, sempre — esse valor é exatamente o que recebe. O cliente vê um preço com tudo incluído ligeiramente superior que já cobre a nossa parte; nada é descontado do seu."
         },
         "extrasWhenPaid": {
           "question": "Quando é que recebo o dinheiro das fotografias extra?",
@@ -3791,7 +3787,6 @@
     "blindBookingOccasion": "Ocasião",
     "blindBookingDuration": "Duração",
     "blindBookingTotal": "Total",
-    "blindBookingPhotographerRate": "tarifa do fotógrafo",
     "blindBookingLargeGroupSurcharge": "sobretaxa de grupo grande (9+ pessoas)",
     "blindBookingHoldNote": "Autorizado agora — só é cobrado quando o seu fotógrafo for confirmado em 24h. Reembolso automático se não conseguirmos encontrar.",
     "blindBookingYes": "Sim, reservar",
@@ -4003,7 +3998,6 @@
   "packagePage": {
     "mostPopular": "Mais Popular",
     "byPhotographerInLocation": "por {photographer}{locText}",
-    "plusFee": "+ {rate}% de taxa",
     "bookNow": "Reservar esta sessão",
     "photos": "fotos",
     "review": "avaliação",
@@ -4019,7 +4013,7 @@
     "reviewsHeading": "O que os clientes dizem sobre {photographer}",
     "privateClient": "Viajante verificado",
     "otherPackagesHeading": "Mais sessões com {photographer}",
-    "totalIncl": "Total c/ taxa",
+    "totalIncl": "Total — tudo incluído",
     "backToPhotographer": "Voltar ao perfil de {photographer}",
     "noPaymentNow": "Sem pagamento agora — paga apenas depois da confirmação",
     "otherPackagesSubtitle": "Outras formas de trabalhar com {photographer} — escolha o que melhor encaixa na sua história.",
@@ -4045,7 +4039,7 @@
     "notSpecified": "Idiomas não confirmados"
   },
   "promoTopbar": {
-    "text": "Super Oferta de Verão: sessão fotográfica <strong>desde {price} tudo incluído</strong> <was>€344</was> — reservamos um fotógrafo de topo por si",
+    "text": "Super Oferta de Verão: sessão fotográfica <strong>desde {price} tudo incluído</strong> <was>€345</was> — reservamos um fotógrafo de topo por si",
     "cta": "Reservar em 60 seg",
     "dismiss": "Fechar"
   },

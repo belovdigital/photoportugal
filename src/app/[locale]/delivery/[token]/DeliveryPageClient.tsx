@@ -223,10 +223,10 @@ export function DeliveryPageClient({
     const ok = await confirm(
       t("takeAllTitle"),
       freeCount > 0 && paidIds.length > 0
-        ? t("takeAllMixed", { free: freeCount, paid: paidIds.length, total: money(paidIds.length * (gallery?.extras_price_cents ?? 290)) })
+        ? t("takeAllMixed", { free: freeCount, paid: paidIds.length, total: money(paidIds.length * (gallery?.extras_price_cents ?? 630)) })
         : freeCount > 0
           ? t("takeAllFree", { count: freeCount })
-          : t("takeAllPaid", { count: paidIds.length, total: money(paidIds.length * (gallery?.extras_price_cents ?? 290)) }),
+          : t("takeAllPaid", { count: paidIds.length, total: money(paidIds.length * (gallery?.extras_price_cents ?? 630)) }),
       { confirmLabel: t("takeAllConfirm") }
     );
     if (!ok) return;
@@ -744,7 +744,7 @@ export function DeliveryPageClient({
                     {(gallery?.gift_remaining ?? 0) > 0 ? t("railCanAdd") : t("railCanBuy")}
                   </span>
                   <span className="mt-0.5 block text-[10px] text-amber-700/80">
-                    {t("railEach", { price: money(gallery?.extras_price_cents ?? 290) })}
+                    {t("railEach", { price: money(gallery?.extras_price_cents ?? 630) })}
                   </span>
                 </button>
               )}
@@ -972,7 +972,7 @@ export function DeliveryPageClient({
                       const free = Math.min(selectedExtras.size, gallery.gift_remaining ?? 0);
                       const paid = selectedExtras.size - free;
                       if (free > 0 && paid === 0) return t("giftAllFree", { count: free });
-                      return money(paid * (gallery.extras_price_cents ?? 290));
+                      return money(paid * (gallery.extras_price_cents ?? 630));
                     })()}
                   </p>
                   <p className="mt-1 text-xs text-gray-300">{t("extrasSelected", { count: selectedExtras.size })}</p>
@@ -1074,7 +1074,7 @@ export function DeliveryPageClient({
           onReorder={reorderPhotos}
           onTakeAll={takeAllExtras}
           takingAll={takingAll}
-          extrasPriceCents={gallery?.extras_price_cents ?? 290}
+          extrasPriceCents={gallery?.extras_price_cents ?? 630}
           giftLeft={gallery?.gift_remaining ?? 0}
           photographerFirstName={normalizeName(gallery.photographer_name).split(" ")[0]}
           onUngift={ungiftPhoto}

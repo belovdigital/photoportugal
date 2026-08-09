@@ -41,7 +41,7 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
     // Next to Payouts: both answer "what happens to the money on this booking",
     // and someone looking up an amount to invoice is already on Payouts. The
     // urgency lives in the dashboard banner, not in the nav position.
-    // Portugal only — see invoicing-announcement.ts.
+    // Market-gated via LIVE_BY_MARKET — see invoicing-announcement.ts.
     { href: "/dashboard/invoicing", labelKey: "sidebarInvoicing", icon: "document-text", roles: showsInvoicingAnnouncement ? ["photographer"] : [] },
     { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings", roles: ["client", "photographer"] },
     { href: "/dashboard/support", labelKey: "sidebarSupport", icon: "help-circle", roles: ["photographer"] },

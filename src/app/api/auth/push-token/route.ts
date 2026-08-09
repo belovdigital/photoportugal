@@ -27,3 +27,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to save token" }, { status: 500 });
   }
 }
+
+// The app calls this when the user switches markets: THIS market must stop
+// pushing to the device, or its notifications keep arriving and a tap routes
+// this database's bookingId into the other market's screens. Until this
+// handler existed the app's DELETE got a 405 and the deregistration silently
+// never happened.
+export async function DELETE(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await queryOne(
+      "UPDATE users SET push_token = NULL, push_platform = NULL WHERE id = $1",
+      [user.id]
+    );
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[push-token] delete error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/push-token", method: req.method, statusCode: 500 }); } catch {}
+    return NextResponse.json({ error: "Failed to remove token" }, { status: 500 });
+  }
+}

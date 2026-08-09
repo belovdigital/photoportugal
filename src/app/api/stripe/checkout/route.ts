@@ -215,7 +215,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ url: checkoutSession.url, payment });
+    // URL only — `payment` carried base/fee/payout internals to the client.
+    return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
     console.error("[stripe/checkout] error:", error);
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/checkout", method: req.method, statusCode: 500 }); } catch {}

@@ -907,8 +907,6 @@
       },
       "table": {
         "examplePackage": "Esempio: pacchetto da €300",
-        "clientPays": "Il cliente paga",
-        "serviceFee": "Commissione di servizio ({rate}%)",
         "platformCommission": "Commissione della piattaforma",
         "youReceive": "Tu ricevi",
         "yourPrice": "Il tuo prezzo di listino"
@@ -1003,7 +1001,7 @@
         "plan": "Piano",
         "monthly": "Costo mensile",
         "commission": "Commissione",
-        "youEarn": "Il tuo guadagno su una prenotazione da €299"
+        "youEarn": "Il tuo guadagno su una prenotazione da €200"
       },
       "earlyBirdNote": "I fotografi Early Bird ricevono gratuitamente l'upgrade del piano, continuando a beneficiare di commissioni più basse."
     },
@@ -2859,7 +2857,7 @@
         },
         "extrasEarnings": {
           "question": "Quanto guadagno per ogni foto extra?",
-          "answer": "Ogni volta ricevi il prezzo per foto stabilito da te. Il cliente paga il prezzo che hai impostato, che rappresenta il costo finale: nessuna commissione di servizio aggiuntiva e nessuna sorpresa al momento del pagamento.\n\nIl tuo piano non fa alcuna differenza. Free, Pro o Premium: per ogni foto extra ricevi il prezzo da te stabilito.\n\nQuindi, se un cliente acquista 10 foto extra, alla prenotazione si aggiungono €20.00, oltre al prezzo del pacchetto."
+          "answer": "Fissi tu il prezzo per ogni foto extra — ed è esattamente quello che ricevi. Il cliente vede un prezzo tutto compreso leggermente più alto che copre già la nostra parte; dal tuo non viene mai detratto nulla."
         },
         "extrasWhenPaid": {
           "question": "Quando ricevo il pagamento per le foto extra?",
@@ -3661,9 +3659,7 @@
     "hours": "ore",
     "partySize": "Numero di persone",
     "total": "Totale",
-    "photographerRate": "tariffa del fotografo",
     "largeGroupSurcharge": "supplemento per gruppi numerosi (9+ persone)",
-    "platformFee": "commissione della piattaforma",
     "noPrice": "Non è ancora disponibile un prezzo per questa combinazione.",
     "holdNote": "Importo autorizzato ora, ma addebitato solo quando il fotografo sarà confermato entro 24 ore. Se non troviamo il professionista giusto, riceverai un rimborso completo.",
     "name": "Il tuo nome",
@@ -3790,7 +3786,6 @@
     "blindBookingOccasion": "Occasione",
     "blindBookingDuration": "Durata",
     "blindBookingTotal": "Totale",
-    "blindBookingPhotographerRate": "compenso del fotografo",
     "blindBookingLargeGroupSurcharge": "supplemento per gruppi numerosi (9+ persone)",
     "blindBookingHoldNote": "Autorizzato ora: l'addebito avverrà solo quando il fotografo sarà confermato entro 24h. Rimborso automatico se non riusciamo a trovare un abbinamento.",
     "blindBookingYes": "Sì, prenota",
@@ -4002,7 +3997,6 @@
   "packagePage": {
     "mostPopular": "Più popolare",
     "byPhotographerInLocation": "di {photographer}{locText}",
-    "plusFee": "+ {rate}% di commissione",
     "bookNow": "Prenota questa sessione",
     "photos": "foto",
     "review": "recensione",
@@ -4018,7 +4012,7 @@
     "reviewsHeading": "Cosa dicono i clienti di {photographer}",
     "privateClient": "Viaggiatore verificato",
     "otherPackagesHeading": "Altre sessioni con {photographer}",
-    "totalIncl": "Totale, commissione inclusa",
+    "totalIncl": "Totale — tutto incluso",
     "backToPhotographer": "Torna al profilo di {photographer}",
     "noPaymentNow": "Nessun pagamento ora: pagherai solo dopo la conferma del fotografo",
     "otherPackagesSubtitle": "Scopri altri modi per lavorare con {photographer} e scegli quello più adatto alla tua storia.",
@@ -4044,7 +4038,7 @@
     "notSpecified": "Lingue non confermate"
   },
   "promoTopbar": {
-    "text": "Super offerta estiva: servizio fotografico <strong>a partire da {price}, tutto incluso</strong> <was>€344</was> — prenotiamo per te un fotografo d'eccezione",
+    "text": "Super offerta estiva: servizio fotografico <strong>a partire da {price}, tutto incluso</strong> <was>€345</was> — prenotiamo per te un fotografo d'eccezione",
     "cta": "Prenota in 60 secondi",
     "dismiss": "Chiudi"
   },

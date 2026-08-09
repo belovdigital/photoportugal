@@ -133,9 +133,6 @@ function detectFromPath(pathname: string | null): { slug?: string; occasion?: st
 }
 
 interface PricePreview {
-  regional_base_eur: number;
-  base_eur: number;
-  service_fee_eur: number;
   /** All-inclusive summer-offer total the client pays — charged straight. */
   total_eur: number;
   /** Pre-offer all-in total for the strike-through ("was €344"). */
@@ -459,9 +456,6 @@ function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
         if (cancelled) return;
         if (data?.total_eur) {
           setPrice({
-            regional_base_eur: data.regional_base_eur,
-            base_eur: data.base_eur,
-            service_fee_eur: data.service_fee_eur,
             total_eur: data.total_eur,
             compare_at_eur: data.compare_at_eur || 0,
             savings_eur: data.savings_eur || 0,

@@ -57,7 +57,7 @@ export default async function HowItWorksPage({
     name: t("title"),
     description: t("metaDescription"),
     totalTime: "PT10M",
-    estimatedCost: { "@type": "MonetaryAmount", currency: "EUR", value: "150" },
+    estimatedCost: { "@type": "MonetaryAmount", currency: "EUR", value: "279" },
     step: [
       {
         "@type": "HowToStep",

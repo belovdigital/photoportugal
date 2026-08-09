@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
     const phone = String(body.phone || "").trim().slice(0, 30);
     const meetingHint = String(body.meeting_hint || "").trim().slice(0, 500);
     const rawLocale = typeof body.locale === "string" ? body.locale : "";
-    const locale: "pt" | "de" | "es" | "fr" | "en" =
-      rawLocale === "pt" || rawLocale === "de" || rawLocale === "es" || rawLocale === "fr"
+    const locale: "pt" | "de" | "es" | "fr" | "it" | "en" =
+      rawLocale === "pt" || rawLocale === "de" || rawLocale === "es" || rawLocale === "fr" || rawLocale === "it"
         ? rawLocale
         : "en";
 

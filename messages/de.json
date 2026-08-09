@@ -827,7 +827,7 @@
   },
   "pricing": {
     "metaTitle": "Foto-Pakete und Preise",
-    "metaDescription": "Urlaubs-Fotoshooting-Pakete in Portugal ab 299 EUR. Paar-, Familien-, Solo- und Heiratsantrag-Fotografie.",
+    "metaDescription": "Urlaubs-Fotoshooting-Pakete in Portugal ab 279 EUR. Paar-, Familien-, Solo- und Heiratsantrag-Fotografie.",
     "title": "Einfache, transparente Preise",
     "subtitle": "Kostenlos starten, upgraden, wenn Sie bereit zum Wachsen sind",
     "plans": {
@@ -907,8 +907,6 @@
       },
       "table": {
         "examplePackage": "Beispiel: 300 €-Paket",
-        "clientPays": "Kunde zahlt",
-        "serviceFee": "Servicegebühr ({rate} %)",
         "platformCommission": "Plattform-Provision",
         "youReceive": "Sie erhalten",
         "yourPrice": "Ihr Listenpreis"
@@ -1003,7 +1001,7 @@
         "plan": "Plan",
         "monthly": "Monatlich",
         "commission": "Provision",
-        "youEarn": "Sie verdienen bei einer 299 €-Buchung"
+        "youEarn": "Sie verdienen bei einer 200 €-Buchung"
       },
       "earlyBirdNote": "Early-Bird-Fotografen erhalten ihr Plan-Upgrade kostenlos — Sie profitieren weiterhin von niedrigeren Provisionssätzen."
     },
@@ -2860,7 +2858,7 @@
         },
         "extrasEarnings": {
           "question": "Was verdiene ich an einem zusätzlichen Foto?",
-          "answer": "Ihren Preis pro Foto, jedes Mal. Ihr Kunde zahlt den von Ihrem Fotografen festgelegten Preis, und das ist für ihn der Endpreis — keine Servicegebühr obendrauf, keine Überraschung beim Bezahlen.\n\nIhr Tarif ändert daran nichts. Ob Free, Pro oder Premium: Ein zusätzliches Foto bringt Ihnen Ihren Preis.\n\nKauft ein Kunde also 10 zusätzliche Fotos, kommen 20,00 € zu dieser Buchung dazu."
+          "answer": "Sie legen Ihren eigenen Preis pro Extra-Foto fest — genau diesen Betrag erhalten Sie. Die Kundschaft sieht einen etwas höheren All-inclusive-Preis, der unseren Anteil bereits enthält; von Ihrem wird nie etwas abgezogen."
         },
         "extrasWhenPaid": {
           "question": "Wann bekomme ich das Geld für zusätzliche Fotos?",
@@ -3662,9 +3660,7 @@
     "hours": "Stunden",
     "partySize": "Anzahl Personen",
     "total": "Gesamt",
-    "photographerRate": "Fotografenpreis",
     "largeGroupSurcharge": "Großgruppenzuschlag (9+ Personen)",
-    "platformFee": "Plattformgebühr",
     "noPrice": "Für diese Kombination ist noch kein Preis verfügbar.",
     "holdNote": "Jetzt autorisiert — belastet nur, wenn Ihr Fotograf innerhalb von 24h bestätigt ist. Volle Rückerstattung, wenn kein Match.",
     "name": "Ihr Name",
@@ -3791,7 +3787,6 @@
     "blindBookingOccasion": "Anlass",
     "blindBookingDuration": "Dauer",
     "blindBookingTotal": "Gesamt",
-    "blindBookingPhotographerRate": "Fotografenpreis",
     "blindBookingLargeGroupSurcharge": "Großgruppenzuschlag (9+ Personen)",
     "blindBookingHoldNote": "Jetzt autorisiert — wird erst belastet, wenn Ihr Fotograf innerhalb von 24h bestätigt ist. Automatische Rückerstattung, wenn kein Match.",
     "blindBookingYes": "Ja, buchen",
@@ -4003,7 +3998,6 @@
   "packagePage": {
     "mostPopular": "Am beliebtesten",
     "byPhotographerInLocation": "mit {photographer}{locText}",
-    "plusFee": "+ {rate}% Gebühr",
     "bookNow": "Diese Session buchen",
     "photos": "Fotos",
     "review": "Bewertung",
@@ -4019,7 +4013,7 @@
     "reviewsHeading": "Was Kunden über {photographer} sagen",
     "privateClient": "Verifizierter Reisender",
     "otherPackagesHeading": "Weitere Sessions mit {photographer}",
-    "totalIncl": "Gesamt inkl. Gebühr",
+    "totalIncl": "Gesamt — alles inklusive",
     "backToPhotographer": "Zurück zum Profil von {photographer}",
     "noPaymentNow": "Keine Zahlung jetzt — zahlen nur nach Bestätigung des Fotografen",
     "otherPackagesSubtitle": "Weitere Möglichkeiten, mit {photographer} zu arbeiten — wählen Sie, was am besten zu Ihrer Geschichte passt.",
@@ -4045,7 +4039,7 @@
     "notSpecified": "Sprachen nicht bestätigt"
   },
   "promoTopbar": {
-    "text": "Sommer-Superangebot: Fotoshooting <strong>ab {price} all-inclusive</strong> <was>€344</was> — wir buchen einen Top-Fotografen für Sie",
+    "text": "Sommer-Superangebot: Fotoshooting <strong>ab {price} all-inclusive</strong> <was>€345</was> — wir buchen einen Top-Fotografen für Sie",
     "cta": "In 60 Sek. buchen",
     "dismiss": "Schließen"
   },

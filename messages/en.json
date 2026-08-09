@@ -907,8 +907,6 @@
       },
       "table": {
         "examplePackage": "Example: €300 package",
-        "clientPays": "Client pays",
-        "serviceFee": "Service fee ({rate}%)",
         "platformCommission": "Platform commission",
         "youReceive": "You receive",
         "yourPrice": "Your listed price"
@@ -1003,7 +1001,7 @@
         "plan": "Plan",
         "monthly": "Monthly",
         "commission": "Commission",
-        "youEarn": "You earn on €299 booking"
+        "youEarn": "You earn on €200 booking"
       },
       "earlyBirdNote": "Early bird photographers get their plan upgrade free — you still benefit from lower commission rates."
     },
@@ -2859,7 +2857,7 @@
         },
         "extrasEarnings": {
           "question": "What do I earn on an extra photo?",
-          "answer": "your own price per photo, every time. Your client pays the price your photographer set and that is their final price — no service fee on top, no surprise at checkout.\n\nYour plan makes no difference here. Free, Pro or Premium: an extra photo pays you your price.\n\nSo a client who buys 10 extra photos adds €20.00 to that booking, on top of the package."
+          "answer": "You set your own price per extra photo, every time — that price is exactly what you receive. The client sees a slightly higher all-inclusive price that already covers our part; nothing is ever deducted from yours."
         },
         "extrasWhenPaid": {
           "question": "When does the money for extra photos reach me?",
@@ -3661,9 +3659,7 @@
     "hours": "hours",
     "partySize": "Number of people",
     "total": "Total",
-    "photographerRate": "photographer rate",
     "largeGroupSurcharge": "large-group surcharge (9+ people)",
-    "platformFee": "platform fee",
     "noPrice": "No pricing available for this combination yet.",
     "holdNote": "Authorised now — charged only when your photographer is confirmed within 24h. Full refund if we can't match.",
     "name": "Your name",
@@ -3790,7 +3786,6 @@
     "blindBookingOccasion": "Occasion",
     "blindBookingDuration": "Duration",
     "blindBookingTotal": "Total",
-    "blindBookingPhotographerRate": "photographer rate",
     "blindBookingLargeGroupSurcharge": "large-group surcharge (9+ people)",
     "blindBookingHoldNote": "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match.",
     "blindBookingYes": "Yes, book it",
@@ -4002,7 +3997,6 @@
   "packagePage": {
     "mostPopular": "Most Popular",
     "byPhotographerInLocation": "by {photographer}{locText}",
-    "plusFee": "+ {rate}% fee",
     "bookNow": "Book this session",
     "photos": "photos",
     "review": "review",
@@ -4018,7 +4012,7 @@
     "reviewsHeading": "What clients say about {photographer}",
     "privateClient": "Verified traveler",
     "otherPackagesHeading": "More sessions with {photographer}",
-    "totalIncl": "Total incl. fee",
+    "totalIncl": "Total — all included",
     "backToPhotographer": "Back to {photographer}’s profile",
     "noPaymentNow": "No payment now — pay only after the photographer confirms",
     "otherPackagesSubtitle": "Other ways to work with {photographer} — pick what fits your story best.",
@@ -4044,7 +4038,7 @@
     "notSpecified": "Languages not confirmed"
   },
   "promoTopbar": {
-    "text": "Summer Super-Offer: photoshoot <strong>from {price} all-in</strong> <was>€344</was> — we book a top photographer for you",
+    "text": "Summer Super-Offer: photoshoot <strong>from {price} all-in</strong> <was>€345</was> — we book a top photographer for you",
     "cta": "Book in 60 sec",
     "dismiss": "Dismiss"
   },
