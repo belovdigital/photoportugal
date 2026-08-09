@@ -93,3 +93,24 @@ anyway. The cost is one extra tool call; the cost of wrong is the user
 WhatsApp-ing a client at 4am.
 
 See: `~/.claude/projects/-Users-alex-projects-photoportugal/memory/feedback_always_run_date.md`
+
+## Deploy — the ONLY correct rsync (any Claude session, no exceptions)
+
+```bash
+rsync -az --delete \
+  --exclude=node_modules --exclude=.next --exclude=.git \
+  --exclude=.env --exclude=.env.local --exclude=uploads \
+  --exclude=google-credentials.json --exclude=tsconfig.tsbuildinfo \
+  ./ <host>:/var/www/<app>-incoming/
+ssh <host> 'bash /var/www/deploy.sh'
+```
+
+Hosts: hetzner-pp/photoportugal, hetzner-ps/photospain, hetzner-pi/photoitaly.
+
+**`--exclude='.env.local'` is NOT optional.** On 2026-08-09 one session rsynced
+without it; the stale local file overrode prod `.env` (`@next/env` loads
+`.env.local` first), all three markets lost their DB and the retry storm ate
+every Postgres connection slot. deploy.sh now purges the file from slots,
+monitors alert on it, and stray-DB clients are auto-killed — but do not rely on
+the safety net: use the exact command above. deploy.sh also holds an flock;
+if it says another deploy is running, WAIT — never kill the lock.

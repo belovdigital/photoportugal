@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { photographerPayoutFor } from "@/lib/stripe";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ReviewForm } from "@/components/ui/ReviewForm";
@@ -519,15 +520,18 @@ export default async function BookingsPage() {
                     ) : (
                       <>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
-                        {/* Blind summer offer: the client saw the all-inclusive
-                            number (base / 0.85) — never show them the internal
-                            base. */}
-                        <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price) / (booking.blind_booking ? 0.85 : 1))}</p>
-                        {booking.stripe_amount_paid_cents !== null && !isPhotographer && (
-                          <p className="text-[10px] font-medium text-green-700">
-                            Paid: {formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)}
-                          </p>
-                        )}
+                        {/* The client's ONE number. Paid bookings show what was
+                            actually charged (old bookings paid the pre-rounding
+                            exact 15% — history is not rewritten); unpaid show
+                            what checkout will charge now: blind = all-in from
+                            the derived base, regular = clientPriceWithFee. */}
+                        <p className="text-sm font-medium text-gray-800">
+                          {booking.stripe_amount_paid_cents !== null
+                            ? formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)
+                            : `€${booking.blind_booking
+                                ? Math.round(Number(booking.total_price) / 0.85)
+                                : clientPriceWithFee(Number(booking.total_price))}`}
+                        </p>
                         {Number(booking.stripe_amount_discount_cents) > 0 && !isPhotographer && (
                           <p className="text-[10px] font-medium text-primary-600">
                             Discount: -{formatStripeAmount(booking.stripe_amount_discount_cents, booking.stripe_currency)}
