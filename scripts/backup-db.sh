@@ -156,14 +156,25 @@ SIZE_BYTES="$(stat -c%s "$FILE" 2>/dev/null || stat -f%z "$FILE")"
 # one halving overnight is alarming even at 200MB.
 MIN_BYTES="$(getenv MIN_BACKUP_BYTES)"; MIN_BYTES="${MIN_BYTES:-15000}"
 if [ "$SIZE_BYTES" -lt "$MIN_BYTES" ]; then
+  # Delete it. A refused dump left on disk becomes "yesterday" for the
+  # comparison below, and a 20-byte file as the baseline disables that check
+  # for every night that follows — one bad dump would quietly switch off the
+  # guard that catches the next one.
+  rm -f "$FILE"
   alert "Дамп подозрительно мал: ${SIZE_BYTES} байт (порог ${MIN_BYTES}). Не выгружаю, чтобы не затереть хорошие копии."
   exit 1
 fi
 
-PREV="$(ls -t "${LOCAL_DIR}"/*.sql.gz 2>/dev/null | sed -n '2p' || true)"
+# Newest dump that is NOT the one just written and is big enough to have been
+# a real backup. Sorting by name and taking the last would pick the file from
+# this very run and compare it against itself, which is how this check silently
+# passed a dump a quarter the size of its predecessor.
+PREV="$(find "${LOCAL_DIR}" -name '*.sql.gz' ! -name "$(basename "$FILE")" \
+          -size +"$((MIN_BYTES / 1024))"k 2>/dev/null | sort | tail -1 || true)"
 if [ -n "$PREV" ]; then
   PREV_BYTES="$(stat -c%s "$PREV" 2>/dev/null || stat -f%z "$PREV" || echo 0)"
   if [ "$PREV_BYTES" -gt 0 ] && [ "$((SIZE_BYTES * 2))" -lt "$PREV_BYTES" ]; then
+    rm -f "$FILE"
     alert "Дамп вдвое меньше вчерашнего: ${SIZE_BYTES} против ${PREV_BYTES} байт. Не выгружаю — проверь базу."
     exit 1
   fi
