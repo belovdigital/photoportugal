@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { titleCasePackageName } from "@/lib/format-package-name";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
@@ -64,7 +65,13 @@ async function notifyClientAboutPackageOffer({
   const locale = normalizeLocale(client.locale);
   const photographerName = photographer?.name || "your photographer";
   const firstName = client.name.split(" ")[0] || "there";
-  const priceText = formatPrice(price, locale);
+  // `price` arrives as the photographer's BASE, the same number the chat card
+  // carries — every client surface converts it, and this email is one. It was
+  // sending the base: Jennifer Duarte's €2050 custom offer on 2026-08-10 mailed
+  // "€2050" while her client's chat card and Stripe both said €2360.
+  // Converted here rather than at the two call sites so a third one cannot
+  // forget it.
+  const priceText = formatPrice(clientPriceWithFee(price), locale);
   const bookingUrl = localizedUrl(`/book/${photographerSlug}?package=${encodeURIComponent(packageId)}`, locale);
   const messagesUrl = localizedUrl("/dashboard/messages", locale);
   const durationLabel = durationMinutes >= 60 && durationMinutes % 60 === 0

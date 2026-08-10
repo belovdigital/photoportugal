@@ -1673,25 +1673,23 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             const isCustom = !!card.is_custom;
                             const isRevoked = !!card.revoked;
                             const viewerIsClient = activeConvo?.other_role === "photographer";
-                            // Clients see the all-in amount on CUSTOM cards —
-                            // a negotiated price must match what checkout will
-                            // actually charge (base + 15% service fee).
-                            // Catalog-package cards keep the base price for
-                            // consistency with profile/catalog surfaces.
-                            // Photographers keep seeing their own base price.
-                            // Clients see the all-in number on EVERY card;
-                            // photographers see their projected PAYOUT at the
-                            // current plan — nobody ever sees the base
-                            // (2026-08-09). Paid bookings elsewhere show the
-                            // stored payout_amount instead of this projection.
-                            // Photographer side waits for the real plan —
-                            // a null-plan projection would show the free-tier
-                            // 20% cut to pro/premium photographers.
+                            // Client sees the all-in number on EVERY card — a
+                            // negotiated price has to match what checkout will
+                            // actually charge (base + 15%, €5-rounded).
+                            //
+                            // Photographer sees the price HE TYPED. This card is
+                            // the offer he just wrote; showing a payout
+                            // projection here meant Jennifer Duarte sent €2050
+                            // and her own screen answered €1845 (premium, 10%),
+                            // which reads as the platform quietly editing her
+                            // offer. Payout stays where it belongs — the booking
+                            // card and the payouts page, off the stored
+                            // payout_amount rather than a projection.
+                            // Supersedes the 2026-08-09 "nobody sees the base"
+                            // rule for this surface only (Alex, 2026-08-10).
                             const displayPrice = viewerIsClient
                               ? clientPriceWithFee(Number(card.price))
-                              : myPlan
-                              ? Math.round(photographerPayoutFor(Number(card.price), myPlan))
-                              : null;
+                              : Math.round(Number(card.price));
                             return (
                               <div key={msg.id} className="flex justify-center my-3">
                                 <div className={`max-w-[90%] sm:max-w-[70%] rounded-2xl border p-5 shadow-sm ${
