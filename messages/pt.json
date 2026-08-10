@@ -3653,7 +3653,7 @@
         },
         "extrasWhenPaid": {
           "question": "Quando é que recebo o dinheiro das fotografias extra?",
-          "answer": "De imediato. As fotografias extra não esperam que o cliente aceite a galeria — assim que o pagamento é confirmado, os seus o seu preço por fotografia seguem para a sua conta Stripe e a venda aparece no seu painel. Da Stripe para o seu banco demora os habituais 2 a 7 dias úteis.\n\nA galeria fica aberta durante 90 dias depois de o cliente a aceitar, por isso ainda pode vender fotografias semanas depois da sessão."
+          "answer": "De imediato. As fotografias extra não esperam que o cliente aceite a galeria — assim que o pagamento é confirmado, o seu preço por fotografia segue para a sua conta Stripe e a venda aparece no seu painel. Da Stripe para o seu banco demora os habituais 2 a 7 dias úteis.\n\nA galeria fica aberta durante 90 dias depois de o cliente a aceitar, por isso ainda pode vender fotografias semanas depois da sessão."
         },
         "giftPhotos": {
           "question": "Posso oferecer fotografias extra ao cliente?",

@@ -3110,7 +3110,7 @@
         },
         "extrasWhenPaid": {
           "question": "Quand l'argent des photos supplémentaires arrive-t-il ?",
-          "answer": "Tout de suite. Les photos supplémentaires n'attendent pas que votre client accepte la galerie : dès que le paiement est validé, vos votre prix par photo partent vers votre compte Stripe et la vente s'affiche dans votre tableau de bord. De Stripe à votre banque, comptez les 2–7 jours ouvrés habituels.\n\nLa galerie reste ouverte 90 jours après son acceptation : des photos peuvent donc encore se vendre plusieurs semaines après la séance."
+          "answer": "Tout de suite. Les photos supplémentaires n'attendent pas que votre client accepte la galerie : dès que le paiement est validé, votre prix par photo part vers votre compte Stripe et la vente s'affiche dans votre tableau de bord. De Stripe à votre banque, comptez les 2–7 jours ouvrés habituels.\n\nLa galerie reste ouverte 90 jours après son acceptation : des photos peuvent donc encore se vendre plusieurs semaines après la séance."
         },
         "giftPhotos": {
           "question": "Puis-je offrir des photos supplémentaires à mon client ?",

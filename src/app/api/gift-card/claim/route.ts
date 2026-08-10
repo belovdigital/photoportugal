@@ -48,8 +48,14 @@ export async function GET(req: NextRequest) {
     has_password: !!user.password_hash,
     gift_card_id: card.id,
     tier: card.tier,
-    // Recipient must not learn what the gift cost — label/perks only.
-    tier_meta: (({ label, duration_minutes, num_photos }) => ({ label, duration_minutes, num_photos }))(GIFT_CARD_TIERS[card.tier] as Record<string, unknown> as { label: string; duration_minutes?: number; num_photos?: number }),
+    // Recipient must not learn what the gift cost — perks only, no buyerPrice.
+    // Destructure by the tier's REAL keys: an earlier pass renamed them to
+    // snake_case on the way out, so the claim page read tier.durationMinutes /
+    // .photos / .locations off an object that only had `label` and rendered
+    // "undefined min · undefined edited photos · undefined location" to the
+    // recipient. The double cast is what let that through tsc.
+    tier_meta: (({ label, durationMinutes, photos, locations, outfitChange, description }) =>
+      ({ label, durationMinutes, photos, locations, outfitChange, description }))(GIFT_CARD_TIERS[card.tier]),
     buyer_name: card.buyer_name,
     personal_message: card.personal_message,
     expires_at: card.expires_at,

@@ -37,13 +37,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 WHERE bp.client_id = b.client_id
                   AND bp.photographer_id = b.photographer_id
                   AND bp.payment_status = 'paid'
-              ) as any_paid_booking
+              ) as any_paid_booking,
+              -- Which side is asking. The list endpoint computes this; without
+              -- it the mobile app's gift guard reads undefined and falls
+              -- through to showing a recipient what their present cost.
+              CASE
+                WHEN pp.user_id = $2 THEN 'photographer'
+                WHEN b.gift_recipient_user_id = $2 THEN 'gift_recipient'
+                WHEN b.is_gift = TRUE AND b.client_id = $2 THEN 'gift_buyer'
+                ELSE 'client'
+              END as viewer_role
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
        LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
        LEFT JOIN users pu ON pu.id = pp.user_id
        LEFT JOIN packages p ON p.id = b.package_id
-       WHERE b.id = $1 AND (b.client_id = $2 OR pp.user_id = $2)`,
+       -- A revealed gift is openable by its recipient. The list endpoint
+       -- admits them, so without this they saw the booking in the list and got
+       -- a 404 on tapping it.
+       WHERE b.id = $1 AND (
+               b.client_id = $2
+               OR pp.user_id = $2
+               OR (b.gift_recipient_user_id = $2 AND b.gift_reveal_sent_at IS NOT NULL)
+             )`,
       [id, user.id]
     );
 
@@ -85,6 +101,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       delete b.platform_fee;
       delete b.service_fee;
       delete b.extra_photo_payout_cents;
+      // A gift recipient is a client too, and what the present cost is the
+      // buyer's business — same strip the list endpoint applies.
+      if (b.viewer_role === "gift_recipient") {
+        delete b.total_price;
+        delete b.stripe_amount_paid_cents;
+        delete b.stripe_amount_subtotal_cents;
+        delete b.stripe_amount_discount_cents;
+        delete b.stripe_promo_code;
+        delete b.stripe_currency;
+        delete b.payment_url;
+      }
     }
 
     return NextResponse.json(booking);

@@ -808,6 +808,20 @@ export async function GET(req: NextRequest) {
         delete b.platform_fee;
         delete b.service_fee;
         delete b.extra_photo_payout_cents;
+        // A gift RECIPIENT is a client too, and the scrub above only had the
+        // photographer in mind. What the present cost is the buyer's business:
+        // the row was still carrying total_price and the Stripe actuals. The
+        // app hides the figure at render, but "unpainted yet in the payload" is
+        // the same standard we just closed on the photographer's own page.
+        if (b.viewer_role === "gift_recipient") {
+          delete b.total_price;
+          delete b.stripe_amount_paid_cents;
+          delete b.stripe_amount_subtotal_cents;
+          delete b.stripe_amount_discount_cents;
+          delete b.stripe_promo_code;
+          delete b.stripe_currency;
+          delete b.payment_url;
+        }
       }
     }
 

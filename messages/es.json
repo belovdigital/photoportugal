@@ -3110,7 +3110,7 @@
         },
         "extrasWhenPaid": {
           "question": "¿Cuándo recibo el dinero de las fotos extra?",
-          "answer": "Enseguida. Las fotos extra no esperan a que el cliente acepte la galería: en cuanto se confirma el pago, sus tu precio por foto van camino de su cuenta de Stripe y la venta aparece en su panel. De Stripe a su banco tarda los 2–7 días laborables de siempre.\n\nLa galería sigue abierta 90 días después de que el cliente la acepte, así que aún puede vender fotos semanas después de la sesión."
+          "answer": "Enseguida. Las fotos extra no esperan a que el cliente acepte la galería: en cuanto se confirma el pago, su precio por foto va camino de su cuenta de Stripe y la venta aparece en su panel. De Stripe a su banco tarda los 2–7 días laborables de siempre.\n\nLa galería sigue abierta 90 días después de que el cliente la acepte, así que aún puede vender fotos semanas después de la sesión."
         },
         "giftPhotos": {
           "question": "¿Puedo regalar fotos extra al cliente?",

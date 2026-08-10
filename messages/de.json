@@ -2865,7 +2865,7 @@
         },
         "extrasWhenPaid": {
           "question": "Wann bekomme ich das Geld für zusätzliche Fotos?",
-          "answer": "Sofort. Zusätzliche Fotos warten nicht darauf, dass Ihr Kunde die Galerie annimmt — sobald die Zahlung durch ist, sind Ihre Ihren Preis pro Foto auf dem Weg zu Ihrem Stripe-Konto, und der Verkauf erscheint in Ihrem Dashboard. Von Stripe zu Ihrer Bank dauert es die üblichen 2–7 Werktage.\n\nDie Galerie bleibt nach der Annahme noch 90 Tage offen. Fotos können sich also noch Wochen nach dem Shooting verkaufen."
+          "answer": "Sofort. Zusätzliche Fotos warten nicht darauf, dass Ihr Kunde die Galerie annimmt — sobald die Zahlung durch ist, ist Ihr Preis pro Foto auf dem Weg zu Ihrem Stripe-Konto, und der Verkauf erscheint in Ihrem Dashboard. Von Stripe zu Ihrer Bank dauert es die üblichen 2–7 Werktage.\n\nDie Galerie bleibt nach der Annahme noch 90 Tage offen. Fotos können sich also noch Wochen nach dem Shooting verkaufen."
         },
         "giftPhotos": {
           "question": "Kann ich meinem Kunden zusätzliche Fotos schenken?",

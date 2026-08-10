@@ -280,10 +280,16 @@ export async function PATCH(
             </div>`
           ).catch(e => console.error("[dispute] resolve photographer email:", e));
 
-          // Chat message
+          // Chat message. Both sides of the booking read this row, so it must
+          // carry no euro figure: the refund is client money, and the
+          // photographer knows his own payout — the difference is our
+          // commission. His email nine lines up already sends the resolution
+          // without the amount for exactly this reason; the shared chat row
+          // had been missed. The client sees the refunded sum on their booking
+          // and from Stripe.
           const chatResolution: Record<string, string> = {
             reshoot: "✅ Issue resolved — a reshoot has been arranged.",
-            partial_refund: `✅ Issue resolved — partial refund of €${refund_amount || 0} issued.`,
+            partial_refund: "✅ Issue resolved — a partial refund has been issued.",
             full_refund: "✅ Issue resolved — full refund issued.",
             rejected: "✅ Issue reviewed — delivery meets agreed terms. You can accept the delivery.",
           };
