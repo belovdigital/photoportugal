@@ -15,6 +15,7 @@ import {
   type LocationExplorerRegion,
 } from "@/lib/location-explorer-data";
 import { country, byCountry } from "@/lib/country";
+import { Link } from "@/i18n/navigation";
 
 // The country name declined per language. This component carries its own copy
 // block (it predates the messages catalogue), so the market name has to be
@@ -315,12 +316,6 @@ function placeImage(place: ExplorerPlace): string {
     regionImage(place.region) ||
     locationImage(FALLBACK_IMAGE_SLUG, "cardLarge")
   );
-}
-
-function localizedPath(locale: string, href: string): string {
-  if (href.startsWith("http")) return href;
-  if (locale === "en") return href;
-  return `/${locale}${href.startsWith("/") ? href : `/${href}`}`;
 }
 
 export function LocationExplorer({ locale, mapboxToken, totalPhotographers, coverageCounts, regionPhotographers }: Props) {
@@ -660,9 +655,12 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
       ])).slice(0, 8)
     : [];
   const selectedTags = selectedRegion ? [...selectedRegion.bestFor.slice(0, 2), selectedRegion.vibes[0]].filter(Boolean) : [];
+  // Left unprefixed on purpose: <Link> resolves it through the pathnames
+  // table, which pasting "/{locale}" in front never did — that produced
+  // /de/photographers?location=lazio and a redirect to /de/fotografen?…
   const selectedPhotographersHref = selectedPlace
-    ? localizedPath(locale, `/photographers?location=${selectedPlace.slug}`)
-    : selectedRegion ? localizedPath(locale, selectedRegion.photographerHref) : "";
+    ? `/photographers?location=${selectedPlace.slug}`
+    : selectedRegion ? selectedRegion.photographerHref : "";
   const selectedTitle = selectedPlace?.name || selectedRegion.name;
   const selectedKicker = selectedPlace
     ? `${selectedPlace.type} in ${selectedPlace.parentName}`
@@ -928,13 +926,13 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
                       </span>
                     ))}
                   </div>
-                  <a
+                  <Link
                     href={selectedPhotographersHref}
                     className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
                   >
                     {copy.show}
                     <ChevronRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -987,13 +985,13 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
                   </div>
                 </div>
 
-                <a
+                <Link
                   href={selectedPhotographersHref}
                   className="mt-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 text-sm font-semibold text-white transition hover:bg-primary-700"
                 >
                   {copy.show}
                   <ChevronRight className="h-4 w-4" />
-                </a>
+                </Link>
 
                 <div className={`transition-opacity duration-200 ${mobileSheetExpanded ? "opacity-100" : "pointer-events-none opacity-0"}`}>
                   {mobileSheetSnap === "full" && selectedPhotos.length > 1 && (

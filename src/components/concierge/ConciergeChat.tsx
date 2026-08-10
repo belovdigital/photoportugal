@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 import { useConciergeDrawer } from "@/components/concierge/ConciergeDrawer";
+import { Link } from "@/i18n/navigation";
 
 function humanizeSlug(s: string): string {
   return s
@@ -815,7 +816,6 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                         )}
                         <PhotographerMatchCard
                           p={p}
-                          locale={locale}
                           chatId={chatId}
                           // Strip the "(slug:foo)" hint that LocationOptionCard appends to
                           // user replies — those hints are AI-routing metadata, not something
@@ -1049,7 +1049,6 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
       {compareOpen && compareList.length >= 2 && (
         <CompareModal
           photographers={compareList}
-          locale={locale}
           onClose={() => setCompareOpen(false)}
         />
       )}
@@ -1287,7 +1286,7 @@ function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: str
   );
 }
 
-function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected, onToggleCompare, compareDisabled }: { p: MatchPhotographer; locale: string; chatContext: string; chatId: string | null; compareSelected?: boolean; onToggleCompare?: () => void; compareDisabled?: boolean }) {
+function PhotographerMatchCard({ p, chatContext, chatId, compareSelected, onToggleCompare, compareDisabled }: { p: MatchPhotographer; chatContext: string; chatId: string | null; compareSelected?: boolean; onToggleCompare?: () => void; compareDisabled?: boolean }) {
   // Fire-and-forget click beacon — drives the click_through funnel
   // metric on concierge_recommendation_events. Uses sendBeacon when
   // available so it survives navigation away from the page.
@@ -1314,7 +1313,7 @@ function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected
   const prefill = chatContext
     ? encodeURIComponent(`${t("prefillIntro")}\n\n${chatContext}`.slice(0, 1000))
     : "";
-  const bookHref = `/${locale}/book/${p.slug}?from=concierge${prefill ? `&prefill_message=${prefill}` : ""}`;
+  const bookHref = `/book/${p.slug}?from=concierge${prefill ? `&prefill_message=${prefill}` : ""}`;
   const locationLabel = p.locations.slice(0, 2).map(l => l.charAt(0).toUpperCase() + l.slice(1).replace(/-/g, " ")).join(" · ");
 
   // Build the slider thumbnails: cover first, then up to 7 portfolio photos.
@@ -1438,16 +1437,16 @@ function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected
         )}
       </div>
       <div className="flex items-stretch border-t border-warm-100">
-        <a
-          href={`/${locale}/photographers/${p.slug}`}
+        <Link
+          href={`/photographers/${p.slug}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={trackClick}
           className="flex-1 px-3 py-2 text-center text-[13px] font-medium text-gray-600 transition hover:bg-warm-50"
         >
           {t("viewProfile")}
-        </a>
-        <a
+        </Link>
+        <Link
           href={bookHref}
           target="_blank"
           rel="noopener noreferrer"
@@ -1455,7 +1454,7 @@ function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected
           className="flex-1 border-l border-warm-100 bg-primary-600 px-3 py-2 text-center text-[13px] font-semibold text-white transition hover:bg-primary-700"
         >
           {t("talkTo", { name: firstName })}
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -1477,11 +1476,9 @@ function ResendMatchesButton({ onClick, disabled }: { onClick: () => void; disab
 
 function CompareModal({
   photographers,
-  locale,
   onClose,
 }: {
   photographers: MatchPhotographer[];
-  locale: string;
   onClose: () => void;
 }) {
   const t = useTranslations("concierge");
@@ -1516,7 +1513,7 @@ function CompareModal({
         <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
           <div className={`grid gap-3 ${photographers.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
             {photographers.map((p) => (
-              <CompareColumn key={p.slug} p={p} locale={locale} />
+              <CompareColumn key={p.slug} p={p} />
             ))}
           </div>
         </div>
@@ -1525,7 +1522,7 @@ function CompareModal({
   );
 }
 
-function CompareColumn({ p, locale }: { p: MatchPhotographer; locale: string }) {
+function CompareColumn({ p }: { p: MatchPhotographer }) {
   const t = useTranslations("concierge");
   const firstName = p.name.split(" ")[0];
   const cover = p.cover_url || p.sample_portfolio_url || p.avatar_url;
@@ -1600,22 +1597,22 @@ function CompareColumn({ p, locale }: { p: MatchPhotographer; locale: string }) 
         )}
       </div>
       <div className="flex items-stretch border-t border-warm-100">
-        <a
-          href={`/${locale}/photographers/${p.slug}`}
+        <Link
+          href={`/photographers/${p.slug}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 px-2 py-2 text-center text-[12px] font-medium text-gray-600 transition hover:bg-warm-50"
         >
           {t("viewProfile")}
-        </a>
-        <a
-          href={`/${locale}/book/${p.slug}?from=concierge`}
+        </Link>
+        <Link
+          href={`/book/${p.slug}?from=concierge`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 border-l border-warm-100 bg-primary-600 px-2 py-2 text-center text-[12px] font-semibold text-white transition hover:bg-primary-700"
         >
           {t("talkTo", { name: firstName })}
-        </a>
+        </Link>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { clientPriceWithFee } from "@/lib/service-fee";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ConciergeChat } from "@/components/concierge/ConciergeChat";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
@@ -188,7 +188,7 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-600">
                 {t("why.browsePrefix")}{" "}
-                <Link href={`/${locale}/photographers`} className="font-semibold text-primary-600 hover:text-primary-700 underline underline-offset-2">
+                <Link href="/photographers" className="font-semibold text-primary-600 hover:text-primary-700 underline underline-offset-2">
                   {t("why.browseLink")}
                 </Link>
               </p>
