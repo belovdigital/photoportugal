@@ -162,7 +162,7 @@
         "question": "How does Photo Italy work?"
       },
       "locationsAvailable": {
-        "answer": "We cover {locationCount}+ locations across Italy, including <a href=\"/photographers/location/lisbon\">Rome</a>, <a href=\"/photographers/location/porto\">Florence</a>, <a href=\"/photographers/location/algarve\">the Amalfi Coast</a>, <a href=\"/photographers/location/sintra\">Tuscany</a>, <a href=\"/photographers/location/madeira\">Sicily</a>, <a href=\"/photographers/location/azores\">Sardinia</a>, and many more."
+        "answer": "We cover {locationCount}+ locations across Italy, including <a href=\"/photographers/location/rome\">Rome</a>, <a href=\"/photographers/location/florence\">Florence</a>, <a href=\"/photographers/location/venice\">Venice</a>, <a href=\"/photographers/location/amalfi-coast\">the Amalfi Coast</a>, <a href=\"/photographers/location/lake-como\">Lake Como</a>, <a href=\"/photographers/location/capri\">Capri</a>, and many more."
       },
       "reviewsVerified": {
         "answer": "Yes. All reviews on Photo Italy are tied to completed bookings. Only clients who have had a confirmed photoshoot can leave a review, ensuring authentic and trustworthy feedback."

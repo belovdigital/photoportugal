@@ -64,7 +64,12 @@ export default async function AboutPage({
               "@type": "Person",
               name: "Kate Belova",
               jobTitle: "Founder & Photographer",
-              url: `${country.baseUrl}/photographers/kate-belova`,
+              // Only Portugal has the profile behind the founder story. On the
+              // other markets this URL 308'd back to the catalogue, so the
+              // structured data described a page that was not the founder's.
+              ...(country.founderProfileSlug
+                ? { url: `${country.baseUrl}/photographers/${country.founderProfileSlug}` }
+                : {}),
             },
             contactPoint: {
               "@type": "ContactPoint",
@@ -148,13 +153,21 @@ export default async function AboutPage({
         <div className="mt-16 rounded-2xl border border-warm-200 bg-white p-8">
           <h2 className="font-display text-2xl font-bold text-gray-900">{t("founder.title")}</h2>
           <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start">
-            <Link href="/photographers/kate-belova" className="shrink-0">
+            {country.founderProfileSlug ? (
+              <Link href={`/photographers/${country.founderProfileSlug}`} className="shrink-0">
+                <img
+                  src="/images/founder.webp"
+                  alt={t("founder.alt")}
+                  className="h-28 w-28 rounded-2xl object-cover"
+                />
+              </Link>
+            ) : (
               <img
-                src="/api/img/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg?w=200&q=85&f=webp"
+                src="/images/founder.webp"
                 alt={t("founder.alt")}
-                className="h-28 w-28 rounded-2xl object-cover"
+                className="h-28 w-28 shrink-0 rounded-2xl object-cover"
               />
-            </Link>
+            )}
             <div className="space-y-3 text-gray-600 leading-relaxed">
               <p dangerouslySetInnerHTML={{ __html: t.raw("founder.bio1") }} />
               <p>{t("founder.bio2")}</p>

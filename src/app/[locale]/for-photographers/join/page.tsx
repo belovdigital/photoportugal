@@ -366,7 +366,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
         <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="flex flex-col items-center text-center">
             <img
-              src="/api/img/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg?w=160&q=85&f=webp"
+              src="/images/founder.webp"
               alt={t("founderAlt")}
               className="h-20 w-20 rounded-full object-cover"
             />
@@ -375,9 +375,11 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
             </blockquote>
             <p className="mt-4 font-semibold text-gray-900">{t("founderName")}</p>
             <p className="text-sm text-gray-500">{t("founderRole")}</p>
-            <Link href="/photographers/kate-belova" className="mt-2 text-xs text-primary-600 hover:underline">
-              {t("viewProfile")}
-            </Link>
+            {country.founderProfileSlug && (
+              <Link href={`/photographers/${country.founderProfileSlug}`} className="mt-2 text-xs text-primary-600 hover:underline">
+                {t("viewProfile")}
+              </Link>
+            )}
           </div>
         </div>
       </section>

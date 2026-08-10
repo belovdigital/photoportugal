@@ -456,7 +456,10 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
             {SHOOT_TYPE_PILLS.map((s) => (
               <Link
                 key={s.slug}
-                href={`/photoshoots/${s.slug}`}
+                // Weddings have their own landing; /photoshoots/wedding is only
+                // a 308 to it (next.config.ts), which is why the sitemap skips
+                // that slug too. Link the destination, not the redirect.
+                href={s.slug === "wedding" ? "/weddings" : `/photoshoots/${s.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
               >
                 {localizeShootType(s.canonical, locale)}

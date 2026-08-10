@@ -206,30 +206,10 @@ export function openGraphIdentity(path: string, locale: string) {
  */
 export function localizedAbsolute(href: string, locale: string): string {
   try {
-    // Lazy imports keep seo.ts usable from scripts that have no next-intl.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // Lazy import keeps seo.ts usable from scripts that have no next-intl.
     const { getPathname } = require("@/i18n/navigation") as { getPathname: (a: { href: string | object; locale: string }) => string };
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { routing } = require("@/i18n/routing") as { routing: { pathnames?: Record<string, unknown> } };
-
-    // A plain string only translates when it matches a STATIC pathnames entry;
-    // "/locations/lisbon" fell through and came back as /de/locations/lisbon —
-    // prefixed, untranslated, and a 307 for anything that followed it. Match
-    // dynamic patterns ourselves and hand getPathname the {pathname, params}
-    // form it translates properly.
-    const patterns = Object.keys(routing.pathnames ?? {}).filter((k) => k.includes("["));
-    for (const pattern of patterns.sort((a, b) => b.length - a.length)) {
-      const names: string[] = [];
-      const re = new RegExp(
-        "^" + pattern.replace(/\[([^\]]+)\]/g, (_, n) => { names.push(n); return "([^/]+)"; }) + "$"
-      );
-      const m = href.match(re);
-      if (m) {
-        const params = Object.fromEntries(names.map((n, i) => [n, m[i + 1]]));
-        const path = getPathname({ href: { pathname: pattern, params }, locale });
-        return `${country.baseUrl}${path === "/" ? "" : path}`;
-      }
-    }
+    // Concrete dynamic paths ("/locations/lisbon") are matched back to their
+    // pattern inside getPathname, so a plain string is enough here.
     const path = getPathname({ href, locale });
     return `${country.baseUrl}${path === "/" ? "" : path}`;
   } catch {

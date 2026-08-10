@@ -687,7 +687,7 @@
       },
       "locationsAvailable": {
         "question": "Quali location sono disponibili?",
-        "answer": "Siamo presenti in oltre {locationCount} location in tutta Italia, tra cui <a href=\"/photographers/location/lisbon\">Roma</a>, <a href=\"/photographers/location/porto\">Firenze</a>, <a href=\"/photographers/location/algarve\">Costiera Amalfitana</a>, <a href=\"/photographers/location/sintra\">Toscana</a>, <a href=\"/photographers/location/madeira\">Sicilia</a>, <a href=\"/photographers/location/azores\">Sardegna</a> e molte altre."
+        "answer": "Siamo presenti in oltre {locationCount} location in tutta Italia, tra cui <a href=\"/photographers/location/rome\">Roma</a>, <a href=\"/photographers/location/florence\">Firenze</a>, <a href=\"/photographers/location/venice\">Venezia</a>, <a href=\"/photographers/location/amalfi-coast\">Costiera Amalfitana</a>, <a href=\"/photographers/location/lake-como\">Lago di Como</a>, <a href=\"/photographers/location/capri\">Capri</a> e molte altre."
       },
       "speakEnglish": {
         "question": "I fotografi parlano inglese?",

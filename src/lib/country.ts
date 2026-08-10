@@ -72,6 +72,13 @@ export interface CountryPack {
   dpaUrl: string;
   /** Google Business Profile for the trust badge, or null if the market has none. */
   googleProfileUrl: string | null;
+  /**
+   * The founder's own photographer profile, or null where she has none. The
+   * founder story runs on every market, but only Portugal has the profile
+   * behind it — Spain and Italy linked it anyway and sent both visitors and
+   * Google to a 308 back to the catalogue.
+   */
+  founderProfileSlug: string | null;
   /** Are the iOS/Android apps published for this market? */
   hasMobileApp: boolean;
   /**
@@ -166,6 +173,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     dpaName: "www.cnpd.pt",
     dpaUrl: "https://www.cnpd.pt",
     googleProfileUrl: "https://g.page/r/CbWG7PogT_K2EBM",
+    founderProfileSlug: "kate-belova",
     hasMobileApp: true,
     intercomAppId: "d02q0i7w",
     city: "Lisbon",
@@ -221,6 +229,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     dpaName: "www.aepd.es",
     dpaUrl: "https://www.aepd.es",
     googleProfileUrl: null,
+    founderProfileSlug: null,
     hasMobileApp: false,
     intercomAppId: null,
     city: "Madrid",
@@ -274,6 +283,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     dpaName: "Garante per la protezione dei dati personali",
     dpaUrl: "https://www.garanteprivacy.it",
     googleProfileUrl: null,
+    founderProfileSlug: null,
     hasMobileApp: false,
     intercomAppId: null,
     city: "Rome",
