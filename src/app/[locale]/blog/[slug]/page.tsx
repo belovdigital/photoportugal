@@ -10,7 +10,7 @@ import { localeAlternates, localeAlternatesFiltered, openGraphIdentity, localeAl
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
-import { BUSINESS_SHOOT_TYPE } from "@/lib/shoot-type-labels";
+import { BUSINESS_SHOOT_TYPE, shootTypeHref } from "@/lib/shoot-type-labels";
 import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
 import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
 import { getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
@@ -1174,7 +1174,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 {mentionedShootTypes.map((st) => (
                   <Link
                     key={st.slug}
-                    href={`/photoshoots/${st.slug}`}
+                    href={shootTypeHref(st.slug)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-accent-200 bg-accent-50 px-4 py-2 text-sm font-medium text-accent-700 transition hover:bg-accent-100 hover:border-accent-300"
                   >
                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

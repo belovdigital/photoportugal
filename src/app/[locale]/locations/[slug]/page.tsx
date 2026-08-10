@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locField, faqField } from "@/lib/locations-data";
-import { localizeShootType } from "@/lib/shoot-type-labels";
+import { localizeShootType, shootTypeHref } from "@/lib/shoot-type-labels";
 import { photoSpots, getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
 import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
 import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
@@ -1030,7 +1030,7 @@ export default async function LocationPage({
             {shootTypeLinks.map((st) => (
               <Link
                 key={st.slug}
-                href={`/photoshoots/${st.slug}`}
+                href={shootTypeHref(st.slug)}
                 className="rounded-full border border-warm-200 bg-warm-50 px-4 py-1.5 text-sm font-medium text-gray-600 transition hover:border-primary-300 hover:text-primary-600"
               >
                 {st.label}

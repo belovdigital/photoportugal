@@ -12,7 +12,7 @@ import { queryOne, query } from "@/lib/db";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getHomepageReviews } from "@/lib/reviews-data";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
-import { localizeShootType } from "@/lib/shoot-type-labels";
+import { localizeShootType, shootTypeHref } from "@/lib/shoot-type-labels";
 import { LocationExplorer, type LocationExplorerPhotographer } from "@/components/locations/LocationExplorer";
 import { LOCATION_EXPLORER_REGIONS } from "@/lib/location-explorer-data";
 import { getCompatibleCoverageNodeSlugs } from "@/lib/location-hierarchy";
@@ -456,10 +456,7 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
             {SHOOT_TYPE_PILLS.map((s) => (
               <Link
                 key={s.slug}
-                // Weddings have their own landing; /photoshoots/wedding is only
-                // a 308 to it (next.config.ts), which is why the sitemap skips
-                // that slug too. Link the destination, not the redirect.
-                href={s.slug === "wedding" ? "/weddings" : `/photoshoots/${s.slug}`}
+                href={shootTypeHref(s.slug)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
               >
                 {localizeShootType(s.canonical, locale)}

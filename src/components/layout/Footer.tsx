@@ -7,6 +7,7 @@ import { locations, locField } from "@/lib/locations-data";
 import { country, byCountry, siblingMarkets } from "@/lib/country";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
+import { shootTypeHref } from "@/lib/shoot-type-labels";
 import { NorteiraLogo } from "./NorteiraLogo";
 
 // Footer shortcut list, per market. These are slugs, so a Portuguese list on
@@ -241,7 +242,7 @@ export function Footer() {
               {TOP_SHOOT_TYPES.map((s) => (
                 <li key={s.slug}>
                   <Link
-                    href={`/photoshoots/${s.slug}`}
+                    href={shootTypeHref(s.slug)}
                     className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
                   >
                     {tShoot(s.key)}

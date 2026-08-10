@@ -166,3 +166,18 @@ export function localizeShootType(canonical: string, locale: string): string {
 export function localizeShootTypes(types: string[], locale: string): string[] {
   return types.map((t) => localizeShootType(t, locale));
 }
+
+/**
+ * Where a shoot-type pill should actually point.
+ *
+ * Weddings and business shoots consolidated into their own landings, so
+ * /photoshoots/wedding and /photoshoots/business now only redirect there
+ * (next.config.ts) — and the sitemap already skips both slugs. Linking them
+ * directly costs a hop and files the URL under "Page with redirect" in Search
+ * Console, which is how they surfaced on all three markets.
+ */
+export function shootTypeHref(slug: string): string {
+  if (slug === "wedding") return "/weddings";
+  if (slug === "business") return "/for-business";
+  return `/photoshoots/${slug}`;
+}
