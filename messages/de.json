@@ -2164,7 +2164,7 @@
           "acceptance": "Nach der Übermittlung hat der Kunde <strong>7 Tage</strong> Zeit, die Fotos zu akzeptieren oder eine Reklamation einzureichen",
           "autoRelease": "Wenn der Kunde nicht innerhalb von 7 Tagen reagiert, kann der Fotograf den Support kontaktieren, um die Zahlungsfreigabe zu klären. Nach <strong>14 Tagen</strong> Inaktivität des Kunden wird die Zahlung automatisch an den Fotografen freigegeben",
           "galleryAccess": "Übermittelte Foto-Galerien bleiben <strong>90 Tage</strong> lang zugänglich",
-          "extras": "Ein Fotograf kann zusätzliche Fotos aus derselben Session über die zugesagte Anzahl hinaus zum Festpreis von <strong>den von Ihrem Fotografen festgelegten Preis pro Foto</strong> anbieten. Der Kauf ist freiwillig, diese Fotos werden nie von der zugesagten Anzahl abgezogen, und der Fotograf kann davon auch einige gratis gewähren. Gekaufte Fotos gehören der Kundschaft und können nicht zurückgezogen werden. Das Kauffenster schließt mit dem Ablauf der Galerie"
+          "extras": "Ein Fotograf kann zusätzliche Fotos aus derselben Session über die zugesagte Anzahl hinaus zu <strong>dem von Ihrem Fotografen festgelegten Preis pro Foto</strong> anbieten. Der Kauf ist freiwillig, diese Fotos werden nie von der zugesagten Anzahl abgezogen, und der Fotograf kann davon auch einige gratis gewähren. Gekaufte Fotos gehören der Kundschaft und können nicht zurückgezogen werden. Das Kauffenster schließt mit dem Ablauf der Galerie"
         }
       },
       "disputes": {
@@ -2803,7 +2803,7 @@
         },
         "extraPhotosBuy": {
           "question": "Wie kaufe ich ein zusätzliches Foto und wie lade ich es herunter?",
-          "answer": "Tippen Sie die zusätzlichen Fotos an, die Sie möchten. Unten in der Galerie erscheint eine Leiste mit Anzahl und Summe — 3 Fotos, 8,70 €. Auf Kaufen tippen und mit Karte bezahlen.\n\nSie landen wieder in Ihrer Galerie, und die Fotos sind in voller Auflösung offen, das Wasserzeichen ist weg. Einzeln herunterladen können Sie sofort; ein paar Minuten später kommt ein zweiter Download dazu, mit allen Ihren zusätzlichen Fotos zusammen.\n\nDie gebuchten Fotos behalten ihren eigenen Download, genau wie vorher.\n\nZusätzliche Fotos können Sie holen, solange Ihre Galerie offen ist — 90 Tage ab dem Tag, an dem Sie Ihre Fotos annehmen."
+          "answer": "Tippen Sie die zusätzlichen Fotos an, die Sie möchten. Unten in der Galerie erscheint eine Leiste mit Anzahl und Summe. Auf Kaufen tippen und mit Karte bezahlen.\n\nSie landen wieder in Ihrer Galerie, und die Fotos sind in voller Auflösung offen, das Wasserzeichen ist weg. Einzeln herunterladen können Sie sofort; ein paar Minuten später kommt ein zweiter Download dazu, mit allen Ihren zusätzlichen Fotos zusammen.\n\nDie gebuchten Fotos behalten ihren eigenen Download, genau wie vorher.\n\nZusätzliche Fotos können Sie holen, solange Ihre Galerie offen ist — 90 Tage ab dem Tag, an dem Sie Ihre Fotos annehmen."
         },
         "extraPhotosGift": {
           "question": "Mein Fotograf hat mir Fotos geschenkt. Was bedeutet das?",

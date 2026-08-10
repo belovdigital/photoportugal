@@ -2409,7 +2409,7 @@
           "acceptance": "Après la livraison, le client a <strong>7 jours</strong> pour accepter les photos ou ouvrir un litige",
           "autoRelease": "Si le client ne répond pas sous 7 jours, le photographe peut contacter le support pour résoudre la libération du paiement. Après <strong>14 jours</strong> d'inactivité du client, le paiement est automatiquement libéré au photographe",
           "galleryAccess": "Les galeries de photos livrées restent accessibles pendant <strong>90 jours</strong>",
-          "extras": "Le photographe peut proposer des photos supplémentaires de la même séance, au-delà du nombre promis par le forfait, au prix fixe de <strong>un prix fixé par votre photographe</strong>. L'achat est facultatif, ces photos ne sont jamais déduites du nombre promis, et le photographe peut également en offrir gratuitement. Les photos achetées appartiennent au client et ne peuvent être reprises. La fenêtre d'achat se ferme à l'expiration de la galerie"
+          "extras": "Le photographe peut proposer des photos supplémentaires de la même séance, au-delà du nombre promis par le forfait, au <strong>prix fixé par votre photographe</strong>. L'achat est facultatif, ces photos ne sont jamais déduites du nombre promis, et le photographe peut également en offrir gratuitement. Les photos achetées appartiennent au client et ne peuvent être reprises. La fenêtre d'achat se ferme à l'expiration de la galerie"
         }
       },
       "disputes": {
@@ -3048,7 +3048,7 @@
         },
         "extraPhotosBuy": {
           "question": "Comment acheter une photo supplémentaire et la télécharger ?",
-          "answer": "Touchez les photos supplémentaires qui vous plaisent. Une barre apparaît en bas de la galerie avec le nombre et le total : 3 photos, 8,70 €. Touchez Acheter et payez par carte.\n\nVous revenez dans votre galerie et les photos sont ouvertes en haute résolution, sans filigrane. Vous pouvez les télécharger une par une tout de suite ; quelques minutes plus tard, un second téléchargement apparaît avec toutes vos photos supplémentaires réunies.\n\nLes photos que vous avez réservées gardent leur propre téléchargement, exactement comme avant.\n\nVous pouvez en ajouter tant que votre galerie est ouverte — 90 jours à partir du jour où vous acceptez vos photos."
+          "answer": "Touchez les photos supplémentaires qui vous plaisent. Une barre apparaît en bas de la galerie avec le nombre et le total. Touchez Acheter et payez par carte.\n\nVous revenez dans votre galerie et les photos sont ouvertes en haute résolution, sans filigrane. Vous pouvez les télécharger une par une tout de suite ; quelques minutes plus tard, un second téléchargement apparaît avec toutes vos photos supplémentaires réunies.\n\nLes photos que vous avez réservées gardent leur propre téléchargement, exactement comme avant.\n\nVous pouvez en ajouter tant que votre galerie est ouverte — 90 jours à partir du jour où vous acceptez vos photos."
         },
         "extraPhotosGift": {
           "question": "Mon photographe m'offre des photos. Qu'est-ce que cela veut dire ?",

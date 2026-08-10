@@ -1,5 +1,7 @@
 "use client";
 
+import { BLIND_COMPARE_AT_EUR } from "@/lib/blind-booking/pricing";
+
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -604,7 +606,11 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
               </span>
               <span className="mt-0.5 block text-lg font-bold leading-tight text-white drop-shadow-sm">
                 {t("offerTitle", { price: "€279" })}{" "}
-                <s className="font-semibold text-white/70">€344</s>
+                {/* From the constant, not a copy of it: the €5 rounding of
+                  2026-08-09 moved this 344 -> 345 and the hardcodes did not
+                  follow, so the strike-through disagreed with the promo bar
+                  directly above it. */}
+              <s className="font-semibold text-white/70">&euro;{BLIND_COMPARE_AT_EUR[60]}</s>
               </span>
               <span className="mt-0.5 block text-xs font-medium text-amber-950/80">
                 {t("offerSub")}

@@ -1,5 +1,7 @@
 "use client";
 
+import { BLIND_COMPARE_AT_EUR } from "@/lib/blind-booking/pricing";
+
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
@@ -62,7 +64,11 @@ export function BrandHero({ photos }: { photos: string[] }) {
             </p>
             <p className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
               {t("offerTitle", { price: "€279" })}{" "}
-              <s className="font-semibold text-white/60">€344</s>
+              {/* From the constant, not a copy of it: the €5 rounding of
+                  2026-08-09 moved this 344 -> 345 and the hardcodes did not
+                  follow, so the strike-through disagreed with the promo bar
+                  directly above it. */}
+              <s className="font-semibold text-white/60">&euro;{BLIND_COMPARE_AT_EUR[60]}</s>
             </p>
             <p className="mt-2 text-sm text-white/80">{t("offerSub")}</p>
 

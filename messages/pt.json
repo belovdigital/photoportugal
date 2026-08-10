@@ -2164,7 +2164,7 @@
           "acceptance": "Após a entrega, o cliente tem <strong>7 dias</strong> para aceitar as fotos ou abrir uma disputa",
           "autoRelease": "Se o cliente não responder no prazo de 7 dias, o fotógrafo pode contactar o apoio para resolver a libertação do pagamento. Após <strong>14 dias</strong> de inatividade do cliente, o pagamento é automaticamente libertado para o fotógrafo",
           "galleryAccess": "As galerias de fotos entregues permanecem acessíveis durante <strong>90 dias</strong>",
-          "extras": "O fotógrafo pode oferecer fotografias adicionais da mesma sessão, além do número prometido pelo pacote, a <strong>o preço definido pelo seu fotógrafo cada</strong>. A compra é opcional, essas fotografias nunca são descontadas do número prometido, e o fotógrafo pode também oferecer algumas gratuitamente. As fotografias compradas pertencem ao cliente e não podem ser retiradas. A janela de compra fecha quando a galeria expira"
+          "extras": "O fotógrafo pode oferecer fotografias adicionais da mesma sessão, além do número prometido pelo pacote, ao <strong>preço definido pelo seu fotógrafo</strong>. A compra é opcional, essas fotografias nunca são descontadas do número prometido, e o fotógrafo pode também oferecer algumas gratuitamente. As fotografias compradas pertencem ao cliente e não podem ser retiradas. A janela de compra fecha quando a galeria expira"
         }
       },
       "disputes": {
@@ -3591,7 +3591,7 @@
         },
         "extraPhotosBuy": {
           "question": "Como compro uma foto extra e como a descarrego?",
-          "answer": "Toque nas fotos extra que quiser. Aparece uma barra no fundo da galeria com o número e o total — 3 fotos, €8,70. Toque em Comprar e pague com cartão.\n\nVolta à sua galeria e as fotos ficam abertas em resolução total, sem marca de água. Pode descarregá-las uma a uma logo a seguir; poucos minutos depois aparece um segundo download com todas as suas fotos extra juntas.\n\nAs fotos que reservou mantêm o seu próprio download, tal como antes.\n\nPode juntar fotos extra enquanto a galeria estiver aberta — 90 dias a contar do dia em que aceita as suas fotos."
+          "answer": "Toque nas fotos extra que quiser. Aparece uma barra no fundo da galeria com o número e o total. Toque em Comprar e pague com cartão.\n\nVolta à sua galeria e as fotos ficam abertas em resolução total, sem marca de água. Pode descarregá-las uma a uma logo a seguir; poucos minutos depois aparece um segundo download com todas as suas fotos extra juntas.\n\nAs fotos que reservou mantêm o seu próprio download, tal como antes.\n\nPode juntar fotos extra enquanto a galeria estiver aberta — 90 dias a contar do dia em que aceita as suas fotos."
         },
         "extraPhotosGift": {
           "question": "O meu fotógrafo ofereceu-me fotos. O que significa isso?",

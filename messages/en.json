@@ -2164,7 +2164,7 @@
           "acceptance": "After delivery, the client has <strong>7 days</strong> to accept the photos or open a dispute",
           "autoRelease": "If the client does not respond within 7 days, the photographer may contact support to resolve the payment release. After <strong>14 days</strong> of client inactivity, payment is automatically released to the photographer",
           "galleryAccess": "Delivered photo galleries remain accessible for <strong>90 days</strong>",
-          "extras": "A photographer may offer additional photos from the same session, beyond the number the package promised, at a fixed <strong>a price your photographer sets</strong>. Buying them is optional, they are never deducted from the promised count, and a photographer may also grant a number of them free. Purchased photos remain the client's and cannot be withdrawn. The purchase window closes when the gallery expires"
+          "extras": "A photographer may offer additional photos from the same session, beyond the number the package promised, at <strong>a price your photographer sets</strong>. Buying them is optional, they are never deducted from the promised count, and a photographer may also grant a number of them free. Purchased photos remain the client's and cannot be withdrawn. The purchase window closes when the gallery expires"
         }
       },
       "disputes": {
@@ -2802,7 +2802,7 @@
         },
         "extraPhotosBuy": {
           "question": "How do I buy an extra photo, and how do I download it?",
-          "answer": "Tap the extra photos you want. A bar appears at the bottom of the gallery with the count and the total — 3 photos, €8.70. Tap Buy and pay by card.\n\nYou land back in your gallery and the photos are open in full resolution, watermark gone. Download them one at a time straight away; a few minutes later a second download appears with all your extra photos together.\n\nThe photos you booked keep their own download, exactly as before.\n\nYou can add extra photos for as long as your gallery is open — 90 days from the day you accept your photos."
+          "answer": "Tap the extra photos you want. A bar appears at the bottom of the gallery with the count and the total. Tap Buy and pay by card.\n\nYou land back in your gallery and the photos are open in full resolution, watermark gone. Download them one at a time straight away; a few minutes later a second download appears with all your extra photos together.\n\nThe photos you booked keep their own download, exactly as before.\n\nYou can add extra photos for as long as your gallery is open — 90 days from the day you accept your photos."
         },
         "extraPhotosGift": {
           "question": "My photographer gave me free photos. What does that mean?",
@@ -2864,7 +2864,7 @@
         },
         "extrasWhenPaid": {
           "question": "When does the money for extra photos reach me?",
-          "answer": "Straight away. Extra photos do not wait for your client to accept the gallery — the moment the payment clears, your your own price per photo is on its way to your Stripe account and the sale shows up in your dashboard. From Stripe to your bank takes the usual 2–7 business days.\n\nThe gallery stays open for 90 days after your client accepts it, so photos can still sell weeks after the shoot."
+          "answer": "Straight away. Extra photos do not wait for your client to accept the gallery — the moment the payment clears, your own price per photo is on its way to your Stripe account and the sale shows up in your dashboard. From Stripe to your bank takes the usual 2–7 business days.\n\nThe gallery stays open for 90 days after your client accepts it, so photos can still sell weeks after the shoot."
         },
         "giftPhotos": {
           "question": "Can I give my client extra photos for free?",

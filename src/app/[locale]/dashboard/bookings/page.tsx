@@ -501,7 +501,13 @@ export default async function BookingsPage() {
                 )}
                 {/* Gift recipients never see money: not what the buyer paid,
                     not the package price (2026-08-09 audit). */}
-                {booking.total_price && booking.viewer_role !== "gift_recipient" && !(booking.gift_card_id && booking.stripe_amount_paid_cents == null) && (
+                {/* The gift clauses hide CLIENT money — a recipient must not
+                    learn what their present cost. They were swallowing the
+                    photographer's payout too: a redeemed gift never carries
+                    stripe_amount_paid_cents, so his €254 vanished from the very
+                    booking he has to invoice. He is neither the buyer nor the
+                    recipient, so neither clause is about him. */}
+                {booking.total_price && (isPhotographer || (booking.viewer_role !== "gift_recipient" && !(booking.gift_card_id && booking.stripe_amount_paid_cents == null))) && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     {isPhotographer && Number(booking.payout_amount) > 0 ? (
                       /* Photographers see their PAYOUT (what they receive),

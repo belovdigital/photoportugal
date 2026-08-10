@@ -791,7 +791,12 @@ export async function GET(req: NextRequest) {
          LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
          LEFT JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
-         WHERE (b.client_id = $1 OR b.gift_recipient_user_id = $1) AND b.status != 'inquiry'
+         -- A recipient may only see a gift that has actually been revealed to
+         -- them. The web query carries the same condition; without it the
+         -- mobile app could surface a surprise before its reveal date, and
+         -- with it the price the buyer paid.
+         WHERE (b.client_id = $1 OR (b.gift_recipient_user_id = $1 AND b.gift_reveal_sent_at IS NOT NULL))
+           AND b.status != 'inquiry'
          ORDER BY b.created_at DESC`,
         [userId]
       );
