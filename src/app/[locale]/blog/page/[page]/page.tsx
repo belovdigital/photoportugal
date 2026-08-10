@@ -79,7 +79,7 @@ export default async function BlogPaginatedPage({
       "SELECT id, slug, title, excerpt, cover_image_url, author, published_at, target_keywords FROM blog_posts WHERE is_published = TRUE AND (locale = $1) ORDER BY published_at DESC LIMIT $2 OFFSET $3",
       [locale, POSTS_PER_PAGE, offset]
     );
-    posts = await attachBlogHeroPhotos(posts);
+    posts = await attachBlogHeroPhotos(posts, locale);
   } catch (e) {
     console.error("[blog] Failed to fetch posts:", e);
   }

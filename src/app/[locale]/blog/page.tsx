@@ -80,7 +80,7 @@ export default async function BlogPage({
 
     // Inject hero photos from real photographer portfolios — same logic
     // shared with /blog/page/[N] and /blog/category/[X].
-    posts = await attachBlogHeroPhotos(posts);
+    posts = await attachBlogHeroPhotos(posts, locale);
   } catch (e) {
     console.error("[blog] Failed to fetch posts:", e);
   }

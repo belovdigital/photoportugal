@@ -88,7 +88,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
       "SELECT id, slug, title, excerpt, cover_image_url, author, published_at, target_keywords FROM blog_posts WHERE is_published = TRUE AND category = $1 AND (locale = $2) ORDER BY published_at DESC",
       [category, locale]
     );
-    posts = await attachBlogHeroPhotos(posts);
+    posts = await attachBlogHeroPhotos(posts, locale);
   } catch (e) {
     console.error("[blog/category] Failed to fetch posts:", e);
   }

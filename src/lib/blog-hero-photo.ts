@@ -1,6 +1,7 @@
 import { queryOne } from "@/lib/db";
-import { locations } from "@/lib/locations-data";
+import { locations, locField } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
+import { localizeShootType } from "@/lib/shoot-type-labels";
 
 export type BlogHeroAttachable = {
   id: string;
@@ -30,14 +31,28 @@ export type BlogHeroAttachable = {
  * One SQL per post; runs in parallel via Promise.all. ~12 small indexed
  * queries per page render is cheap and keeps the data flow simple.
  */
-export async function attachBlogHeroPhotos<T extends BlogHeroAttachable>(posts: T[]): Promise<T[]> {
+export async function attachBlogHeroPhotos<T extends BlogHeroAttachable>(posts: T[], locale = "en"): Promise<T[]> {
   return Promise.all(posts.map(async (p) => {
     const haystack = (p.title + " " + (p.target_keywords || "")).toLowerCase();
+    // Match the locale's own words as well as the English ones. A Portuguese
+    // post is titled "Sessão fotográfica de família em Lisboa" — "Lisboa" does
+    // not contain "lisbon" and "família" does not contain "family", so an
+    // English-only match found nothing and the card fell back to a placeholder.
+    // Cities whose name is spelled the same either way (Porto, Sintra, Algarve)
+    // are why this only ever showed up on some posts.
     const locSlugs = locations
-      .filter((l) => haystack.includes(l.name.toLowerCase()) || haystack.includes(l.slug))
+      .filter((l) =>
+        haystack.includes(l.name.toLowerCase()) ||
+        haystack.includes((locField(l, "name", locale) || l.name).toLowerCase()) ||
+        haystack.includes(l.slug)
+      )
       .map((l) => l.slug);
     const stNames = shootTypes
-      .filter((s) => haystack.includes(s.name.toLowerCase()) || haystack.includes(s.slug))
+      .filter((s) =>
+        haystack.includes(s.name.toLowerCase()) ||
+        haystack.includes(localizeShootType(s.name, locale).toLowerCase()) ||
+        haystack.includes(s.slug)
+      )
       .map((s) => s.name);
     if (locSlugs.length === 0 && stNames.length === 0) return p;
     const hero = await queryOne<{ url: string; photographer_name: string; photographer_slug: string }>(
