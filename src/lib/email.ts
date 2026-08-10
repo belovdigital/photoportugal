@@ -1774,6 +1774,180 @@ export async function sendShootReminderToClient(
   );
 }
 
+/**
+ * Your plan is about to lapse — sent 14 days out, once per expiry period.
+ *
+ * Written from the photographer's pocket rather than from our plan names: what
+ * they actually feel is the commission going up and the location cap coming
+ * down. `daysLeft` and the new commission are interpolated so the mail is
+ * specific enough to act on.
+ */
+export async function sendPlanExpiringSoonToPhotographer(
+  photographerEmail: string,
+  photographerName: string,
+  expiresOn: string,
+  currentCommission: number,
+  freeCommission: number
+) {
+  const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
+  const locale = await getUserLocaleByEmail(photographerEmail);
+  const name = toFirstName(photographerName);
+  const when = formatShootDate(expiresOn, locale) || expiresOn;
+  const T = pickT({
+    en: {
+      subject: `Your Premium plan ends on ${when}`,
+      h2: "Your plan is about to change",
+      greeting: `Hi ${name},`,
+      body1: `Your complimentary Premium plan runs until <strong>${when}</strong>. We wanted you to hear it from us rather than notice it later.`,
+      body2: `After that date your account moves to the Free plan: commission goes from <strong>${currentCommission}%</strong> to <strong>${freeCommission}%</strong>, your locations are limited to one, and a custom profile link is no longer included. Nothing else changes — your profile, bookings and payouts stay exactly as they are.`,
+      body3: "If you would like to stay on Premium, or just talk it through, reply to this email and we will sort it out together.",
+      cta: "See my plan",
+    },
+    pt: {
+      subject: `O seu plano Premium termina a ${when}`,
+      h2: "O seu plano está prestes a mudar",
+      greeting: `Olá ${name},`,
+      body1: `O seu plano Premium oferecido vai até <strong>${when}</strong>. Preferimos que soubesse por nós e não que reparasse mais tarde.`,
+      body2: `A partir dessa data a conta passa para o plano Free: a comissão sobe de <strong>${currentCommission}%</strong> para <strong>${freeCommission}%</strong>, as localizações ficam limitadas a uma e o link de perfil personalizado deixa de estar incluído. O resto mantém-se igual — perfil, reservas e pagamentos não mudam.`,
+      body3: "Se quiser continuar no Premium, ou apenas falar sobre isto, responda a este email e resolvemos juntos.",
+      cta: "Ver o meu plano",
+    },
+    de: {
+      subject: `Ihr Premium-Plan endet am ${when}`,
+      h2: "Ihr Plan ändert sich bald",
+      greeting: `Hallo ${name},`,
+      body1: `Ihr kostenloser Premium-Plan läuft bis <strong>${when}</strong>. Sie sollen es von uns erfahren und nicht später bemerken.`,
+      body2: `Danach wechselt Ihr Konto auf den Free-Plan: Die Provision steigt von <strong>${currentCommission}%</strong> auf <strong>${freeCommission}%</strong>, die Orte sind auf einen begrenzt, und der eigene Profil-Link ist nicht mehr enthalten. Sonst ändert sich nichts — Profil, Buchungen und Auszahlungen bleiben unverändert.`,
+      body3: "Wenn Sie bei Premium bleiben möchten oder einfach darüber sprechen wollen, antworten Sie auf diese E-Mail — wir finden gemeinsam eine Lösung.",
+      cta: "Meinen Plan ansehen",
+    },
+    es: {
+      subject: `Tu plan Premium termina el ${when}`,
+      h2: "Tu plan está a punto de cambiar",
+      greeting: `Hola ${name}:`,
+      body1: `Tu plan Premium de cortesía llega hasta el <strong>${when}</strong>. Preferimos que lo sepas por nosotros y no que lo notes más tarde.`,
+      body2: `A partir de esa fecha tu cuenta pasa al plan Free: la comisión sube del <strong>${currentCommission}%</strong> al <strong>${freeCommission}%</strong>, las ubicaciones se limitan a una y el enlace de perfil personalizado deja de estar incluido. Lo demás sigue igual: tu perfil, tus reservas y tus pagos no cambian.`,
+      body3: "Si quieres seguir en Premium, o simplemente comentarlo, responde a este correo y lo resolvemos juntos.",
+      cta: "Ver mi plan",
+    },
+    fr: {
+      subject: `Votre plan Premium se termine le ${when}`,
+      h2: "Votre plan va changer",
+      greeting: `Bonjour ${name},`,
+      body1: `Votre plan Premium offert court jusqu'au <strong>${when}</strong>. Nous préférons que vous l'appreniez par nous plutôt que de le remarquer plus tard.`,
+      body2: `Après cette date, votre compte passe au plan Free : la commission passe de <strong>${currentCommission}%</strong> à <strong>${freeCommission}%</strong>, les lieux sont limités à un, et le lien de profil personnalisé n'est plus inclus. Le reste ne change pas — profil, réservations et versements restent identiques.`,
+      body3: "Si vous souhaitez rester en Premium, ou simplement en discuter, répondez à cet e-mail et nous verrons cela ensemble.",
+      cta: "Voir mon plan",
+    },
+    it: {
+      subject: `Il tuo piano Premium termina il ${when}`,
+      h2: "Il tuo piano sta per cambiare",
+      greeting: `Ciao ${name},`,
+      body1: `Il tuo piano Premium in omaggio arriva fino al <strong>${when}</strong>. Preferiamo che tu lo sappia da noi invece di accorgertene dopo.`,
+      body2: `Da quella data l'account passa al piano Free: la commissione sale dal <strong>${currentCommission}%</strong> al <strong>${freeCommission}%</strong>, le località sono limitate a una e il link profilo personalizzato non è più incluso. Il resto resta uguale — profilo, prenotazioni e compensi non cambiano.`,
+      body3: "Se vuoi restare su Premium, o semplicemente parlarne, rispondi a questa email e lo risolviamo insieme.",
+      cta: "Vedi il mio piano",
+    },
+  }, locale);
+
+  await sendEmail(
+    photographerEmail,
+    T.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body3}</p>
+      ${emailButton(localizedUrl("/dashboard/subscriptions", locale, BASE_URL), T.cta)}
+    `, locale)
+  );
+}
+
+/**
+ * The plan has just lapsed. Sent at the moment of the downgrade, whether the
+ * plan was complimentary (early-bird expiry) or paid (Stripe cancellation) —
+ * from the photographer's side the effect is identical.
+ */
+export async function sendPlanDowngradedToPhotographer(
+  photographerEmail: string,
+  photographerName: string,
+  freeCommission: number
+) {
+  const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
+  const locale = await getUserLocaleByEmail(photographerEmail);
+  const name = toFirstName(photographerName);
+  const T = pickT({
+    en: {
+      subject: "Your plan has moved to Free",
+      h2: "Your plan changed today",
+      greeting: `Hi ${name},`,
+      body1: `Your account is now on the Free plan. Commission on new bookings is <strong>${freeCommission}%</strong>, and your locations are limited to one.`,
+      body2: "Your profile stays online, your existing bookings are untouched, and every payout already agreed stays exactly as agreed.",
+      body3: "If this is not what you wanted, reply to this email — we would rather fix it than have you find out from a payout.",
+      cta: "See my plan",
+    },
+    pt: {
+      subject: "O seu plano passou para Free",
+      h2: "O seu plano mudou hoje",
+      greeting: `Olá ${name},`,
+      body1: `A sua conta está agora no plano Free. A comissão nas novas reservas é de <strong>${freeCommission}%</strong> e as localizações ficam limitadas a uma.`,
+      body2: "O seu perfil continua online, as reservas existentes não são afetadas e todos os pagamentos já acordados mantêm-se exatamente como acordados.",
+      body3: "Se não era isto que queria, responda a este email — preferimos resolver do que deixar que descubra por um pagamento.",
+      cta: "Ver o meu plano",
+    },
+    de: {
+      subject: "Ihr Plan ist jetzt Free",
+      h2: "Ihr Plan hat sich heute geändert",
+      greeting: `Hallo ${name},`,
+      body1: `Ihr Konto läuft jetzt auf dem Free-Plan. Die Provision auf neue Buchungen beträgt <strong>${freeCommission}%</strong>, und Ihre Orte sind auf einen begrenzt.`,
+      body2: "Ihr Profil bleibt online, bestehende Buchungen bleiben unberührt, und jede bereits vereinbarte Auszahlung bleibt genau wie vereinbart.",
+      body3: "Wenn das nicht Ihre Absicht war, antworten Sie auf diese E-Mail — uns ist es lieber, das zu klären, als dass Sie es an einer Auszahlung merken.",
+      cta: "Meinen Plan ansehen",
+    },
+    es: {
+      subject: "Tu plan ha pasado a Free",
+      h2: "Tu plan cambió hoy",
+      greeting: `Hola ${name}:`,
+      body1: `Tu cuenta está ahora en el plan Free. La comisión en las nuevas reservas es del <strong>${freeCommission}%</strong> y tus ubicaciones se limitan a una.`,
+      body2: "Tu perfil sigue online, tus reservas existentes no se ven afectadas y todos los pagos ya acordados se mantienen exactamente como se acordaron.",
+      body3: "Si no era lo que querías, responde a este correo: preferimos arreglarlo antes de que lo descubras en un pago.",
+      cta: "Ver mi plan",
+    },
+    fr: {
+      subject: "Votre plan est passé en Free",
+      h2: "Votre plan a changé aujourd'hui",
+      greeting: `Bonjour ${name},`,
+      body1: `Votre compte est désormais sur le plan Free. La commission sur les nouvelles réservations est de <strong>${freeCommission}%</strong>, et vos lieux sont limités à un.`,
+      body2: "Votre profil reste en ligne, vos réservations existantes ne sont pas touchées, et tout versement déjà convenu reste exactement comme convenu.",
+      body3: "Si ce n'était pas ce que vous vouliez, répondez à cet e-mail — nous préférons corriger plutôt que vous laisser le découvrir sur un versement.",
+      cta: "Voir mon plan",
+    },
+    it: {
+      subject: "Il tuo piano è passato a Free",
+      h2: "Il tuo piano è cambiato oggi",
+      greeting: `Ciao ${name},`,
+      body1: `Il tuo account ora è sul piano Free. La commissione sulle nuove prenotazioni è del <strong>${freeCommission}%</strong> e le tue località sono limitate a una.`,
+      body2: "Il tuo profilo resta online, le prenotazioni esistenti non sono toccate e ogni compenso già concordato resta esattamente come concordato.",
+      body3: "Se non era quello che volevi, rispondi a questa email — preferiamo sistemarlo piuttosto che fartelo scoprire da un compenso.",
+      cta: "Vedi il mio piano",
+    },
+  }, locale);
+
+  await sendEmail(
+    photographerEmail,
+    T.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body3}</p>
+      ${emailButton(localizedUrl("/dashboard/subscriptions", locale, BASE_URL), T.cta)}
+    `, locale)
+  );
+}
+
 export async function sendShootReminderToPhotographer(
   photographerEmail: string,
   photographerName: string,

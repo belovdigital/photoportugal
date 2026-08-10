@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { query, queryOne, withAdvisoryLock } from "@/lib/db";
-import {
-  sendEmail,
+import { sendEmail,
   getAdminEmail,
   sendPaymentReminderToClient,
   sendAdminAutoCancelNotification,
@@ -14,11 +13,13 @@ import {
   renderReadyToBookNudge,
   emailLayout,
   emailButton,
+  sendPlanExpiringSoonToPhotographer,
+  sendPlanDowngradedToPhotographer,
 } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { maskSurname } from "@/lib/photographer-name";
 import { queueNotification, processNotificationQueue } from "@/lib/notification-queue";
-import { requireStripe, calculatePayment, clientPriceWithFee, payoutBreakdownTelegram } from "@/lib/stripe";
+import { requireStripe, calculatePayment, clientPriceWithFee, payoutBreakdownTelegram , COMMISSION_RATES } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
 import { country } from "@/lib/country";
@@ -1792,24 +1793,65 @@ async function runReminders(): Promise<NextResponse> {
     results.errors.push(`Concierge matches email query: ${err}`);
   }
 
+  // === Plan expiry warning — 14 days before the complimentary plan lapses ===
+  // The downgrade below used to happen in silence: for a Premium holder it
+  // doubles the commission (10% → 20%), caps them to one location and drops
+  // their custom slug. Finding that out from a smaller payout is the worst
+  // possible way to learn it, so we say it in advance and again on the day.
+  let planWarnings = 0;
+  try {
+    const expiring = await query<{ id: string; email: string; name: string; plan: string; expires_at: string }>(
+      `SELECT pp.id, u.email, u.name, pp.plan, pp.early_bird_expires_at::text AS expires_at
+         FROM photographer_profiles pp
+         JOIN users u ON u.id = pp.user_id
+        WHERE pp.early_bird_expires_at IS NOT NULL
+          AND pp.early_bird_expires_at > NOW()
+          AND pp.early_bird_expires_at < NOW() + INTERVAL '14 days'
+          AND pp.early_bird_tier IS NOT NULL
+          AND pp.is_founding = FALSE
+          AND pp.plan_expiry_warned_at IS NULL
+          AND COALESCE(u.is_banned, FALSE) = FALSE`
+    );
+    for (const p of expiring) {
+      const current = COMMISSION_RATES[p.plan] ?? COMMISSION_RATES.free;
+      await sendPlanExpiringSoonToPhotographer(p.email, p.name, p.expires_at, current, COMMISSION_RATES.free);
+      await queryOne(
+        "UPDATE photographer_profiles SET plan_expiry_warned_at = NOW() WHERE id = $1 RETURNING id",
+        [p.id]
+      );
+      planWarnings++;
+    }
+  } catch (err) {
+    results.errors.push(`Plan expiry warning: ${err}`);
+  }
+
   // === Early Bird tier expiration ===
   let earlyBirdExpired = 0;
   try {
-    const expired = await query<{ id: string; early_bird_tier: string }>(
-      `SELECT id, early_bird_tier FROM photographer_profiles
-       WHERE early_bird_expires_at IS NOT NULL
-       AND early_bird_expires_at < NOW()
-       AND early_bird_tier IS NOT NULL
-       AND is_founding = FALSE`
+    const expired = await query<{ id: string; early_bird_tier: string; email: string; name: string }>(
+      `SELECT pp.id, pp.early_bird_tier, u.email, u.name
+         FROM photographer_profiles pp
+         JOIN users u ON u.id = pp.user_id
+        WHERE pp.early_bird_expires_at IS NOT NULL
+          AND pp.early_bird_expires_at < NOW()
+          AND pp.early_bird_tier IS NOT NULL
+          AND pp.is_founding = FALSE`
     );
     for (const p of expired) {
-      // Downgrade to free plan
+      // Downgrade to free plan. plan_expiry_warned_at is cleared with it so a
+      // future paid plan starts from a clean slate.
       await queryOne(
         `UPDATE photographer_profiles
-         SET plan = 'free', early_bird_tier = NULL, early_bird_expires_at = NULL
+         SET plan = 'free', early_bird_tier = NULL, early_bird_expires_at = NULL,
+             plan_expiry_warned_at = NULL
          WHERE id = $1 RETURNING id`,
         [p.id]
       );
+      try {
+        await sendPlanDowngradedToPhotographer(p.email, p.name, COMMISSION_RATES.free);
+      } catch (err) {
+        results.errors.push(`Plan downgrade email for ${p.id}: ${err}`);
+      }
       earlyBirdExpired++;
     }
   } catch (err) {
@@ -3323,7 +3365,8 @@ async function runReminders(): Promise<NextResponse> {
     results.errors.push(`Calendar sync: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, submitReady, submitUnready, submitNudged, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, calendarBrokenEmails, conciergeMatchesEmails, readyToBookNudges });
+  console.log("[cron/reminders]", results, { earlyBirdExpired,
+    planWarnings, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, submitReady, submitUnready, submitNudged, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, calendarBrokenEmails, conciergeMatchesEmails, readyToBookNudges });
 
   return NextResponse.json({
     success: true,

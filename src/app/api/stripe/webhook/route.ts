@@ -1499,7 +1499,14 @@ export async function POST(req: NextRequest) {
             const info = await queryOne<{ email: string; name: string }>(
               "SELECT u.email, u.name FROM users u JOIN photographer_profiles pp ON pp.user_id = u.id WHERE pp.id = $1", [photographerId]
             );
-            if (info) sendSubscriptionEmail(info.email, info.name, "Free", "cancelled");
+            if (info) {
+              sendSubscriptionEmail(info.email, info.name, "Free", "cancelled");
+              // Same consequence as an early-bird lapse (commission back to the
+              // Free rate, one location), so say it in the same words.
+              const { sendPlanDowngradedToPhotographer } = await import("@/lib/email");
+              const { COMMISSION_RATES } = await import("@/lib/stripe");
+              await sendPlanDowngradedToPhotographer(info.email, info.name, COMMISSION_RATES.free).catch(() => {});
+            }
           } catch {}
           await notifyAdminSubscriptionEvent(
             photographerId,
