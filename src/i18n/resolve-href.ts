@@ -33,9 +33,18 @@ export function resolveHref(href: string | object): string | object {
   const queryAt = withoutHash.indexOf("?");
   const search = queryAt === -1 ? "" : withoutHash.slice(queryAt + 1);
   const pathname = queryAt === -1 ? withoutHash : withoutHash.slice(0, queryAt);
+  const extras = {
+    ...(search ? { query: Object.fromEntries(new URLSearchParams(search)) } : {}),
+    ...(hash ? { hash } : {}),
+  };
 
-  // An exact key already translates as a plain string.
-  if (pathname in (routing.pathnames ?? {})) return href;
+  // A static key translates on its own — but only as a bare string. next-intl
+  // looks the href up verbatim, so "/photographers?location=rome" missed the
+  // "/photographers" entry and stayed unlocalised, which is the same redirect
+  // in a different costume.
+  if (pathname in (routing.pathnames ?? {})) {
+    return search || hash ? { pathname, ...extras } : href;
+  }
 
   const segments = pathname.split("/").filter(Boolean);
   let best: { pathname: string; params: Record<string, string> } | null = null;
@@ -72,9 +81,5 @@ export function resolveHref(href: string | object): string | object {
 
   if (!best) return href;
 
-  return {
-    ...best,
-    ...(search ? { query: Object.fromEntries(new URLSearchParams(search)) } : {}),
-    ...(hash ? { hash } : {}),
-  };
+  return { ...best, ...extras };
 }
