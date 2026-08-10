@@ -17,7 +17,7 @@ import { locations } from "@/lib/locations-data";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { country, byCountry } from "@/lib/country";
-import { BUSINESS_SHOOT_TYPE } from "@/lib/shoot-type-labels";
+import { BUSINESS_SHOOT_TYPE, shootTypeHref } from "@/lib/shoot-type-labels";
 import { getBusinessPhotos } from "@/lib/business-showcase";
 
 /** Market name in Spanish, for the hardcoded copy dictionary below. */
@@ -327,7 +327,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                 >
                   {/* Photo + overlay header */}
                   <Link
-                    href={type.slug === "wedding" ? "/weddings" : type.slug === "business" ? "/for-business" : `/photoshoots/${type.slug}`}
+                    href={shootTypeHref(type.slug)}
                     className="relative block aspect-[4/3] overflow-hidden bg-gray-900"
                   >
                     {photo ? (

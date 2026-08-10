@@ -10,7 +10,7 @@ import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
-import { localizeShootType, localizeShootTypes, isBusinessPhoto } from "@/lib/shoot-type-labels";
+import { localizeShootType, localizeShootTypes, isBusinessPhoto, shootTypeHref } from "@/lib/shoot-type-labels";
 import { shootTypes as allShootTypes } from "@/lib/shoot-types-data";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
@@ -496,7 +496,7 @@ export default async function PhotographerProfilePage({
     return {
       key: type,
       label: localizeShootType(type, locale),
-      href: matched ? `/photoshoots/${matched.slug}` : undefined,
+      href: matched ? shootTypeHref(matched.slug) : undefined,
     };
   });
   const hiddenShootTypeChipCount = Math.max(0, shootTypeChipItems.length - 5);
