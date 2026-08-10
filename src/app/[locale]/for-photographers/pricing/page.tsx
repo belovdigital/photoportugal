@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
+import { COMMISSION_RATES, PLAN_PRICES , SERVICE_FEE_RATE } from "@/lib/stripe";
 import { StripeLogo } from "@/components/ui/StripeLogo";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
@@ -246,7 +246,7 @@ export default async function PricingPage({
           <div>
             <p className="text-sm font-semibold text-gray-900">{t("howPaymentsWork.forClients.title")}</p>
             <p className="mt-1 text-sm text-gray-500">
-              {t("howPaymentsWork.forClients.description")}
+              {t("howPaymentsWork.forClients.description", { rate: SERVICE_FEE_RATE * 100 })}
             </p>
           </div>
           <div>

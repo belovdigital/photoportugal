@@ -899,7 +899,7 @@
       "title": "Come funzionano i pagamenti",
       "forClients": {
         "title": "Per i clienti",
-        "description": "I clienti pagano un unico prezzo tutto compreso, mostrato fin dall'inizio: il tuo lavoro più il nostro servizio di prenotazione, senza aggiunte al checkout. Tu non gestisci mai il loro pagamento."
+        "description": "I clienti pagano un unico prezzo tutto compreso, mostrato fin dall'inizio. È il tuo prezzo più una commissione di prenotazione del {rate}% che addebitiamo e fatturiamo noi al cliente: nulla viene aggiunto al checkout e nulla viene tolto dalla tua parte."
       },
       "forPhotographers": {
         "title": "Per i fotografi",
@@ -2568,7 +2568,9 @@
     "save": "Salva",
     "extrasPricePerPhoto": "per foto",
     "youReceiveLabel": "ricevi",
-    "youReceiveHint": "Ricevi €{payout} per prenotazione con il tuo piano attuale — è questo l'importo che fatturi."
+    "youReceiveHint": "Ricevi €{payout} per prenotazione con il tuo piano attuale — è questo l'importo che fatturi.",
+    "clientSeesHint": "I clienti vedono €{clientPrice} — aggiungiamo il {rate}% per il nostro servizio di prenotazione e lo fatturiamo noi al cliente. Non viene mai tolto dal tuo importo.",
+    "clientSeesShort": "i clienti vedono €{clientPrice}"
   },
   "subscriptions": {
     "title": "Abbonamenti",
@@ -2604,7 +2606,7 @@
     "networkError": "Errore di rete. Controlla la connessione e riprova.",
     "failedStripeOnboarding": "Impossibile avviare la configurazione di Stripe. Riprova.",
     "howPaymentsWork": "Come funzionano i pagamenti",
-    "paymentStep1": "Il cliente paga un prezzo tutto compreso alla conferma della prenotazione",
+    "paymentStep1": "Il cliente paga un prezzo tutto compreso alla prenotazione: il tuo prezzo più la nostra commissione di servizio del {fee}%",
     "paymentStep2": "Il pagamento viene custodito in modo sicuro finché la sessione non viene contrassegnata come consegnata",
     "paymentStep3": "La commissione della piattaforma dipende dal tuo piano (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "I pagamenti vengono trasferiti automaticamente sul conto bancario collegato",
@@ -4399,7 +4401,8 @@
       "tipsNote": "Tips are a gratuity, not payment for a service — as a rule they need no fatura. Confirm the treatment with your contabilista once, then stop worrying about it.",
       "nothingTitle": "You will never get an invoice from us",
       "nothingBody": "We do not invoice you for commission, and we never ask you to invoice us. Our share of each booking is part of what the client pays and we invoice the client for it directly. Your entire paperwork is one fatura-recibo per shoot, for your payout. That's it.",
-      "s4cta": "Open my bookings"
+      "s4cta": "Open my bookings",
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
     },
     "es": {
       "eyebrow": "Invoicing in Spain",
@@ -4433,7 +4436,8 @@
       "helpTitle": "Stuck on any of this?",
       "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
       "helpCta": "Message support",
-      "s4cta": "Open my bookings"
+      "s4cta": "Open my bookings",
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
     },
     "it": {
       "eyebrow": "Fatturazione in Italia",
@@ -4467,7 +4471,8 @@
       "helpTitle": "Bloccato su qualche punto?",
       "helpBody": "Dicci dove ti sei bloccato e lo vediamo insieme passo passo. Preferiamo di gran lunga rispondere trenta volte alla stessa domanda piuttosto che lasciar tirare a indovinare. — Kate e il team {brand}",
       "helpCta": "Scrivi al supporto",
-      "s4cta": "Apri le mie prenotazioni"
+      "s4cta": "Apri le mie prenotazioni",
+      "clientPriceNote": "Perché il catalogo mostra più del tuo prezzo: sulla tua tariffa aggiungiamo una commissione di prenotazione del {rate}%, che addebitiamo e fatturiamo noi al cliente. Un pacchetto da 300 € appare al cliente come 345 € — ma la tua parte non viene toccata, e la commissione del piano è l'unica cosa che ne esce."
     }
   }
 }

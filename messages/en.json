@@ -899,7 +899,7 @@
       "title": "How payments work",
       "forClients": {
         "title": "For clients",
-        "description": "Clients pay one all-inclusive price, shown upfront — your work plus our booking service, nothing added at checkout. You never handle their payment."
+        "description": "Clients pay one all-inclusive price, shown upfront. It is your price plus a {rate}% booking service fee that we charge and invoice the client for — nothing is added at checkout, and nothing is deducted from your side."
       },
       "forPhotographers": {
         "title": "For photographers",
@@ -2568,7 +2568,9 @@
     "save": "Save",
     "extrasPricePerPhoto": "per photo",
     "youReceiveLabel": "you receive",
-    "youReceiveHint": "You receive €{payout} per booking on your current plan — this is the amount you invoice."
+    "youReceiveHint": "You receive €{payout} per booking on your current plan — this is the amount you invoice.",
+    "clientSeesHint": "Clients see €{clientPrice} — we add {rate}% on top for our booking service and invoice the client for it. It is never taken out of your amount.",
+    "clientSeesShort": "clients see €{clientPrice}"
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -2604,7 +2606,7 @@
     "networkError": "Network error. Please check your connection and try again.",
     "failedStripeOnboarding": "Failed to start Stripe onboarding. Please try again.",
     "howPaymentsWork": "How payments work",
-    "paymentStep1": "The client pays an all-inclusive price when the booking is confirmed",
+    "paymentStep1": "The client pays an all-inclusive price at booking: your price plus our {fee}% booking service fee",
     "paymentStep2": "Payment is held securely until the session is marked as delivered",
     "paymentStep3": "Platform commission depends on your plan (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Payouts are processed automatically to your connected bank account",
@@ -4399,7 +4401,8 @@
       "tipsNote": "Tips are a gratuity, not payment for a service — as a rule they need no fatura. Confirm the treatment with your contabilista once, then stop worrying about it.",
       "nothingTitle": "You will never get an invoice from us",
       "nothingBody": "We do not invoice you for commission, and we never ask you to invoice us. Our share of each booking is part of what the client pays and we invoice the client for it directly. Your entire paperwork is one fatura-recibo per shoot, for your payout. That's it.",
-      "s4cta": "Open my bookings"
+      "s4cta": "Open my bookings",
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
     },
     "es": {
       "eyebrow": "Invoicing in Spain",
@@ -4433,7 +4436,8 @@
       "helpTitle": "Stuck on any of this?",
       "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
       "helpCta": "Message support",
-      "s4cta": "Open my bookings"
+      "s4cta": "Open my bookings",
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
     },
     "it": {
       "eyebrow": "Invoicing in Italy",
@@ -4467,7 +4471,8 @@
       "helpTitle": "Stuck on any of this?",
       "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
       "helpCta": "Message support",
-      "s4cta": "Open my bookings"
+      "s4cta": "Open my bookings",
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
     }
   }
 }

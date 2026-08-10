@@ -1322,7 +1322,7 @@
       "title": "Comment fonctionnent les paiements",
       "forClients": {
         "title": "Pour les clients",
-        "description": "Les clients paient un prix unique tout compris, affiché d'emblée — votre travail plus notre service de réservation, rien d'ajouté au paiement. Vous ne touchez jamais à leur paiement."
+        "description": "Les clients paient un prix unique tout compris, affiché d'emblée. C'est votre prix plus des frais de service de réservation de {rate}% que nous facturons nous-mêmes au client — rien n'est ajouté au paiement et rien n'est déduit de votre côté."
       },
       "forPhotographers": {
         "title": "Pour les photographes",
@@ -2813,7 +2813,9 @@
     "save": "Enregistrer",
     "extrasPricePerPhoto": "par photo",
     "youReceiveLabel": "vous recevez",
-    "youReceiveHint": "Vous recevez €{payout} par réservation avec votre plan actuel — c'est ce montant que vous facturez."
+    "youReceiveHint": "Vous recevez €{payout} par réservation avec votre plan actuel — c'est ce montant que vous facturez.",
+    "clientSeesHint": "Les clients voient €{clientPrice} — nous ajoutons {rate}% pour notre service de réservation et c'est nous qui le facturons au client. Cela ne sort jamais de votre montant.",
+    "clientSeesShort": "clients voient €{clientPrice}"
   },
   "subscriptions": {
     "title": "Abonnements",
@@ -2849,7 +2851,7 @@
     "networkError": "Erreur réseau. Vérifiez votre connexion et réessayez.",
     "failedStripeOnboarding": "Échec du démarrage de l'onboarding Stripe. Veuillez réessayer.",
     "howPaymentsWork": "Comment fonctionnent les paiements",
-    "paymentStep1": "Le client paie un prix tout compris à la confirmation de la réservation",
+    "paymentStep1": "Le client paie un prix tout compris à la réservation : votre prix plus nos frais de service de {fee}%",
     "paymentStep2": "Le paiement est conservé en sécurité jusqu'à ce que la séance soit marquée comme livrée",
     "paymentStep3": "La commission plateforme dépend de votre plan (Free : {free}%, Pro : {pro}%, Premium : {premium}%)",
     "paymentStep4": "Les virements sont traités automatiquement vers votre compte bancaire connecté",
@@ -4400,7 +4402,8 @@
       "tipsNote": "Les pourboires sont une gratification, pas le paiement d'un service — en règle générale, pas de fatura. Confirmez le traitement une fois avec votre contabilista, puis n'y pensez plus.",
       "nothingTitle": "Vous ne recevrez jamais de facture de notre part",
       "nothingBody": "Nous ne vous facturons pas de commission et ne vous demandons jamais de nous facturer. Notre part de chaque réservation fait partie de ce que paie le client et nous la facturons directement au client. Toute votre paperasse : une fatura-recibo par séance, pour votre versement. C'est tout.",
-      "s4cta": "Ouvrir mes réservations"
+      "s4cta": "Ouvrir mes réservations",
+      "clientPriceNote": "Pourquoi le catalogue affiche plus que votre prix : à votre tarif nous ajoutons des frais de service de réservation de {rate}%, que nous facturons nous-mêmes au client. Un forfait à 300 € apparaît à 345 € pour le client — mais votre part n'est pas touchée, et la commission du plan est la seule chose qui en sort."
     },
     "es": {
       "eyebrow": "Facturation en Espagne",
@@ -4434,7 +4437,8 @@
       "helpTitle": "Bloqué quelque part ?",
       "helpBody": "Dites-nous où vous bloquez et nous le reprenons avec vous. Nous préférons mille fois répondre trente fois à la même question que laisser quelqu'un deviner. — Kate et l'équipe {brand}",
       "helpCta": "Écrire au support",
-      "s4cta": "Ouvrir mes réservations"
+      "s4cta": "Ouvrir mes réservations",
+      "clientPriceNote": "Pourquoi le catalogue affiche plus que votre prix : à votre tarif nous ajoutons des frais de service de réservation de {rate}%, que nous facturons nous-mêmes au client. Un forfait à 300 € apparaît à 345 € pour le client — mais votre part n'est pas touchée, et la commission du plan est la seule chose qui en sort."
     },
     "it": {
       "eyebrow": "Facturation en Italie",
@@ -4468,7 +4472,8 @@
       "helpTitle": "Bloqué quelque part ?",
       "helpBody": "Dites-nous où vous bloquez et nous le reprenons avec vous. Nous préférons mille fois répondre trente fois à la même question que laisser quelqu'un deviner. — Kate et l'équipe {brand}",
       "helpCta": "Écrire au support",
-      "s4cta": "Ouvrir mes réservations"
+      "s4cta": "Ouvrir mes réservations",
+      "clientPriceNote": "Pourquoi le catalogue affiche plus que votre prix : à votre tarif nous ajoutons des frais de service de réservation de {rate}%, que nous facturons nous-mêmes au client. Un forfait à 300 € apparaît à 345 € pour le client — mais votre part n'est pas touchée, et la commission du plan est la seule chose qui en sort."
     }
   }
 }

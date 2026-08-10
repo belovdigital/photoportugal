@@ -899,7 +899,7 @@
       "title": "So funktionieren Zahlungen",
       "forClients": {
         "title": "Für Kunden",
-        "description": "Kundinnen und Kunden zahlen einen einzigen All-inclusive-Preis, der von Anfang an angezeigt wird — Ihre Arbeit plus unser Buchungsservice, ohne Aufschlag an der Kasse. Mit der Zahlung haben Sie nie zu tun."
+        "description": "Die Kundschaft zahlt einen einzigen All-inclusive-Preis, der von Anfang an angezeigt wird. Es ist Ihr Preis plus eine Buchungsgebühr von {rate}%, die wir der Kundschaft berechnen und in Rechnung stellen — an der Kasse kommt nichts hinzu, und von Ihrer Seite wird nichts abgezogen."
       },
       "forPhotographers": {
         "title": "Für Fotografen",
@@ -2568,7 +2568,9 @@
     "save": "Speichern",
     "extrasPricePerPhoto": "pro Foto",
     "youReceiveLabel": "Sie erhalten",
-    "youReceiveHint": "Sie erhalten €{payout} pro Buchung in Ihrem aktuellen Plan — genau diesen Betrag stellen Sie in Rechnung."
+    "youReceiveHint": "Sie erhalten €{payout} pro Buchung in Ihrem aktuellen Plan — genau diesen Betrag stellen Sie in Rechnung.",
+    "clientSeesHint": "Die Kundschaft sieht €{clientPrice} — wir schlagen {rate}% für unseren Buchungsservice auf und stellen ihn der Kundschaft in Rechnung. Von Ihrem Betrag wird nie etwas abgezogen.",
+    "clientSeesShort": "Kundschaft sieht €{clientPrice}"
   },
   "subscriptions": {
     "title": "Abonnements",
@@ -2604,7 +2606,7 @@
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     "failedStripeOnboarding": "Stripe-Einrichtung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
     "howPaymentsWork": "So funktionieren Zahlungen",
-    "paymentStep1": "Die Kundschaft zahlt bei Bestätigung der Buchung einen All-inclusive-Preis",
+    "paymentStep1": "Die Kundschaft zahlt bei der Buchung einen All-inclusive-Preis: Ihr Preis plus unsere Buchungsgebühr von {fee}%",
     "paymentStep2": "Die Zahlung wird sicher hinterlegt, bis die Session als geliefert markiert wird",
     "paymentStep3": "Die Plattformprovision hängt von Ihrem Tarif ab (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Auszahlungen werden automatisch auf Ihr verbundenes Bankkonto verarbeitet",
@@ -4400,7 +4402,8 @@
       "tipsNote": "Trinkgelder sind eine Anerkennung, kein Entgelt für eine Leistung — in der Regel brauchen sie keine Fatura. Klären Sie die Behandlung einmal mit Ihrem contabilista und denken Sie nicht weiter darüber nach.",
       "nothingTitle": "Von uns bekommen Sie nie eine Rechnung",
       "nothingBody": "Wir stellen Ihnen keine Provision in Rechnung und bitten Sie nie, uns eine Rechnung zu stellen. Unser Anteil an jeder Buchung ist Teil dessen, was die Kundschaft zahlt, und wir berechnen ihn der Kundschaft direkt. Ihr gesamter Papierkram ist eine fatura-recibo pro Shooting, über Ihre Auszahlung. Mehr nicht.",
-      "s4cta": "Meine Buchungen öffnen"
+      "s4cta": "Meine Buchungen öffnen",
+      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht."
     },
     "es": {
       "eyebrow": "Rechnungsstellung in Spanien",
@@ -4434,7 +4437,8 @@
       "helpTitle": "Irgendwo hängen geblieben?",
       "helpBody": "Sagen Sie uns, wo es klemmt, und wir gehen es gemeinsam mit Ihnen durch. Uns ist es viel lieber, dieselbe Frage dreißig Mal zu beantworten, als dass jemand rät. — Kate und das {brand}-Team",
       "helpCta": "Support kontaktieren",
-      "s4cta": "Meine Buchungen öffnen"
+      "s4cta": "Meine Buchungen öffnen",
+      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht."
     },
     "it": {
       "eyebrow": "Rechnungsstellung in Italien",
@@ -4468,7 +4472,8 @@
       "helpTitle": "Irgendwo hängen geblieben?",
       "helpBody": "Sagen Sie uns, wo es klemmt, und wir gehen es gemeinsam mit Ihnen durch. Uns ist es viel lieber, dieselbe Frage dreißig Mal zu beantworten, als dass jemand rät. — Kate und das {brand}-Team",
       "helpCta": "Support kontaktieren",
-      "s4cta": "Meine Buchungen öffnen"
+      "s4cta": "Meine Buchungen öffnen",
+      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht."
     }
   }
 }

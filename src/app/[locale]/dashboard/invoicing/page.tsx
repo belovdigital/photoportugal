@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { country } from "@/lib/country";
 import { getTranslations } from "next-intl/server";
 import { activityStartLabel } from "@/lib/invoicing-announcement";
+import { SERVICE_FEE_RATE } from "@/lib/service-fee";
 
 export const dynamic = "force-dynamic";
 
@@ -112,6 +113,12 @@ export default async function InvoicingPage({
             </p>
             <p className="rounded-lg bg-warm-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
               {t("tipsNote")}
+            </p>
+            {/* Named explicitly (Alex, 2026-08-10): a photographer WILL notice
+                the catalogue number is bigger than their own price, and the
+                honest answer is short. */}
+            <p className="rounded-lg bg-warm-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
+              {t("clientPriceNote", { rate: SERVICE_FEE_RATE * 100 })}
             </p>
           </div>
           <Link

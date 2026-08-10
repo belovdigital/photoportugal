@@ -1856,7 +1856,7 @@
       "title": "Cómo funcionan los pagos",
       "forClients": {
         "title": "Para clientes",
-        "description": "Los clientes pagan un único precio con todo incluido, mostrado desde el principio: tu trabajo más nuestro servicio de reserva, sin añadidos al pagar. Tú nunca gestionas su pago."
+        "description": "Los clientes pagan un único precio con todo incluido, mostrado desde el principio. Es tu precio más una tarifa de servicio de reserva del {rate}% que cobramos y facturamos nosotros al cliente: no se añade nada al pagar ni se descuenta nada de tu parte."
       },
       "forPhotographers": {
         "title": "Para fotógrafos",
@@ -2813,7 +2813,9 @@
     "save": "Guardar",
     "extrasPricePerPhoto": "por foto",
     "youReceiveLabel": "recibes",
-    "youReceiveHint": "Recibes €{payout} por reserva en tu plan actual — este es el importe que facturas."
+    "youReceiveHint": "Recibes €{payout} por reserva en tu plan actual — este es el importe que facturas.",
+    "clientSeesHint": "Los clientes ven €{clientPrice}: añadimos un {rate}% por nuestro servicio de reserva y se lo facturamos al cliente. Nunca sale de tu importe.",
+    "clientSeesShort": "clientes ven €{clientPrice}"
   },
   "subscriptions": {
     "title": "Suscripciones",
@@ -2849,7 +2851,7 @@
     "networkError": "Error de red. Compruebe su conexión e inténtelo de nuevo.",
     "failedStripeOnboarding": "Error al iniciar el onboarding de Stripe. Por favor inténtelo de nuevo.",
     "howPaymentsWork": "Cómo funcionan los pagos",
-    "paymentStep1": "El cliente paga un precio con todo incluido cuando se confirma la reserva",
+    "paymentStep1": "El cliente paga un precio con todo incluido al reservar: tu precio más nuestra tarifa de servicio del {fee}%",
     "paymentStep2": "El pago se conserva de forma segura hasta que la sesión se marque como entregada",
     "paymentStep3": "La comisión de plataforma depende de su plan (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
     "paymentStep4": "Los pagos se procesan automáticamente a su cuenta bancaria conectada",
@@ -4400,7 +4402,8 @@
       "tipsNote": "Las propinas son una gratificación, no el pago de un servicio: por regla general no necesitan factura. Confírmalo una vez con tu contabilista y deja de preocuparte.",
       "nothingTitle": "Nunca recibirás una factura nuestra",
       "nothingBody": "No te facturamos comisión y nunca te pedimos que nos factures. Nuestra parte de cada reserva forma parte de lo que paga el cliente y se la facturamos nosotros directamente. Todo tu papeleo es una fatura-recibo por sesión, por tu pago. Nada más.",
-      "s4cta": "Abrir mis reservas"
+      "s4cta": "Abrir mis reservas",
+      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella."
     },
     "es": {
       "eyebrow": "Facturación en España",
@@ -4434,7 +4437,8 @@
       "helpTitle": "¿Te has atascado en algo?",
       "helpBody": "Dinos dónde te has atascado y lo vemos contigo paso a paso. Preferimos mil veces responder treinta veces la misma pregunta que dejar que alguien lo adivine. — Kate y el equipo de {brand}",
       "helpCta": "Escribir a soporte",
-      "s4cta": "Abrir mis reservas"
+      "s4cta": "Abrir mis reservas",
+      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella."
     },
     "it": {
       "eyebrow": "Facturación en Italia",
@@ -4468,7 +4472,8 @@
       "helpTitle": "¿Te has atascado en algo?",
       "helpBody": "Dinos dónde te has atascado y lo vemos contigo paso a paso. Preferimos mil veces responder treinta veces la misma pregunta que dejar que alguien lo adivine. — Kate y el equipo de {brand}",
       "helpCta": "Escribir a soporte",
-      "s4cta": "Abrir mis reservas"
+      "s4cta": "Abrir mis reservas",
+      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella."
     }
   }
 }

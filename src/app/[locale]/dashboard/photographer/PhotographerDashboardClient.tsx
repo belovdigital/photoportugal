@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { photographerPayoutFor } from "@/lib/stripe";
+import { photographerPayoutFor , SERVICE_FEE_RATE, clientPriceWithFee } from "@/lib/stripe";
 import Cropper from "react-easy-crop";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -1770,9 +1770,18 @@ function PackageFormInline({
                 : "border-gray-300 focus:border-primary-500 focus:ring-primary-200"
             }`} />
           {pkgPrice && parseFloat(pkgPrice) > 0 && (
-            <p className="mt-1 text-xs font-medium text-green-700">
-              {t("youReceiveHint", { payout: Math.round(photographerPayoutFor(parseFloat(pkgPrice), plan)) })}
-            </p>
+            <>
+              <p className="mt-1 text-xs font-medium text-green-700">
+                {t("youReceiveHint", { payout: Math.round(photographerPayoutFor(parseFloat(pkgPrice), plan)) })}
+              </p>
+              {/* The client-side number, stated where the price is typed —
+                  a photographer who spots €345 in the catalogue against their
+                  own €299 deserves the explanation before they have to ask
+                  (Alex, 2026-08-10). */}
+              <p className="mt-0.5 text-xs text-gray-500">
+                {t("clientSeesHint", { clientPrice: clientPriceWithFee(parseFloat(pkgPrice)), rate: SERVICE_FEE_RATE * 100 })}
+              </p>
+            </>
           )}
           {pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && (
             <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
@@ -1905,6 +1914,7 @@ function SortablePackageCard({
                 where it is the thing being set. */}
             <p className={`text-lg font-bold ${belowMin ? "text-red-600" : "text-green-700"}`}>&euro;{Math.round(photographerPayoutFor(Number(pkg.price), plan))}</p>
             <p className="text-[10px] font-medium text-gray-400">{t("youReceiveLabel")}</p>
+            <p className="text-[10px] text-gray-400">{t("clientSeesShort", { clientPrice: clientPriceWithFee(Number(pkg.price)) })}</p>
           </div>
           <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title={t("editTooltip")}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
