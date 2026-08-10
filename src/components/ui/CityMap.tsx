@@ -114,9 +114,42 @@ export function CityMap({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapboxRef = useRef<MapboxGL | null>(null);
   const [error, setError] = useState<string>("");
+  const [nearViewport, setNearViewport] = useState(false);
+
+  /**
+   * Hold Mapbox back until the map is nearly on screen.
+   *
+   * It used to load on mount, and on a location page that is ~1 MB and 2.0 s
+   * of script evaluation — mapbox-gl-csp.js alone is 439 kB, before terrain
+   * and tiles — all of it competing with the hero image for bandwidth and the
+   * main thread during first paint. Measured on photospain.co/locations/madrid:
+   * TBT 850 ms, and Mapbox was the four largest transfers on the page.
+   *
+   * The 400px margin means it still starts loading before it is looked at, so
+   * the map itself is no later than before for anyone who scrolls to it.
+   */
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || nearViewport) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [nearViewport]);
 
   useEffect(() => {
-    if (!mapboxToken || !containerRef.current || mapRef.current) return;
+    if (!nearViewport || !mapboxToken || !containerRef.current || mapRef.current) return;
     let cancelled = false;
     let resizeObserver: ResizeObserver | undefined;
 
@@ -228,6 +261,7 @@ export function CityMap({
   // map on every parent re-render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    nearViewport,
     mapboxToken,
     cityCenter.lat,
     cityCenter.lng,
