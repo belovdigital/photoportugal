@@ -4,7 +4,6 @@ import { locales as activeLocales, type Locale } from "./i18n/config";
 import { NextRequest, NextResponse } from "next/server";
 import { getRedirect } from "./lib/redirects-cache";
 import { country } from "@/lib/country";
-import { isParsableRouterState } from "@/lib/flight-router-state";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -156,31 +155,10 @@ export default async function middleware(request: NextRequest) {
     return new NextResponse("Bad Request", { status: 400 });
   }
 
-  // Same class of problem, different header. Next parses `Next-Router-State-Tree`
-  // (a URI-encoded JSON array) on every RSC navigation, and throws
-  // "The router state header was sent but could not be parsed." when it is not
-  // valid — which Next surfaces as a 500 for the whole page:
-  //
-  //   curl .../faq                                              -> 200
-  //   curl -H 'RSC: 1' -H 'Next-Router-State-Tree: nonsense' ... -> 500
-  //
-  // A real browser never sends a broken one, but a scanner, a truncating proxy
-  // or a speculative prefetch can, and each one pages us with a false 5xx.
-  //
-  // It has to be answered here rather than sanitised: stripping the headers via
-  // NextResponse.next({request:{headers}}) does NOT help, because Next reads the
-  // router state from the original request when it resolves the RSC render, not
-  // from the copy middleware hands downstream. Verified on production — the
-  // 500 survived the strip.
-  //
-  // 400 is both honest (the request header really is malformed) and safe: an
-  // RSC fetch that gets a non-OK, non-text/x-component response makes the Next
-  // client fall back to a full browser navigation, so even a real client that
-  // somehow tripped this still lands on the page.
-  const routerState = request.headers.get("Next-Router-State-Tree");
-  if (routerState !== null && !isParsableRouterState(routerState)) {
-    return new NextResponse("Bad Request", { status: 400 });
-  }
+  // A malformed `Next-Router-State-Tree` header cannot be caught here, though
+  // it is the same class of problem: Next does not expose that header to
+  // middleware, so a guard on it never fires while the 500 still happens.
+  // Verified on production — see UNACTIONABLE_CLIENT_ERRORS in lib/error-logger.
 
   // Static assets (sitemap.xml, robots.txt, og images, fonts, source maps…)
   // skip the intl/redirect pipeline — same as the old matcher exclusion, but

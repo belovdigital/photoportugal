@@ -33,6 +33,30 @@ export interface ErrorContext {
   referrer?: string | null;
 }
 
+/**
+ * Errors only a malformed client request can produce. They are still recorded —
+ * a spike is worth seeing in the admin list — but they never page anyone,
+ * because there is nothing on our side to fix.
+ *
+ * All three come from Next parsing `Next-Router-State-Tree` on an RSC
+ * navigation and serving the failure as a 500 for the whole page:
+ *
+ *   curl .../faq                                              -> 200
+ *   curl -H 'RSC: 1' -H 'Next-Router-State-Tree: nonsense' ... -> 500
+ *
+ * A real browser never sends a broken one — the first four we ever logged, on
+ * 2026-08-10, all came from one auditing machine — but scanners, truncating
+ * proxies and speculative prefetches do. It cannot be stopped upstream: Next
+ * does not expose that header to middleware, so a guard there never fires
+ * while the 500 still happens (tried on production, both by stripping the
+ * header and by answering 400 — neither changed the result).
+ */
+const UNACTIONABLE_CLIENT_ERRORS = [
+  "The router state header was sent but could not be parsed.",
+  "The router state header was too large.",
+  "Multiple router state headers were sent.",
+];
+
 const ERROR_TO_EMAIL = process.env.ERROR_LOG_EMAIL || "cto@photoportugal.com";
 const THROTTLE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const TRUNCATE_BODY_BYTES = 2048;
@@ -145,6 +169,10 @@ export async function logServerError(err: unknown, ctx: ErrorContext = {}): Prom
       );
       logId = row?.id || null;
       shouldEmail = true;
+    }
+
+    if (UNACTIONABLE_CLIENT_ERRORS.some((m) => message.includes(m))) {
+      shouldEmail = false;
     }
 
     if (shouldEmail && logId) {
