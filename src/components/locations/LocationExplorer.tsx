@@ -525,7 +525,11 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
         center: [-8.25, 39.65],
         zoom: window.innerWidth < 768 ? 5 : 5.75,
         minZoom: 4,
-        maxZoom: 11,
+        // 11 was set when the map only ever framed regions. A city needs to
+        // land close enough to recognise the place, and anything above the cap
+        // is silently clamped — so a city zoom of 12 did nothing until this
+        // moved.
+        maxZoom: 14,
         attributionControl: false,
         cooperativeGestures: true,
       });
@@ -588,7 +592,53 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
         .setLngLat(region.center)
         .addTo(mapRef.current as MapboxMap);
     });
-  }, [filteredRegions, mapReady, selectedSlug]);
+
+    // Pins for the places inside the open region. The map only ever carried one
+    // pin per region, so picking a city moved the view to somewhere with
+    // nothing on it — the card was the only sign anything had been selected.
+    // Only places we have a point for; the rest stay list-only, as before.
+    if (selectedRegion) {
+      for (const place of flattenRegionPlaces(selectedRegion)) {
+        const point = place.center ?? placeCoords[place.slug];
+        if (!point) continue;
+        const isOpen = place.slug === selectedPlaceSlug;
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = [
+          "rounded-full border shadow transition",
+          isOpen
+            ? "h-3.5 w-3.5 border-2 border-white bg-primary-600 ring-2 ring-primary-600/40"
+            : "h-2.5 w-2.5 border border-white bg-gray-700/80 hover:bg-primary-500",
+        ].join(" ");
+        dot.setAttribute("aria-label", place.name);
+        dot.title = place.name;
+        dot.addEventListener("click", (event) => {
+          event.stopPropagation();
+          setSelectedPlaceSlug(place.slug);
+          setFilmstripMode("places");
+          setMobileSheetExpanded(true);
+          setLocationCardOpen(true);
+        });
+        markersRef.current.push(
+          new mapboxgl.Marker({ element: dot, anchor: "center" })
+            .setLngLat(point)
+            .addTo(mapRef.current as MapboxMap)
+        );
+      }
+    }
+  }, [filteredRegions, mapReady, selectedSlug, selectedRegion, selectedPlaceSlug, placeCoords]);
+
+  // Where the selected place sits on the map, if we know. One derivation
+  // shared by the three things that need it: the fly, the card anchor and the
+  // pin. Most resolve through placeCoords, built server-side from
+  // locations-data — which is per-market, so Spain gets Barcelona's
+  // coordinates and Italy gets Rome's with no second code path. The island
+  // groups and Gerês have no location page at all, so they carry their own
+  // `center` in the explorer data.
+  const selectedPlaceCenter = useMemo<[number, number] | undefined>(
+    () => (selectedPlace ? selectedPlace.center ?? placeCoords[selectedPlace.slug] : undefined),
+    [selectedPlace, placeCoords]
+  );
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !selectedRegion) return;
@@ -598,18 +648,11 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
     // city left the map wherever the region had put it — every city inside
     // Lisbon Region looked like the map had frozen on Lisbon.
     //
-    // Explorer children carry no coordinates of their own. Most resolve through
-    // placeCoords, built server-side from locations-data — which is per-market,
-    // so Spain gets Barcelona's coordinates and Italy gets Rome's with no
-    // second code path. The island groups and Gerês are map-only groupings with
-    // no location page at all, so they carry their own `center` instead.
-    const placeCenter = selectedPlace
-      ? selectedPlace.center ?? placeCoords[selectedPlace.slug]
-      : undefined;
+    const placeCenter = selectedPlaceCenter;
 
     // A group spans several islands; framing it as tightly as a city would put
     // half of them off-screen.
-    const placeZoom = selectedPlace?.type === "Group" || selectedPlace?.type === "Region" ? 8.2 : 10.5;
+    const placeZoom = selectedPlace?.type === "Group" || selectedPlace?.type === "Region" ? 8.2 : 12;
 
     mapRef.current.flyTo({
       center: placeCenter ?? selectedRegion.center,
@@ -620,7 +663,7 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
       speed: 0.65,
       essential: false,
     });
-  }, [mapReady, selectedRegion, selectedPlace, placeCoords]);
+  }, [mapReady, selectedRegion, selectedPlace, selectedPlaceCenter]);
 
   useEffect(() => {
     setLocationCardOpen(true);
@@ -637,7 +680,12 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
     const updatePoint = () => {
       const map = mapRef.current;
       if (!map) return;
-      const projected = map.project(selectedRegion.center);
+      // Anchor to the place when one is picked. This projected the region's
+      // centre whatever was selected, so the card for Cascais pointed at the
+      // middle of Lisbon Region — and looked correct only for Lisbon, whose
+      // city centre happens to sit near it.
+      const anchorAt = selectedPlaceCenter ?? selectedRegion.center;
+      const projected = map.project(anchorAt);
       const container = map.getContainer();
       const width = container.clientWidth;
       const height = container.clientHeight;
