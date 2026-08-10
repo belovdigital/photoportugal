@@ -1,8 +1,5 @@
 "use client";
 
-import { r2ImgProps } from "@/lib/image-variants";
-import { country } from "@/lib/country";
-
 import { useState, useEffect, useRef } from "react";
 import { maskSurname } from "@/lib/photographer-name";
 
@@ -228,7 +225,6 @@ function MosaicCell({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={previous.url}
-          {...r2ImgProps(previous.url, country.filesHost, "(max-width: 1024px) 33vw, 380px")}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           aria-hidden="true"
@@ -238,7 +234,6 @@ function MosaicCell({
       <img
         key={current.url}
         src={current.url}
-        {...r2ImgProps(current.url, country.filesHost, "(max-width: 1024px) 33vw, 380px")}
         alt={current.name + (current.location ? ` photoshoot in ${current.location}` : "")}
         loading={priority ? "eager" : "lazy"}
         decoding={priority ? "sync" : "async"}
