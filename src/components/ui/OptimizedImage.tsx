@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { unsplashSrcSet } from "@/lib/unsplash-images";
+import { r2SrcSet } from "@/lib/image-variants";
+import { country } from "@/lib/country";
 
 interface OptimizedImageProps {
   src: string;
@@ -46,14 +48,17 @@ export function OptimizedImage({
 
   const optimizedSrc = getOptimizedSrc(src, width, quality);
 
-  // R2 originals still ship as-is: they are capped at 2000px q=85 at upload
-  // time and Cloudflare caches them globally. The Image Transformations layer
-  // we tried on top added cold-cache MISS latency without a clear win.
+  // Two ladders, one rule: send the number of pixels the slot actually has.
   //
-  // Unsplash is a different case — they resize on their own CDN, so a ladder
-  // costs us nothing and fixes an actual quality bug: a single hardcoded width
-  // both overserved phones and left large retina screens upscaling.
-  const srcSet = unsplashSrcSet(optimizedSrc, quality);
+  // Unsplash resizes on their own CDN, so the rungs cost us nothing. R2 photos
+  // are resized once at upload (and backfilled for everything older) and sit
+  // beside the original as plain static objects — which is why this is safe
+  // where Cloudflare Image Transformations was not: there is no request-time
+  // resize to miss on a cold cache.
+  //
+  // The original stays as `src`, so a rung that is somehow absent degrades to
+  // exactly what we served before rather than to a broken image.
+  const srcSet = unsplashSrcSet(optimizedSrc, quality) ?? r2SrcSet(optimizedSrc, country.filesHost);
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -95,8 +100,10 @@ export function OptimizedImage({
   );
 }
 
-/** R2 public hostname — where all user-uploaded media lives after migration. */
-const R2_HOST = "files.photoportugal.com";
+/** R2 public hostname for THIS market — files.photoportugal.com,
+ *  files.photospain.co or files.photoitaly.co. It used to be hardcoded to
+ *  Portugal's, so the check below silently never matched on the other two. */
+const R2_HOST = country.filesHost;
 
 /** Legacy local-upload prefix. Still recognised so any straggler `/uploads/...`
  *  rows that slipped past the migration keep working via the old image proxy. */
@@ -107,11 +114,12 @@ function isLocalUpload(src: string): boolean {
 /**
  * Resolve the image source to whatever URL the browser should actually fetch.
  *
- * Strategy: pass R2 URLs through unchanged. They're already capped at 2000px
- * wide JPEG q=85 at upload time, and Cloudflare's normal CDN caches them
- * globally for free. We tried Cloudflare Image Transformations (`/cdn-cgi/image/`)
- * for on-the-fly AVIF + resize; the win on bytes was real but cold-cache MISS
- * latency made first-time-viewer experience worse, so we rolled it back.
+ * Strategy: the R2 URL stays as `src` — it is the original, capped at 2000px
+ * q=85 at upload. The resized rungs ride alongside it in `srcSet` (see
+ * lib/image-variants), so the browser picks the size its slot needs and the
+ * original remains the fallback. Cloudflare Image Transformations were tried
+ * for this once and rolled back: resizing at request time made the first
+ * visitor wait on a cold cache. Static objects have no such miss.
  *
  * Legacy `/uploads/...` rows (rare after the R2 migration) still route through
  * the local `/api/img/` Sharp proxy — disk-cached on the server.
