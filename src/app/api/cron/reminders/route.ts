@@ -23,7 +23,7 @@ import { rm } from "fs/promises";
 import path from "path";
 import { country } from "@/lib/country";
 import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
-import { stageOneCompleteSql } from "@/lib/onboarding-stage";
+import { stageOneCompleteSql, SUBMIT_NUDGE_DAYS } from "@/lib/onboarding-stage";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
@@ -2020,12 +2020,17 @@ async function runReminders(): Promise<NextResponse> {
          AND pp.created_at >= NOW() - INTERVAL '8 days'
          AND pp.created_at < NOW() - INTERVAL '6 days'
          AND COALESCE(pp.checklist_deadline_emailed, FALSE) = FALSE
-         AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
-           AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
-           AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-           AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
-           AND u.phone IS NOT NULL)`
+         -- Already sent themselves for review: they are waiting on us, and
+         -- warning them about a deadline of their own would be a lie.
+         AND pp.approval_requested_at IS NULL
+         -- Stage one only. This predicate used to demand a connected Stripe
+         -- account, which stopped being part of the checklist on 2026-08-02 —
+         -- Stripe now unlocks *after* approval, so nobody has it at day six
+         -- and the NOT() matched almost every unapproved photographer. People
+         -- whose profile was complete were told to "complete your profile
+         -- today to avoid account deactivation", while the deactivation sweep
+         -- below deliberately spares exactly them.
+         AND NOT (${stageOneCompleteSql("pp", "u", MIN_PORTFOLIO_PHOTOS)})`
     );
     for (const p of incompletePhotographers) {
       try {
@@ -2310,6 +2315,106 @@ async function runReminders(): Promise<NextResponse> {
   }
   if (stripeFinalised || stripeNudged || stripeHidden) {
     console.log(`[cron] stripe grace week: ${stripeFinalised} finalised, ${stripeNudged} nudged, ${stripeHidden} hidden`);
+  }
+
+  // === Two-stage onboarding: finished the checklist, never pressed submit ===
+  //
+  // The step between the two sweeps that already exist. An unfinished
+  // checklist gets chased to deactivation; an approved photographer without
+  // Stripe gets chased for a week. A *complete* profile that was never sent
+  // for review was chased by nobody — it sits in the photographer's own
+  // dashboard looking finished, while our queue shows nothing.
+  //
+  // Three steps, three try blocks, same reasoning as the Stripe sweep above:
+  // a bad column name in one must not silently disable the others.
+  let submitReady = 0, submitUnready = 0, submitNudged = 0;
+
+  // Everything below shares one predicate. `stageOneCompleteSql` is the single
+  // definition of "ready" — the button, the admin queue and this sweep must
+  // never disagree about it.
+  const READY = stageOneCompleteSql("pp", "u", MIN_PORTFOLIO_PHOTOS);
+  // Who this sweep may touch at all. `revision_status = 'pending'` is excluded
+  // because request-approval rejects those photographers outright: nudging
+  // someone towards a button that will refuse them is worse than silence.
+  const SUBMIT_SCOPE = `pp.is_approved = FALSE
+            AND pp.approval_requested_at IS NULL
+            AND pp.stripe_hidden_at IS NULL
+            AND COALESCE(pp.revision_status, '') <> 'pending'
+            AND COALESCE(u.is_banned, FALSE) = FALSE`;
+
+  try {
+    // (a) Just became ready — start the clock. The stamp is what the nudges
+    //     count from, so it is written before any of them can fire.
+    const nowReady = await query<{ id: string }>(
+      `UPDATE photographer_profiles pp
+          SET stage_one_ready_at = NOW()
+         FROM users u
+        WHERE u.id = pp.user_id
+          AND pp.stage_one_ready_at IS NULL
+          AND ${SUBMIT_SCOPE}
+          AND (${READY})
+        RETURNING pp.id`
+    );
+    submitReady = nowReady.length;
+  } catch (err) {
+    console.error("[cron] submit nudge — stamp step failed:", err);
+  }
+
+  try {
+    // (b) Fell back below the bar — they deleted photos, or removed their last
+    //     package. Clear the stamp and the flags so the clock restarts from
+    //     scratch when they finish again, instead of firing a nudge at someone
+    //     whose button has disappeared.
+    const noLongerReady = await query<{ id: string }>(
+      `UPDATE photographer_profiles pp
+          SET stage_one_ready_at = NULL,
+              submit_nudge_d1_sent = FALSE,
+              submit_nudge_d3_sent = FALSE
+         FROM users u
+        WHERE u.id = pp.user_id
+          AND pp.stage_one_ready_at IS NOT NULL
+          AND pp.is_approved = FALSE
+          AND pp.approval_requested_at IS NULL
+          AND NOT (${READY})
+        RETURNING pp.id`
+    );
+    submitUnready = noLongerReady.length;
+  } catch (err) {
+    console.error("[cron] submit nudge — reset step failed:", err);
+  }
+
+  try {
+    // (c) Ready and still silent — nudge on day 1, then day 3, then stop.
+    for (const day of SUBMIT_NUDGE_DAYS) {
+      const col = `submit_nudge_d${day}_sent`;
+      const due = await query<{ id: string; email: string; name: string; locale: string | null; days_ready: number }>(
+        `UPDATE photographer_profiles pp
+            SET ${col} = TRUE
+           FROM users u
+          WHERE u.id = pp.user_id
+            AND pp.stage_one_ready_at IS NOT NULL
+            AND COALESCE(pp.${col}, FALSE) = FALSE
+            AND ${SUBMIT_SCOPE}
+            AND NOW() >= pp.stage_one_ready_at + INTERVAL '${day} days'
+          RETURNING pp.id, u.email, u.name, u.locale AS locale,
+                    GREATEST(1, FLOOR(EXTRACT(EPOCH FROM NOW() - pp.stage_one_ready_at) / 86400)::int) AS days_ready`
+      );
+      for (const p of due) {
+        submitNudged++;
+        try {
+          const { sendSubmitForReviewNudge } = await import("@/lib/email");
+          await sendSubmitForReviewNudge(p.email, p.name, p.days_ready, normalizeLocale(p.locale));
+        } catch (e) {
+          console.error("[cron] submit-for-review nudge failed:", p.email, e);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[cron] submit nudge — send step failed:", err);
+  }
+
+  if (submitReady || submitUnready || submitNudged) {
+    console.log(`[cron] submit-for-review: ${submitReady} newly ready, ${submitUnready} fell back, ${submitNudged} nudged`);
   }
 
   // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
@@ -3203,7 +3308,7 @@ async function runReminders(): Promise<NextResponse> {
     results.errors.push(`Calendar sync: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, calendarBrokenEmails, conciergeMatchesEmails, readyToBookNudges });
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, submitReady, submitUnready, submitNudged, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, calendarBrokenEmails, conciergeMatchesEmails, readyToBookNudges });
 
   return NextResponse.json({
     success: true,

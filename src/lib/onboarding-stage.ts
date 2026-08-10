@@ -39,6 +39,20 @@ export const HIDE_ON_STRIPE_DEADLINE = true;
 /** Days after approval on which we nudge an unfinished Stripe connection. */
 export const STRIPE_NUDGE_DAYS = [1, 4, 7] as const;
 
+/**
+ * Days after the checklist goes green on which we nudge a photographer who
+ * has not pressed "send me for review".
+ *
+ * Counted from `stage_one_ready_at`, not from registration: the button only
+ * exists once the checklist is complete, and someone who took three weeks to
+ * upload their portfolio should hear from us one day after they *could* have
+ * submitted, not three weeks after they signed up.
+ *
+ * Two and then stop. This is a profile they built and can submit whenever
+ * they like; nothing is expiring, so a third reminder would only be nagging.
+ */
+export const SUBMIT_NUDGE_DAYS = [1, 3] as const;
+
 export interface StageProfile {
   is_approved: boolean;
   approval_requested_at: string | Date | null;

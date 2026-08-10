@@ -2752,6 +2752,94 @@ export async function sendApprovedConnectStripeEmail(
   );
 }
 
+/**
+ * Stage one is finished but the photographer never pressed "send me for
+ * review", so nobody on our side knows the profile is ready.
+ *
+ * Deliberately not written as a warning: nothing expires here, and the
+ * day-7 deactivation sweep explicitly spares a complete checklist. Threatening
+ * a consequence that will not happen is how a reminder loses its credibility.
+ *
+ * Two languages by design (Alex, 2026-08-10): the market's own language, or
+ * English for everyone else. `pickT` handles the fallback, so a German
+ * photographer in Portugal gets the English copy rather than a key.
+ */
+export async function sendSubmitForReviewNudge(
+  to: string,
+  photographerName: string,
+  daysWaiting: number,
+  locale: Locale = "en",
+) {
+  const firstName = toFirstName(photographerName, photographerName);
+  const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard`;
+  const d = Math.max(1, Math.round(daysWaiting));
+
+  // Resolve the language BEFORE building the copy, because the country phrase
+  // has to be declined in the same language as the sentence around it.
+  // `countryIn` is keyed by the requested locale, so a French photographer
+  // falling back to the English body got "a bank account au Portugal in your
+  // own name" — and on the Spanish market a German one would have got
+  // "a bank account in Spanien".
+  const WRITTEN_IN = ["en", "pt", "es", "it"] as const;
+  const L = (WRITTEN_IN as readonly string[]).includes(locale)
+    ? (locale as (typeof WRITTEN_IN)[number])
+    : "en";
+  const where = country.countryIn[L];
+
+  const COPY = {
+    en: {
+      subject: "Your profile is ready — it just hasn't been sent to us",
+      h2: "One button away from the review queue",
+      greet: `Hi ${firstName},`,
+      p1: `Your profile has been complete for ${d} day${d === 1 ? "" : "s"} — photo, bio, portfolio, packages, locations. All of it is done.`,
+      p2: "It hasn't reached us, though. A profile goes into the review queue only when you send it, so ours still shows nothing to look at.",
+      p3: `Open your dashboard, tick that you hold a bank account ${where} in your own name, and press the button. A real person reads every application, usually within a couple of days.`,
+      cta: "Send my profile for review",
+    },
+    pt: {
+      subject: "O seu perfil está pronto — só falta enviá-lo",
+      h2: "Falta um botão para entrar na fila de análise",
+      greet: `Olá ${firstName},`,
+      p1: `O seu perfil está completo há ${d} dia${d === 1 ? "" : "s"} — foto, biografia, portefólio, pacotes, localizações. Está tudo feito.`,
+      p2: "Só que ainda não chegou até nós. Um perfil entra na fila de análise quando o envia, por isso do nosso lado continua sem nada para ver.",
+      p3: `Abra o seu painel, confirme que tem uma conta bancária ${where} em seu nome e carregue no botão. Cada candidatura é lida por uma pessoa, normalmente dentro de dois dias.`,
+      cta: "Enviar o meu perfil para análise",
+    },
+    es: {
+      subject: "Tu perfil está listo, solo falta enviárnoslo",
+      h2: "Estás a un botón de la cola de revisión",
+      greet: `Hola ${firstName},`,
+      p1: `Tu perfil lleva ${d} día${d === 1 ? "" : "s"} completo: foto, biografía, portafolio, paquetes y ubicaciones. Todo hecho.`,
+      p2: "Pero no nos ha llegado. Un perfil entra en la cola de revisión cuando tú lo envías, así que por nuestra parte seguimos sin nada que mirar.",
+      p3: `Entra en tu panel, marca que tienes una cuenta bancaria ${where} a tu nombre y pulsa el botón. Cada solicitud la lee una persona, normalmente en un par de días.`,
+      cta: "Enviar mi perfil a revisión",
+    },
+    it: {
+      subject: "Il tuo profilo è pronto, manca solo inviarcelo",
+      h2: "Ti manca un pulsante per entrare in revisione",
+      greet: `Ciao ${firstName},`,
+      p1: `Il tuo profilo è completo da ${d} giorn${d === 1 ? "o" : "i"}: foto, biografia, portfolio, pacchetti e località. È tutto fatto.`,
+      p2: "Però non è ancora arrivato a noi. Un profilo entra in revisione solo quando lo invii tu, quindi dalla nostra parte non c'è ancora nulla da guardare.",
+      p3: `Apri la tua dashboard, conferma di avere un conto bancario ${where} intestato a te e premi il pulsante. Ogni candidatura viene letta da una persona, di solito entro un paio di giorni.`,
+      cta: "Invia il mio profilo in revisione",
+    },
+  };
+  const C = COPY[L];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      <p style="margin:0 0 4px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p3}</p>
+      ${emailButton(url, C.cta)}
+    `, L),
+  );
+}
+
 export async function sendStripeDeadlineNudge(
   to: string,
   photographerName: string,

@@ -8,13 +8,32 @@ import { Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { trackSignUp } from "@/lib/analytics";
 
+/** Shared by the toggle's photographer half and the locked-in badge. */
+const cameraIcon = (
+  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
 function SignUpForm() {
   const router = useRouter();
   const t = useTranslations("auth.signUp");
   const tc = useTranslations("common");
   const searchParams = useSearchParams();
-  const initialRole = searchParams.get("role") === "photographer" ? "photographer" : "client";
-  const [role, setRole] = useState<"client" | "photographer">(initialRole);
+  // `?role=photographer` is only ever produced by /for-photographers/join —
+  // a page the visitor reached by wanting to shoot for us, and whose two CTAs
+  // link straight here. Preselecting the role was not enough: the toggle sat
+  // right above the form still offering "I need photos", which is the one
+  // thing that visitor is not here for, and picking it silently creates the
+  // wrong account type. So in that arrival the choice is not offered at all.
+  //
+  // Scoped deliberately to the parameter, not to the page: a bare
+  // /auth/signup, or a client-side link, keeps the toggle it always had.
+  const lockedToPhotographer = searchParams.get("role") === "photographer";
+  const [role, setRole] = useState<"client" | "photographer">(
+    lockedToPhotographer ? "photographer" : "client"
+  );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -101,7 +120,7 @@ function SignUpForm() {
             {t("title")}
           </h1>
           <p className="mt-2 text-gray-500">
-            {t("subtitle")}
+            {lockedToPhotographer ? t("subtitlePhotographer") : t("subtitle")}
           </p>
         </div>
 
@@ -112,11 +131,19 @@ function SignUpForm() {
             </div>
           )}
 
-          {/* Role selector — prominent so users don't miss it */}
+          {/* Role selector — prominent so users don't miss it. Replaced by a
+              static badge when the visitor arrived from the photographer join
+              page: same slot, same weight, nothing left to get wrong. */}
           <div className="mb-6">
             <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
               {t("roleLabel")}
             </p>
+            {lockedToPhotographer ? (
+              <div className="flex items-center justify-center gap-2 rounded-xl border-2 border-accent-200 bg-accent-600 py-3 text-sm font-bold text-white">
+                {cameraIcon}
+                {t("rolePhotographer")}
+              </div>
+            ) : (
             <div className="relative flex rounded-xl border-2 border-accent-200 bg-warm-50 p-1">
               {/* Sliding pill — accent green so the active choice really pops */}
               <div
@@ -142,13 +169,11 @@ function SignUpForm() {
                   role === "photographer" ? "text-white" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                {cameraIcon}
                 {t("rolePhotographer")}
               </button>
             </div>
+            )}
           </div>
 
           {/* Google Sign Up */}

@@ -1747,7 +1747,8 @@
       "imAPhotographerDesc": "Junte-se à nossa rede e receba reservas",
       "roleClient": "Quero fotos",
       "rolePhotographer": "Sou fotógrafo",
-      "roleLabel": "Estou aqui para..."
+      "roleLabel": "Estou aqui para...",
+      "subtitlePhotographer": "Crie a sua conta de fotógrafo"
     },
     "forgotPassword": {
       "title": "Repor Palavra-passe",

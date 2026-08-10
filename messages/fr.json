@@ -1992,7 +1992,8 @@
       "imAPhotographerDesc": "Rejoignez notre réseau et obtenez des réservations",
       "roleClient": "J'ai besoin de photos",
       "rolePhotographer": "Je prends des photos",
-      "roleLabel": "Je suis ici pour..."
+      "roleLabel": "Je suis ici pour...",
+      "subtitlePhotographer": "Créez votre compte photographe"
     },
     "forgotPassword": {
       "title": "Réinitialiser le mot de passe",

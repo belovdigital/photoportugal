@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
+import { readFormData } from "@/lib/form-data";
 import { queryOne } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { uploadToS3 } from "@/lib/s3";
@@ -19,13 +20,17 @@ export async function POST(req: NextRequest) {
 
   const userId = mobileUser.id;
 
+  // Not inside the try below on purpose: a half-arrived multipart body is a
+  // broken request (400), never a broken server (500). See lib/form-data.ts.
+  const { form: formData, error: formError } = await readFormData(req);
+  if (!formData) return formError;
+
   try {
-    const formData = await req.formData();
     const file = formData.get("file") as File;
     const type = (formData.get("type") as string) || "avatar";
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    if (file.size > MAX_FILE_SIZE) return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
+    if (file.size > MAX_FILE_SIZE) return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
 
     // Accept image/* and HEIC/HEIF (iOS sometimes sends empty mime for HEIC)
     const isImage = file.type.startsWith("image/") || /\.(heic|heif|jpg|jpeg|png|webp)$/i.test(file.name);

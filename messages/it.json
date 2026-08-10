@@ -1747,7 +1747,8 @@
       "imAPhotographerDesc": "Entra nella nostra rete e ricevi prenotazioni",
       "roleClient": "Ho bisogno di foto",
       "rolePhotographer": "Scatto foto",
-      "roleLabel": "Sono qui per..."
+      "roleLabel": "Sono qui per...",
+      "subtitlePhotographer": "Crea il tuo account da fotografo"
     },
     "forgotPassword": {
       "title": "Reimposta la password",
