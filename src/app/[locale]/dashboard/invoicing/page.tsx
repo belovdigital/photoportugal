@@ -150,6 +150,11 @@ export default async function InvoicingPage({
         <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-800">
           {t("vatWarning")}
         </p>
+        {/* The block above talks only about VAT, and a reader came away
+            thinking "under the threshold = nothing to pay" (photographer
+            question, 2026-08-10). Income tax is a different animal — say so
+            rather than let the silence imply otherwise. */}
+        <p className="mt-3 text-[15px] leading-relaxed text-gray-600">{t("irsNote")}</p>
       </section>
 
       {/* PT only: activity is backdated to Aug 1, so shoots done since then

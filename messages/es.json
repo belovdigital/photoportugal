@@ -4406,7 +4406,8 @@
       "nothingTitle": "Nunca recibirás una factura nuestra",
       "nothingBody": "No te facturamos comisión y nunca te pedimos que nos factures. Nuestra parte de cada reserva forma parte de lo que paga el cliente y se la facturamos nosotros directamente. Todo tu papeleo es una fatura-recibo por sesión, por tu pago. Nada más.",
       "s4cta": "Abrir mis reservas",
-      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella."
+      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella.",
+      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión."
     },
     "es": {
       "eyebrow": "Facturación en España",
@@ -4441,7 +4442,8 @@
       "helpBody": "Dinos dónde te has atascado y lo vemos contigo paso a paso. Preferimos mil veces responder treinta veces la misma pregunta que dejar que alguien lo adivine. — Kate y el equipo de {brand}",
       "helpCta": "Escribir a soporte",
       "s4cta": "Abrir mis reservas",
-      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella."
+      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella.",
+      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión."
     },
     "it": {
       "eyebrow": "Facturación en Italia",
@@ -4476,7 +4478,8 @@
       "helpBody": "Dinos dónde te has atascado y lo vemos contigo paso a paso. Preferimos mil veces responder treinta veces la misma pregunta que dejar que alguien lo adivine. — Kate y el equipo de {brand}",
       "helpCta": "Escribir a soporte",
       "s4cta": "Abrir mis reservas",
-      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella."
+      "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella.",
+      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión."
     }
   }
 }

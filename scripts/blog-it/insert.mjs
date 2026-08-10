@@ -68,6 +68,12 @@ for (const p of POSTS) {
   for (const m of p.content.matchAll(/\]\(\/photoshoots\/([a-z0-9-]+)\)/g)) {
     if (!SHOOT_TYPES.has(m[1])) problems.push(`${at}: links /photoshoots/${m[1]} which does not exist`);
   }
+  // These two shoot types consolidated into their own landings and now only
+  // redirect (next.config.ts). Linking them from a post costs a hop and shows
+  // up in Search Console as "Page with redirect".
+  for (const m of p.content.matchAll(/\]\(\/photoshoots\/(wedding|business)\)/g)) {
+    problems.push(`${at}: links /photoshoots/${m[1]} which only redirects — use ${m[1] === "wedding" ? "/weddings" : "/for-business"}`);
+  }
   for (const word of ["Photo Portugal", "Photo Spain", "photoportugal.com", "photospain.co"]) {
     if (p.content.includes(word)) problems.push(`${at}: mentions ${word}`);
   }

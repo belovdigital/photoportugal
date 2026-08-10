@@ -4406,7 +4406,8 @@
       "nothingTitle": "Von uns bekommen Sie nie eine Rechnung",
       "nothingBody": "Wir stellen Ihnen keine Provision in Rechnung und bitten Sie nie, uns eine Rechnung zu stellen. Unser Anteil an jeder Buchung ist Teil dessen, was die Kundschaft zahlt, und wir berechnen ihn der Kundschaft direkt. Ihr gesamter Papierkram ist eine fatura-recibo pro Shooting, über Ihre Auszahlung. Mehr nicht.",
       "s4cta": "Meine Buchungen öffnen",
-      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht."
+      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht.",
+      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt."
     },
     "es": {
       "eyebrow": "Rechnungsstellung in Spanien",
@@ -4441,7 +4442,8 @@
       "helpBody": "Sagen Sie uns, wo es klemmt, und wir gehen es gemeinsam mit Ihnen durch. Uns ist es viel lieber, dieselbe Frage dreißig Mal zu beantworten, als dass jemand rät. — Kate und das {brand}-Team",
       "helpCta": "Support kontaktieren",
       "s4cta": "Meine Buchungen öffnen",
-      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht."
+      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht.",
+      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt."
     },
     "it": {
       "eyebrow": "Rechnungsstellung in Italien",
@@ -4476,7 +4478,8 @@
       "helpBody": "Sagen Sie uns, wo es klemmt, und wir gehen es gemeinsam mit Ihnen durch. Uns ist es viel lieber, dieselbe Frage dreißig Mal zu beantworten, als dass jemand rät. — Kate und das {brand}-Team",
       "helpCta": "Support kontaktieren",
       "s4cta": "Meine Buchungen öffnen",
-      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht."
+      "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht.",
+      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt."
     }
   }
 }

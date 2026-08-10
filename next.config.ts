@@ -108,6 +108,9 @@ const nextConfig: NextConfig = {
       { source: "/de/fotoshootings/wedding", destination: "/de/hochzeiten", permanent: true },
       { source: "/es/sesiones-de-fotos/wedding", destination: "/es/bodas", permanent: true },
       { source: "/fr/seances-photo/wedding", destination: "/fr/mariages", permanent: true },
+      // Italy was never added when it launched, so /it/servizi-fotografici/wedding
+      // stayed a live 200 competing with /it/matrimoni for the same queries.
+      { source: "/it/servizi-fotografici/wedding", destination: "/it/matrimoni", permanent: true },
       // Business shoot type consolidates into the /for-business landing —
       // the generic shoot-type template (consumer hero, summer offer,
       // couple packages) is wrong for a B2B audience.
@@ -116,6 +119,7 @@ const nextConfig: NextConfig = {
       { source: "/de/fotoshootings/business", destination: "/de/for-business", permanent: true },
       { source: "/es/sesiones-de-fotos/business", destination: "/es/for-business", permanent: true },
       { source: "/fr/seances-photo/business", destination: "/fr/for-business", permanent: true },
+      { source: "/it/servizi-fotografici/business", destination: "/it/for-business", permanent: true },
     ];
   },
   async headers() {

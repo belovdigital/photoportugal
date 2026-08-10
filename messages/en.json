@@ -4405,7 +4405,8 @@
       "nothingTitle": "You will never get an invoice from us",
       "nothingBody": "We do not invoice you for commission, and we never ask you to invoice us. Our share of each booking is part of what the client pays and we invoice the client for it directly. Your entire paperwork is one fatura-recibo per shoot, for your payout. That's it.",
       "s4cta": "Open my bookings",
-      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it.",
+      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission."
     },
     "es": {
       "eyebrow": "Invoicing in Spain",
@@ -4440,7 +4441,8 @@
       "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
       "helpCta": "Message support",
       "s4cta": "Open my bookings",
-      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it.",
+      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission."
     },
     "it": {
       "eyebrow": "Invoicing in Italy",
@@ -4475,7 +4477,8 @@
       "helpBody": "Tell us where you got stuck and we will walk you through it. We would much rather answer the same question thirty times than have someone guess. — Kate & the {brand} team",
       "helpCta": "Message support",
       "s4cta": "Open my bookings",
-      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it."
+      "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it.",
+      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission."
     }
   }
 }

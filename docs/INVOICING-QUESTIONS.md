@@ -47,4 +47,34 @@ being late once.
 
 ---
 
-## Q2 — (next question goes here)
+## Q2 — 2026-08-10 — OPEN (page silent on IRS)
+
+> "Although there may be a VAT exemption if the turnover is under €15,000, for
+> IRS (income tax) purposes this amount will always have to be declared. This
+> will result in an extra cost for the photographer at the end of the year,
+> which will likely force many to increase the price of each session."
+
+**He is right on the distinction and the page never makes it.** The whole `vat*`
+block talks only about IVA and the art. 53.º threshold; a reader can easily come
+away thinking "under €15k = nothing to pay". IVA exemption and IRS are unrelated.
+
+**Where he is wrong, and it matters:** this is not an extra cost created by the
+change. The income was always category B income and always declarable. What
+changed is that it is now documented, not that it became taxable.
+
+**The point in our favour, which nobody has told them yet:** under model B the
+photographer invoices their **payout**, not the package price. Under *regime
+simplificado* expenses are not deductible — so invoicing €255 instead of
+invoicing €300 and paying us €45 leaves them with a materially smaller taxable
+base. Our structure is the lighter of the two options for them, and the page
+should say so.
+
+**Fixed:** added `irsNote` to `invoicing.{pt,es,it}` (all 6 locales), rendered
+under the VAT block — states that the exemption is about VAT only, that income
+is declared regardless, and that they invoice the payout rather than the gross.
+Deliberately no numbers and no advice; first-year activity reliefs and
+coefficients are a contabilista question.
+
+---
+
+## Q3 — (next question goes here)
