@@ -4,6 +4,7 @@ import { locales as activeLocales, type Locale } from "./i18n/config";
 import { NextRequest, NextResponse } from "next/server";
 import { getRedirect } from "./lib/redirects-cache";
 import { country } from "@/lib/country";
+import { isParsableRouterState } from "@/lib/flight-router-state";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -139,6 +140,7 @@ function agentMarkdownPath(pathname: string): string | null {
   return null;
 }
 
+
 export default async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
@@ -152,6 +154,28 @@ export default async function middleware(request: NextRequest) {
     decodeURIComponent(pathname);
   } catch {
     return new NextResponse("Bad Request", { status: 400 });
+  }
+
+  // Same class of problem, different header. Next parses `Next-Router-State-Tree`
+  // (a URI-encoded JSON array) on every RSC navigation, and throws
+  // "The router state header was sent but could not be parsed." when it is not
+  // valid — which Next surfaces as a 500 for the whole page:
+  //
+  //   curl .../faq                                              -> 200
+  //   curl -H 'RSC: 1' -H 'Next-Router-State-Tree: nonsense' ... -> 500
+  //
+  // A real browser never sends a broken one, but a scanner, a truncating proxy
+  // or a speculative prefetch can, and each one pages us with a false 5xx.
+  // Dropping the RSC headers downgrades the request to a plain document render,
+  // which is exactly what a client in that state needs anyway.
+  const routerState = request.headers.get("Next-Router-State-Tree");
+  if (routerState !== null && !isParsableRouterState(routerState)) {
+    const headers = new Headers(request.headers);
+    headers.delete("Next-Router-State-Tree");
+    headers.delete("RSC");
+    headers.delete("Next-Router-Prefetch");
+    headers.delete("Next-Router-Segment-Prefetch");
+    return NextResponse.next({ request: { headers } });
   }
 
   // Static assets (sitemap.xml, robots.txt, og images, fonts, source maps…)
