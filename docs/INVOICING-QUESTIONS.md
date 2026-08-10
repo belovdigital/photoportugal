@@ -132,4 +132,40 @@ already know their own dates).
 
 ---
 
+## Open risk — photographer subscriptions (found 2026-08-10)
+
+Not a photographer question — a hole we found while sizing InvoiceXpress volume.
+
+**Subscriptions have never earned a cent.** `stripe_subscription_id` is NULL on
+all 94 profiles; no subscription has ever existed. All 50 active photographers
+sit on `premium` for free via early-bird:
+
+| tier | people | free until |
+|---|---|---|
+| founding | 10 | never expires |
+| early50 | 29 | Mar–Jun **2029** |
+| first100 | 11 | **Nov 2026 – Feb 2027** |
+
+**Two separate problems hide here.**
+
+1. **Invoicing.** If we ever charge a subscription, the platform invoices the
+   photographer — contradicting "we never invoice you", which went out by email
+   to 50 people on 2026-08-10. For an ES/IT photographer it is also intra-EU
+   B2B → reverse charge → VIES, which Alex explicitly refused. Cost of never
+   charging: €0, because the current revenue is €0.
+
+2. **The November cliff — the more urgent one, and it is not about invoicing.**
+   `src/app/api/cron/reminders/route.ts:1798` silently downgrades an expired
+   early-bird to `plan = 'free'`: no charge, no notification, no email. On
+   1 Nov 2026 Esmee Buitenhuis moves premium → free, which means her commission
+   goes **10% → 20%** (payout drops by a tenth of base on every booking), her
+   locations are capped 1, and she loses her custom slug. Then Carla Lima and
+   Maya Rodrigues (4 Nov), Perry Gallagher (11 Nov), Fábio Tito Nunes (17 Nov),
+   Olga Borisova (26 Nov), Louisa Schlepper (11 Dec), and 4 more into 2027.
+
+**Nothing decided yet.** Whatever the answer, something must ship before
+1 November, or seven photographers take an unannounced pay cut.
+
+---
+
 ## Q4 — (next question goes here)
