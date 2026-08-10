@@ -12,6 +12,15 @@ export type LocationExplorerChild = {
    */
   names?: Record<string, string>;
   type: "Region" | "Group" | "Island" | "City" | "Spot";
+  /**
+   * [lng, lat] for the map to fly to when this entry is picked.
+   *
+   * Only needed where the slug has no matching row in locations-data — the
+   * island GROUPS and Gerês, which are map-only groupings and have no location
+   * page of their own. Everything else resolves through locations-data, so
+   * adding a coordinate here would be a second copy waiting to drift.
+   */
+  center?: [number, number];
   children?: LocationExplorerChild[];
 };
 
@@ -75,7 +84,7 @@ const LOCATION_EXPLORER_REGIONSPT: LocationExplorerRegion[] = [
       { slug: "douro-valley", name: "Douro Valley", type: "Region" },
       { slug: "braga", name: "Braga", type: "City" },
       { slug: "guimaraes", name: "Guimaraes", type: "City" },
-      { slug: "geres", name: "Geres", type: "Region" },
+      { slug: "geres", name: "Geres", type: "Region", center: [-8.19, 41.73] },
     ],
   },
   {
@@ -166,6 +175,7 @@ const LOCATION_EXPLORER_REGIONSPT: LocationExplorerRegion[] = [
         slug: "azores-eastern-group",
         name: "Eastern Group",
         type: "Group",
+        center: [-25.43, 37.66],
         children: [
           {
             slug: "sao-miguel",
@@ -180,6 +190,7 @@ const LOCATION_EXPLORER_REGIONSPT: LocationExplorerRegion[] = [
         slug: "azores-central-group",
         name: "Central Group",
         type: "Group",
+        center: [-28.20, 38.55],
         children: [
           { slug: "terceira", name: "Terceira", type: "Island" },
           { slug: "graciosa", name: "Graciosa", type: "Island" },
@@ -192,6 +203,7 @@ const LOCATION_EXPLORER_REGIONSPT: LocationExplorerRegion[] = [
         slug: "azores-western-group",
         name: "Western Group",
         type: "Group",
+        center: [-31.15, 39.45],
         children: [
           { slug: "flores", name: "Flores", type: "Island" },
           { slug: "corvo", name: "Corvo", type: "Island" },

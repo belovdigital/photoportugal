@@ -206,6 +206,16 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
     totalPhotographers = parseInt(stats?.total_photographers || "0");
   } catch {}
 
+  // Coordinates for the explorer's city pins, resolved here rather than in the
+  // component: LocationExplorer is a client component, and importing the
+  // locations dataset there would ship all of it to the browser for the sake
+  // of two numbers per city.
+  const placeCoords: Record<string, [number, number]> = Object.fromEntries(
+    locations
+      .filter((l) => typeof l.lat === "number" && typeof l.lng === "number")
+      .map((l) => [l.slug, [l.lng as number, l.lat as number] as [number, number]])
+  );
+
   const explorerCoverageCounts = await getExplorerCoverageCounts();
   const explorerRegionPhotographers = await getExplorerRegionPhotographers();
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -342,6 +352,7 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
       <h1 className="sr-only">{pageTitle}</h1>
       <LocationExplorer
         locale={locale}
+        placeCoords={placeCoords}
         mapboxToken={mapboxToken}
         totalPhotographers={totalPhotographers}
         coverageCounts={explorerCoverageCounts}

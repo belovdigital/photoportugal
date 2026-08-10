@@ -34,6 +34,10 @@ type Props = {
   totalPhotographers: number;
   coverageCounts: Record<string, number>;
   regionPhotographers: Record<string, LocationExplorerPhotographer[]>;
+  /** [lng, lat] per city slug, resolved server-side from locations-data.
+   *  Passed in rather than imported: this is a client component and that
+   *  dataset is far too large to ship for two numbers per city. */
+  placeCoords: Record<string, [number, number]>;
 };
 
 export type LocationExplorerPhotographer = {
@@ -199,6 +203,8 @@ type ExplorerPlace = {
   slug: string;
   name: string;
   type: LocationExplorerChild["type"];
+  /** Carried through from the data for the map-only groupings. */
+  center?: [number, number];
   parentSlug: string;
   parentName: string;
   parentScope: LocationExplorerRegion["scope"];
@@ -260,6 +266,7 @@ function flattenRegionPlaces(region: LocationExplorerRegion, children: LocationE
       slug: child.slug,
       name: child.name,
       type: child.type,
+      center: child.center,
       parentSlug: region.slug,
       parentName: region.name,
       parentScope: region.scope,
@@ -318,7 +325,7 @@ function placeImage(place: ExplorerPlace): string {
   );
 }
 
-export function LocationExplorer({ locale, mapboxToken, totalPhotographers, coverageCounts, regionPhotographers }: Props) {
+export function LocationExplorer({ locale, mapboxToken, totalPhotographers, coverageCounts, regionPhotographers, placeCoords }: Props) {
   const copy = COPY[(locale as keyof typeof COPY)] ?? COPY.en;
   const regions = useMemo(() => localizeRegions(LOCATION_EXPLORER_REGIONS, locale), [locale]);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -585,14 +592,35 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !selectedRegion) return;
+
+    // Picking a CITY moves the map to that city; picking a region frames the
+    // region. This effect used to depend on the region alone, so choosing a
+    // city left the map wherever the region had put it — every city inside
+    // Lisbon Region looked like the map had frozen on Lisbon.
+    //
+    // Explorer children carry no coordinates of their own. Most resolve through
+    // placeCoords, built server-side from locations-data — which is per-market,
+    // so Spain gets Barcelona's coordinates and Italy gets Rome's with no
+    // second code path. The island groups and Gerês are map-only groupings with
+    // no location page at all, so they carry their own `center` instead.
+    const placeCenter = selectedPlace
+      ? selectedPlace.center ?? placeCoords[selectedPlace.slug]
+      : undefined;
+
+    // A group spans several islands; framing it as tightly as a city would put
+    // half of them off-screen.
+    const placeZoom = selectedPlace?.type === "Group" || selectedPlace?.type === "Region" ? 8.2 : 10.5;
+
     mapRef.current.flyTo({
-      center: selectedRegion.center,
-      zoom: selectedRegion.scope === "islands" ? selectedRegion.mapZoom : Math.min(selectedRegion.mapZoom, 7.7),
+      center: placeCenter ?? selectedRegion.center,
+      zoom: placeCenter
+        ? placeZoom
+        : selectedRegion.scope === "islands" ? selectedRegion.mapZoom : Math.min(selectedRegion.mapZoom, 7.7),
       offset: window.innerWidth >= 1024 ? [140, 0] : [0, 0],
       speed: 0.65,
       essential: false,
     });
-  }, [mapReady, selectedRegion]);
+  }, [mapReady, selectedRegion, selectedPlace, placeCoords]);
 
   useEffect(() => {
     setLocationCardOpen(true);
