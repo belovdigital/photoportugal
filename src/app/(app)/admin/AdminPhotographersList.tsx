@@ -446,12 +446,32 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                       ⚠ {belowMinPackages[p.id].length} pkg below min
                     </span>
                   )}
+                  {/* Paid bookings, always visible — the one number that says
+                      whether this photographer is actually working. Sits in the
+                      badge row rather than the quick-stats block because that
+                      block is hidden below `sm`. Zero is shown too: an approved
+                      photographer at 0 is exactly who needs attention. */}
+                  {p.is_approved && (
+                    <span
+                      title={`${bookingStatsByPhotographer[p.id]?.paid_bookings ?? 0} paid booking(s)`}
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                        (bookingStatsByPhotographer[p.id]?.paid_bookings ?? 0) > 0
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      💰 {bookingStatsByPhotographer[p.id]?.paid_bookings ?? 0}
+                    </span>
+                  )}
                 </div>
                 <p className="truncate text-xs text-gray-400">{p.email}</p>
               </div>
 
               {/* Quick stats — right side */}
               <div className="hidden sm:flex items-center gap-3 shrink-0">
+                <span className="text-xs text-gray-500">
+                  {bookingStatsByPhotographer[p.id]?.paid_bookings ?? 0} paid
+                </span>
                 {p.rating > 0 && (
                   <span className="text-xs text-gray-500">{p.rating} ({p.review_count})</span>
                 )}
