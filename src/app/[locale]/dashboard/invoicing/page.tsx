@@ -70,6 +70,24 @@ export default async function InvoicingPage({
         </p>
       </div>
 
+      {/* Moved above the steps (Alex, 2026-08-10): "this is how, not what is
+          right for you" has to be read BEFORE the instructions, not after
+          someone has already filed something on the strength of them. */}
+      <section className="mt-6 rounded-2xl border border-warm-200 bg-warm-50 p-6 sm:p-8">
+        <h2 className="font-display text-lg font-bold text-gray-900">
+          {t("limitsTitle")}
+        </h2>
+        <p className="mt-2 text-[15px] leading-relaxed text-gray-700">{t("limitsIntro")}</p>
+        <ul className="mt-3 space-y-2 text-[15px] leading-relaxed text-gray-700">
+          {["l1", "l2", "l3"].map((k) => (
+            <li key={k} className="flex gap-2.5">
+              <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
+              <span>{t(k)}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <div className="mt-10 space-y-8">
         <Step
           n={1}
@@ -175,20 +193,6 @@ export default async function InvoicingPage({
           </Link>
         </section>
       )}
-
-      <section className="mt-6 rounded-2xl border border-warm-200 bg-warm-50 p-6 sm:p-8">
-        <h2 className="font-display text-lg font-bold text-gray-900">
-          {t("limitsTitle")}
-        </h2>
-        <ul className="mt-3 space-y-2 text-[15px] leading-relaxed text-gray-700">
-          {["l1", "l2", "l3"].map((k) => (
-            <li key={k} className="flex gap-2.5">
-              <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
-              <span>{t(k)}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       <footer className="mt-6 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-warm-50 p-6 text-center sm:p-8">
         <p className="text-base font-semibold text-gray-900">{t("helpTitle")}</p>

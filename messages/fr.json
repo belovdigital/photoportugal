@@ -1150,7 +1150,7 @@
       },
       "extraPhotos": {
         "question": "Que sont les photos supplémentaires dans ma galerie et combien coûtent-elles ?",
-        "answer": "Les photographes prennent en général plus de photos que le forfait n'en promet. Les photos que vous avez réservées sont à vous et se trouvent normalement dans votre galerie : rien de ce que vous avez payé n'est retenu. Tout ce qui dépasse ce nombre est proposé en photo supplémentaire à un prix fixé par votre photographe, prix final : aucun frais en plus, aucun minimum, aucun abonnement. L'achat est entièrement facultatif et, si votre galerie n'affiche aucune photo supplémentaire, c'est que votre photographe a mis en ligne exactement le nombre promis. Notre <a href=\"/aide\">Centre d'aide</a> explique comment les choisir et les télécharger."
+        "answer": "Les photographes prennent en général plus de photos que le forfait n'en promet. Les photos que vous avez réservées sont à vous et se trouvent normalement dans votre galerie : rien de ce que vous avez payé n'est retenu. Tout ce qui dépasse ce nombre est proposé en photo supplémentaire à un prix fixé par votre photographe, prix final : aucun frais en plus, aucun minimum, aucun abonnement. L'achat est entièrement facultatif et, si votre galerie n'affiche aucune photo supplémentaire, c'est que votre photographe a mis en ligne exactement le nombre promis. Notre <a href=\"/fr/aide\">Centre d'aide</a> explique comment les choisir et les télécharger."
       },
       "extraPhotosGift": {
         "question": "Qu'est-ce que cela veut dire quand mon photographe m'offre des photos supplémentaires ?",
@@ -2336,7 +2336,7 @@
           "portfolio": "Les photos de portfolio doivent être votre propre travail original",
           "response": "Vous devez répondre aux demandes de réservation sous 24 heures",
           "delivery": "Vous acceptez de livrer les photos dans le délai indiqué dans votre forfait",
-          "taxes": "Vous êtes responsable de vos propres taxes, assurances et conformité légale",
+          "taxes": "Vous êtes responsable de vos propres impôts, de votre facturation, de vos assurances et de votre conformité légale. Toute indication que nous publions sur la facturation constitue une information générale sur le fonctionnement de la plateforme, non un conseil fiscal, et ne remplace pas un conseil professionnel adapté à votre situation",
           "subscription": "Les frais d'abonnement (plans Pro, Premium) sont facturés mensuellement et non remboursables",
           "noOffPlatform": "Il vous est strictement interdit de solliciter ou conduire des affaires avec des clients qui vous ont contacté via Photo Portugal en dehors de la plateforme. Cela inclut l'échange de coordonnées, la redirection vers des sites personnels ou l'acceptation de paiements directs. Toute violation entraînera la résiliation immédiate et permanente du compte"
         }
@@ -4382,10 +4382,10 @@
       "s3body": "C'est gratuit sur le Portal das Finanças, sans aucun logiciel. Le chemin :",
       "s3p1": "Connectez-vous sur portaldasfinancas.gov.pt avec votre NIF et votre mot de passe.",
       "s3p2": "Allez dans Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
-      "s3p3": "Choisissez Fatura-Recibo — le client a déjà payé, une simple fatura vous laisserait devoir en plus un reçu.",
+      "s3p3": "Choisissez le type de document. Une Fatura-Recibo est facture et reçu en un seul document et suppose que l'argent est déjà chez vous ; une Fatura seule documente la prestation, avec un Recibo plus tard à l'arrivée du paiement. Votre versement arrive normalement après l'acceptation de la livraison : laquelle s'applique dépend donc de ce calendrier — tranchez-le une fois avec votre contabilista, ensuite c'est le même choix à chaque fois.",
       "s3p4": "Renseignez le client. La plupart des nôtres sont des voyageurs sans NIF portugais : indiquez le pays qu'ils vous ont donné et laissez le NIF sur consumidor final (999999990).",
       "s3p5": "Saisissez le montant, validez et téléchargez le PDF. La transmission à l'AT est automatique.",
-      "s3deadline": "Le délai est de 5 jours ouvrables à compter du jour de la séance — pas du jour où l'argent vous parvient. Émettez-la dès la séance terminée et vous ne serez jamais en retard.",
+      "s3deadline": "Ce qui déclenche le délai, c'est le jour de la séance — pas le jour où l'argent vous parvient. Votre versement arrive après l'acceptation de la livraison par le client, donc généralement plus tard, et cela ne déplace pas la date d'exigibilité du document. La règle générale est de 5 jours ouvrables à compter de la prestation ; les régimes diffèrent, confirmez le vôtre une fois auprès d'un contabilista et ce sera ensuite la même routine à chaque fois.",
       "backlogTitle": "Les séances déjà réalisées",
       "backlogBody": "Tout ce que vous avez photographié le {date} ou après doit également être facturé, et le délai de 5 jours ouvrables a déjà commencé — pour les plus anciennes, il est dépassé. Passez en revue vos réservations terminées et émettez celles-là en premier, avant tout le reste de cette page.",
       "backlogCta": "Ouvrir mes réservations",
@@ -4407,7 +4407,8 @@
       "nothingBody": "Nous ne vous facturons pas de commission et ne vous demandons jamais de nous facturer. Notre part de chaque réservation fait partie de ce que paie le client et nous la facturons directement au client. Toute votre paperasse : une fatura-recibo par séance, pour votre versement. C'est tout.",
       "s4cta": "Ouvrir mes réservations",
       "clientPriceNote": "Pourquoi le catalogue affiche plus que votre prix : à votre tarif nous ajoutons des frais de service de réservation de {rate}%, que nous facturons nous-mêmes au client. Un forfait à 300 € apparaît à 345 € pour le client — mais votre part n'est pas touchée, et la commission du plan est la seule chose qui en sort.",
-      "irsNote": "Ce que cette exonération NE couvre PAS : l'impôt sur le revenu. L'exonération ci-dessus ne concerne que la TVA — ce que vous gagnez est déclaré au titre de l'impôt sur le revenu dans tous les cas, exactement comme avant. Rien n'a changé sur ce point ; c'est simplement écrit noir sur blanc désormais. Bon à savoir : vous facturez votre versement, pas le prix du client — le montant qui entre dans votre comptabilité est donc déjà net de notre commission."
+      "irsNote": "Ce que cette exonération NE couvre PAS : l'impôt sur le revenu. L'exonération ci-dessus ne concerne que la TVA — ce que vous gagnez est déclaré au titre de l'impôt sur le revenu dans tous les cas, exactement comme avant. Rien n'a changé sur ce point ; c'est simplement écrit noir sur blanc désormais. Bon à savoir : vous facturez votre versement, pas le prix du client — le montant qui entre dans votre comptabilité est donc déjà net de notre commission.",
+      "limitsIntro": "À lire d'abord. Cette page explique comment la mécanique fonctionne de notre côté et vous indique les bons écrans — ce n'est pas un conseil fiscal et cela ne remplace pas un professionnel qui connaît votre situation."
     },
     "es": {
       "eyebrow": "Facturation en Espagne",
@@ -4424,7 +4425,7 @@
       "s2cta": "Demandez-nous en cas de doute",
       "s3title": "Émettez votre facture après chaque séance",
       "s3body": "Émettez-la comme vous facturez habituellement en Espagne — le modèle de votre gestor ou votre logiciel de facturation conviennent. La plupart de nos clients sont des voyageurs sans NIF espagnol : identifiez-les par nom et pays, comme tout consommateur final. Si vous facturez depuis un logiciel, vérifiez qu'il est prêt pour Verifactu — votre gestor saura.",
-      "s3deadline": "En règle générale, la facture s'émet quand la prestation est réalisée — prenez le réflexe : séance terminée, facture émise. Votre gestor confirmera les délais exacts pour votre cas.",
+      "s3deadline": "Ce qui déclenche le délai, c'est le jour de la séance — pas le jour où l'argent vous parvient. Votre versement arrive après l'acceptation de la livraison, donc généralement plus tard, et cela ne déplace pas l'exigibilité. En règle générale la facture suit la prestation ; confirmez les délais de votre régime une fois auprès d'un gestor, ensuite c'est la même routine à chaque fois.",
       "s4title": "Le montant à porter sur la facture",
       "s4body": "Facturez exactement ce que vous recevez pour la réservation — le montant vert « Votre versement » sur la fiche de réservation. Pas le total payé par le client : la différence entre ce total et votre versement est notre propre prestation facturée au client, et c'est nous qui la lui facturons.",
       "extrasNote": "Si le client achète ensuite des photos supplémentaires dans votre galerie, c'est une seconde vente de votre part — facturez le montant des extras indiqué sur la réservation (ce que vous recevez), de la même façon.",
@@ -4443,7 +4444,8 @@
       "helpCta": "Écrire au support",
       "s4cta": "Ouvrir mes réservations",
       "clientPriceNote": "Pourquoi le catalogue affiche plus que votre prix : à votre tarif nous ajoutons des frais de service de réservation de {rate}%, que nous facturons nous-mêmes au client. Un forfait à 300 € apparaît à 345 € pour le client — mais votre part n'est pas touchée, et la commission du plan est la seule chose qui en sort.",
-      "irsNote": "Ce que cette exonération NE couvre PAS : l'impôt sur le revenu. L'exonération ci-dessus ne concerne que la TVA — ce que vous gagnez est déclaré au titre de l'impôt sur le revenu dans tous les cas, exactement comme avant. Rien n'a changé sur ce point ; c'est simplement écrit noir sur blanc désormais. Bon à savoir : vous facturez votre versement, pas le prix du client — le montant qui entre dans votre comptabilité est donc déjà net de notre commission."
+      "irsNote": "Ce que cette exonération NE couvre PAS : l'impôt sur le revenu. L'exonération ci-dessus ne concerne que la TVA — ce que vous gagnez est déclaré au titre de l'impôt sur le revenu dans tous les cas, exactement comme avant. Rien n'a changé sur ce point ; c'est simplement écrit noir sur blanc désormais. Bon à savoir : vous facturez votre versement, pas le prix du client — le montant qui entre dans votre comptabilité est donc déjà net de notre commission.",
+      "limitsIntro": "À lire d'abord. Cette page explique comment la mécanique fonctionne de notre côté et vous indique les bons écrans — ce n'est pas un conseil fiscal et cela ne remplace pas un professionnel qui connaît votre situation."
     },
     "it": {
       "eyebrow": "Facturation en Italie",
@@ -4460,7 +4462,7 @@
       "s2cta": "Demandez-nous en cas de doute",
       "s3title": "Émettez une fattura électronique après chaque séance",
       "s3body": "En Italie, la facture est électronique : la fattura transite par le Sistema di Interscambio (SdI) en XML — y compris en regime forfettario. N'importe quel outil courant (le portail de votre commercialista, Fatture in Cloud, Aruba, etc.) l'envoie pour vous. Les clients touristes étrangers ne posent pas de problème : nom et pays, avec le code destinataire étranger (XXXXXXX).",
-      "s3deadline": "Une fattura immédiate doit être transmise sous 12 jours après la prestation. Prenez le réflexe : séance terminée, fattura envoyée. Votre commercialista confirmera les délais exacts pour votre cas.",
+      "s3deadline": "Ce qui déclenche le délai, c'est le jour de la séance — pas le jour où l'argent vous parvient. Votre versement arrive après l'acceptation de la livraison, donc généralement plus tard, et cela ne déplace pas l'exigibilité. Pour la fattura immédiate, la règle générale est une transmission sous 12 jours après la prestation ; confirmez les délais de votre régime une fois auprès d'un commercialista, ensuite c'est la même routine à chaque fois.",
       "s4title": "Le montant à porter sur la fattura",
       "s4body": "Facturez exactement ce que vous recevez pour la réservation — le montant vert « Votre versement » sur la fiche de réservation. Pas le total payé par le client : la différence entre ce total et votre versement est notre propre prestation facturée au client, et c'est nous qui la lui facturons.",
       "extrasNote": "Si le client achète ensuite des photos supplémentaires dans votre galerie, c'est une seconde vente de votre part — émettez une fattura pour le montant des extras indiqué sur la réservation (ce que vous recevez), de la même façon.",
@@ -4479,7 +4481,8 @@
       "helpCta": "Écrire au support",
       "s4cta": "Ouvrir mes réservations",
       "clientPriceNote": "Pourquoi le catalogue affiche plus que votre prix : à votre tarif nous ajoutons des frais de service de réservation de {rate}%, que nous facturons nous-mêmes au client. Un forfait à 300 € apparaît à 345 € pour le client — mais votre part n'est pas touchée, et la commission du plan est la seule chose qui en sort.",
-      "irsNote": "Ce que cette exonération NE couvre PAS : l'impôt sur le revenu. L'exonération ci-dessus ne concerne que la TVA — ce que vous gagnez est déclaré au titre de l'impôt sur le revenu dans tous les cas, exactement comme avant. Rien n'a changé sur ce point ; c'est simplement écrit noir sur blanc désormais. Bon à savoir : vous facturez votre versement, pas le prix du client — le montant qui entre dans votre comptabilité est donc déjà net de notre commission."
+      "irsNote": "Ce que cette exonération NE couvre PAS : l'impôt sur le revenu. L'exonération ci-dessus ne concerne que la TVA — ce que vous gagnez est déclaré au titre de l'impôt sur le revenu dans tous les cas, exactement comme avant. Rien n'a changé sur ce point ; c'est simplement écrit noir sur blanc désormais. Bon à savoir : vous facturez votre versement, pas le prix du client — le montant qui entre dans votre comptabilité est donc déjà net de notre commission.",
+      "limitsIntro": "À lire d'abord. Cette page explique comment la mécanique fonctionne de notre côté et vous indique les bons écrans — ce n'est pas un conseil fiscal et cela ne remplace pas un professionnel qui connaît votre situation."
     }
   }
 }

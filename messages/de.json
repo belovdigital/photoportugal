@@ -727,7 +727,7 @@
       },
       "extraPhotos": {
         "question": "Was sind die zusätzlichen Fotos in meiner Galerie und was kosten sie?",
-        "answer": "Fotografen machen meist mehr Aufnahmen, als das Paket verspricht. Die gebuchten Fotos gehören Ihnen und liegen ganz normal in Ihrer Galerie — von dem, wofür Sie bezahlt haben, wird nichts zurückgehalten. Alles darüber hinaus wird als zusätzliches Foto zum von Ihrem Fotografen festgelegten Preis pro Stück angeboten, Endpreis: keine Gebühr obendrauf, keine Mindestmenge, kein Abo. Kaufen ist völlig freiwillig, und wenn Ihre Galerie keine zusätzlichen Fotos zeigt, hat Ihr Fotograf genau die versprochene Anzahl hochgeladen. Wie Sie sie aussuchen und herunterladen, steht in unserem <a href=\"/hilfe\">Hilfe-Center</a>."
+        "answer": "Fotografen machen meist mehr Aufnahmen, als das Paket verspricht. Die gebuchten Fotos gehören Ihnen und liegen ganz normal in Ihrer Galerie — von dem, wofür Sie bezahlt haben, wird nichts zurückgehalten. Alles darüber hinaus wird als zusätzliches Foto zum von Ihrem Fotografen festgelegten Preis pro Stück angeboten, Endpreis: keine Gebühr obendrauf, keine Mindestmenge, kein Abo. Kaufen ist völlig freiwillig, und wenn Ihre Galerie keine zusätzlichen Fotos zeigt, hat Ihr Fotograf genau die versprochene Anzahl hochgeladen. Wie Sie sie aussuchen und herunterladen, steht in unserem <a href=\"/de/hilfe\">Hilfe-Center</a>."
       },
       "extraPhotosGift": {
         "question": "Was bedeutet es, wenn mein Fotograf mir zusätzliche Fotos schenkt?",
@@ -2091,7 +2091,7 @@
           "portfolio": "Portfolio-Fotos müssen Ihre eigenen Originalwerke sein",
           "response": "Sie müssen innerhalb von 24 Stunden auf Buchungsanfragen antworten",
           "delivery": "Sie verpflichten sich, die Fotos innerhalb des in Ihrem Paket angegebenen Zeitraums zu übermitteln",
-          "taxes": "Sie sind selbst für Ihre Steuern, Versicherungen und die Einhaltung gesetzlicher Vorschriften verantwortlich",
+          "taxes": "Sie sind für Ihre eigenen Steuern, Rechnungsstellung, Versicherungen und die Einhaltung gesetzlicher Vorschriften verantwortlich. Hinweise, die wir zur Rechnungsstellung veröffentlichen, sind allgemeine Informationen zur Funktionsweise der Plattform, keine Steuerberatung, und ersetzen keine fachliche Beratung für Ihre Situation",
           "subscription": "Abonnementgebühren (Pro-, Premium-Tarife) werden monatlich abgerechnet und sind nicht erstattungsfähig",
           "noOffPlatform": "Es ist Ihnen strikt untersagt, mit Kunden, die Sie über Photo Portugal kontaktiert haben, Geschäfte außerhalb der Plattform anzubahnen oder durchzuführen. Dies umfasst den Austausch von Kontaktdaten, die Weiterleitung von Kunden auf persönliche Websites oder die Annahme von Direktzahlungen. Verstöße gegen diese Richtlinie führen zur sofortigen und dauerhaften Sperrung Ihres Kontos"
         }
@@ -4382,10 +4382,10 @@
       "s3body": "Das geht kostenlos im Portal das Finanças, ganz ohne Software. Der Weg:",
       "s3p1": "Melden Sie sich auf portaldasfinancas.gov.pt mit NIF und Passwort an.",
       "s3p2": "Gehen Sie zu Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
-      "s3p3": "Wählen Sie Fatura-Recibo — die Kundschaft hat bereits bezahlt, bei einer einfachen Fatura würden Sie zusätzlich noch eine Quittung schulden.",
+      "s3p3": "Wählen Sie die Belegart. Eine Fatura-Recibo ist Rechnung und Quittung in einem und setzt voraus, dass das Geld bereits bei Ihnen ist; eine Fatura allein dokumentiert die Leistung, mit späterem Recibo bei Zahlungseingang. Ihre Auszahlung kommt normalerweise nach der Abnahme durch die Kundschaft — welche Variante passt, hängt also von diesem Zeitpunkt ab. Klären Sie es einmal mit Ihrem contabilista, danach ist es immer dieselbe Wahl.",
       "s3p4": "Tragen Sie die Kundschaft ein. Die meisten unserer Kundinnen und Kunden sind Reisende ohne portugiesische NIF: Nehmen Sie das angegebene Land und lassen Sie die NIF als consumidor final (999999990) stehen.",
       "s3p5": "Betrag eingeben, bestätigen, PDF herunterladen. Die Meldung an die AT erfolgt automatisch.",
-      "s3deadline": "Die Frist beträgt 5 Werktage ab dem Tag des Shootings — nicht ab dem Tag, an dem das Geld bei Ihnen ankommt. Stellen Sie die Rechnung direkt nach dem Shooting aus, dann sind Sie nie zu spät.",
+      "s3deadline": "Die Frist beginnt am Tag des Shootings — nicht an dem Tag, an dem das Geld bei Ihnen ankommt. Ihre Auszahlung erfolgt, nachdem die Kundschaft die Lieferung akzeptiert hat, also in der Regel später, und das verschiebt den Fälligkeitstag des Dokuments nicht. Die allgemeine Regel sind 5 Werktage ab der Leistung; die Regime unterscheiden sich, klären Sie Ihres also einmal mit einem contabilista — danach ist es jedes Mal dieselbe Routine.",
       "backlogTitle": "Bereits durchgeführte Shootings",
       "backlogBody": "Auch alles, was Sie am oder nach dem {date} fotografiert haben, braucht eine Rechnung, und die Frist von 5 Werktagen läuft bereits — bei den ältesten ist sie schon abgelaufen. Gehen Sie Ihre abgeschlossenen Buchungen durch und stellen Sie diese Rechnungen zuerst aus, noch vor allem anderen auf dieser Seite.",
       "backlogCta": "Meine Buchungen öffnen",
@@ -4407,7 +4407,8 @@
       "nothingBody": "Wir stellen Ihnen keine Provision in Rechnung und bitten Sie nie, uns eine Rechnung zu stellen. Unser Anteil an jeder Buchung ist Teil dessen, was die Kundschaft zahlt, und wir berechnen ihn der Kundschaft direkt. Ihr gesamter Papierkram ist eine fatura-recibo pro Shooting, über Ihre Auszahlung. Mehr nicht.",
       "s4cta": "Meine Buchungen öffnen",
       "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht.",
-      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt."
+      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt.",
+      "limitsIntro": "Bitte zuerst lesen. Diese Seite erklärt, wie die Mechanik auf unserer Seite funktioniert, und zeigt Ihnen die richtigen Masken — sie ist keine Steuerberatung und ersetzt keine Fachperson, die Ihre Situation kennt."
     },
     "es": {
       "eyebrow": "Rechnungsstellung in Spanien",
@@ -4424,7 +4425,7 @@
       "s2cta": "Fragen Sie uns, wenn Sie unsicher sind",
       "s3title": "Stellen Sie nach jedem Shooting Ihre Rechnung aus",
       "s3body": "Stellen Sie sie so aus, wie Sie in Spanien üblicherweise fakturieren — die Vorlage Ihres gestor oder Ihre Rechnungssoftware funktionieren beide. Die meisten unserer Kundinnen und Kunden sind Reisende ohne spanische NIF: Name und Land genügen, wie bei jedem Endverbraucher. Wenn Sie aus einer Software fakturieren, achten Sie darauf, dass sie Verifactu-fähig ist — Ihr gestor weiß Bescheid.",
-      "s3deadline": "In der Regel wird die Rechnung ausgestellt, wenn die Leistung erbracht wird — machen Sie es zur Gewohnheit: Shooting fertig, Rechnung raus. Die genauen Fristen für Ihren Fall bestätigt Ihr gestor.",
+      "s3deadline": "Die Frist beginnt am Tag des Shootings — nicht an dem Tag, an dem das Geld bei Ihnen ankommt. Ihre Auszahlung erfolgt nach der Abnahme durch die Kundschaft, also meist später, und das verschiebt die Fälligkeit nicht. Grundsätzlich folgt die Rechnung der Leistung; klären Sie die Fristen für Ihr Regime einmal mit einem gestor — danach ist es jedes Mal dieselbe Routine.",
       "s4title": "Der Betrag auf der Rechnung",
       "s4body": "Stellen Sie genau das in Rechnung, was Sie für die Buchung erhalten — den grünen Betrag «Ihre Auszahlung» auf der Buchungskarte. Nicht den Gesamtbetrag der Kundschaft: die Differenz zwischen diesem Gesamtbetrag und Ihrer Auszahlung ist unsere eigene Leistung an die Kundschaft, und wir stellen sie ihr selbst in Rechnung.",
       "extrasNote": "Kauft die Kundschaft später Extra-Fotos aus Ihrer Galerie, ist das ein zweiter Verkauf von Ihnen — fakturieren Sie den auf der Buchung ausgewiesenen Extras-Betrag (das, was Sie erhalten) genauso.",
@@ -4443,7 +4444,8 @@
       "helpCta": "Support kontaktieren",
       "s4cta": "Meine Buchungen öffnen",
       "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht.",
-      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt."
+      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt.",
+      "limitsIntro": "Bitte zuerst lesen. Diese Seite erklärt, wie die Mechanik auf unserer Seite funktioniert, und zeigt Ihnen die richtigen Masken — sie ist keine Steuerberatung und ersetzt keine Fachperson, die Ihre Situation kennt."
     },
     "it": {
       "eyebrow": "Rechnungsstellung in Italien",
@@ -4460,7 +4462,7 @@
       "s2cta": "Fragen Sie uns, wenn Sie unsicher sind",
       "s3title": "Stellen Sie nach jedem Shooting eine elektronische fattura aus",
       "s3body": "In Italien ist die Rechnung elektronisch: Die fattura läuft als XML über das Sistema di Interscambio (SdI) — auch im regime forfettario. Jedes gängige Tool (das Portal Ihres commercialista, Fatture in Cloud, Aruba u. ä.) übermittelt sie für Sie. Ausländische Reisende sind kein Problem: Name und Land, mit dem Auslands-Empfängercode (XXXXXXX).",
-      "s3deadline": "Eine sofortige fattura muss innerhalb von 12 Tagen nach der Leistung übermittelt werden. Machen Sie es zur Gewohnheit: Shooting fertig, fattura raus. Die genauen Fristen bestätigt Ihr commercialista.",
+      "s3deadline": "Die Frist beginnt am Tag des Shootings — nicht an dem Tag, an dem das Geld bei Ihnen ankommt. Ihre Auszahlung erfolgt nach der Abnahme durch die Kundschaft, also meist später, und das verschiebt die Fälligkeit nicht. Für die sofortige fattura gilt grundsätzlich die Übermittlung innerhalb von 12 Tagen nach der Leistung; klären Sie die Fristen für Ihr Regime einmal mit einem commercialista — danach ist es jedes Mal dieselbe Routine.",
       "s4title": "Der Betrag auf der fattura",
       "s4body": "Stellen Sie genau das in Rechnung, was Sie für die Buchung erhalten — den grünen Betrag «Ihre Auszahlung» auf der Buchungskarte. Nicht den Gesamtbetrag der Kundschaft: die Differenz zwischen diesem Gesamtbetrag und Ihrer Auszahlung ist unsere eigene Leistung an die Kundschaft, und wir stellen sie ihr selbst in Rechnung.",
       "extrasNote": "Kauft die Kundschaft später Extra-Fotos aus Ihrer Galerie, ist das ein zweiter Verkauf von Ihnen — stellen Sie dafür genauso eine fattura über den auf der Buchung ausgewiesenen Extras-Betrag (das, was Sie erhalten) aus.",
@@ -4479,7 +4481,8 @@
       "helpCta": "Support kontaktieren",
       "s4cta": "Meine Buchungen öffnen",
       "clientPriceNote": "Warum der Katalog mehr zeigt als Ihren Preis: Auf Ihr Honorar schlagen wir eine Buchungsgebühr von {rate}% auf, die wir der Kundschaft selbst berechnen und in Rechnung stellen. Ein 300-€-Paket erscheint der Kundschaft als 345 € — Ihre Seite bleibt unberührt, und die Plan-Provision ist das Einzige, was davon abgeht.",
-      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt."
+      "irsNote": "Was diese Befreiung NICHT abdeckt: die Einkommensteuer. Die Befreiung oben betrifft nur die Umsatzsteuer — was Sie verdienen, wird für die Einkommensteuer ohnehin erklärt, genau wie bisher. Daran hat sich hier nichts geändert; es steht jetzt lediglich auf dem Papier. Gut zu wissen: Sie fakturieren Ihre Auszahlung, nicht den Preis der Kundschaft — der Betrag, der in Ihre Bücher geht, ist also bereits um unsere Provision bereinigt.",
+      "limitsIntro": "Bitte zuerst lesen. Diese Seite erklärt, wie die Mechanik auf unserer Seite funktioniert, und zeigt Ihnen die richtigen Masken — sie ist keine Steuerberatung und ersetzt keine Fachperson, die Ihre Situation kennt."
     }
   }
 }

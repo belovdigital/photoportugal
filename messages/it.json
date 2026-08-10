@@ -2091,7 +2091,7 @@
           "portfolio": "Le foto del portfolio devono essere opere originali realizzate da te",
           "response": "Devi rispondere alle richieste di prenotazione entro 24 ore",
           "delivery": "Ti impegni a consegnare le foto entro i tempi indicati nel tuo pacchetto",
-          "taxes": "Sei responsabile dei tuoi obblighi fiscali, assicurativi e legali",
+          "taxes": "Sei responsabile delle tue imposte, della tua fatturazione, delle assicurazioni e della conformità legale. Qualsiasi indicazione che pubblichiamo sulla fatturazione è informazione generale sul funzionamento della piattaforma, non consulenza fiscale, e non sostituisce la consulenza professionale per la tua situazione",
           "subscription": "I costi di abbonamento (piani Pro e Premium) vengono addebitati mensilmente e non sono rimborsabili",
           "noOffPlatform": "È severamente vietato proporre o svolgere attività al di fuori della piattaforma con clienti che ti hanno contattato tramite Photo Italy. Ciò include lo scambio di recapiti, il reindirizzamento dei clienti verso siti web personali o l'accettazione di pagamenti diretti. La violazione di questa politica comporterà la chiusura immediata e permanente dell'account"
         }
@@ -4381,10 +4381,10 @@
       "s3body": "You can do this for free on the Portal das Finanças — no software required. The path is:",
       "s3p1": "Sign in at portaldasfinancas.gov.pt with your NIF and password.",
       "s3p2": "Go to Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
-      "s3p3": "Choose Fatura-Recibo — the client has already paid, so a plain fatura would leave you owing a receipt as well.",
+      "s3p3": "Pick the document type. A Fatura-Recibo is invoice and receipt in one and assumes the money is already with you; a Fatura on its own documents the service, with a Recibo later when the payment arrives. Your payout normally lands after the client accepts the delivery, so which one fits depends on that timing — settle it once with your contabilista and it is the same choice every time after that.",
       "s3p4": "Fill in the client. Most of our clients are tourists with no Portuguese NIF: use the country they gave you and leave the NIF as consumidor final (999999990).",
       "s3p5": "Enter the amount, confirm, and download the PDF. It is communicated to the AT automatically.",
-      "s3deadline": "The deadline is 5 working days from the day of the shoot — not from the day the money reaches you. Issue it as soon as the shoot is done and you will never be late.",
+      "s3deadline": "What starts the clock is the day of the shoot — not the day the money reaches you. Your payout arrives after the client accepts the delivery, which is usually later, and that does not move the date the document is due. The general rule is 5 working days from the service; regimes differ, so confirm yours once with a contabilista and after that it is the same routine every time.",
       "backlogTitle": "Shoots you have already done",
       "backlogBody": "Anything you shot on or after {date} needs an invoice too, and its 5-working-day deadline has already started — for the earliest ones it has passed. Go through your completed bookings and issue those first, before anything else on this page.",
       "backlogCta": "Open my bookings",
@@ -4406,7 +4406,8 @@
       "nothingBody": "We do not invoice you for commission, and we never ask you to invoice us. Our share of each booking is part of what the client pays and we invoice the client for it directly. Your entire paperwork is one fatura-recibo per shoot, for your payout. That's it.",
       "s4cta": "Open my bookings",
       "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it.",
-      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission."
+      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission.",
+      "limitsIntro": "Read this first. This page explains how the mechanics work on our side and points you at the right screens — it is not tax advice and does not replace a professional who knows your situation."
     },
     "es": {
       "eyebrow": "Invoicing in Spain",
@@ -4423,7 +4424,7 @@
       "s2cta": "Ask us if you are unsure",
       "s3title": "Issue your invoice after each shoot",
       "s3body": "Issue it the way you normally invoice in Spain — your gestor's template or your invoicing software both work. Most of our clients are tourists without a Spanish NIF: identify them by name and country, as with any final consumer. If you invoice from software, make sure it is Verifactu-ready — your gestor will know.",
-      "s3deadline": "As a rule the invoice is issued when the service is provided — so make it a habit: shoot done, invoice out. Your gestor can confirm the exact timing rules for your setup.",
+      "s3deadline": "What starts the clock is the day of the shoot — not the day the money reaches you. Your payout arrives after the client accepts the delivery, which is usually later, and that does not move the date the document is due. As a general rule the invoice follows the service; confirm the timing for your regime once with a gestor and after that it is the same routine every time.",
       "s4title": "The amount to put on the invoice",
       "s4body": "Invoice exactly what you receive for the booking — the green «Tu pago» amount on the booking card. Not the total the client paid: the difference between that total and your payout is our own charge to the client, and we invoice the client for it ourselves.",
       "extrasNote": "If the client later buys extra photos from your gallery, that is a second sale of yours — invoice the extras amount shown on the booking (what you receive) the same way.",
@@ -4442,7 +4443,8 @@
       "helpCta": "Message support",
       "s4cta": "Open my bookings",
       "clientPriceNote": "Why the catalogue shows more than your price: on top of your rate we add a {rate}% booking service fee, which we charge and invoice the client ourselves. So a €300 package appears as €345 to the client — but your side is untouched, and the plan commission is the only thing that ever comes off it.",
-      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission."
+      "irsNote": "One thing this exemption does NOT cover: income tax. The exemption above is about VAT only — what you earn is declared for income tax either way, exactly as it always was. Nothing about that changed here; it is simply now on paper. Worth knowing: you invoice your payout, not the client's price, so the amount that enters your accounts is already net of our commission.",
+      "limitsIntro": "Read this first. This page explains how the mechanics work on our side and points you at the right screens — it is not tax advice and does not replace a professional who knows your situation."
     },
     "it": {
       "eyebrow": "Fatturazione in Italia",
@@ -4459,7 +4461,7 @@
       "s2cta": "Chiedici se hai dubbi",
       "s3title": "Emetti la fattura elettronica dopo ogni servizio",
       "s3body": "In Italia la fattura è elettronica: passa dal Sistema di Interscambio (SdI) in XML — vale anche per il regime forfettario. Qualsiasi strumento comune (il portale del tuo commercialista, Fatture in Cloud, Aruba e simili) la trasmette per te. I clienti turisti stranieri non sono un problema: nome e paese, con il codice destinatario estero (XXXXXXX).",
-      "s3deadline": "La fattura immediata va trasmessa entro 12 giorni dalla prestazione. Fanne un'abitudine: servizio concluso, fattura inviata. Il tuo commercialista può confermarti i termini esatti per il tuo caso.",
+      "s3deadline": "A far partire il termine è il giorno del servizio — non il giorno in cui ti arrivano i soldi. Il tuo compenso arriva dopo che il cliente accetta la consegna, di solito più tardi, e questo non sposta la data in cui il documento è dovuto. Per la fattura immediata la regola generale è la trasmissione entro 12 giorni dalla prestazione; conferma i termini per il tuo regime una volta con un commercialista e poi è sempre la stessa routine.",
       "s4title": "L'importo da mettere in fattura",
       "s4body": "Fattura esattamente quello che ricevi per la prenotazione: l'importo verde «Il tuo compenso» nella scheda della prenotazione. Non il totale pagato dal cliente: la differenza tra quel totale e il tuo compenso è il nostro addebito al cliente, e glielo fatturiamo noi direttamente.",
       "extrasNote": "Se il cliente acquista in seguito foto extra dalla tua galleria, è una tua seconda vendita: emetti fattura per l'importo extra indicato nella prenotazione (quello che ricevi), allo stesso modo.",
@@ -4478,7 +4480,8 @@
       "helpCta": "Scrivi al supporto",
       "s4cta": "Apri le mie prenotazioni",
       "clientPriceNote": "Perché il catalogo mostra più del tuo prezzo: sulla tua tariffa aggiungiamo una commissione di prenotazione del {rate}%, che addebitiamo e fatturiamo noi al cliente. Un pacchetto da 300 € appare al cliente come 345 € — ma la tua parte non viene toccata, e la commissione del piano è l'unica cosa che ne esce.",
-      "irsNote": "Una cosa che questa esenzione NON copre: l'imposta sul reddito. L'esenzione qui sopra riguarda solo l'IVA — quello che guadagni viene comunque dichiarato ai fini delle imposte sul reddito, esattamente come è sempre stato. Su questo non è cambiato nulla; semplicemente ora è messo per iscritto. Vale la pena saperlo: fatturi il tuo compenso, non il prezzo del cliente, quindi l'importo che entra nella tua contabilità è già al netto della nostra commissione."
+      "irsNote": "Una cosa che questa esenzione NON copre: l'imposta sul reddito. L'esenzione qui sopra riguarda solo l'IVA — quello che guadagni viene comunque dichiarato ai fini delle imposte sul reddito, esattamente come è sempre stato. Su questo non è cambiato nulla; semplicemente ora è messo per iscritto. Vale la pena saperlo: fatturi il tuo compenso, non il prezzo del cliente, quindi l'importo che entra nella tua contabilità è già al netto della nostra commissione.",
+      "limitsIntro": "Leggi prima questo. Questa pagina spiega come funziona la meccanica dalla nostra parte e ti indica le schermate giuste — non è consulenza fiscale e non sostituisce un professionista che conosca la tua situazione."
     }
   }
 }

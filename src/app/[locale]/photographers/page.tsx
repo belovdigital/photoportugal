@@ -10,6 +10,7 @@ import { localeAlternates, openGraphIdentity, clampMeta } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 import { getActiveGiftCard } from "@/lib/gift-card-session";
+import { Link } from "@/i18n/navigation";
 import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -195,7 +196,6 @@ export default async function PhotographersPage({
   const dbPhotographers = await getDbPhotographers(locale, !!giftCard);
   const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id), locale);
   const resolvedShootType = resolveShootType(initialShootType);
-  const localePrefix = locale === "en" ? "" : `/${locale}`;
 
   const base = country.baseUrl;
   const itemListJsonLd = {
@@ -242,13 +242,17 @@ export default async function PhotographersPage({
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {locations.map((loc) => (
-          <a
+          <Link
             key={loc.slug}
-            href={`${localePrefix}/photographers/location/${loc.slug}`}
+            // Pasting the locale in front of an English path skips the
+            // pathnames table: this grid alone produced 125 of Italy's
+            // "Page with redirect" URLs (/de/photographers/location/rome ->
+            // /de/fotografen/location/rome). Let Link translate it.
+            href={`/photographers/location/${loc.slug}`}
             className="rounded-lg border border-warm-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-warm-50"
           >
             {(loc as unknown as Record<string, string>)[`name_${locale}`] || loc.name}
-          </a>
+          </Link>
         ))}
       </div>
     </section>

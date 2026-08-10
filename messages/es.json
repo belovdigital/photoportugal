@@ -1772,7 +1772,7 @@
       },
       "extraPhotos": {
         "question": "¿Qué son las fotos extra de mi galería y cuánto cuestan?",
-        "answer": "Los fotógrafos suelen hacer más fotos de las que promete el paquete. Las fotos que reservó son suyas y están en su galería como siempre: de lo que ha pagado no se retiene nada. Todo lo que pasa de ese número se ofrece como foto extra a un precio que fija tu fotógrafo, precio final: sin recargos, sin mínimo y sin suscripciones. Comprarlas es totalmente opcional y, si su galería no muestra fotos extra, es que su fotógrafo subió exactamente el número prometido. En nuestro <a href=\"/ayuda\">Centro de ayuda</a> le explicamos cómo elegirlas y descargarlas."
+        "answer": "Los fotógrafos suelen hacer más fotos de las que promete el paquete. Las fotos que reservó son suyas y están en su galería como siempre: de lo que ha pagado no se retiene nada. Todo lo que pasa de ese número se ofrece como foto extra a un precio que fija tu fotógrafo, precio final: sin recargos, sin mínimo y sin suscripciones. Comprarlas es totalmente opcional y, si su galería no muestra fotos extra, es que su fotógrafo subió exactamente el número prometido. En nuestro <a href=\"/es/ayuda\">Centro de ayuda</a> le explicamos cómo elegirlas y descargarlas."
       },
       "extraPhotosGift": {
         "question": "¿Qué significa que mi fotógrafo me regale fotos extra?",
@@ -2336,7 +2336,7 @@
           "portfolio": "Las fotos del portafolio deben ser su propio trabajo original",
           "response": "Debe responder a las solicitudes de reserva en 24 horas",
           "delivery": "Acepta entregar las fotos dentro del plazo indicado en su paquete",
-          "taxes": "Es responsable de sus propios impuestos, seguros y cumplimiento legal",
+          "taxes": "Eres responsable de tus propios impuestos, facturación, seguros y cumplimiento legal. Cualquier orientación que publiquemos sobre facturación es información general sobre cómo funciona la plataforma, no asesoramiento fiscal, y no sustituye el asesoramiento profesional para tu situación",
           "subscription": "Las tarifas de suscripción (planes Pro, Premium) se facturan mensualmente y no son reembolsables",
           "noOffPlatform": "Se le prohíbe estrictamente solicitar o realizar negocios con clientes que le contactaron a través de Photo Portugal fuera de la plataforma. Esto incluye el intercambio de datos de contacto, redirigir clientes a sitios web personales o aceptar pagos directos. La violación resultará en la terminación inmediata y permanente de la cuenta"
         }
@@ -4382,10 +4382,10 @@
       "s3body": "Puedes hacerlo gratis en el Portal das Finanças, sin ningún software. El camino es:",
       "s3p1": "Entra en portaldasfinancas.gov.pt con tu NIF y tu contraseña.",
       "s3p2": "Ve a Todos os Serviços → Faturas e Recibos Verdes → Emitir.",
-      "s3p3": "Elige Fatura-Recibo: el cliente ya ha pagado, así que una fatura simple te dejaría debiendo además el recibo.",
+      "s3p3": "Elige el tipo de documento. Una Fatura-Recibo es factura y recibo en uno y presupone que el dinero ya está contigo; una Fatura sola documenta la prestación, con Recibo después cuando entre el pago. Tu pago suele llegar después de que el cliente acepte la entrega, así que cuál corresponde depende de ese calendario: acláralo una vez con tu contabilista y a partir de ahí es siempre la misma elección.",
       "s3p4": "Rellena los datos del cliente. La mayoría de nuestros clientes son turistas sin NIF portugués: usa el país que te indicaron y deja el NIF como consumidor final (999999990).",
       "s3p5": "Introduce el importe, confirma y descarga el PDF. La comunicación a la AT es automática.",
-      "s3deadline": "El plazo es de 5 días hábiles desde el día de la sesión, no desde el día en que te llega el dinero. Emítela en cuanto termine la sesión y nunca llegarás tarde.",
+      "s3deadline": "Lo que hace correr el plazo es el día de la sesión, no el día en que te llega el dinero. Tu pago entra después de que el cliente acepte la entrega, normalmente más tarde, y eso no cambia la fecha en que el documento es exigible. La regla general son 5 días hábiles desde la prestación; los regímenes varían, así que confirma el tuyo una vez con un contabilista y a partir de ahí es siempre la misma rutina.",
       "backlogTitle": "Sesiones que ya has hecho",
       "backlogBody": "Todo lo que fotografiaste el {date} o después también necesita factura, y su plazo de 5 días hábiles ya ha empezado a correr; en las más antiguas ya ha pasado. Repasa tus reservas completadas y emite esas primero, antes que cualquier otra cosa de esta página.",
       "backlogCta": "Abrir mis reservas",
@@ -4407,7 +4407,8 @@
       "nothingBody": "No te facturamos comisión y nunca te pedimos que nos factures. Nuestra parte de cada reserva forma parte de lo que paga el cliente y se la facturamos nosotros directamente. Todo tu papeleo es una fatura-recibo por sesión, por tu pago. Nada más.",
       "s4cta": "Abrir mis reservas",
       "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella.",
-      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión."
+      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión.",
+      "limitsIntro": "Lee esto primero. Esta página explica cómo funciona la mecánica por nuestra parte y te indica las pantallas correctas: no es asesoramiento fiscal ni sustituye a un profesional que conozca tu situación."
     },
     "es": {
       "eyebrow": "Facturación en España",
@@ -4424,7 +4425,7 @@
       "s2cta": "Pregúntanos si tienes dudas",
       "s3title": "Emite tu factura después de cada sesión",
       "s3body": "Emítela como factures normalmente en España: sirve la plantilla de tu gestor o tu software de facturación. La mayoría de nuestros clientes son turistas sin NIF español: identifícalos por nombre y país, como a cualquier consumidor final. Si facturas desde un software, asegúrate de que está preparado para Verifactu — tu gestor lo sabrá.",
-      "s3deadline": "Por regla general la factura se emite cuando se presta el servicio, así que hazlo costumbre: sesión terminada, factura emitida. Tu gestor puede confirmarte los plazos exactos para tu caso.",
+      "s3deadline": "Lo que hace correr el plazo es el día de la sesión, no el día en que te llega el dinero. Tu pago entra después de que el cliente acepte la entrega, normalmente más tarde, y eso no cambia la fecha en que la factura es exigible. Como regla general la factura sigue a la prestación; confirma los plazos de tu régimen una vez con un gestor y a partir de ahí es siempre la misma rutina.",
       "s4title": "El importe que va en la factura",
       "s4body": "Factura exactamente lo que recibes por la reserva: el importe verde «Tu pago» en la ficha de la reserva. No el total que pagó el cliente: la diferencia entre ese total y tu pago es nuestro propio cargo al cliente, y se lo facturamos nosotros directamente.",
       "extrasNote": "Si el cliente compra después fotos extra de tu galería, es una segunda venta tuya: factura el importe de extras que aparece en la reserva (lo que recibes), de la misma forma.",
@@ -4443,7 +4444,8 @@
       "helpCta": "Escribir a soporte",
       "s4cta": "Abrir mis reservas",
       "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella.",
-      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión."
+      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión.",
+      "limitsIntro": "Lee esto primero. Esta página explica cómo funciona la mecánica por nuestra parte y te indica las pantallas correctas: no es asesoramiento fiscal ni sustituye a un profesional que conozca tu situación."
     },
     "it": {
       "eyebrow": "Facturación en Italia",
@@ -4460,7 +4462,7 @@
       "s2cta": "Pregúntanos si tienes dudas",
       "s3title": "Emite la fattura electrónica después de cada sesión",
       "s3body": "En Italia la factura es electrónica: la fattura pasa por el Sistema di Interscambio (SdI) en XML — también en regime forfettario. Cualquier herramienta común (el portal de tu commercialista, Fatture in Cloud, Aruba y similares) la envía por ti. Los clientes turistas extranjeros no son problema: nombre y país, con el código de destinatario extranjero (XXXXXXX).",
-      "s3deadline": "La fattura inmediata debe transmitirse dentro de los 12 días siguientes a la prestación. Hazlo costumbre: sesión terminada, fattura enviada. Tu commercialista puede confirmarte los plazos exactos para tu caso.",
+      "s3deadline": "Lo que hace correr el plazo es el día de la sesión, no el día en que te llega el dinero. Tu pago entra después de que el cliente acepte la entrega, normalmente más tarde, y eso no cambia la fecha en que el documento es exigible. Para la fattura inmediata la regla general es la transmisión dentro de los 12 días desde la prestación; confirma los plazos de tu régimen una vez con un commercialista y a partir de ahí es siempre la misma rutina.",
       "s4title": "El importe que va en la fattura",
       "s4body": "Factura exactamente lo que recibes por la reserva: el importe verde «Tu pago» en la ficha de la reserva. No el total que pagó el cliente: la diferencia entre ese total y tu pago es nuestro propio cargo al cliente, y se lo facturamos nosotros directamente.",
       "extrasNote": "Si el cliente compra después fotos extra de tu galería, es una segunda venta tuya: emite fattura por el importe de extras que aparece en la reserva (lo que recibes), de la misma forma.",
@@ -4479,7 +4481,8 @@
       "helpCta": "Escribir a soporte",
       "s4cta": "Abrir mis reservas",
       "clientPriceNote": "Por qué el catálogo muestra más que tu precio: sobre tu tarifa añadimos una tarifa de servicio de reserva del {rate}%, que cobramos y facturamos nosotros al cliente. Un paquete de 300 € aparece como 345 € para el cliente, pero tu parte no se toca y la comisión del plan es lo único que sale de ella.",
-      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión."
+      "irsNote": "Una cosa que esta exención NO cubre: el impuesto sobre la renta. La exención de arriba se refiere solo al IVA — lo que ganas se declara igualmente en la renta, exactamente como siempre. Eso no ha cambiado aquí; simplemente ahora está sobre el papel. Conviene saberlo: facturas tu pago, no el precio del cliente, así que el importe que entra en tu contabilidad ya viene neto de nuestra comisión.",
+      "limitsIntro": "Lee esto primero. Esta página explica cómo funciona la mecánica por nuestra parte y te indica las pantallas correctas: no es asesoramiento fiscal ni sustituye a un profesional que conozca tu situación."
     }
   }
 }

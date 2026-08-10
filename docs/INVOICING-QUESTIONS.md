@@ -77,4 +77,59 @@ coefficients are a contabilista question.
 
 ---
 
-## Q3 — (next question goes here)
+## Q3 — 2026-08-10 (Tatiana) — PARTLY FIXED
+
+> "I would need the complete infos from each client — complete name / NIF /
+> address. And of course they don't have a NIF as they are not from Portugal.
+> I have never tried to do a fatura-recibo without completing the NIF info.
+> I don't even know if it's possible to do it."
+>
+> "Who pays us is Stripe, therefore PhotoPortugal. It would make much more
+> sense to do a factura recibo for the company PhotoPortugal."
+
+**NIF half — still OPEN (usability, not liability).** The answer exists: pick
+the client's country, use consumidor final `999999990`, and below €1000 to a
+private individual the NIF is not required at all. But step 4 states this in one
+line without showing the screen, and someone who has never done it cannot find
+the field. Needs the actual Portal das Finanças screens, or a "we'll do the
+first one with you on a call" offer.
+
+**"Invoice Photo Portugal instead" — answered, no page change needed yet.** The
+payment channel is not the buyer: the client buys the shoot, we introduce,
+collect and hold. Terms §15, unchanged. The argument that actually lands is
+self-interested, not authoritarian: invoicing a business triggers 25% retenção
+na fonte under art. 101.º CIRS, recoverable only at the annual IRS settlement —
+invoicing a private client has no withholding at all. Also note she assumed
+"Portuguese company"; it is an ENI, not a company. Consider adding a short
+"why not invoice the platform" FAQ block to the page if it comes up a third time.
+
+**Also confirms Q1.** Her instinct that a fatura-recibo "doesn't make sense for
+the clients" is the same timing problem: she has not been paid when the document
+is due. The instruction was softened on 2026-08-10 (see below) but the
+substantive answer still needs the contabilista.
+
+---
+
+## Safety pass — 2026-08-10
+
+Applied after Q1-Q3, without waiting for the accountant, because all three are
+about *genre* rather than tax substance:
+
+- `s3deadline` now gives the **trigger** (the shoot day, explicitly not the
+  payout day) and calls the number a general rule to confirm. A trigger is a
+  fact we own; a deadline is a legal conclusion we do not.
+- `s3p3` (PT) no longer asserts "choose Fatura-Recibo, the client has already
+  paid". It lays out both documents and sends the choice to their contabilista.
+  Removing a false claim needs no sign-off; replacing it with a different claim
+  would.
+- The "what we do not do" block moved **above** the steps, with a new
+  `limitsIntro`: this page explains how, not what is right for you.
+- Terms §4 `taxes` now covers guidance we publish: general information about how
+  the platform works, not tax advice.
+
+Rejected: showing shoot/payout dates on each booking (Alex — photographers
+already know their own dates).
+
+---
+
+## Q4 — (next question goes here)
