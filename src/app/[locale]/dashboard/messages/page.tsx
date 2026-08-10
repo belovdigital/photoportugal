@@ -1682,11 +1682,15 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             // projection here meant Jennifer Duarte sent €2050
                             // and her own screen answered €1845 (premium, 10%),
                             // which reads as the platform quietly editing her
-                            // offer. Payout stays where it belongs — the booking
-                            // card and the payouts page, off the stored
-                            // payout_amount rather than a projection.
-                            // Supersedes the 2026-08-09 "nobody sees the base"
-                            // rule for this surface only (Alex, 2026-08-10).
+                            // offer.
+                            //
+                            // This does NOT loosen "photographers see only their
+                            // payout" — that rule is about BOOKINGS, money that
+                            // has been or will be paid, and it still holds on the
+                            // booking card and the payouts page, off the stored
+                            // payout_amount rather than a projection. A package
+                            // he is composing is his own asking price, not a
+                            // payout (Alex, 2026-08-10).
                             const displayPrice = viewerIsClient
                               ? clientPriceWithFee(Number(card.price))
                               : Math.round(Number(card.price));
