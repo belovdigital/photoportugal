@@ -4359,7 +4359,10 @@
     "s8title": "Mobile App installieren",
     "s8body": "Push-Nachrichten erreichen Sie in Sekunden, viel schneller als E-Mail. Antworten Sie vom Strand, aus dem Gym, von überall. Suchen Sie \"{brand}\" im App Store oder Play Store, oder tippen Sie unten auf die Badges.",
     "s9title": "Verkaufen Sie die Aufnahmen, die Sie sonst löschen",
-    "s9body": "Sie fotografieren immer mehr, als das Paket zusagt. Auf dem Lieferbildschirm liegen diese Aufnahmen in einer zweiten Gruppe, **Zusätzliche Fotos**, und Ihre Kundschaft kann jedes davon zum von Ihrem Fotografen festgelegten Preis kaufen — Sie erhalten Ihren Preis pro Foto, in jedem Tarif, ausgezahlt sobald die Zahlung durch ist und nicht erst bei der Abnahme.\n\nVerschenken Sie zuerst ein paar. Legen Sie auf demselben Bildschirm eine Anzahl kostenloser Fotos fest, Ihre Kundschaft wählt selbst aus — es kostet Sie nichts, so erfährt sie überhaupt, dass es mehr gibt, und es ist der Unterschied zwischen Verkauf und Geschenk. Laden Sie genau das Zugesagte hoch, erscheint nichts davon."
+    "s9body": "Sie fotografieren immer mehr, als das Paket zusagt. Auf dem Lieferbildschirm liegen diese Aufnahmen in einer zweiten Gruppe, **Zusätzliche Fotos**, und Ihre Kundschaft kann jedes davon zum von Ihrem Fotografen festgelegten Preis kaufen — Sie erhalten Ihren Preis pro Foto, in jedem Tarif, ausgezahlt sobald die Zahlung durch ist und nicht erst bei der Abnahme.\n\nVerschenken Sie zuerst ein paar. Legen Sie auf demselben Bildschirm eine Anzahl kostenloser Fotos fest, Ihre Kundschaft wählt selbst aus — es kostet Sie nichts, so erfährt sie überhaupt, dass es mehr gibt, und es ist der Unterschied zwischen Verkauf und Geschenk. Laden Sie genau das Zugesagte hoch, erscheint nichts davon.",
+    "invoicingTitle": "Zuerst: Rechnungsstellung",
+    "invoicingBody": "Sie stellen der Kundschaft für jedes Shooting eine Rechnung — über den grünen Betrag «Ihre Auszahlung» auf der Buchung, innerhalb von 5 Werktagen. Wir stellen Ihnen nie etwas in Rechnung. Drei Minuten Lesezeit, und das Einzige hier, was nicht optional ist.",
+    "invoicingCta": "So funktioniert die Rechnungsstellung"
   },
   "invoicing": {
     "pt": {

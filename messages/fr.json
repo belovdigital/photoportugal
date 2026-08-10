@@ -4359,7 +4359,10 @@
     "s8title": "Installez l'application mobile",
     "s8body": "Les notifications push arrivent en quelques secondes, bien avant un email. Vous pouvez répondre depuis la plage, la salle de sport, n'importe où. Cherchez \"{brand}\" sur l'App Store ou Play Store, ou touchez les badges ci-dessous.",
     "s9title": "Vendez les photos que vous auriez supprimées",
-    "s9body": "Vous photographiez toujours plus que ce que le forfait promet. Sur l'écran de livraison, ces photos en trop forment un second groupe, **Photos supplémentaires**, et votre client peut en acheter n'importe laquelle au prix fixé par votre photographe — vous en recevez votre prix, quel que soit votre plan, dès que le paiement passe et non à l'acceptation.\n\nOffrez-en d'abord quelques-unes. Indiquez sur le même écran combien vous voulez offrir et votre client choisit lesquelles — cela ne vous coûte rien, c'est ainsi qu'il découvre qu'il en existe d'autres, et c'est toute la différence entre une vente et un cadeau. Téléversez exactement ce que vous avez promis et rien de tout cela n'apparaît."
+    "s9body": "Vous photographiez toujours plus que ce que le forfait promet. Sur l'écran de livraison, ces photos en trop forment un second groupe, **Photos supplémentaires**, et votre client peut en acheter n'importe laquelle au prix fixé par votre photographe — vous en recevez votre prix, quel que soit votre plan, dès que le paiement passe et non à l'acceptation.\n\nOffrez-en d'abord quelques-unes. Indiquez sur le même écran combien vous voulez offrir et votre client choisit lesquelles — cela ne vous coûte rien, c'est ainsi qu'il découvre qu'il en existe d'autres, et c'est toute la différence entre une vente et un cadeau. Téléversez exactement ce que vous avez promis et rien de tout cela n'apparaît.",
+    "invoicingTitle": "Avant tout : la facturation",
+    "invoicingBody": "Vous émettez une facture au client pour chaque séance — pour le montant vert « Votre versement » de la réservation, sous 5 jours ouvrables. Nous ne vous facturons jamais rien. Trois minutes de lecture, et la seule chose ici qui ne soit pas facultative.",
+    "invoicingCta": "Voir comment fonctionne la facturation"
   },
   "invoicing": {
     "pt": {

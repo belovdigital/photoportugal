@@ -4359,7 +4359,10 @@
     "s8title": "Instale a aplicação móvel",
     "s8body": "As notificações push chegam em segundos, muito antes de um email. Pode responder da praia, do ginásio ou de onde estiver. Procure \"{brand}\" na App Store ou Play Store, ou toque nos botões abaixo.",
     "s9title": "Venda as fotografias que ia apagar",
-    "s9body": "Fotografa sempre mais do que o pacote promete. No ecrã de entrega essas fotografias a mais ficam num segundo grupo, **Fotografias extra**, e o seu cliente pode comprar qualquer uma delas pelo preço definido pelo seu fotógrafo — recebe o seu preço por cada, em qualquer plano, assim que o pagamento é confirmado e não só na aceitação.\n\nOfereça algumas primeiro. Defina no mesmo ecrã quantas fotografias quer dar e o cliente escolhe quais — não lhe custa nada, é assim que ele descobre que existem mais, e é a diferença entre uma venda e um presente. Se carregar exatamente o que prometeu, nada disto aparece."
+    "s9body": "Fotografa sempre mais do que o pacote promete. No ecrã de entrega essas fotografias a mais ficam num segundo grupo, **Fotografias extra**, e o seu cliente pode comprar qualquer uma delas pelo preço definido pelo seu fotógrafo — recebe o seu preço por cada, em qualquer plano, assim que o pagamento é confirmado e não só na aceitação.\n\nOfereça algumas primeiro. Defina no mesmo ecrã quantas fotografias quer dar e o cliente escolhe quais — não lhe custa nada, é assim que ele descobre que existem mais, e é a diferença entre uma venda e um presente. Se carregar exatamente o que prometeu, nada disto aparece.",
+    "invoicingTitle": "Antes de tudo: faturação",
+    "invoicingBody": "Emite uma fatura ao cliente em cada sessão — pelo valor verde «O seu pagamento» da reserva, no prazo de 5 dias úteis. Nós nunca lhe faturamos nada. Leva três minutos a ler e é a única coisa aqui que não é opcional.",
+    "invoicingCta": "Ver como funciona a faturação"
   },
   "invoicing": {
     "pt": {

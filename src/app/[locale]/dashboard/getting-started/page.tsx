@@ -4,6 +4,7 @@ import { queryOne, query } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { country, byCountry } from "@/lib/country";
 import { getTranslations } from "next-intl/server";
+import { showsInvoicingAnnouncement } from "@/lib/invoicing-announcement";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,33 @@ export default async function GettingStartedPage() {
           {t("intro")}
         </p>
       </header>
+
+      {/* Not a tip — an obligation, so it sits above the numbered playbook
+          rather than inside it, and does not take a step number. Market-gated
+          like every other invoicing surface (LIVE_BY_MARKET). */}
+      {showsInvoicingAnnouncement && (
+        <section className="mb-12 rounded-2xl border-2 border-amber-300 bg-amber-50 p-6 sm:p-8">
+          <div className="flex items-start gap-4">
+            <svg className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div className="min-w-0">
+              <h2 className="font-display text-xl font-bold text-amber-900">
+                {t("invoicingTitle")}
+              </h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-amber-900">
+                {t("invoicingBody")}
+              </p>
+              <Link
+                href="/dashboard/invoicing"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+              >
+                {t("invoicingCta")}
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="space-y-12">
         <Section

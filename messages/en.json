@@ -4358,7 +4358,10 @@
     "s8title": "Install the mobile app",
     "s8body": "Push notifications hit you within seconds — way faster than email. You can reply from a beach, the gym, anywhere. Search \"{brand}\" on App Store or Play Store, or tap the badges below.",
     "s9title": "Sell the frames you'd have deleted",
-    "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for the price your photographer set — you get your own price for it on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Upload exactly what you promised and none of this appears to anyone."
+    "s9body": "You always shoot more than the package promises. On the delivery screen those surplus photos sit in a second group, **Extra photos**, and your client can buy any of them for the price your photographer set — you get your own price for it on every plan, paid as soon as the card clears rather than at acceptance.\n\nGive a few away first. Set a number of free photos on the same screen and your client picks which ones — it costs you nothing, it is how they discover the rest exist, and it is the difference between an upsell and a gift. Upload exactly what you promised and none of this appears to anyone.",
+    "invoicingTitle": "Before anything else: invoicing",
+    "invoicingBody": "You issue an invoice to the client for every shoot — for the green «Your payout» amount on the booking, within 5 working days. We never invoice you. It takes three minutes to read and it is the one thing here that is not optional.",
+    "invoicingCta": "Read how invoicing works"
   },
   "invoicing": {
     "pt": {
