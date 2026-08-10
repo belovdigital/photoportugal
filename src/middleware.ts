@@ -166,16 +166,20 @@ export default async function middleware(request: NextRequest) {
   //
   // A real browser never sends a broken one, but a scanner, a truncating proxy
   // or a speculative prefetch can, and each one pages us with a false 5xx.
-  // Dropping the RSC headers downgrades the request to a plain document render,
-  // which is exactly what a client in that state needs anyway.
+  //
+  // It has to be answered here rather than sanitised: stripping the headers via
+  // NextResponse.next({request:{headers}}) does NOT help, because Next reads the
+  // router state from the original request when it resolves the RSC render, not
+  // from the copy middleware hands downstream. Verified on production — the
+  // 500 survived the strip.
+  //
+  // 400 is both honest (the request header really is malformed) and safe: an
+  // RSC fetch that gets a non-OK, non-text/x-component response makes the Next
+  // client fall back to a full browser navigation, so even a real client that
+  // somehow tripped this still lands on the page.
   const routerState = request.headers.get("Next-Router-State-Tree");
   if (routerState !== null && !isParsableRouterState(routerState)) {
-    const headers = new Headers(request.headers);
-    headers.delete("Next-Router-State-Tree");
-    headers.delete("RSC");
-    headers.delete("Next-Router-Prefetch");
-    headers.delete("Next-Router-Segment-Prefetch");
-    return NextResponse.next({ request: { headers } });
+    return new NextResponse("Bad Request", { status: 400 });
   }
 
   // Static assets (sitemap.xml, robots.txt, og images, fonts, source maps…)
