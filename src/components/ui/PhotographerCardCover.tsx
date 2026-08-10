@@ -1,5 +1,8 @@
 "use client";
 
+import { r2ImgProps } from "@/lib/image-variants";
+import { country } from "@/lib/country";
+
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeName } from "@/lib/format-name";
@@ -161,6 +164,7 @@ export function PhotographerCardCover({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={url}
+                {...r2ImgProps(url, country.filesHost, "(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 320px")}
                 alt={altPrefix ? `${altPrefix} ${normalizeName(name)}` : `${normalizeName(name)} portfolio`}
                 loading="lazy"
                 decoding="async"

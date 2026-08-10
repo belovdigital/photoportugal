@@ -1,5 +1,8 @@
 "use client";
 
+import { r2ImgProps } from "@/lib/image-variants";
+import { country } from "@/lib/country";
+
 import { useTranslations } from "next-intl";
 import { maskSurname } from "@/lib/photographer-name";
 
@@ -129,6 +132,7 @@ function PhotoCard({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photo.url}
+          {...r2ImgProps(photo.url, country.filesHost, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px")}
           alt={`Photo by ${photo.photographer.name}`}
           loading="lazy"
           decoding="async"
@@ -179,6 +183,7 @@ function PhotoOverlay({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={photographer.avatar_url}
+          {...r2ImgProps(photographer.avatar_url, country.filesHost, "56px")}
           alt=""
           className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 rounded-full ring-2 ring-white/40 object-cover"
         />

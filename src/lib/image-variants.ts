@@ -66,3 +66,24 @@ export function r2SrcSet(originalUrl: string, filesHost: string): string | undef
   if (!hasVariants(key)) return undefined;
   return VARIANT_WIDTHS.map((w) => `${variantUrl(originalUrl, w)} ${w}w`).join(", ");
 }
+
+/**
+ * srcset + sizes ready to spread onto a plain `<img>`.
+ *
+ * Most photos on the site are rendered by hand-written `<img>` tags rather
+ * than by OptimizedImage — 44 of them at the last count — and those were the
+ * ones still pulling full originals. Spreading this is a one-line change per
+ * call site, which is a far smaller edit than swapping the component.
+ *
+ * Returns an empty object for anything that is not one of our R2 photos, so
+ * it is always safe to spread.
+ */
+export function r2ImgProps(
+  src: string | null | undefined,
+  filesHost: string,
+  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+): { srcSet?: string; sizes?: string } {
+  if (!src) return {};
+  const srcSet = r2SrcSet(src, filesHost);
+  return srcSet ? { srcSet, sizes } : {};
+}
