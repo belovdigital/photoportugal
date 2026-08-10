@@ -1,6 +1,6 @@
 "use client";
 
-import { BLIND_COMPARE_AT_EUR } from "@/lib/blind-booking/pricing";
+import { BLIND_COMPARE_AT_EUR } from "@/lib/blind-booking/compare-at";
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";

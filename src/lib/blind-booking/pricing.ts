@@ -267,14 +267,10 @@ export interface PriceLookup {
   sample_size: number;
 }
 
-/** Pre-offer all-in totals (base €299/€500/€700 × 1.15) — shown struck
- *  through next to the summer-offer price so the saving is visible. */
-export const BLIND_COMPARE_AT_EUR: Record<number, number> = {
-  // €5-rounded like every other client price since 2026-08-09 (was 344).
-  60: 345,
-  120: 575,
-  180: 805,
-};
+/** Pre-offer all-in totals (base €299/€500/€700 × 1.15). Defined in
+ *  ./compare-at so the client components that render it do not pull this
+ *  module — and with it `pg` — into the browser bundle. */
+export { BLIND_COMPARE_AT_EUR } from "./compare-at";
 
 /** 15%-of-total platform service cut, exact to cents. */
 export function blindServiceFeeFromTotal(totalEur: number): number {
