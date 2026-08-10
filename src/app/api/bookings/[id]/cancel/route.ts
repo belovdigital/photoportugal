@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendCancellationMessage } from "@/lib/booking-messages";
+import { clientPriceWithFee } from "@/lib/service-fee";
+import { photographerPayoutFor } from "@/lib/stripe";
 import { maskSurname } from "@/lib/photographer-name";
 import { country } from "@/lib/country";
 
@@ -60,10 +62,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     shoot_date: string | null;
     total_price: string | null;
     gift_card_id: string | null;
+    photographer_plan: string | null;
   }>(
     `SELECT b.id, b.status, b.payment_status, b.client_id, b.photographer_id,
             pu.id as photographer_user_id, pu.name as photographer_name,
             pu.email as photographer_email, pp.slug as photographer_slug,
+            pp.plan as photographer_plan,
             cu.name as client_name, cu.email as client_email,
             b.shoot_date, b.total_price::text,
             b.gift_card_id
@@ -202,7 +206,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const otherFirstName = (cancelledBy === "photographer" ? booking.client_name : booking.photographer_name).split(" ")[0] || "there";
     const formattedDate = formatShootDate(booking.shoot_date, recipientLocale);
     const dateLine = formattedDate ? `<p style="margin:0 0 8px;color:#666;">Date: ${formattedDate}</p>` : "";
-    const priceLine = booking.total_price ? `<p style="margin:0 0 8px;color:#666;">Amount: €${Math.round(Number(booking.total_price))}</p>` : "";
+    // One template, two possible recipients — and the base is right for
+    // neither. When the photographer cancelled, the client reads this and must
+    // see what he would have paid; when the client cancelled, the photographer
+    // reads it and must see his payout. Gift bookings carry no out-of-pocket
+    // amount for either side, so they get no line at all.
+    const recipientIsClient = cancelledBy === "photographer";
+    const priceLine = booking.total_price && !booking.gift_card_id
+      ? `<p style="margin:0 0 8px;color:#666;">Amount: €${
+          recipientIsClient
+            ? clientPriceWithFee(Number(booking.total_price))
+            : Math.round(photographerPayoutFor(Number(booking.total_price), booking.photographer_plan))
+        }</p>`
+      : "";
     const subject = cancelledBy === "photographer"
       ? `Your booking with ${maskSurname(booking.photographer_name)} was cancelled`
       : `${booking.client_name} cancelled their booking`;

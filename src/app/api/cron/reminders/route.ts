@@ -110,7 +110,12 @@ async function runReminders(): Promise<NextResponse> {
           if (smsPrefs?.sms_bookings !== false) {
             const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
             const cLocale = await getUserLocaleById(booking.client_id);
-            const priceStr = booking.total_price ? ` (€${clientPriceWithFee(Number(booking.total_price))})` : "";
+            // Same reconstruction the email eleven lines up already uses: a blind
+            // row stores the DERIVED base, so the fee is already inside it and
+            // marking it up again quotes a price nobody is charged.
+            const priceStr = booking.total_price
+              ? ` (€${booking.blind_booking ? Math.round(Number(booking.total_price) / 0.85) : clientPriceWithFee(Number(booking.total_price))})`
+              : "";
             const maskedPhotog = maskSurname(booking.photographer_name);
             const smsBody = pickT({
               en: `${country.brand}: Your slot with ${maskedPhotog}${priceStr} isn't locked yet — secure it now. Auto-cancel in ~18h if unpaid: ${country.baseUrl}/dashboard/bookings`,
@@ -158,11 +163,11 @@ async function runReminders(): Promise<NextResponse> {
       client_phone: string | null;
       client_id: string;
       photographer_name: string;
-      total_price: number | null;
+      total_price: number | null; blind_booking: boolean | null;
     }>(
       `SELECT b.id, u.email as client_email, u.name as client_name,
               u.phone as client_phone, u.id as client_id,
-              pu.name as photographer_name, b.total_price
+              pu.name as photographer_name, b.total_price, b.blind_booking
        FROM bookings b
        JOIN users u ON u.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -181,7 +186,12 @@ async function runReminders(): Promise<NextResponse> {
         const BASE_URL = process.env.AUTH_URL || country.baseUrl;
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
         const cLocale = await getUserLocaleByEmail(booking.client_email);
-        const priceStr = booking.total_price ? ` (€${clientPriceWithFee(Number(booking.total_price))})` : "";
+        // Same reconstruction the email eleven lines up already uses: a blind
+            // row stores the DERIVED base, so the fee is already inside it and
+            // marking it up again quotes a price nobody is charged.
+            const priceStr = booking.total_price
+              ? ` (€${booking.blind_booking ? Math.round(Number(booking.total_price) / 0.85) : clientPriceWithFee(Number(booking.total_price))})`
+              : "";
         const firstName = booking.client_name.split(" ")[0];
         const T = pickT({
           en: { subject: "Last chance — your booking will be cancelled in 6 hours", h2: "Your Booking Will Be Cancelled Soon", greet: `Hi ${firstName},`, body1: `Your photoshoot with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.`, body2: `${booking.photographer_name} is holding this time slot for you — don't miss out!`, fomo: `Reminder: your slot isn't locked in our calendar yet — only paid bookings are. Another client could still pay for this date first.`, cta: "Pay Now & Secure Your Booking", footer: "If you no longer wish to proceed, the booking will be cancelled automatically. No action needed." },
@@ -250,11 +260,11 @@ async function runReminders(): Promise<NextResponse> {
       client_phone: string | null;
       client_id: string;
       photographer_name: string;
-      total_price: number | null;
+      total_price: number | null; blind_booking: boolean | null;
     }>(
       `SELECT b.id, u.email as client_email, u.name as client_name,
               u.phone as client_phone, u.id as client_id,
-              pu.name as photographer_name, b.total_price
+              pu.name as photographer_name, b.total_price, b.blind_booking
        FROM bookings b
        JOIN users u ON u.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -273,7 +283,12 @@ async function runReminders(): Promise<NextResponse> {
         const BASE_URL = process.env.AUTH_URL || country.baseUrl;
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
         const cLocale = await getUserLocaleByEmail(booking.client_email);
-        const priceStr = booking.total_price ? ` (€${clientPriceWithFee(Number(booking.total_price))})` : "";
+        // Same reconstruction the email eleven lines up already uses: a blind
+            // row stores the DERIVED base, so the fee is already inside it and
+            // marking it up again quotes a price nobody is charged.
+            const priceStr = booking.total_price
+              ? ` (€${booking.blind_booking ? Math.round(Number(booking.total_price) / 0.85) : clientPriceWithFee(Number(booking.total_price))})`
+              : "";
         const firstName = booking.client_name.split(" ")[0];
         const T = pickT({
           en: { subject: "🚨 FINAL WARNING — 30 minutes left to pay", h2: "30 Minutes Left — Last Chance", greet: `Hi ${firstName},`, body1: `This is the FINAL warning. Your booking with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in approximately 30 minutes</strong>.`, body2: `Pay now or lose your slot — there will be no further warnings.`, fomo: `Once your booking is cancelled the slot reopens to other clients — and the calendar only locks the date after payment clears.`, cta: "Pay Now — Final Chance" },

@@ -5,6 +5,7 @@ import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getLocationDisplayName } from "@/lib/location-hierarchy";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { country } from "@/lib/country";
 
 async function isAdmin() {
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const photographerCards = photographerDetails.map((p) => {
       const avatarUrl = resolveAbsoluteImageUrl(p.avatar_url, BASE_URL) || `${BASE_URL}/favicon.svg`;
       const assignedPrice = priceMap.get(p.id);
-      const priceText = assignedPrice ? `€${assignedPrice} for your session` : "";
+      const priceText = assignedPrice ? `€${clientPriceWithFee(Number(assignedPrice))} for your session` : "";
       const reviewCount = Number(p.review_count);
       const ratingStars = "★".repeat(Math.round(Number(p.rating))) + "☆".repeat(5 - Math.round(Number(p.rating)));
       const ratingHtml = reviewCount > 0
@@ -478,7 +479,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           ? (p.avatar_url.startsWith("http") ? p.avatar_url : `${BASE_URL}/api/img/${p.avatar_url.replace("/uploads/", "")}?w=128&q=80&f=webp`)
           : `${BASE_URL}/favicon.svg`;
         const assignedPrice = priceMap.get(p.id);
-        const priceText = assignedPrice ? `€${assignedPrice} for your session` : "";
+        const priceText = assignedPrice ? `€${clientPriceWithFee(Number(assignedPrice))} for your session` : "";
         const reviewCount = Number(p.review_count);
         const ratingStars = "★".repeat(Math.round(Number(p.rating))) + "☆".repeat(5 - Math.round(Number(p.rating)));
         const ratingHtml = reviewCount > 0

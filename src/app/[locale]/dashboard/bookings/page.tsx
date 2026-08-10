@@ -541,6 +541,14 @@ export default async function BookingsPage() {
                         <p className="text-sm font-medium text-gray-800">
                           {booking.stripe_amount_paid_cents !== null
                             ? formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)
+                            /* Paid before the 2026-05-03 Stripe-columns migration:
+                               those rows have no recorded cents and were never
+                               backfilled, so recomputing at today's rate rewrote
+                               history — a €300 base paid under the old 12.5%
+                               charged €337.50 and the tile claimed €345. The row's
+                               own service_fee is what was actually added. */
+                            : booking.payment_status === "paid" && booking.service_fee != null
+                            ? `€${Math.round(Number(booking.total_price) + Number(booking.service_fee))}`
                             : `€${booking.blind_booking
                                 ? Math.round(Number(booking.total_price) / 0.85)
                                 : clientPriceWithFee(Number(booking.total_price))}`}

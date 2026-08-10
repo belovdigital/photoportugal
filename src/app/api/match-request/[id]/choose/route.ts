@@ -5,6 +5,8 @@ import { sendEmail, sendBookingConfirmationWithPayment, sendAdminBookingConfirme
 import { sendSMS } from "@/lib/sms";
 import { formatShootDate } from "@/lib/format-shoot-date";
 import { getLocationDisplayName } from "@/lib/location-hierarchy";
+import { clientPriceWithFee } from "@/lib/service-fee";
+import { photographerPayoutFor } from "@/lib/stripe";
 import { country } from "@/lib/country";
 
 const BASE_URL = process.env.AUTH_URL || country.baseUrl;
@@ -77,9 +79,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Get photographer details
     const photographerInfo = await queryOne<{
       profile_id: string; user_id: string; name: string; email: string;
-      phone: string | null; slug: string;
+      phone: string | null; slug: string; plan: string | null;
     }>(
-      `SELECT pp.id as profile_id, pp.user_id, u.name, u.email, u.phone, pp.slug
+      `SELECT pp.id as profile_id, pp.user_id, u.name, u.email, u.phone, pp.slug, pp.plan
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.id = $1`,
@@ -136,7 +138,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           <p style="margin:0 0 8px;font-size:14px;"><strong>Type:</strong> ${shootTypeLabel}</p>
           <p style="margin:0 0 8px;font-size:14px;"><strong>Group size:</strong> ${matchReq.group_size} people</p>
           ${(() => { const d = formatShootDate(matchReq.shoot_date, "en"); return d ? `<p style="margin:0 0 8px;font-size:14px;"><strong>Date:</strong> ${d}</p>` : ""; })()}
-          ${price ? `<p style="margin:0;font-size:14px;"><strong>Price:</strong> €${price}</p>` : ""}
+          ${price ? `<p style="margin:0;font-size:14px;"><strong>You receive:</strong> €${Math.round(photographerPayoutFor(Number(price), photographerInfo.plan))}</p>` : ""}
         </div>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
         <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
@@ -150,7 +152,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       photographerInfo.name,
       matchReq.shoot_date,
       null, // no payment URL yet — photographer will confirm and trigger Stripe checkout
-      price || 0,
+      price ? clientPriceWithFee(Number(price)) : 0,
     ).catch((err) => console.error("[match-request/choose] client email error:", err));
 
     // Admin notification email
