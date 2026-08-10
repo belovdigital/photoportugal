@@ -163,14 +163,18 @@ export async function PATCH(req: NextRequest) {
         // No photographer on an unassigned blind booking — nobody to notify.
         if (booking.photographer_email) sendEmail(
           booking.photographer_email,
+          // No euro figure to the photographer: the client's gross minus his
+          // known payout is our commission, which is the leak the 2026-08-09
+          // policy closed. The push and Telegram on the sibling route already
+          // send the fact without the amount; this email had been missed.
           wasPaid
-            ? `Booking cancelled by admin — €${totalPaid.toFixed(2)} refunded to client`
+            ? `Booking cancelled by admin — client refunded in full`
             : `Booking cancelled by admin`,
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Booking cancelled</h2>
             <p>Hi ${booking.photographer_name?.split(" ")[0] || "there"},</p>
             <p>The ${country.brand} team cancelled a booking with <strong>${booking.client_name}</strong>.</p>
-            <p>${wasPaid ? `A full refund of <strong>&euro;${totalPaid.toFixed(2)}</strong> was issued to the client.` : "No payment had been collected on this booking."}</p>
+            <p>${wasPaid ? `The client's payment was refunded in full.` : "No payment had been collected on this booking."}</p>
             ${adminNote}
             <p>If anything looks off, reply to this email and we'll look into it.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>

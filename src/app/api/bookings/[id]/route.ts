@@ -397,10 +397,15 @@ export async function PATCH(
 
         if (cancelInfo) {
           const cancelledBy = isClient ? "client" : "photographer";
+          // Photographer's copy — the fact and the percentage, never the euro
+          // figure. He knows his own payout, so the client's gross hands him our
+          // commission by subtraction (the 2026-08-09 policy; "Isa thought
+          // €592.25 was hers"). The push and Telegram below already got this
+          // treatment, the email had not.
           const refundText = refundPercent === 100
-            ? `The full payment of <strong>&euro;${totalPaid.toFixed(2)}</strong> has been refunded to the client.`
+            ? `The client's payment has been refunded in full.`
             : refundPercent > 0
-            ? `A partial refund of <strong>&euro;${refundAmount.toFixed(2)}</strong> (${refundPercent}%) has been issued to the client (cancellation within 3-7 days of shoot date).`
+            ? `A partial refund of ${refundPercent}% has been issued to the client (cancellation within 3-7 days of shoot date).`
             : `No refund has been issued (cancellation less than 3 days before shoot date).`;
 
           const clientRefundText = refundPercent === 100
@@ -413,7 +418,7 @@ export async function PATCH(
           sendEmail(
             cancelInfo.photographer_email,
             refundPercent > 0
-              ? `Booking cancelled — €${refundAmount.toFixed(2)} refunded to client`
+              ? `Booking cancelled — ${refundPercent}% refunded to client`
               : `Booking cancelled — no refund issued`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Booking Cancelled</h2>

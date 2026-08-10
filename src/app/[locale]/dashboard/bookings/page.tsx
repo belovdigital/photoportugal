@@ -286,7 +286,13 @@ export default async function BookingsPage() {
 
   // GA4 purchase value = what the client is actually charged, not the base:
   // recorded Stripe cents when paid, else the all-in the checkout will charge.
-  const bookingAmounts = Object.fromEntries(bookings.map((b) => [b.id,
+  //
+  // Client-side only. This map is serialised into the delivered HTML, so
+  // building it for a photographer put the client's gross for every one of his
+  // bookings in view-source — readable even though nothing paints it. It has no
+  // function for him either: the tracker fires on ?payment=success, which is a
+  // client-only return URL.
+  const bookingAmounts = isPhotographer ? {} : Object.fromEntries(bookings.map((b) => [b.id,
     b.stripe_amount_paid_cents != null ? b.stripe_amount_paid_cents / 100
       : b.blind_booking ? Math.round((Number(b.total_price) || 0) / 0.85)
       : clientPriceWithFee(Number(b.total_price) || 0)]));

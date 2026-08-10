@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { queryOne, query } from "@/lib/db";
 import { defaultPhotographerSlug } from "@/lib/photographer-slug";
 import { revalidatePath } from "next/cache";
@@ -47,7 +48,10 @@ function paymentAmountFromStripe(amountCents: number | null | undefined, fallbac
   // Fallback only fires if Stripe omitted amount_total. `fallbackEuros` is the
   // booking BASE (total_price), but the client is charged the GROSS (base +
   // service fee), so apply the fee here too — never quote bare base as "paid".
-  return Math.round(Number(fallbackEuros || 0) * (1 + SERVICE_FEE_RATE) * 100) / 100;
+  // Through clientPriceWithFee, not the raw ×1.15: the charge is rounded UP to
+  // the nearest €5, so the old formula quoted €344 against a €345 charge on a
+  // €299 base.
+  return clientPriceWithFee(Number(fallbackEuros || 0));
 }
 
 function safeTelegramText(value: unknown): string {
@@ -960,10 +964,15 @@ export async function POST(req: NextRequest) {
               // the client service fee, which photographers must not see
               // (same policy as the photographer email below). 2026-07-15:
               // a photographer saw "€343.85 received" for a €299 session.
-              const baseEur = bookingForMsg.total_price != null ? Number(bookingForMsg.total_price) : null;
-              const amountPart = baseEur && baseEur > 0
-                ? ` of €${Number.isInteger(baseEur) ? baseEur : baseEur.toFixed(2)}`
-                : "";
+              // No amount at all. This single row is read by BOTH sides of the
+              // thread, and there is no number that is right for both: the
+              // client paid the all-in (€345 on a €300 base), the photographer
+              // is owed his payout (€270). Printing the base — chosen on
+              // 2026-07-15 to stop him seeing the client's gross — traded the
+              // leak for a figure the client had never been charged.
+              // Each side already sees its own correct number on the booking
+              // card; the message only needs to carry the event.
+              const amountPart = "";
               await queryOne(
                 `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
                 [bookingId, bookingForMsg.client_id,

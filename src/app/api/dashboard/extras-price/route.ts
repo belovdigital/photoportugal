@@ -27,10 +27,12 @@ export async function GET(req: NextRequest) {
   );
   if (!row) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
 
-  return NextResponse.json({
-    payout_cents: row.extra_photo_payout_cents,
-    client_price_cents: clientExtraPriceCents(row.extra_photo_payout_cents),
-  });
+  // Only his own payout. The gap between it and the client price IS our
+  // commission, so returning both hands him the margin in his network tab —
+  // /api/bookings strips the twin field for exactly that reason ("The client's
+  // price for an extra photo is the client's business"). Nothing in either repo
+  // reads client_price_cents.
+  return NextResponse.json({ payout_cents: row.extra_photo_payout_cents });
 }
 
 export async function PUT(req: NextRequest) {
@@ -59,6 +61,5 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json({
     success: true,
     payout_cents: cents,
-    client_price_cents: clientExtraPriceCents(cents),
   });
 }

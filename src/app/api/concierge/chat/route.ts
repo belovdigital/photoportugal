@@ -1,3 +1,4 @@
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { query, queryOne } from "@/lib/db";
@@ -499,7 +500,7 @@ export async function POST(req: NextRequest) {
       const reviews = Number(v.review_count) > 0
         ? `${Number(v.rating).toFixed(1)}★ (${v.review_count} reviews)`
         : "no reviews yet";
-      const price = v.min_price ? `from €${v.min_price}` : "price tbd";
+      const price = v.min_price ? `from €${clientPriceWithFee(Number(v.min_price))}` : "price tbd";
       const tier = [
         v.is_featured ? "FEATURED" : null,
         v.is_verified ? "VERIFIED" : null,

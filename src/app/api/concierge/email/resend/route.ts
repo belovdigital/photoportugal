@@ -1,3 +1,4 @@
+import { clientPriceWithFee } from "@/lib/service-fee";
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { emailLayout, emailButton, sendEmail } from "@/lib/email";
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
             <td style="font-size:16px;font-weight:700;color:#1F1F1F;">${c.name}</td>
             <td align="right" style="font-size:13px;color:#1F1F1F;font-weight:600;white-space:nowrap;">
               ${c.review_count > 0 ? `⭐ ${c.rating.toFixed(1)} <span style="color:#9B8E82;font-weight:400;">(${c.review_count})</span>` : ""}
-              ${c.min_price ? ` &nbsp;·&nbsp; from <strong>€${c.min_price}</strong>` : ""}
+              ${c.min_price ? ` &nbsp;·&nbsp; from <strong>€${clientPriceWithFee(Number(c.min_price))}</strong>` : ""}
             </td>
           </tr>
           ${locs ? `<tr><td colspan="2" style="font-size:12px;color:#9B8E82;padding-top:2px;">${locs}</td></tr>` : ""}

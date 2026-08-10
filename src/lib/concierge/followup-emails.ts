@@ -10,6 +10,7 @@
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { pickT, normalizeLocale, localizedUrl, type Locale } from "@/lib/email-locale";
 import { country } from "@/lib/country";
+import { clientPriceWithFee } from "@/lib/service-fee";
 
 interface FollowupMatch {
   slug: string;
@@ -32,7 +33,7 @@ function matchCardHtml(m: FollowupMatch, profileUrl: string, t: { from: string; 
       ? `<span style="font-size:13px;color:#6B6056;">⭐ ${m.rating.toFixed(1)} <span style="color:#9B8E82;">(${m.review_count})</span></span>`
       : "";
   const priceHtml = m.min_price
-    ? `<span style="font-size:13px;font-weight:600;color:#1F1F1F;">${t.from} €${m.min_price}</span>`
+    ? `<span style="font-size:13px;font-weight:600;color:#1F1F1F;">${t.from} €${clientPriceWithFee(Number(m.min_price))}</span>`
     : "";
   return `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border:1px solid #F3EDE6;border-radius:12px;overflow:hidden;">

@@ -15,6 +15,7 @@ import type { PageContext } from "@/lib/concierge/page-context";
 import { LOCATION_TREE, type LocationNode } from "@/lib/location-hierarchy";
 import { shootTypes as ALL_SHOOT_TYPES } from "@/lib/shoot-types-data";
 import { canonicalizeShootType } from "@/lib/shoot-type-labels";
+import { clientPriceWithFee } from "@/lib/service-fee";
 
 export interface ResolvedIntent {
   /** The most specific location slug we've inferred — could be a city,
@@ -464,7 +465,10 @@ export function formatTopCandidatesBlock(
     const tagStr = tags.length ? `[${tags.join(",")}] ` : "";
     const reviews = Number(p.review_count) > 0 ? `${Number(p.rating).toFixed(1)}★ (${p.review_count} reviews)` : "no reviews yet";
     const langs = (p.languages || []).slice(0, 3).join(", ") || "EN";
-    const price = p.min_price ? `from €${p.min_price}` : "price tbd";
+    // The model is told every price it sees is all-in, so hand it the all-in.
+    // min_price is the raw base out of the loader; quoting it here made the
+    // concierge say "from €300" for a photographer the client is charged €345.
+    const price = p.min_price ? `from €${clientPriceWithFee(Number(p.min_price))}` : "price tbd";
     return `${i + 1}. ${tagStr}${p.slug} — ${p.name} — covers: ${(p.locations || []).join(", ")} — ${reviews} — ${langs} — ${price}`;
   });
   return `\n\n## Top server-ranked candidates for this conversation (${intentLabel})\n\nServer-side filter (coverage hierarchy + tier + rating + reviews) ranked these as the strongest fits. Prefer them when calling show_matches UNLESS the visitor's stated style/preference clearly points elsewhere — your job is the stylistic/persona match on top of this pool.\n\n**Important when picking show_matches:**\n- ALWAYS try to include any **[NEW]** photographer when their intent matches — we're giving them exposure while they build a session/review history.\n- ALWAYS try to include any **[FEATURED]** photographer when their intent matches — they paid for prominent placement.\n- These two injection slots should rarely both be dropped from a 2-4 card response unless the visitor's style preference clearly excludes them.\n\n${lines.join("\n")}\n`;

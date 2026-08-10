@@ -2383,7 +2383,11 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                       <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
                                     </div>
                                     <span className="text-sm font-bold text-gray-700">
-                                      {sharingPackageId === pkg.id ? t("customProposalSending") : myPlan ? <>&euro;{Math.round(photographerPayoutFor(Number(pkg.price), myPlan))}</> : <>…</>}
+                                      {/* His asking price, matching the card he
+                                          gets one tap later. A payout here meant
+                                          the picker said €270 and the sent card
+                                          said €300 for the same package. */}
+                                      {sharingPackageId === pkg.id ? t("customProposalSending") : <>&euro;{Math.round(Number(pkg.price))}</>}
                                     </span>
                                   </button>
                                 ))
