@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { unsplashSrcSet } from "@/lib/unsplash-images";
 
 interface OptimizedImageProps {
   src: string;
@@ -45,11 +46,14 @@ export function OptimizedImage({
 
   const optimizedSrc = getOptimizedSrc(src, width, quality);
 
-  // No srcset — we serve the R2 original (already capped at 2000px wide,
-  // q=85 JPEG) and let Cloudflare's edge cache do the heavy lifting. The
-  // Image Transformations layer added latency on cold cache without a clear
-  // win for our use case, and made debugging harder.
-  const srcSet: string | undefined = undefined;
+  // R2 originals still ship as-is: they are capped at 2000px q=85 at upload
+  // time and Cloudflare caches them globally. The Image Transformations layer
+  // we tried on top added cold-cache MISS latency without a clear win.
+  //
+  // Unsplash is a different case — they resize on their own CDN, so a ladder
+  // costs us nothing and fixes an actual quality bug: a single hardcoded width
+  // both overserved phones and left large retina screens upscaling.
+  const srcSet = unsplashSrcSet(optimizedSrc, quality);
 
   return (
     <div className={`relative overflow-hidden ${className}`}>

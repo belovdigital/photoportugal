@@ -163,6 +163,28 @@ export function locationImage(slug: string, size: keyof typeof IMAGE_SIZES = "ca
   return unsplashUrl(id, IMAGE_SIZES[size]);
 }
 
+/**
+ * Width ladder for a responsive Unsplash image.
+ *
+ * One hardcoded width cannot serve both ends: `hero: 1600` sent 626 kB to a
+ * 412 px phone (LCP 9.1 s on photospain.co/locations/madrid) while a 2560 px
+ * desktop hero was being UPSCALED from 1600 — so the big screen was getting a
+ * softer picture than it should, and the phone was paying for pixels it cannot
+ * show. A srcset fixes both directions at once: fewer bytes on the phone, more
+ * real pixels on a retina monitor.
+ *
+ * Unsplash resizes on their CDN, so every rung is free for us — no origin CPU
+ * and no cold-cache penalty, which is why this is safe where the Cloudflare
+ * Image Transformations experiment was not.
+ */
+const SRCSET_LADDER = [640, 828, 1080, 1440, 1920, 2560];
+
+export function unsplashSrcSet(url: string, quality = 85): string | undefined {
+  const match = url.match(/^https:\/\/images\.unsplash\.com\/([^?]+)/);
+  if (!match) return undefined;
+  return SRCSET_LADDER.map((w) => `${unsplashUrl(match[1], w, quality)} ${w}w`).join(", ");
+}
+
 // Compat: old API
 export const locationImages: Record<string, string> = Object.fromEntries(
   Object.entries(baseUrls).map(([slug, id]) => [slug, unsplashUrl(id, IMAGE_SIZES.card)])

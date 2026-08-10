@@ -711,6 +711,9 @@ export default async function LocationPage({
           <div className="absolute inset-0">
             <OptimizedImage
               src={locationImage(location.slug, "hero")}
+              // Full-bleed hero: the card-sized default would otherwise make the
+              // browser pick a rung far too small for the widest element on the page.
+              sizes="100vw"
               alt={
                 // The picture is decorative until this market has its own
                 // photography — do not tell a screen reader or Google that it
