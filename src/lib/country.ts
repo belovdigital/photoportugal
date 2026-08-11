@@ -95,6 +95,10 @@ export interface CountryPack {
    * Intercom workspace, or null for a market that runs without live chat.
    * Gates both the widget and the server-side contact sync — a null here
    * must never let a market's users leak into another market's inbox.
+   *
+   * Null in every market since 2026-08-11: Portugal's workspace was switched
+   * off deliberately (the concierge covers chat), so a null here is the
+   * intended state, not a missing config value. Don't "restore" it.
    */
   intercomAppId: string | null;
   /** Head-office city for schema.org PostalAddress. */
@@ -186,7 +190,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     founderProfileSlug: "kate-belova",
     hasMobileApp: true,
     photographerDigest: true,
-    intercomAppId: "d02q0i7w",
+    intercomAppId: null,
     city: "Lisbon",
     geo: { lat: 38.7223, lng: -9.1393 },
     phone: "+351 308 800 496",
