@@ -708,7 +708,11 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
       mapRef.current?.off("zoom", updatePoint);
       mapRef.current?.off("resize", updatePoint);
     };
-  }, [filteredRegions.length, mapReady, selectedRegion]);
+    // selectedPlaceCenter belongs here: without it updatePoint keeps the value
+    // captured when the region was chosen, so picking a city recomputed
+    // nothing and the card stayed parked over the region centre. The same
+    // stale-dependency shape as the flyTo bug this pass started from.
+  }, [filteredRegions.length, mapReady, selectedRegion, selectedPlaceCenter]);
 
   const resetFilters = () => {
     setQuery("");
