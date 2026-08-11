@@ -13,6 +13,18 @@ import { locations } from "@/lib/locations-data";
 // port. `secure` is derived from the port: 465 → implicit TLS, anything
 // else → STARTTLS (which nodemailer auto-upgrades).
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
+
+// Timeouts are explicit because nodemailer's defaults are enormous —
+// connectionTimeout 2 min, socketTimeout 10 min — so one unlucky send
+// could pin a request handler for a quarter of an hour. These are the
+// only thing bounding how long a caller waits; nothing races them from
+// the outside, because the library already enforces them properly.
+const SMTP_TIMEOUTS = {
+  connectionTimeout: 5_000,
+  greetingTimeout: 5_000,
+  socketTimeout: 10_000,
+} as const;
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.migadu.com",
   port: SMTP_PORT,
@@ -21,6 +33,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER || country.supportEmail,
     pass: process.env.SMTP_PASS || "",
   },
+  ...SMTP_TIMEOUTS,
 });
 
 const FROM = country.emailFrom;
@@ -39,6 +52,7 @@ const ceoTransporter = process.env.SMTP_CEO_PASS
         user: process.env.SMTP_CEO_USER || `ceo@${country.host}`,
         pass: process.env.SMTP_CEO_PASS,
       },
+      ...SMTP_TIMEOUTS,
     })
   : null;
 
@@ -77,20 +91,96 @@ export function replyToAddress(raw?: string | null): string | undefined {
   return /^[^\s@,]+@[^\s@,]+\.[^\s@,]{2,}$/.test(trimmed) ? trimmed : undefined;
 }
 
-export async function sendEmail(to: string, subject: string, html: string, options?: { replyTo?: string }) {
+// ── Sending, retrying, and not losing the message ──────────────────
+//
+// Until 2026-08-11 this made exactly ONE SMTP attempt and threw the
+// failure away. Eight emails died that way in 30 days, among them a
+// photographer's "your shoot is tomorrow" for a paid proposal shoot and
+// a signup verification we only heard about because he complained.
+//
+// Two attempts here for the blip class — five of the eight were
+// connection drops that clear in a second — and everything that survives
+// both is parked in notification_queue, which retries it for a day (see
+// parkFailedEmail). No error classification: at fifty emails a day,
+// retrying a dead address for 24 hours costs nothing, and guessing wrong
+// about which failures are permanent costs a real message.
+
+export interface EmailSendResult {
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * Send, and say whether it worked.
+ *
+ * `park: false` is for callers that ARE the parking lot (the queue
+ * processor) — without it a queued retry would park a copy of itself on
+ * every failed attempt.
+ */
+export async function sendEmailWithResult(
+  to: string,
+  subject: string,
+  html: string,
+  options?: { replyTo?: string; park?: boolean }
+): Promise<EmailSendResult> {
   if (!process.env.SMTP_PASS) {
     console.log(`[email] SMTP not configured, skipping: ${subject} → ${to}`);
-    return;
+    return { ok: true };
   }
 
-  try {
-    await transporter.sendMail({ from: FROM, to, subject, html, ...(options?.replyTo ? { replyTo: options.replyTo } : {}) });
-    console.log(`[email] Sent: ${subject} → ${to}`);
-    import("@/lib/notification-log").then(m => m.logNotification("email", to, subject.slice(0, 100), "sent")).catch(() => {});
-  } catch (error) {
-    console.error(`[email] Failed: ${subject} → ${to}`, error);
-    import("@/lib/notification-log").then(m => m.logNotification("email", to, subject.slice(0, 100), "failed", undefined, String(error))).catch(() => {});
+  const mail = {
+    from: FROM,
+    to,
+    subject,
+    html,
+    ...(options?.replyTo ? { replyTo: options.replyTo } : {}),
+  };
+
+  let lastError = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const startedAt = Date.now();
+    try {
+      await transporter.sendMail(mail);
+      console.log(`[email] Sent: ${subject} → ${to}${attempt > 1 ? " (2nd attempt)" : ""}`);
+      import("@/lib/notification-log").then(m => m.logNotification("email", to, subject.slice(0, 100), "sent")).catch(() => {});
+      return { ok: true };
+    } catch (error) {
+      lastError = String(error);
+      // Retry only a fast failure. A slow one means the far end is sick,
+      // and the right place to wait that out is the queue, not an HTTP
+      // handler — Stripe gives its webhook ~20s before it redelivers.
+      if (attempt === 1 && Date.now() - startedAt < 3_000) {
+        console.warn(`[email] Attempt 1 failed, retrying in 1s: ${error}`);
+        await new Promise(r => setTimeout(r, 1_000));
+        continue;
+      }
+      break;
+    }
   }
+
+  console.error(`[email] Failed: ${subject} → ${to} — ${lastError}`);
+  import("@/lib/notification-log")
+    .then(m => m.logNotification("email", to, subject.slice(0, 100), "failed", undefined, lastError))
+    .catch(() => {});
+
+  if (options?.park !== false) {
+    import("@/lib/notification-queue")
+      .then(m => m.parkFailedEmail({ recipient: to, subject, html, replyTo: options?.replyTo, lastError }))
+      .catch(e => console.error("[email] could not park failed message:", e));
+  }
+
+  return { ok: false, error: lastError };
+}
+
+/**
+ * Fire-and-forget façade. It must keep swallowing: 22 call sites are bare
+ * floating promises with no `.catch`, there is no
+ * process.on('unhandledRejection') anywhere, and pm2 runs a single fork
+ * per box — one throw here would take every market on that machine down.
+ * Callers that need the verdict use sendEmailWithResult.
+ */
+export async function sendEmail(to: string, subject: string, html: string, options?: { replyTo?: string }) {
+  await sendEmailWithResult(to, subject, html, options);
 }
 
 // === Email template wrapper ===

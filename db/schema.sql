@@ -483,6 +483,10 @@ CREATE TABLE IF NOT EXISTS notification_queue (
   last_error TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   sent_at TIMESTAMPTZ,
+  -- Set when a dead ('failed') email has been reported to Telegram.
+  -- Separate from sent_at, which despite the name is only ever written on
+  -- cancellation — a delivered row is DELETEd, so it never means "sent".
+  alerted_at TIMESTAMPTZ,
   CONSTRAINT uq_notification_dedup UNIQUE (dedup_key)
 );
 

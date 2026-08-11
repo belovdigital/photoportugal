@@ -9,10 +9,12 @@
  * Dedup: UNIQUE constraint on dedup_key prevents any possibility of duplicates.
  */
 
+import { randomUUID } from "crypto";
 import { query, queryOne } from "@/lib/db";
 import { parsePhone } from "@/lib/phone-codes";
 import { sendSMS } from "@/lib/sms";
 import { country } from "@/lib/country";
+import type { EmailSendResult } from "@/lib/email";
 
 // ── Timezone mapping ───────────────────────────────────────────────
 
@@ -183,7 +185,12 @@ export async function queueNotification(opts: QueueOptions): Promise<QueueResult
       if (opts.channel === "sms") {
         await sendSMS(opts.recipient, opts.body);
       } else {
-        await sendQueuedEmail(opts);
+        // The catch below was always written for this and never got to run:
+        // sendEmail swallowed its own failures, so a refused message was
+        // DELETEd as if delivered. Now the verdict comes back and the row
+        // we parked above becomes the retry.
+        const res = await sendQueuedEmail(opts);
+        if (!res.ok) throw new Error(res.error || "email send failed");
       }
       // Success — remove from queue (logs are in notification_logs via sendSMS/sendEmail)
       await queryOne("DELETE FROM notification_queue WHERE id = $1", [inserted.id]);
@@ -386,6 +393,25 @@ async function shouldCancelNewMessage(row: {
 const MAX_PER_RUN = 50;
 const MAX_ATTEMPTS = 3;
 
+// Two ladders on purpose. MAX_ATTEMPTS above still means "handling this
+// row blew up" — a DB hiccup, a bad dynamic import — and three tries a
+// minute apart is right for that. An SMTP rejection is a different
+// animal: Migadu deferred a real message with 451 for about two hours on
+// 2026-08-11, and a three-tries-in-three-minutes ladder declares that
+// dead before the provider has even changed its mind.
+const EMAIL_BACKOFF_MIN = [2, 5, 15, 45, 120, 240, 480, 480]; // ~23h of rungs
+// Measured from created_at, which for a night-queued row is hours before
+// the first attempt — hence 36 rather than 24, so the ladder is what
+// decides, and this is only the backstop against an immortal row.
+const EMAIL_GIVE_UP_HOURS = 36;
+/**
+ * Stop starting new items after a minute. The claim holds a 10-minute
+ * lease, so anything not reached simply falls due again with its lease
+ * intact; the point is only to keep a slow pass from running into the
+ * next one's lease and letting two passes send the same row.
+ */
+const RUN_DEADLINE_MS = 60_000;
+
 export async function processNotificationQueue(): Promise<number> {
   const pending = await query<{
     id: string;
@@ -399,6 +425,8 @@ export async function processNotificationQueue(): Promise<number> {
     recipient_id: string | null;
     message_id: string | null;
     booking_id: string | null;
+    created_at: Date;
+    reply_to: string | null;
   }>(
     // Claim rows by LEASE, in a single statement.
     //
@@ -426,13 +454,20 @@ export async function processNotificationQueue(): Promise<number> {
               FOR UPDATE SKIP LOCKED) s
       WHERE q.id = s.id
      RETURNING q.id, q.channel, q.recipient, q.subject, q.body, q.dedup_key,
-               q.attempts, q.event_kind, q.recipient_id, q.message_id, q.booking_id`,
+               q.attempts, q.event_kind, q.recipient_id, q.message_id, q.booking_id,
+               q.created_at, q.reply_to`,
     [MAX_PER_RUN]
   );
 
   let processed = 0;
+  const runStartedAt = Date.now();
 
-  for (const item of pending) {
+  for (let i = 0; i < pending.length; i++) {
+    const item = pending[i];
+    if (Date.now() - runStartedAt > RUN_DEADLINE_MS) {
+      console.warn(`[notification-queue] Pass hit ${RUN_DEADLINE_MS / 1000}s deadline, leaving ${pending.length - i} rows for the next one`);
+      break;
+    }
     try {
       // For new-message notifs, re-check cancel conditions just before
       // sending. If the recipient already saw the message / replied /
@@ -480,18 +515,42 @@ export async function processNotificationQueue(): Promise<number> {
         continue;
       }
 
-      if (item.channel === "sms") {
-        await sendSMS(item.recipient, item.body);
-      } else {
-        // For queued emails, body contains the pre-rendered HTML
-        const { sendEmail } = await import("@/lib/email");
-        await sendEmail(item.recipient, item.subject || country.brand, item.body);
+      if (item.channel === "email") {
+        // For queued emails, body contains the pre-rendered HTML.
+        const { sendEmailWithResult } = await import("@/lib/email");
+        const res = await sendEmailWithResult(item.recipient, item.subject || country.brand, item.body, {
+          replyTo: item.reply_to || undefined,
+          park: false, // we ARE the parking lot
+        });
+        if (res.ok) {
+          await queryOne("DELETE FROM notification_queue WHERE id = $1", [item.id]);
+          processed++;
+          continue;
+        }
+        // This is the bug the whole change exists for: a refused email
+        // used to be DELETEd here exactly like a delivered one, which is
+        // why prod had zero failed rows and max(attempts)=1 since May.
+        await scheduleEmailRetry(item, res.error || "send failed");
+        continue;
       }
 
-      // Success — remove from queue (logs are in notification_logs via sendSMS/sendEmail)
+      // SMS still swallows its own failures (sms.ts returns false rather
+      // than throwing), so a bounced SMS is still deleted as if sent. Same
+      // bug, deliberately out of scope here — fixing it means deciding
+      // whether an invalid-number 21211 should page, which is its own call.
+      await sendSMS(item.recipient, item.body);
+
+      // Success — remove from queue (logs are in notification_logs via sendSMS)
       await queryOne("DELETE FROM notification_queue WHERE id = $1", [item.id]);
       processed++;
     } catch (err) {
+      // An email row that blew up on the DB/import side still has good
+      // rungs left on its own ladder; the three-strike rule below would
+      // kill it at attempt 3 of 8.
+      if (item.channel === "email") {
+        await scheduleEmailRetry(item, String(err));
+        continue;
+      }
       // The claim above already bumped `attempts`, so item.attempts is the
       // post-increment value — don't add to it again or every failure
       // would burn two of the three allowed tries.
@@ -514,6 +573,12 @@ export async function processNotificationQueue(): Promise<number> {
     }
   }
 
+  // Unconditional: a message can also be marked dead outside a pass (the
+  // inline path in queueNotification), and gating this on "did anything
+  // die in THIS pass" is how a death goes unreported until the 7-day
+  // sweep deletes the evidence.
+  await alertDeadEmails();
+
   // Cleanup old failed entries (> 7 days)
   await queryOne(
     "DELETE FROM notification_queue WHERE status = 'failed' AND created_at < NOW() - INTERVAL '7 days'"
@@ -528,7 +593,129 @@ export async function processNotificationQueue(): Promise<number> {
 
 // ── Email helper ───────────────────────────────────────────────────
 
-async function sendQueuedEmail(opts: QueueOptions): Promise<void> {
-  const { sendEmail } = await import("@/lib/email");
-  await sendEmail(opts.recipient, opts.subject || country.brand, opts.body);
+async function sendQueuedEmail(opts: QueueOptions): Promise<EmailSendResult> {
+  const { sendEmailWithResult } = await import("@/lib/email");
+  // park:false — the row the caller just inserted IS the parking spot;
+  // parking again would leave two rows for one message.
+  return sendEmailWithResult(opts.recipient, opts.subject || country.brand, opts.body, { park: false });
+}
+
+// ── Retry ladder for refused email ─────────────────────────────────
+
+/**
+ * Park a message that sendEmail could not deliver, so the every-minute
+ * cron can keep trying for the next day instead of the message simply
+ * ceasing to exist. Called from sendEmail's failure path for all ~85
+ * direct call sites; the queue processor passes `park: false` and uses
+ * scheduleEmailRetry on its own row instead.
+ */
+export async function parkFailedEmail(opts: {
+  recipient: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+  lastError: string;
+}): Promise<void> {
+  // dedup_key is UNIQUE across the whole table and every other writer
+  // uses it to coalesce; here there is nothing to coalesce with, so it
+  // gets a fresh id. A shared key would only create a way for one dead
+  // row to silently swallow the next failure of the same message.
+  await queryOne(
+    `INSERT INTO notification_queue
+       (channel, recipient, subject, body, reply_to, dedup_key, recipient_timezone,
+        send_after, status, attempts, last_error, event_kind)
+     VALUES ('email', $1, $2, $3, $4, $5, $6, NOW() + INTERVAL '2 minutes', 'pending', 1, $7, 'retry_email')
+     RETURNING id`,
+    [
+      opts.recipient,
+      opts.subject.slice(0, 500),
+      opts.html,
+      opts.replyTo || null,
+      `retry:${randomUUID()}`,
+      country.timezone,
+      opts.lastError,
+    ]
+  );
+}
+
+/**
+ * Move a refused queue row along its ladder, or declare it dead.
+ * Returns "dead" when the message will never be tried again.
+ */
+async function scheduleEmailRetry(
+  item: { id: string; attempts: number; created_at: Date; dedup_key: string },
+  error: string
+): Promise<"retried" | "dead"> {
+  // The claim already incremented attempts, so this is the number of
+  // tries spent, and it indexes the rung to wait before the next one.
+  const spent = item.attempts;
+  const tooOld = Date.now() - new Date(item.created_at).getTime() > EMAIL_GIVE_UP_HOURS * 3_600_000;
+
+  if (spent > EMAIL_BACKOFF_MIN.length || tooOld) {
+    await queryOne(
+      "UPDATE notification_queue SET status = 'failed', last_error = $2 WHERE id = $1",
+      [item.id, error]
+    );
+    console.error(`[notification-queue] Email gave up after ${spent} tries: ${item.dedup_key} — ${error}`);
+    return "dead";
+  }
+
+  // ±20% jitter so an outage that killed the whole backlog does not
+  // release all of it in the same second when it clears.
+  const baseSec = EMAIL_BACKOFF_MIN[Math.max(spent, 1) - 1] * 60;
+  const secs = Math.round(baseSec * (0.8 + Math.random() * 0.4));
+  await queryOne(
+    `UPDATE notification_queue
+        SET send_after = NOW() + make_interval(secs => $2), last_error = $3
+      WHERE id = $1`,
+    [item.id, secs, error]
+  );
+  console.warn(`[notification-queue] Email retry ${spent}/${EMAIL_BACKOFF_MIN.length} in ${Math.round(secs / 60)}min: ${item.dedup_key}`);
+  return "retried";
+}
+
+/**
+ * Page Telegram about messages that ran out of ladder.
+ *
+ * Out-of-band on purpose: an alert about email that cannot send must not
+ * go by email. The claim-and-page is a single UPDATE so two overlapping
+ * drains cannot both report the same death.
+ */
+async function alertDeadEmails(): Promise<void> {
+  const dead = await query<{
+    id: string; recipient: string; subject: string | null;
+    attempts: number; last_error: string | null; created_at: Date;
+  }>(
+    `UPDATE notification_queue q
+        SET alerted_at = NOW()
+       FROM (SELECT id FROM notification_queue
+              WHERE status = 'failed' AND channel = 'email' AND alerted_at IS NULL
+              ORDER BY created_at LIMIT 20) s
+      WHERE q.id = s.id
+     RETURNING q.id, q.recipient, q.subject, q.attempts, q.last_error, q.created_at`
+  );
+  if (dead.length === 0) return;
+
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const lines = dead.slice(0, 5).map(d => {
+    const hours = Math.max(1, Math.round((Date.now() - new Date(d.created_at).getTime()) / 3_600_000));
+    return [
+      `<b>To:</b> ${esc(d.recipient)}`,
+      `<b>Subject:</b> ${esc(d.subject || "(none)")}`,
+      `<b>Tries:</b> ${d.attempts} over ${hours}h`,
+      `<b>Last:</b> <code>${esc((d.last_error || "").slice(0, 180))}</code>`,
+    ].join("\n");
+  });
+  const more = dead.length > 5 ? `\n\n…and ${dead.length - 5} more` : "";
+  const message =
+    `🔴 <b>[${country.code.toUpperCase()}] Email gave up — ${dead.length} message${dead.length === 1 ? "" : "s"} died</b>\n\n` +
+    lines.join("\n\n") + more;
+
+  const { sendTelegram } = await import("@/lib/telegram");
+  const ok = await sendTelegram(message, "alerts");
+  if (!ok) {
+    // sendTelegram returns false instead of throwing. Roll the marker
+    // back, or a death nobody heard about is never mentioned again.
+    await query("UPDATE notification_queue SET alerted_at = NULL WHERE id = ANY($1::uuid[])", [dead.map(d => d.id)]);
+  }
 }
