@@ -1,36 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import {
   invoicexpressConfigured,
   findOrCreateClient,
   createInvoiceDraft,
   finalizeInvoice,
-  lisbonDay,
-  paymentInstant,
-  ACTIVITY_START,
-  SHARE_PCT_MIN,
-  SHARE_PCT_MAX,
+  sequenceLastDocumentDate,
 } from "@/lib/invoicexpress";
-import { issueSubscriptionInvoices, issueExtrasInvoices } from "./streams";
+import { collectAll, type Candidate } from "./collect";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Issues the platform's own invoices to clients, one per paid booking.
+ * Issues every document the platform owes: its share of a booking, a
+ * photographer's add-on subscription, and the margin on an extra-photo sale.
  *
  * A cron rather than a Stripe webhook, deliberately. A webhook fires once: if
- * InvoiceXpress is down or the row is momentarily odd, the document is simply
- * never created and nothing notices. This re-reads outstanding work every time,
- * so a failure is a delay rather than a hole, and the same guard ladder runs
- * on every attempt.
+ * InvoiceXpress is down or a row is momentarily odd, the document is simply
+ * never created and nothing notices. This re-reads outstanding work every run,
+ * so a failure is a delay rather than a hole.
+ *
+ * ── Why collect-then-issue, in that order ────────────────────────────────
+ * A series cannot go backwards in time. InvoiceXpress refuses to finalise a
+ * document dated earlier than the last one in the sequence, and Portuguese
+ * numbering rules are why. Issuing stream by stream produced exactly that on
+ * 2026-08-11: a 3 August subscription arriving after a 4 August booking, and
+ * permanently unissuable in series PP. So every candidate is dated first, the
+ * whole set is sorted oldest-first, and anything older than the series' last
+ * document is held for a person instead of being attempted and failing.
  *
  * Everything irreversible is gated:
  *   INVOICEXPRESS_AUTO_ISSUE=true  — create drafts at all
  *   INVOICEXPRESS_FINALIZE=true    — turn drafts into real fiscal documents
- * With neither set this endpoint reports what it would do and writes nothing.
  */
 export async function GET(req: NextRequest) {
   if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
@@ -44,145 +48,159 @@ export async function GET(req: NextRequest) {
   const finalize = process.env.INVOICEXPRESS_FINALIZE === "true";
   const stripe = requireStripe();
 
-  const candidates = await query<{
-    id: string;
-    stripe_payment_intent_id: string;
-    payout_amount: string | null;
-    client_id: string;
-    client_name: string | null;
-    client_email: string | null;
-    package_name: string | null;
-    photographer_name: string | null;
-  }>(
-    `SELECT b.id, b.stripe_payment_intent_id, b.payout_amount,
-            cu.id::text AS client_id, cu.name AS client_name, cu.email AS client_email,
-            p.name AS package_name, pu.name AS photographer_name
-       FROM bookings b
-       JOIN users cu ON cu.id = b.client_id
-       LEFT JOIN packages p ON p.id = b.package_id
-       LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
-       LEFT JOIN users pu ON pu.id = pp.user_id
-      WHERE b.payment_status = 'paid'
-        AND b.stripe_payment_intent_id IS NOT NULL
-        AND b.invoicexpress_invoice_id IS NULL
-        AND (b.invoicexpress_state IS NULL OR b.invoicexpress_state = 'error')
-      ORDER BY b.created_at DESC
-      LIMIT 40`
-  );
+  const { candidates, held, errors } = await collectAll(stripe);
+  const result = {
+    considered: candidates.length,
+    issued: 0,
+    finalized: 0,
+    held,
+    errors,
+    wouldIssue: [] as string[],
+  };
 
-  const result = { considered: candidates.length, issued: 0, finalized: 0, held: [] as string[], errors: [] as string[] };
+  // The floor: nothing may be dated before the last document already in the
+  // series. Read once per run — every issue moves it forward.
+  let seriesFloor = await sequenceLastDocumentDate();
 
-  for (const b of candidates) {
-    const short = b.id.slice(0, 8);
-    try {
-      const pi = await stripe.paymentIntents.retrieve(b.stripe_payment_intent_id, {
-        expand: ["latest_charge", "latest_charge.balance_transaction"],
-      });
-      const charge = pi.latest_charge && typeof pi.latest_charge === "object" ? pi.latest_charge : null;
-      if (!charge || pi.status !== "succeeded") { result.held.push(`${short}: PI ${pi.status}`); continue; }
-      // An authorised hold is not a payment — blind bookings sit here for days.
-      if (charge.captured === false) { result.held.push(`${short}: authorised, not captured`); continue; }
-
-      const paidOn = lisbonDay(paymentInstant(charge));
-      const currency = (charge.currency || "eur").toLowerCase();
-      const net = Math.round((charge.amount - (charge.amount_refunded || 0))) / 100;
-      const payout = b.payout_amount == null ? null : Number(b.payout_amount);
-      const share = payout == null ? null : Math.round((net - payout) * 100) / 100;
-      const pct = share == null || net <= 0 ? null : (share / net) * 100;
-
-      const hold =
-        currency !== "eur" ? `currency ${currency}`
-        : paidOn < ACTIVITY_START ? `paid ${paidOn}, pre-activity`
-        : net <= 0 ? "fully refunded"
-        : payout == null ? "no payout recorded"
-        : share == null || share <= 0 ? "payout >= net"
-        : (charge.amount_refunded || 0) > 0 ? "refunded — needs a human"
-        : pct! < SHARE_PCT_MIN || pct! > SHARE_PCT_MAX ? `share ${pct!.toFixed(0)}% out of band — needs a human`
-        : null;
-      if (hold) { result.held.push(`${short}: ${hold}`); continue; }
-
-      if (!autoIssue) { result.held.push(`${short}: would issue ${share} (AUTO_ISSUE off)`); continue; }
-
-      // Claim before the document exists: a crash between the API call and the
-      // write would otherwise orphan a draft that the next run duplicates.
-      const claimed = await queryOne<{ id: string }>(
-        `UPDATE bookings SET invoicexpress_state = 'claiming'
-          WHERE id = $1 AND invoicexpress_invoice_id IS NULL
-            AND (invoicexpress_state IS NULL OR invoicexpress_state = 'error')
-          RETURNING id`,
-        [b.id]
+  for (const c of candidates) {
+    const tag = `${c.sourceType} ${c.sourceId.slice(0, 12)}`;
+    if (seriesFloor && c.date < seriesFloor) {
+      result.held.push(
+        `${tag}: dated ${c.date}, but series already has a document dated ${seriesFloor} — needs a person`
       );
-      if (!claimed) { result.held.push(`${short}: claimed elsewhere`); continue; }
-
-      const client = await findOrCreateClient({
-        code: `PP-${b.client_id.slice(0, 12)}`,
-        name: b.client_name || "Consumidor Final",
-        email: b.client_email,
-      });
-      const inv = await createInvoiceDraft({
-        clientId: client.id,
-        date: paidOn,
-        lines: [{
-          name: "Booking service",
-          description: `Photo Portugal booking service — ${b.package_name || "photoshoot"}${b.photographer_name ? ` with ${b.photographer_name.split(" ")[0]}` : ""}`,
-          unit_price: share!,
-          quantity: 1,
-        }],
-        observations: `Booking ${b.id}`,
-      });
-
-      try {
-        await queryOne(
-          `UPDATE bookings SET invoicexpress_invoice_id = $1, invoicexpress_state = 'draft',
-                  invoicexpress_issued_at = NOW()
-            WHERE id = $2 RETURNING id`,
-          [String(inv.id), b.id]
-        );
-      } catch (writeErr) {
-        // The document exists and we could not record it. The id has to reach a
-        // human or the orphan is unfindable; the row stays 'claiming' so no
-        // later run touches it.
-        result.errors.push(`ORPHAN DRAFT #${inv.id} for booking ${b.id} — could not record: ${writeErr}`);
-        throw writeErr;
-      }
+      continue;
+    }
+    if (!autoIssue) {
+      result.wouldIssue.push(`${tag}: ${c.amountEur} on ${c.date}`);
+      continue;
+    }
+    try {
+      const invoiceId = await issueCandidate(c, finalize);
       result.issued++;
-
-      if (finalize) {
-        const final = await finalizeInvoice(inv.id);
-        await queryOne(
-          `UPDATE bookings SET invoicexpress_state = 'final' WHERE id = $1 RETURNING id`,
-          [b.id]
-        );
-        result.finalized++;
-        void final;
-      }
+      if (finalize) result.finalized++;
+      seriesFloor = c.date;
+      void invoiceId;
     } catch (err) {
-      result.errors.push(`${short}: ${err instanceof Error ? err.message : String(err)}`);
-      await queryOne(
-        `UPDATE bookings SET invoicexpress_state = 'error'
-          WHERE id = $1 AND invoicexpress_invoice_id IS NULL AND invoicexpress_state = 'claiming'
-          RETURNING id`,
-        [b.id]
-      ).catch(() => {});
+      result.errors.push(`${tag}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  // The two streams that are not bookings: photographer add-on subscriptions
-  // and extra-photo purchases. Same guards, own table.
-  const subscriptions = await issueSubscriptionInvoices(stripe, autoIssue);
-  const extras = await issueExtrasInvoices(stripe, autoIssue);
-  result.errors.push(...subscriptions.errors, ...extras.errors);
-
-  // Anything the ladder refuses is a thing a person has to look at, so it must
-  // not be findable only by reading a cron log nobody opens.
+  // Anything refused is a thing a person has to look at, so it must not be
+  // findable only by reading a cron log nobody opens.
   if (result.errors.length > 0) {
     try {
       const { sendTelegram } = await import("@/lib/telegram");
       await sendTelegram(
-        `🧾 <b>InvoiceXpress cron: ${result.errors.length} error(s)</b>\n\n${result.errors.slice(0, 5).join("\n")}`
+        `🧾 <b>InvoiceXpress: ${result.errors.length} error(s)</b>\n\n${result.errors.slice(0, 5).join("\n")}`
       );
     } catch {}
   }
 
-  return NextResponse.json({ bookings: result, subscriptions, extras });
+  return NextResponse.json(result);
+}
+
+/**
+ * Claim, create, record — in that order, so a crash between the API call and
+ * the write blocks a duplicate instead of inviting one.
+ *
+ * Bookings claim on their own columns (migration 006); everything else claims
+ * a row in `issued_documents`, whose unique key is (source_type, source_id) and
+ * is the actual one-per-source guarantee.
+ */
+async function issueCandidate(c: Candidate, finalize: boolean): Promise<number> {
+  let release: (() => Promise<void>) | null = null;
+  let record: (invoiceId: number) => Promise<void>;
+  let markFinal: () => Promise<void>;
+
+  if (c.sourceType === "booking") {
+    const claimed = await queryOne<{ id: string }>(
+      `UPDATE bookings SET invoicexpress_state = 'claiming'
+        WHERE id = $1 AND invoicexpress_invoice_id IS NULL
+          AND (invoicexpress_state IS NULL OR invoicexpress_state = 'error')
+        RETURNING id`,
+      [c.sourceId]
+    );
+    if (!claimed) throw new Error("claimed elsewhere");
+    release = async () => {
+      await queryOne(
+        `UPDATE bookings SET invoicexpress_state = 'error'
+          WHERE id = $1 AND invoicexpress_invoice_id IS NULL AND invoicexpress_state = 'claiming'
+          RETURNING id`,
+        [c.sourceId]
+      ).catch(() => {});
+    };
+    record = async (invoiceId) => {
+      await queryOne(
+        `UPDATE bookings SET invoicexpress_invoice_id = $1, invoicexpress_state = 'draft',
+                invoicexpress_issued_at = NOW()
+          WHERE id = $2 RETURNING id`,
+        [String(invoiceId), c.sourceId]
+      );
+    };
+    markFinal = async () => {
+      await queryOne(`UPDATE bookings SET invoicexpress_state = 'final' WHERE id = $1 RETURNING id`, [c.sourceId]);
+    };
+  } else {
+    const claimed = await queryOne<{ id: string }>(
+      `INSERT INTO issued_documents
+         (source_type, source_id, photographer_id, client_id, amount_eur, document_date, state)
+       VALUES ($1, $2, $3, $4, $5, $6, 'claiming')
+       ON CONFLICT (source_type, source_id) DO NOTHING
+       RETURNING id`,
+      [c.sourceType, c.sourceId, c.photographerId || null, c.clientId || null, c.amountEur, c.date]
+    );
+    if (!claimed) throw new Error("claimed elsewhere");
+    const rowId = claimed.id;
+    release = async () => {
+      await queryOne(
+        `UPDATE issued_documents SET state = 'error' WHERE id = $1 AND invoicexpress_invoice_id IS NULL RETURNING id`,
+        [rowId]
+      ).catch(() => {});
+    };
+    record = async (invoiceId) => {
+      await queryOne(
+        `UPDATE issued_documents SET invoicexpress_invoice_id = $1, state = 'draft', issued_at = NOW()
+          WHERE id = $2 RETURNING id`,
+        [String(invoiceId), rowId]
+      );
+    };
+    markFinal = async () => {
+      await queryOne(`UPDATE issued_documents SET state = 'final' WHERE id = $1 RETURNING id`, [rowId]);
+    };
+  }
+
+  let invoiceId: number;
+  try {
+    const client = await findOrCreateClient({
+      code: c.clientCode,
+      name: c.clientName,
+      email: c.clientEmail,
+    });
+    const inv = await createInvoiceDraft({
+      clientId: client.id,
+      date: c.date,
+      lines: [{ name: c.lineName, description: c.lineDescription, unit_price: c.amountEur, quantity: 1 }],
+      observations: c.observations,
+    });
+    invoiceId = inv.id;
+  } catch (err) {
+    await release?.();
+    throw err;
+  }
+
+  try {
+    await record(invoiceId);
+  } catch (writeErr) {
+    // The document exists and could not be recorded. The id has to reach a
+    // human or the orphan is unfindable; the claim stays so nothing re-issues.
+    throw new Error(
+      `ORPHAN DRAFT #${invoiceId} for ${c.sourceType} ${c.sourceId} — could not record: ${writeErr}`
+    );
+  }
+
+  if (finalize) {
+    await finalizeInvoice(invoiceId);
+    await markFinal();
+  }
+  return invoiceId;
 }

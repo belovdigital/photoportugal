@@ -207,6 +207,50 @@ export async function createInvoiceDraft(opts: {
   return created.invoice;
 }
 
+/**
+ * The date of the most recent document already in our series, or null if the
+ * series is empty.
+ *
+ * A series cannot go backwards: InvoiceXpress refuses to finalise anything
+ * dated earlier than this, because Portuguese numbering rules require it. The
+ * issuing loop reads this once and refuses to attempt a document below it,
+ * rather than discovering the rule as a 422 halfway through a run.
+ */
+export async function sequenceLastDocumentDate(): Promise<string | null> {
+  try {
+    const r = await call<{ invoices?: Array<{ date?: string; status?: string }> }>(
+      "GET",
+      "/invoices.json?per_page=30&non_archived=true"
+    );
+    const dates = (r.invoices || [])
+      .filter((i) => i.status && i.status !== "draft" && i.status !== "deleted")
+      // InvoiceXpress returns DD/MM/YYYY; compare as ISO.
+      .map((i) => {
+        const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(i.date || "");
+        return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+      })
+      .filter((d): d is string => Boolean(d));
+    return dates.length ? dates.sort().at(-1)! : null;
+  } catch {
+    // Unknown floor is not a reason to stop: the per-document 422 still
+    // protects us, it is just a worse error message.
+    return null;
+  }
+}
+
+/**
+ * Move a DRAFT's date. The only legitimate use is a document that arrived out
+ * of order and cannot be dated truthfully without going backwards in the
+ * series — where the choice is a date one or two days late, or no document at
+ * all for a real payment. Refuses anything already finalised.
+ */
+export async function setDraftDate(id: number | string, date: string): Promise<IXInvoice> {
+  const r = await call<{ invoice: IXInvoice }>("PUT", `/invoices/${id}.json`, {
+    invoice: { date, due_date: date },
+  });
+  return r.invoice;
+}
+
 /** Read a document back — used to verify a draft before anyone finalises it. */
 export async function getInvoice(id: number | string): Promise<IXInvoice> {
   const r = await call<{ invoice: IXInvoice }>("GET", `/invoices/${id}.json`);
