@@ -23,9 +23,10 @@ function TeamOnlineIndicator() {
     return () => clearInterval(interval);
   }, []);
 
-  // Portugal time (Europe/Lisbon)
-  const ptHour = parseInt(now.toLocaleString("en-US", { timeZone: "Europe/Lisbon", hour: "numeric", hour12: false }));
-  const isOnline = ptHour >= 8 && ptHour < 23;
+  // Working hours where the photographers are — Rome and Madrid are an hour
+  // ahead of Lisbon, so the badge has to read the market's own clock.
+  const localHour = parseInt(now.toLocaleString("en-US", { timeZone: country.timezone, hour: "numeric", hour12: false }));
+  const isOnline = localHour >= 8 && localHour < 23;
 
   if (isOnline) {
     return (
@@ -39,12 +40,12 @@ function TeamOnlineIndicator() {
     );
   }
 
-  // Calculate hours until 8:00 AM Portugal time
+  // Calculate hours until 8:00 AM local time
   let hoursUntil: number;
-  if (ptHour >= 23) {
-    hoursUntil = 24 - ptHour + 8;
+  if (localHour >= 23) {
+    hoursUntil = 24 - localHour + 8;
   } else {
-    hoursUntil = 8 - ptHour;
+    hoursUntil = 8 - localHour;
   }
 
   return (

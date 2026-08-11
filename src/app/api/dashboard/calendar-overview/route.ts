@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -103,20 +104,23 @@ export async function GET(req: NextRequest) {
   // no longer blocks a whole day because of a long event; it checks exact
   // busy windows plus the photographer's configured buffer.
   const syncedBlocks = await query<{ blocked_date: string }>(
+    // Which day an event falls on, and whether it looks like an all-day
+    // block, is read in the market's timezone — an hour out is a whole day
+    // out for an event that starts near midnight.
     `SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS blocked_date
        FROM calendar_busy_slots cbs,
             LATERAL generate_series(
-              (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')::date,
-              (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')::date,
+              (cbs.starts_at AT TIME ZONE $4)::date,
+              (cbs.ends_at   AT TIME ZONE $4)::date,
               '1 day'::interval
             ) AS d
       WHERE cbs.photographer_id = $1
         AND cbs.ends_at >= NOW()
-        AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')) < 23
-        AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')) >= 6
+        AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE $4)) < 23
+        AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE $4)) >= 6
         AND d::date >= $2::date
         AND d::date <= $3::date`,
-    [profile.id, from, to]
+    [profile.id, from, to, country.timezone]
   );
 
   // Merge manual + synced into one list keyed by date. Manual wins on

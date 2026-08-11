@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 import { canonicalizeShootType } from "@/lib/shoot-type-labels";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +22,9 @@ const ALLOWED_WINDOWS = new Set([30, 90, 180]);
 const TOP_PHOTOS_LIMIT = 12;
 const PLATFORM_INTENT_WINDOW_DAYS = 90;
 
-function lisbonToday(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Lisbon" });
+/** Stats days are the market's own days — Lisbon's would be an hour out in ES/IT. */
+function marketToday(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: country.timezone });
 }
 
 function shiftDays(isoDate: string, days: number): string {
@@ -141,7 +143,7 @@ export async function GET(req: NextRequest) {
   const daysParam = parseInt(req.nextUrl.searchParams.get("days") || "90", 10);
   const days = ALLOWED_WINDOWS.has(daysParam) ? daysParam : 90;
 
-  const today = lisbonToday();
+  const today = marketToday();
   const from = shiftDays(today, -(days - 1));
   const prevFrom = shiftDays(from, -days);
 
@@ -344,11 +346,11 @@ export async function GET(req: NextRequest) {
         [profile.id, from],
       ),
       query<{ date: string; field: string }>(
-        `SELECT DISTINCT ((occurred_at AT TIME ZONE 'Europe/Lisbon')::date)::text AS date, field
+        `SELECT DISTINCT ((occurred_at AT TIME ZONE $3)::date)::text AS date, field
          FROM photographer_profile_changes
          WHERE photographer_id = $1 AND occurred_at >= $2::date
          ORDER BY 1`,
-        [profile.id, from],
+        [profile.id, from, country.timezone],
       ),
       queryOne<{ n: number }>(
         "SELECT COUNT(*)::int AS n FROM portfolio_items WHERE photographer_id = $1", [profile.id],

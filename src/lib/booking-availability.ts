@@ -1,4 +1,5 @@
 import { query, queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 import {
   addMinutes,
   type BusyWindow,
@@ -7,11 +8,12 @@ import {
 
 export {
   hasAvailableBookingStart,
-  lisbonLocalMinutesToUtc,
+  localMinutesToUtc,
   type BusyWindow,
 } from "@/lib/booking-time-windows";
 
-const LISBON_TZ = "Europe/Lisbon";
+/** Shoot dates are calendar days in the market's own timezone, not in Lisbon's. */
+const MARKET_TZ = country.timezone;
 const DEFAULT_BUFFER_MINUTES = 60;
 
 let cachedHasBufferColumn: boolean | null = null;
@@ -112,7 +114,7 @@ export async function getBufferedBusyWindows(
         AND ($6::uuid IS NULL OR b.client_id <> $6::uuid)
         AND b.shoot_date >= (($2::timestamptz AT TIME ZONE $5)::date - INTERVAL '1 day')::date
         AND b.shoot_date <= (($3::timestamptz AT TIME ZONE $5)::date + INTERVAL '1 day')::date`,
-    [photographerId, rangeStart, rangeEnd, excludeBookingId || null, LISBON_TZ, excludeClientId || null]
+    [photographerId, rangeStart, rangeEnd, excludeBookingId || null, MARKET_TZ, excludeClientId || null]
   );
 
   const windows = [

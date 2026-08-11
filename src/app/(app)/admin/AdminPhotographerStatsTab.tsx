@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { country } from "@/lib/country";
 
 /**
  * Admin "wasted demand" view — per-photographer funnel for the last 30
@@ -41,10 +42,11 @@ export async function AdminPhotographerStatsTab() {
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      LEFT JOIN photographer_daily_stats s
-       ON s.photographer_id = pp.id AND s.date >= (NOW() AT TIME ZONE 'Europe/Lisbon')::date - 30
+       ON s.photographer_id = pp.id AND s.date >= (NOW() AT TIME ZONE $1)::date - 30
      WHERE pp.is_approved = TRUE AND pp.is_test = FALSE
      GROUP BY pp.id, u.name
      ORDER BY 3 DESC`,
+    [country.timezone],
   ).catch(() => [] as Row[]);
 
   const wasted = rows.filter((r) => r.uniques >= 15 && r.paid === 0);

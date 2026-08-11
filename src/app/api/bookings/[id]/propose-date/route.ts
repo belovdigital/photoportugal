@@ -8,7 +8,7 @@ import {
   getBufferedBusyWindows,
   getPhotographerCalendarBufferMinutes,
   hasAvailableBookingStart,
-  lisbonLocalMinutesToUtc,
+  localMinutesToUtc,
 } from "@/lib/booking-availability";
 import { country } from "@/lib/country";
 
@@ -92,8 +92,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   async function ensureBufferedAvailability(date: string, time: string | null | undefined) {
     const durationMin = currentBooking.duration_minutes || 120;
     const bufferMinutes = await getPhotographerCalendarBufferMinutes(currentBooking.photographer_id);
-    const rangeStart = lisbonLocalMinutesToUtc(date, 0);
-    const rangeEnd = lisbonLocalMinutesToUtc(date, 24 * 60 + durationMin + bufferMinutes);
+    const rangeStart = localMinutesToUtc(date, 0);
+    const rangeEnd = localMinutesToUtc(date, 24 * 60 + durationMin + bufferMinutes);
     const busyWindows = await getBufferedBusyWindows(
       currentBooking.photographer_id,
       rangeStart,

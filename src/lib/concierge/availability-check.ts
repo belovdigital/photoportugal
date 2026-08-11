@@ -16,7 +16,7 @@ import { query } from "@/lib/db";
 import {
   getBufferedBusyWindows,
   getPhotographerCalendarBufferMinutes,
-  lisbonLocalMinutesToUtc,
+  localMinutesToUtc,
 } from "@/lib/booking-availability";
 
 export interface AvailabilityResult {
@@ -80,8 +80,8 @@ export async function checkPhotographersAvailability(
     if (available) {
       try {
         const buffer = await getPhotographerCalendarBufferMinutes(id);
-        const rangeStart = lisbonLocalMinutesToUtc(dateIso, 0);
-        const rangeEnd = lisbonLocalMinutesToUtc(dateIso, 24 * 60);
+        const rangeStart = localMinutesToUtc(dateIso, 0);
+        const rangeEnd = localMinutesToUtc(dateIso, 24 * 60);
         const busy = await getBufferedBusyWindows(id, rangeStart, rangeEnd, buffer);
         if (busy && busy.length > 0) available = false;
       } catch {

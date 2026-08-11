@@ -4,7 +4,7 @@ import { query, queryOne } from "@/lib/db";
 import {
   getBufferedBusyWindows,
   getPhotographerCalendarBufferMinutes,
-  lisbonLocalMinutesToUtc,
+  localMinutesToUtc,
 } from "@/lib/booking-availability";
 
 // GET — fetch unavailability ranges for a photographer
@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
       const from = req.nextUrl.searchParams.get("from") || today;
       const to = req.nextUrl.searchParams.get("to") || new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0];
       const bufferMinutes = await getPhotographerCalendarBufferMinutes(photographerId);
-      const rangeStart = lisbonLocalMinutesToUtc(from, 0);
-      const rangeEnd = lisbonLocalMinutesToUtc(to, 24 * 60);
+      const rangeStart = localMinutesToUtc(from, 0);
+      const rangeEnd = localMinutesToUtc(to, 24 * 60);
       // Best-effort viewer detection — if the request carries a session,
       // exclude that viewer's own bookings from the busy windows so the
       // date-picker doesn't lock them out of their own holds (see

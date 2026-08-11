@@ -11,7 +11,7 @@ import {
   getBufferedBusyWindows,
   getPhotographerCalendarBufferMinutes,
   hasAvailableBookingStart,
-  lisbonLocalMinutesToUtc,
+  localMinutesToUtc,
 } from "@/lib/booking-availability";
 import { country } from "@/lib/country";
 
@@ -165,8 +165,8 @@ export async function POST(req: NextRequest) {
         }
 
         const bufferMinutes = await getPhotographerCalendarBufferMinutes(photographer_id);
-        const rangeStart = lisbonLocalMinutesToUtc(shoot_date, 0);
-        const rangeEnd = lisbonLocalMinutesToUtc(shoot_date, 24 * 60 + durationMin + bufferMinutes);
+        const rangeStart = localMinutesToUtc(shoot_date, 0);
+        const rangeEnd = localMinutesToUtc(shoot_date, 24 * 60 + durationMin + bufferMinutes);
         // Exclude the booker's own existing bookings — they shouldn't be
         // blocked by their own pending hold on the same photographer/date.
         const busyWindows = await getBufferedBusyWindows(photographer_id, rangeStart, rangeEnd, bufferMinutes, undefined, userId);

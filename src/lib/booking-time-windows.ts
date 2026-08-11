@@ -1,4 +1,15 @@
-const LISBON_TZ = "Europe/Lisbon";
+import { country } from "@/lib/country";
+
+/**
+ * A shoot time is wall-clock in the market it happens in: "sunset, 19:00" means
+ * 19:00 where the photographer stands. Synced calendar events, by contrast, are
+ * absolute instants. Converting the first into the second with a hardcoded
+ * Europe/Lisbon put every non-Portuguese market an hour out — Rome and Madrid
+ * are both Lisbon+1 all year — so the conflict check compared an Italian
+ * photographer's 18:00 against their calendar's 17:00 and both missed real
+ * clashes and invented fake ones.
+ */
+const MARKET_TZ = country.timezone;
 const CANDIDATE_STEP_MINUTES = 15;
 
 export const TIME_BUCKETS: Record<string, { start: number; end: number }> = {
@@ -42,15 +53,15 @@ function getTimeZoneOffsetMinutes(timeZone: string, date: Date) {
   return sign * (hours * 60 + minutes);
 }
 
-export function lisbonLocalMinutesToUtc(date: string, minutesFromMidnight: number) {
+export function localMinutesToUtc(date: string, minutesFromMidnight: number) {
   const { year, month, day } = parseDateParts(date);
   const hour = Math.floor(minutesFromMidnight / 60);
   const minute = minutesFromMidnight % 60;
   const wallAsUtc = Date.UTC(year, month - 1, day, hour, minute, 0);
   const firstGuess = new Date(wallAsUtc);
-  const firstOffset = getTimeZoneOffsetMinutes(LISBON_TZ, firstGuess);
+  const firstOffset = getTimeZoneOffsetMinutes(MARKET_TZ, firstGuess);
   const secondGuess = new Date(wallAsUtc - firstOffset * 60_000);
-  const secondOffset = getTimeZoneOffsetMinutes(LISBON_TZ, secondGuess);
+  const secondOffset = getTimeZoneOffsetMinutes(MARKET_TZ, secondGuess);
   return new Date(wallAsUtc - secondOffset * 60_000);
 }
 
@@ -85,7 +96,7 @@ export function hasAvailableBookingStart(
   const starts = candidateStartMinutes(shootTime);
 
   return starts.some((candidateMinute) => {
-    const start = lisbonLocalMinutesToUtc(shootDate, candidateMinute);
+    const start = localMinutesToUtc(shootDate, candidateMinute);
     const end = addMinutes(start, duration);
     return !busyWindows.some((busy) => overlaps(start, end, new Date(busy.starts_at), new Date(busy.ends_at)));
   });
@@ -95,12 +106,12 @@ export function internalBookingWindow(shootDate: string, shootTime: string | nul
   const value = shootTime || "flexible";
   const exact = value.match(/^(\d{2}):(\d{2})/);
   if (exact) {
-    const start = lisbonLocalMinutesToUtc(shootDate, Number(exact[1]) * 60 + Number(exact[2]));
+    const start = localMinutesToUtc(shootDate, Number(exact[1]) * 60 + Number(exact[2]));
     return { start, end: addMinutes(start, Math.max(15, durationMinutes || 120)) };
   }
 
   const bucket = TIME_BUCKETS[value] || TIME_BUCKETS.flexible;
-  const start = lisbonLocalMinutesToUtc(shootDate, bucket.start);
-  const end = addMinutes(lisbonLocalMinutesToUtc(shootDate, bucket.end), Math.max(15, durationMinutes || 120));
+  const start = localMinutesToUtc(shootDate, bucket.start);
+  const end = addMinutes(localMinutesToUtc(shootDate, bucket.end), Math.max(15, durationMinutes || 120));
   return { start, end };
 }

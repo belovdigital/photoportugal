@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rollupPhotographerStats, pullGscProfileStats } from "@/lib/photographer-stats-rollup";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -28,8 +29,8 @@ const MAX_RANGE_DAYS = 400;
 // returns zeros that would overwrite good rows on the next recompute.
 const GSC_LAG_DAYS = 2;
 
-function lisbonToday(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Lisbon" });
+function marketToday(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: country.timezone });
 }
 
 function shiftDays(isoDate: string, days: number): string {
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
 
   const params = req.nextUrl.searchParams;
   const explicitRange = Boolean(params.get("from") || params.get("to"));
-  const to = params.get("to") || lisbonToday();
+  const to = params.get("to") || marketToday();
   const from = params.get("from") || shiftDays(to, -DEFAULT_WINDOW_DAYS);
   const withGsc = params.get("gsc") !== "0";
 
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
   // table would zero the view columns. Require an explicit force=1 so
   // that only intentional repair runs (with sessions staged back into
   // the table first) can touch the archive.
-  const retentionFloor = shiftDays(lisbonToday(), -DEFAULT_WINDOW_DAYS);
+  const retentionFloor = shiftDays(marketToday(), -DEFAULT_WINDOW_DAYS);
   if (from < retentionFloor && params.get("force") !== "1") {
     return NextResponse.json(
       { error: `from=${from} is older than the session retention floor (${retentionFloor}); view stats there are imported archive. Pass force=1 only if sessions for that range are present.` },
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     let gsc: { rows: number; days: number } | { skipped: string } = { skipped: "gsc=0" };
     if (withGsc) {
-      const gscTo = shiftDays(lisbonToday(), -GSC_LAG_DAYS);
+      const gscTo = shiftDays(marketToday(), -GSC_LAG_DAYS);
       const gscEnd = to < gscTo ? to : gscTo;
       if (from <= gscEnd) {
         try {

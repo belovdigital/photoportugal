@@ -4,7 +4,8 @@ import { country } from "@/lib/country";
 
 /**
  * Rollup behind /dashboard/stats: recomputes photographer_daily_stats
- * (and portfolio_item_daily_stats) for a range of Europe/Lisbon days.
+ * (and portfolio_item_daily_stats) for a range of days in the market's own
+ * timezone (Lisbon, Madrid or Rome — see `country.timezone`).
  *
  * Inputs already collected elsewhere:
  *   - visitor_sessions.pageviews  → profile views, uniques, countries,
@@ -35,7 +36,8 @@ const LOCATION_OCCASION_RE = `^${LOCALE_PREFIX}/${LOCATION_SEGMENTS}/[a-z0-9-]+/
 const SHOOT_TYPE_PATH_RE = `^${LOCALE_PREFIX}/${SHOOT_TYPE_SEGMENTS}/([a-z0-9-]+)/?$`;
 const WEDDING_PATH_RE = `^${LOCALE_PREFIX}/${WEDDING_SEGMENTS}/?$`;
 
-const TZ = "Europe/Lisbon";
+/** A stats "day" is a day in the market's own timezone, not always Lisbon's. */
+const TZ = country.timezone;
 const EVENTS_RETENTION_DAYS = 120;
 /**
  * Bookings updated within this window are re-aggregated even when their
