@@ -12,6 +12,7 @@ import type { PhotographerOption } from "./IssueWarningModal";
 import { RedirectsManager } from "./RedirectsManager";
 import { BusinessInquiriesManager } from "./BusinessInquiriesManager";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
+import { NO_TRACK_COOKIE, NO_TRACK_COOKIE_OPTIONS } from "@/lib/no-track";
 import { NotFoundManager } from "./NotFoundManager";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
@@ -596,6 +597,14 @@ export function AdminDashboard({
 
   useEffect(() => {
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as { standalone?: boolean }).standalone === true);
+  }, []);
+
+  // Opening the panel is enough to opt this browser out of visitor
+  // tracking — /api/admin/login sets the same cookie, but a session that
+  // logged in weeks ago would otherwise stay tracked for a month.
+  // See lib/no-track.ts.
+  useEffect(() => {
+    document.cookie = `${NO_TRACK_COOKIE}=1; max-age=${NO_TRACK_COOKIE_OPTIONS.maxAge}; path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
   }, []);
 
   // Deep-link handling: #client-<id> → switch to Clients tab and scroll to

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { isNoTrackRequest } from "@/lib/no-track";
 
 export async function POST(req: NextRequest) {
   try {
+    if (isNoTrackRequest(req)) return NextResponse.json({ ok: true });
+
     const { session_id, duration_ms } = await req.json();
     if (!session_id || !duration_ms) return NextResponse.json({ ok: true });
 

@@ -2,11 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { isInternalAccount } from "@/lib/internal-accounts";
+import { isNoTrackRequest } from "@/lib/no-track";
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ ok: false }, { status: 401 });
+
+    // An admin browser, most likely mid-impersonation: the session is a
+    // real one belonging to someone else, and linking it here is what
+    // used to brand this browser as that photographer forever. The
+    // internal-accounts check below can't catch it — the identity in
+    // play is theirs, not ours. See lib/no-track.ts.
+    if (isNoTrackRequest(req)) {
+      return NextResponse.json({ ok: true, skipped: "no-track" });
+    }
 
     const { visitor_id } = await req.json();
     if (!visitor_id) return NextResponse.json({ ok: true });
@@ -22,8 +32,17 @@ export async function POST(req: NextRequest) {
     // Link visitor_id to user (only if not already linked)
     await query("UPDATE users SET visitor_id = $1 WHERE id = $2 AND visitor_id IS NULL", [visitor_id, session.user.id]);
 
-    // Backfill all unlinked sessions for this visitor
-    await query("UPDATE visitor_sessions SET user_id = $1 WHERE visitor_id = $2 AND user_id IS NULL", [session.user.id, visitor_id]);
+    // Backfill unlinked sessions for this visitor, bounded by the same
+    // 90-day attribution window the tracker keeps UTMs for. A login should
+    // adopt the browsing that led to it, not every session the machine has
+    // ever had — on a shared or long-lived browser that rewrote months of
+    // history under one name.
+    await query(
+      `UPDATE visitor_sessions SET user_id = $1
+        WHERE visitor_id = $2 AND user_id IS NULL
+          AND started_at > NOW() - INTERVAL '90 days'`,
+      [session.user.id, visitor_id]
+    );
 
     // Backfill UTM attribution on users from the earliest visitor_session.
     // Derive utm_source='google' / utm_medium='cpc' from gclid when explicit UTMs missing.

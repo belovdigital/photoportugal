@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import { isBotUserAgent, isSuspectedBotSession } from "@/lib/bot-detect";
+import { isNoTrackRequest } from "@/lib/no-track";
 
 function getDeviceType(ua: string): string {
   if (/tablet|ipad/i.test(ua)) return "tablet";
@@ -21,6 +22,9 @@ function dedupeUtm(v: string | null | undefined): string | null {
 
 export async function POST(req: NextRequest) {
   try {
+    // Our own browsers record nothing — see lib/no-track.
+    if (isNoTrackRequest(req)) return NextResponse.json({ ok: true });
+
     const body = await req.json();
     const { visitor_id, session_id, referrer, utm_source: rawSource, utm_medium: rawMedium, utm_campaign: rawCampaign, utm_term: rawTerm, gclid, landing_page, screen_width, language, ab_hero } = body;
     const utm_source = dedupeUtm(rawSource);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { isNoTrackRequest } from "@/lib/no-track";
 
 const ALLOWED_EVENTS = new Set(["shown", "submitted", "dismissed", "browse_clicked"]);
 
@@ -15,6 +16,8 @@ const ALLOWED_EVENTS = new Set(["shown", "submitted", "dismissed", "browse_click
  */
 export async function POST(req: NextRequest) {
   try {
+    if (isNoTrackRequest(req)) return NextResponse.json({ ok: true });
+
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const eventType = String(body.event_type || "").toLowerCase();
     if (!ALLOWED_EVENTS.has(eventType)) {

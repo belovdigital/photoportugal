@@ -3,6 +3,7 @@ import { compare } from "bcryptjs";
 import { queryOne } from "@/lib/db";
 import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { NO_TRACK_COOKIE, NO_TRACK_COOKIE_OPTIONS } from "@/lib/no-track";
 
 function signToken(payload: string): string {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -68,6 +69,8 @@ export async function POST(req: NextRequest) {
       path: "/",
       maxAge: 30 * 24 * 60 * 60,
     });
+    // Our own browsing stops being visitor data from here on — see lib/no-track.
+    response.cookies.set(NO_TRACK_COOKIE, "1", NO_TRACK_COOKIE_OPTIONS);
 
     return response;
   } catch (error) {

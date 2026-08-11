@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { encode } from "next-auth/jwt";
+import { NO_TRACK_COOKIE, NO_TRACK_COOKIE_OPTIONS } from "@/lib/no-track";
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -50,6 +51,13 @@ export async function POST(req: NextRequest) {
     });
 
     const response = NextResponse.json({ success: true, name: user.name, role: user.role });
+
+    // Browsing as someone else must never be recorded as that someone
+    // else browsing: the token below is indistinguishable from a real
+    // login, so the opt-out cookie is what keeps the tracker off. Set
+    // here too, not just at admin login, because an admin session lasts
+    // 30 days and may predate that cookie. See lib/no-track.ts.
+    response.cookies.set(NO_TRACK_COOKIE, "1", NO_TRACK_COOKIE_OPTIONS);
 
     // Set the NextAuth session cookie (production uses __Secure- prefix)
     response.cookies.set(salt, token, {

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { NO_TRACK_COOKIE } from "@/lib/no-track";
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -20,6 +21,16 @@ function setCookie(name: string, value: string, days: number) {
 
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 min
 
+/**
+ * Our own browsers (anyone who has opened the admin panel) record
+ * nothing: no session, no pageviews, no user link. Checked before every
+ * fetch rather than once on mount, so it also takes effect mid-visit —
+ * e.g. right after an impersonation click. See lib/no-track.ts.
+ */
+function noTrack(): boolean {
+  return getCookie(NO_TRACK_COOKIE) === "1";
+}
+
 export function VisitorTracker() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -31,6 +42,7 @@ export function VisitorTracker() {
   // Initialize visitor + session on mount
   useEffect(() => {
     if (initializedRef.current) return;
+    if (noTrack()) return;
     initializedRef.current = true;
 
     // Get or create visitor_id (persists across sessions via cookie)
@@ -131,6 +143,7 @@ export function VisitorTracker() {
   useEffect(() => {
     if (!initializedRef.current) return;
     if (pathname === lastPathRef.current) return;
+    if (noTrack()) return;
 
     const sessionId = sessionStorage.getItem("vs_sid");
     if (!sessionId) return;
@@ -155,6 +168,7 @@ export function VisitorTracker() {
   // Send duration for current page on leave/hide
   useEffect(() => {
     const sendExitDuration = () => {
+      if (noTrack()) return;
       const sessionId = sessionStorage.getItem("vs_sid");
       if (!sessionId || !lastPathRef.current) return;
       const duration = Date.now() - lastTimestampRef.current;
@@ -178,6 +192,9 @@ export function VisitorTracker() {
   useEffect(() => {
     if (linkedRef.current) return;
     if (status !== "authenticated" || !session?.user) return;
+    // An impersonated session authenticates exactly like a real one —
+    // linking here is what used to brand this browser as that person.
+    if (noTrack()) return;
 
     const visitorId = getCookie("vid");
     if (!visitorId) return;

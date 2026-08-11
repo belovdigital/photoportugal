@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { isBotUserAgent } from "@/lib/bot-detect";
+import { isNoTrackRequest } from "@/lib/no-track";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,8 @@ export async function POST(req: NextRequest) {
   try {
     const ua = req.headers.get("user-agent") || "";
     if (isBotUserAgent(ua)) return new NextResponse(null, { status: 204 });
+    // Admin browsing a profile is not a profile view — see lib/no-track.
+    if (isNoTrackRequest(req)) return new NextResponse(null, { status: 204 });
 
     const visitorId = req.cookies.get("vid")?.value;
     if (!visitorId || !UUID_RE.test(visitorId)) return new NextResponse(null, { status: 204 });
