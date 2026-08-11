@@ -41,6 +41,49 @@ const EXEMPT_TAX_NAME = "Isento";
  *  tourists with no Portuguese tax number. */
 export const CONSUMIDOR_FINAL_NIF = "999999990";
 
+/** Kate's início de atividade. Nothing paid before this can be invoiced. */
+export const ACTIVITY_START = "2026-08-01";
+
+/** Our cut is a service fee plus a plan commission. Outside this band the
+ *  stored payout and the Stripe charge disagree about the booking, and the
+ *  answer is a person, not a document. */
+export const SHARE_PCT_MIN = 10;
+export const SHARE_PCT_MAX = 35;
+
+/**
+ * The Portuguese calendar day for a unix timestamp.
+ *
+ * NOT toISOString(): that is UTC, and Lisbon runs UTC+1 from late March to late
+ * October, so every payment in the first hour of a local day was landing on the
+ * previous date — mis-dating the document and, at the boundary, pushing a
+ * genuine first-of-August payment behind the activity-start cutoff.
+ */
+export function lisbonDay(unixSeconds: number): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Lisbon",
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date(unixSeconds * 1000));
+}
+
+/**
+ * When the money actually moved, for a Stripe charge.
+ *
+ * `charge.created` is the AUTHORISATION. Blind bookings are authorised at
+ * checkout and captured days later when an admin assigns the photographer, so
+ * for those the two differ by up to six days. The balance transaction is
+ * created at capture, which is the instant that dates the document.
+ */
+export function paymentInstant(charge: {
+  created: number;
+  balance_transaction?: unknown;
+}): number {
+  const bt = charge.balance_transaction;
+  if (bt && typeof bt === "object" && "created" in bt && typeof (bt as { created: unknown }).created === "number") {
+    return (bt as { created: number }).created;
+  }
+  return charge.created;
+}
+
 function base(): string {
   return `https://${ACCOUNT}.app.invoicexpress.com`;
 }
