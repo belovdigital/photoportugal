@@ -12,6 +12,7 @@ import {
   SHARE_PCT_MIN,
   SHARE_PCT_MAX,
 } from "@/lib/invoicexpress";
+import { issueSubscriptionInvoices, issueExtrasInvoices } from "./streams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -166,6 +167,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // The two streams that are not bookings: photographer add-on subscriptions
+  // and extra-photo purchases. Same guards, own table.
+  const subscriptions = await issueSubscriptionInvoices(stripe, autoIssue);
+  const extras = await issueExtrasInvoices(stripe, autoIssue);
+  result.errors.push(...subscriptions.errors, ...extras.errors);
+
   // Anything the ladder refuses is a thing a person has to look at, so it must
   // not be findable only by reading a cron log nobody opens.
   if (result.errors.length > 0) {
@@ -177,5 +184,5 @@ export async function GET(req: NextRequest) {
     } catch {}
   }
 
-  return NextResponse.json(result);
+  return NextResponse.json({ bookings: result, subscriptions, extras });
 }
