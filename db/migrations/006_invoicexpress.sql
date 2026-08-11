@@ -15,8 +15,12 @@ ALTER TABLE bookings ADD COLUMN IF NOT EXISTS invoicexpress_invoice_id text;
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS invoicexpress_state text;
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS invoicexpress_issued_at timestamptz;
 
--- One document per booking, enforced by the database rather than by hoping
--- every call site remembers to check.
+-- NOTE what this index does and does not do. It stops one InvoiceXpress id
+-- appearing on two bookings — which is nearly free, since their ids are already
+-- unique — and it does NOT stop one booking receiving two documents, because
+-- that is a sequence of two different ids. One-per-booking is enforced by the
+-- issuing code claiming the row (invoicexpress_state='claiming') BEFORE the
+-- document is created; see scripts/invoicexpress-dry-run.mjs.
 CREATE UNIQUE INDEX IF NOT EXISTS bookings_invoicexpress_invoice_id_key
   ON bookings (invoicexpress_invoice_id)
   WHERE invoicexpress_invoice_id IS NOT NULL;
