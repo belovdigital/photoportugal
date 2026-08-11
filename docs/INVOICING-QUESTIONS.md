@@ -41,9 +41,18 @@ working days of the shoot, then a **recibo** when the payout arrives. Where the
 payout happens to land before the fatura is due, a single **fatura-recibo** is
 fine.
 
-**Blocked on:** contabilista confirmation. Do not ship a tax-substance change
-to this instruction without it — being confidently wrong twice is worse than
-being late once.
+**Resolved-ish 2026-08-11 (Alex's call).** The trigger is the CLIENT'S PAYMENT,
+not the shoot: the client pays when the booking is confirmed, normally before
+the session, and art. 7.º n.º 4 CIVA dates the chargeable event to a payment
+received in advance of the service. So: **fatura dated by the booking payment,
+recibo dated by the payout landing.** The page now says exactly that, and
+states both dates as platform mechanics rather than as a legal conclusion.
+
+**Still open, and it is the whole question:** the client pays US, and we hold
+the money in escrow. Does that count as the photographer receiving payment? If
+yes, the above is right as written. If no, the trigger falls back to the shoot.
+The copy is phrased to survive either answer, but the contabilista still has to
+settle it — this is question one for that call.
 
 ---
 

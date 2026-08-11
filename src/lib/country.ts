@@ -82,6 +82,16 @@ export interface CountryPack {
   /** Are the iOS/Android apps published for this market? */
   hasMobileApp: boolean;
   /**
+   * May the monthly photographer digest go out here?
+   *
+   * It reports the last 30 days and is addressed "your month on <brand>". A
+   * market whose roster is days old has no month to report: Spain's first
+   * digest (2026-08-10) told a photographer approved five days earlier that
+   * she had 7 profile views — three of which were us opening her profile.
+   * Off until a market has a real month of traffic behind it.
+   */
+  photographerDigest: boolean;
+  /**
    * Intercom workspace, or null for a market that runs without live chat.
    * Gates both the widget and the server-side contact sync — a null here
    * must never let a market's users leak into another market's inbox.
@@ -175,6 +185,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     googleProfileUrl: "https://g.page/r/CbWG7PogT_K2EBM",
     founderProfileSlug: "kate-belova",
     hasMobileApp: true,
+    photographerDigest: true,
     intercomAppId: "d02q0i7w",
     city: "Lisbon",
     geo: { lat: 38.7223, lng: -9.1393 },
@@ -231,6 +242,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     googleProfileUrl: null,
     founderProfileSlug: null,
     hasMobileApp: false,
+    photographerDigest: false,
     intercomAppId: null,
     city: "Madrid",
     geo: { lat: 40.4168, lng: -3.7038 },
@@ -285,6 +297,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     googleProfileUrl: null,
     founderProfileSlug: null,
     hasMobileApp: false,
+    photographerDigest: false,
     intercomAppId: null,
     city: "Rome",
     geo: { lat: 41.9028, lng: 12.4964 },
