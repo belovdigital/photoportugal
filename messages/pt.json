@@ -3231,9 +3231,6 @@
     "refunded": "Reembolsado",
     "unpaid": "Por pagar",
     "accepted": "Aceite",
-    "slotNotLockedUntilPaid": "Horário não bloqueado até pagar",
-    "slotNotLockedTitle": "O seu horário ainda não está bloqueado no calendário",
-    "slotLocksExplain": "Só as reservas pagas bloqueiam uma data no nosso calendário. Até o pagamento ser confirmado, outro cliente que pague primeiro pela mesma data pode levá-la.",
     "customPackageInChatTitle": "O seu fotógrafo enviou um pacote personalizado no chat",
     "customPackageInChatExplain": "Para confirmar, abra o chat e toque no cartão “{packageName}” — isso cria uma nova reserva conforme combinado, que poderá pagar.",
     "customPackageInChatExplainGeneric": "Para confirmar, abra o chat e toque no cartão do pacote que o seu fotógrafo enviou — isso cria uma nova reserva conforme combinado, que poderá pagar.",
@@ -3263,7 +3260,7 @@
     "paymentOverdueLabel": "Pagamento em atraso",
     "paymentOverdueMessage": "A sua reserva pode ser cancelada a qualquer momento. Pague imediatamente para evitar o cancelamento.",
     "slotHeldTitle": "Horário reservado — pague para garantir",
-    "slotHeldBody": "O pagamento garante o seu horário. Se não for pago até ao fim do prazo, a reserva será automaticamente cancelada e o horário libertado para outros clientes.",
+    "slotHeldBody": "O pagamento bloqueia a data. Até ser confirmado, outro cliente que pague primeiro pela mesma data pode levá-la — e, se o prazo terminar, a reserva é cancelada automaticamente.",
     "photogSlotHeldTitle": "A aguardar pagamento do cliente",
     "photogSlotHeldBody": "Se o cliente não pagar até ao fim do prazo, a reserva será automaticamente cancelada e o horário libertado.",
     "photogPaymentOverdueLabel": "Pagamento do cliente em atraso",
@@ -3301,7 +3298,7 @@
       "accepted": "Aceite",
       "hintBooked": "O seu pedido de reserva foi enviado",
       "hintConfirmed": "A aguardar confirmação do fotógrafo",
-      "hintPaid": "Complete o pagamento para garantir a reserva",
+      "hintPaid": "Complete o pagamento",
       "hintSession": "A sua sessão está a chegar!",
       "hintPhotos": "O fotógrafo está a editar as suas fotos",
       "hintAccepted": "Reveja as suas fotos e aceite a entrega"
@@ -3420,8 +3417,7 @@
     "redirecting": "A redirecionar...",
     "paymentFailed": "Pagamento falhou",
     "paymentFailedRetry": "Pagamento falhou. Por favor, tente novamente.",
-    "securePayment": "Pagamento seguro",
-    "slotLocksOnPayment": "Horário só fica bloqueado após pagamento"
+    "securePayment": "Pagamento seguro"
   },
   "quickBooking": {
     "badge": "Reserva rápida",

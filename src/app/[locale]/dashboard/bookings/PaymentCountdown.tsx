@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 
-export default function PaymentCountdown({ confirmedAt, viewerRole = "client" }: { confirmedAt: string; viewerRole?: "client" | "photographer" }) {
+/** `action` is the client's Pay button. It lives INSIDE this block on purpose:
+ *  the deadline is the reason to pay, so the reason and the button have to sit
+ *  in the same box. It must render in the overdue branch too — an expired
+ *  countdown is exactly when the client still wants to pay. */
+export default function PaymentCountdown({ confirmedAt, viewerRole = "client", action }: { confirmedAt: string; viewerRole?: "client" | "photographer"; action?: React.ReactNode }) {
   const t = useTranslations("bookings");
   const deadline = new Date(confirmedAt).getTime() + WINDOW_MS;
 
@@ -29,8 +33,13 @@ export default function PaymentCountdown({ confirmedAt, viewerRole = "client" }:
     }
     return (
       <div className="mt-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-        <strong>{t("paymentOverdueLabel") || "Payment overdue"}</strong>{" "}
-        {t("paymentOverdueMessage") || "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <strong>{t("paymentOverdueLabel") || "Payment overdue"}</strong>{" "}
+            {t("paymentOverdueMessage") || "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."}
+          </div>
+          {action && <div className="shrink-0">{action}</div>}
+        </div>
       </div>
     );
   }
@@ -63,11 +72,14 @@ export default function PaymentCountdown({ confirmedAt, viewerRole = "client" }:
           <div className="text-sm font-semibold">{title}</div>
           <div className="text-xs mt-0.5 opacity-80">{body}</div>
         </div>
-        <div className="flex flex-row sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0 shrink-0">
-          <div className={`text-2xl font-mono font-bold tabular-nums leading-none ${timerClass}`}>{timeStr}</div>
-          <div className="text-[10px] uppercase tracking-wide opacity-70">
-            {t("timeRemaining") || "remaining"}
+        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+          <div className="flex flex-row sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0">
+            <div className={`text-2xl font-mono font-bold tabular-nums leading-none ${timerClass}`}>{timeStr}</div>
+            <div className="text-[10px] uppercase tracking-wide opacity-70">
+              {t("timeRemaining") || "remaining"}
+            </div>
           </div>
+          {action}
         </div>
       </div>
     </div>

@@ -205,9 +205,16 @@ export function BookingStatusButtons({
     // which routes through PATCH so the Stripe refund still runs; unpaid
     // uses the dedicated /cancel endpoint. Reason hits Telegram + chat
     // either way.
+    // Muted on purpose: this sits in the client's footer row next to
+    // "Message". A red-outlined button there made cancelling the loudest
+    // control on an unpaid card, competing with the Pay CTA.
     return (
       <>
-        <CancelWithReasonButton bookingId={bookingId} variant={isPaid ? "refund" : "cancel"} />
+        <CancelWithReasonButton
+          bookingId={bookingId}
+          variant={isPaid ? "refund" : "cancel"}
+          className="rounded-lg px-2 py-2 text-sm font-medium text-gray-500 underline-offset-2 hover:text-gray-700 hover:underline disabled:opacity-50"
+        />
         {errorBanner}
         {modal}
       </>

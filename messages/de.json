@@ -3457,9 +3457,6 @@
     "refunded": "Erstattet",
     "unpaid": "Unbezahlt",
     "accepted": "Akzeptiert",
-    "slotNotLockedUntilPaid": "Termin bis zur Zahlung nicht gesperrt",
-    "slotNotLockedTitle": "Ihr Termin ist noch nicht im Kalender gesperrt",
-    "slotLocksExplain": "Nur bezahlte Buchungen sperren ein Datum in unserem Kalender. Solange Ihre Zahlung nicht eingegangen ist, könnte ein anderer Kunde, der zuerst für dasselbe Datum bezahlt, den Termin übernehmen.",
     "customPackageInChatTitle": "Ihr Fotograf hat ein individuelles Paket im Chat gesendet",
     "customPackageInChatExplain": "Zum Bestätigen öffnen Sie den Chat und tippen Sie auf die Karte „{packageName}“ — dadurch entsteht eine neue Buchung, die Sie bezahlen können.",
     "customPackageInChatExplainGeneric": "Zum Bestätigen öffnen Sie den Chat und tippen Sie auf die Paketkarte Ihres Fotografen — dadurch entsteht eine neue Buchung, die Sie bezahlen können.",
@@ -3489,7 +3486,7 @@
     "paymentOverdueLabel": "Zahlung überfällig",
     "paymentOverdueMessage": "Ihre Buchung kann jederzeit storniert werden. Bitte zahlen Sie sofort, um eine Stornierung zu vermeiden.",
     "slotHeldTitle": "Termin reserviert — bezahlen, um zu sichern",
-    "slotHeldBody": "Die Zahlung sichert Ihren Termin. Wird bis zum Ablauf der Frist nicht gezahlt, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben.",
+    "slotHeldBody": "Die Zahlung sperrt das Datum. Solange sie nicht eingegangen ist, könnte ein anderer Kunde, der zuerst für dasselbe Datum bezahlt, den Termin übernehmen — und nach Ablauf der Frist wird Ihre Buchung automatisch storniert.",
     "photogSlotHeldTitle": "Warten auf Zahlung des Kunden",
     "photogSlotHeldBody": "Wenn der Kunde nicht rechtzeitig bezahlt, wird die Buchung automatisch storniert und der Termin freigegeben.",
     "photogPaymentOverdueLabel": "Zahlung des Kunden überfällig",
@@ -3527,7 +3524,7 @@
       "accepted": "Akzeptiert",
       "hintBooked": "Ihre Buchungsanfrage wurde gesendet",
       "hintConfirmed": "Wartet auf Bestätigung des Fotografen",
-      "hintPaid": "Schließen Sie Ihre Zahlung ab, um die Buchung zu sichern",
+      "hintPaid": "Schließen Sie Ihre Zahlung ab",
       "hintSession": "Ihre Session steht bevor!",
       "hintPhotos": "Der Fotograf bearbeitet Ihre Fotos",
       "hintAccepted": "Sehen Sie sich Ihre Fotos an und akzeptieren Sie die Übermittlung"
@@ -3646,8 +3643,7 @@
     "redirecting": "Weiterleitung...",
     "paymentFailed": "Zahlung fehlgeschlagen",
     "paymentFailedRetry": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-    "securePayment": "Sichere Zahlung",
-    "slotLocksOnPayment": "Termin wird erst nach Zahlung gesperrt"
+    "securePayment": "Sichere Zahlung"
   },
   "quickBooking": {
     "badge": "Schnellbuchung",

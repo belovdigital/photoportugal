@@ -3456,9 +3456,6 @@
     "refunded": "Refunded",
     "unpaid": "Unpaid",
     "accepted": "Accepted",
-    "slotNotLockedUntilPaid": "Slot not locked until paid",
-    "slotNotLockedTitle": "Your slot isn't locked in the calendar yet",
-    "slotLocksExplain": "Only paid bookings block a date in our calendar. Until your payment clears, another client paying first for the same date could take it.",
     "customPackageInChatTitle": "Your photographer sent a custom package in chat",
     "customPackageInChatExplain": "To confirm, open the chat and tap the “{packageName}” card — that creates a new booking matching what you discussed, which you can then pay.",
     "customPackageInChatExplainGeneric": "To confirm, open the chat and tap the package card your photographer sent — that creates a new booking matching what you discussed, which you can then pay.",
@@ -3488,7 +3485,7 @@
     "paymentOverdueLabel": "Payment overdue",
     "paymentOverdueMessage": "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation.",
     "slotHeldTitle": "Slot held — pay to secure it",
-    "slotHeldBody": "Payment guarantees your slot. If unpaid by the deadline, your booking will be automatically cancelled and the slot released to other clients.",
+    "slotHeldBody": "Payment locks the date. Until it clears, another client paying first for the same date could take it — and if the deadline passes, your booking is cancelled automatically.",
     "photogSlotHeldTitle": "Awaiting client payment",
     "photogSlotHeldBody": "If the client doesn't pay by the deadline, the booking auto-cancels and the slot is released.",
     "photogPaymentOverdueLabel": "Client payment overdue",
@@ -3526,7 +3523,7 @@
       "accepted": "Accepted",
       "hintBooked": "Your booking request has been sent",
       "hintConfirmed": "Waiting for photographer to confirm",
-      "hintPaid": "Complete your payment to secure the booking",
+      "hintPaid": "Complete your payment",
       "hintSession": "Your session is coming up!",
       "hintPhotos": "Photographer is editing your photos",
       "hintAccepted": "Review your photos and accept the delivery"
@@ -3645,8 +3642,7 @@
     "redirecting": "Redirecting...",
     "paymentFailed": "Payment failed",
     "paymentFailedRetry": "Payment failed. Please try again.",
-    "securePayment": "Secure payment",
-    "slotLocksOnPayment": "Slot locks only after payment"
+    "securePayment": "Secure payment"
   },
   "quickBooking": {
     "badge": "Quick Booking",

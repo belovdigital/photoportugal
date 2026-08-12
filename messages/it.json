@@ -3456,9 +3456,6 @@
     "refunded": "Rimborsata",
     "unpaid": "Non pagata",
     "accepted": "Accettata",
-    "slotNotLockedUntilPaid": "La data non è bloccata fino al pagamento",
-    "slotNotLockedTitle": "La tua data non è ancora bloccata nel calendario",
-    "slotLocksExplain": "Solo le prenotazioni pagate bloccano una data nel nostro calendario. Finché il pagamento non viene completato, la data potrebbe essere assegnata a un altro cliente che paga prima di te.",
     "customPackageInChatTitle": "Il fotografo ti ha inviato un pacchetto personalizzato in chat",
     "customPackageInChatExplain": "Per confermare, apri la chat e tocca la scheda “{packageName}”: verrà creata una nuova prenotazione con i dettagli concordati, che potrai poi pagare.",
     "customPackageInChatExplainGeneric": "Per confermare, apri la chat e tocca la scheda del pacchetto inviata dal fotografo: verrà creata una nuova prenotazione con i dettagli concordati, che potrai poi pagare.",
@@ -3488,7 +3485,7 @@
     "paymentOverdueLabel": "Pagamento scaduto",
     "paymentOverdueMessage": "La prenotazione potrebbe essere annullata in qualsiasi momento. Paga subito per evitare l'annullamento.",
     "slotHeldTitle": "Data riservata — paga per confermarla",
-    "slotHeldBody": "Il pagamento garantisce la tua data. Se non paghi entro la scadenza, la prenotazione verrà annullata automaticamente e la data sarà resa disponibile ad altri clienti.",
+    "slotHeldBody": "Il pagamento blocca la data. Finché non viene completato, un altro cliente che paga prima per la stessa data può prenderla — e allo scadere del termine la prenotazione viene annullata automaticamente.",
     "photogSlotHeldTitle": "In attesa del pagamento del cliente",
     "photogSlotHeldBody": "Se il cliente non paga entro la scadenza, la prenotazione verrà annullata automaticamente e la data sarà nuovamente disponibile.",
     "photogPaymentOverdueLabel": "Pagamento del cliente scaduto",
@@ -3526,7 +3523,7 @@
       "accepted": "Approvate",
       "hintBooked": "La tua richiesta di prenotazione è stata inviata",
       "hintConfirmed": "In attesa della conferma del fotografo",
-      "hintPaid": "Completa il pagamento per confermare la prenotazione",
+      "hintPaid": "Completa il pagamento",
       "hintSession": "Il tuo servizio fotografico si avvicina!",
       "hintPhotos": "Il fotografo sta modificando le tue foto",
       "hintAccepted": "Controlla le tue foto e approva la consegna"
@@ -3645,8 +3642,7 @@
     "redirecting": "Reindirizzamento...",
     "paymentFailed": "Pagamento non riuscito",
     "paymentFailedRetry": "Pagamento non riuscito. Riprova.",
-    "securePayment": "Pagamento sicuro",
-    "slotLocksOnPayment": "Lo slot viene riservato solo dopo il pagamento"
+    "securePayment": "Pagamento sicuro"
   },
   "quickBooking": {
     "badge": "Prenotazione rapida",

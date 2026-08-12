@@ -54,16 +54,19 @@ export function PayButton({ bookingId, amount, blind = false }: {
     ? (Math.round((Number(amount) / 0.85) * 100) / 100).toFixed(2)
     : String(clientPriceWithFee(Number(amount)));
 
+  // Sized to match the delivery CTA on the same page — this is the highest-value
+  // action a client can take, it shouldn't look lighter than "see your photos".
+  // Full width on mobile, hugging right inside the countdown block on desktop.
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:items-end">
       <button
         onClick={handlePay}
         disabled={loading}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent-600 px-6 py-3 text-base font-bold text-white shadow-sm transition hover:bg-accent-700 disabled:opacity-50 sm:w-auto"
       >
         {loading ? (
           <>
-            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
@@ -71,21 +74,20 @@ export function PayButton({ bookingId, amount, blind = false }: {
           </>
         ) : (
           <>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
             {t("pay", { total })}
           </>
         )}
       </button>
-      <div className="flex flex-col gap-0.5">
-        <span className="inline-flex items-center gap-1 text-[10px] text-gray-400">
-          <StripeLogo className="h-[10px] w-auto text-gray-400" />
-          {t("securePayment")}
-        </span>
-        <span className="text-[10px] font-medium text-amber-600">⏳ {t("slotLocksOnPayment")}</span>
-      </div>
-      {error && <span className="text-xs text-red-500">{error}</span>}
+      {/* Reassurance only. The "slot locks after payment" warning that used to
+          sit here is covered by the countdown block on the booking card. */}
+      <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
+        <StripeLogo className="h-[10px] w-auto text-gray-500" />
+        {t("securePayment")}
+      </span>
+      {error && <span className="text-xs font-medium text-red-600">{error}</span>}
     </div>
   );
 }

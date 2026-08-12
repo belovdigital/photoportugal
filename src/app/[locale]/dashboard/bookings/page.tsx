@@ -393,9 +393,6 @@ export default async function BookingsPage() {
                   {booking.payment_status === "refunded" && (
                     <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">{t("refunded")}</span>
                   )}
-                  {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && (
-                    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">⏳ {t("slotNotLockedUntilPaid")}</span>
-                  )}
                 </div>
               </div>
 
@@ -455,15 +452,33 @@ export default async function BookingsPage() {
                   isPhotographer={isPhotographer}
                   shootDate={booking.shoot_date}
                   deliveryToken={booking.delivery_token}
+                  /* Photographer actions only. The client's Pay button moved
+                     into the countdown block below — see the comment there. */
                   action={
-                    <div className="flex flex-wrap gap-2">
-                      {isPhotographer && (booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
+                    isPhotographer && (booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") ? (
+                      <div className="flex flex-wrap gap-2">
                         <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} clientFirstName={isPhotographer ? normalizeName(booking.other_name) : undefined} hasPhotographerMessage={booking.has_photographer_message} />
-                      )}
-                      {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
-                        <PayButton bookingId={booking.id} amount={Number(booking.total_price)} blind={!!booking.blind_booking} />
-                      )}
-                    </div>
+                      </div>
+                    ) : undefined
+                  }
+                />
+              )}
+
+              {/* ONE unpaid nudge per card, and it lives here — directly under
+                  the stepper, where the client's eye already is. The card used
+                  to carry five ("slot not locked" badge, journey hint, a line
+                  under the Pay button, an amber explainer box, and this
+                  countdown) saying the same thing, with the Pay button parked
+                  300px above the timer that justifies it. Deadline and button
+                  are one block now. Don't re-add a second nudge. */}
+              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
+                <PaymentCountdown
+                  confirmedAt={booking.confirmed_at || booking.updated_at}
+                  viewerRole={isPhotographer ? "photographer" : "client"}
+                  action={
+                    isPhotographer ? undefined : (
+                      <PayButton bookingId={booking.id} amount={Number(booking.total_price)} blind={!!booking.blind_booking} />
+                    )
                   }
                 />
               )}
@@ -641,21 +656,6 @@ export default async function BookingsPage() {
 
               {booking.message && (
                 <p className="mt-3 rounded-lg bg-warm-50 px-3 py-2 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
-              )}
-
-              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
-                <>
-                  {!isPhotographer && (
-                    <div className="mt-3 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-3.5 py-2.5 text-sm">
-                      <p className="font-semibold text-amber-900">⏳ {t("slotNotLockedTitle")}</p>
-                      <p className="mt-0.5 text-xs text-amber-800 leading-relaxed">{t("slotLocksExplain")}</p>
-                    </div>
-                  )}
-                  <PaymentCountdown
-                    confirmedAt={booking.confirmed_at || booking.updated_at}
-                    viewerRole={isPhotographer ? "photographer" : "client"}
-                  />
-                </>
               )}
 
               {!["cancelled", "completed", "delivered"].includes(booking.status) && (

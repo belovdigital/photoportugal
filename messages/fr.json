@@ -3702,9 +3702,6 @@
     "refunded": "Remboursée",
     "unpaid": "Non payée",
     "accepted": "Acceptée",
-    "slotNotLockedUntilPaid": "Créneau non verrouillé tant que non payé",
-    "slotNotLockedTitle": "Votre créneau n'est pas encore verrouillé dans l'agenda",
-    "slotLocksExplain": "Seules les réservations payées bloquent une date dans notre agenda. Tant que votre paiement n'est pas confirmé, un autre client qui paie en premier pour la même date pourrait la prendre.",
     "customPackageInChatTitle": "Votre photographe a envoyé un forfait personnalisé dans le chat",
     "customPackageInChatExplain": "Pour confirmer, ouvrez le chat et touchez la carte « {packageName} » — cela crée une nouvelle réservation correspondant à ce qui a été convenu, que vous pourrez payer.",
     "customPackageInChatExplainGeneric": "Pour confirmer, ouvrez le chat et touchez la carte du forfait envoyée par votre photographe — cela crée une nouvelle réservation correspondant à ce qui a été convenu, que vous pourrez payer.",
@@ -3734,7 +3731,7 @@
     "paymentOverdueLabel": "Paiement en retard",
     "paymentOverdueMessage": "Votre réservation peut être annulée à tout moment. Veuillez payer immédiatement pour éviter l'annulation.",
     "slotHeldTitle": "Créneau réservé — payez pour le sécuriser",
-    "slotHeldBody": "Le paiement garantit votre créneau. Si non payé dans le délai, la réservation sera automatiquement annulée et le créneau libéré pour d'autres clients.",
+    "slotHeldBody": "Le paiement verrouille la date. Tant qu'il n'est pas confirmé, un autre client qui paie en premier pour la même date pourrait la prendre — et si le délai expire, votre réservation sera automatiquement annulée.",
     "photogSlotHeldTitle": "En attente du paiement du client",
     "photogSlotHeldBody": "Si le client ne paie pas dans le délai, la réservation sera automatiquement annulée et le créneau libéré.",
     "photogPaymentOverdueLabel": "Paiement du client en retard",
@@ -3772,7 +3769,7 @@
       "accepted": "Acceptée",
       "hintBooked": "Votre demande de réservation a été envoyée",
       "hintConfirmed": "En attente de confirmation du photographe",
-      "hintPaid": "Complétez votre paiement pour sécuriser la réservation",
+      "hintPaid": "Complétez votre paiement",
       "hintSession": "Votre séance approche !",
       "hintPhotos": "Le photographe édite vos photos",
       "hintAccepted": "Examinez vos photos et acceptez la livraison"
@@ -3891,8 +3888,7 @@
     "redirecting": "Redirection...",
     "paymentFailed": "Échec du paiement",
     "paymentFailedRetry": "Échec du paiement. Veuillez réessayer.",
-    "securePayment": "Paiement sécurisé",
-    "slotLocksOnPayment": "Créneau verrouillé uniquement après paiement"
+    "securePayment": "Paiement sécurisé"
   },
   "quickBooking": {
     "badge": "Réservation rapide",
