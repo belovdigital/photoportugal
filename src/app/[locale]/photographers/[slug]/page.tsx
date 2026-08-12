@@ -16,14 +16,15 @@ import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { ReviewsPaginated, REVIEWS_PAGE_SIZE } from "@/components/ui/ReviewsPaginated";
+import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
+import { REVIEWS_PAGE_SIZE } from "@/lib/reviews-page-size";
 import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { clientExtraPriceCents, DEFAULT_EXTRA_PHOTO_PAYOUT_CENTS } from "@/lib/extras-pricing";
 import { RequestCustomPackageCard } from "@/components/ui/RequestCustomPackageCard";
 import { BusinessQuoteCard } from "@/components/ui/BusinessQuoteCard";
 import { localeAlternates, openGraphIdentity, localizedAbsolute } from "@/lib/seo";
-import { normalizeName } from "@/lib/format-name";
+import { normalizeName, formatPublicName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { StickyBookBar } from "@/components/ui/StickyBookBar";
 import { MobilePhotographerHero } from "@/components/photographers/MobilePhotographerHero";
@@ -693,7 +694,9 @@ export default async function PhotographerProfilePage({
             const photoUrls = (r.photos || []).map((p: { url: string }) => toAbsoluteUrl(p.url));
             return {
               "@type": "Review",
-              author: { "@type": "Person", name: r.client_name || "Verified traveler" },
+              // formatPublicName, same as ReviewsPaginated renders: the card
+              // says "Sarah W." so the markup must not say "Sarah Warren".
+              author: { "@type": "Person", name: r.client_name ? formatPublicName(r.client_name) : t("privateClient") },
               reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
               ...(body ? { reviewBody: body } : {}),
               ...(r.title ? { name: r.title } : {}),
