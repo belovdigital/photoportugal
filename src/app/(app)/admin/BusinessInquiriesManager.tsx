@@ -44,15 +44,21 @@ const TYPE_LABELS: Record<string, string> = {
 // is the deal board: status + notes per inquiry, contact links for fast reply.
 export function BusinessInquiriesManager() {
   const [inquiries, setInquiries] = useState<Inquiry[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
+  // Swallowing a failed load used to render "No inquiries yet" — an empty
+  // board and a broken board must never look the same.
   useEffect(() => {
     fetch("/api/admin/business-inquiries")
-      .then((r) => r.json())
-      .then((d) => setInquiries(d.inquiries || []))
-      .catch(() => setInquiries([]));
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || `Request failed (${r.status})`);
+        setInquiries(d.inquiries || []);
+      })
+      .catch((e) => setLoadError(e instanceof Error ? e.message : "Failed to load business inquiries"));
   }, []);
 
   const patch = async (id: string, fields: { status?: string; admin_notes?: string }) => {
@@ -73,6 +79,13 @@ export function BusinessInquiriesManager() {
     }
   };
 
+  if (loadError) {
+    return (
+      <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        Could not load business inquiries: {loadError}
+      </p>
+    );
+  }
   if (inquiries === null) return <p className="text-sm text-gray-500">Loading business inquiries…</p>;
 
   const shown = filter === "all" ? inquiries : inquiries.filter((i) => i.status === filter);

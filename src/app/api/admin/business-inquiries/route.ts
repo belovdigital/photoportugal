@@ -20,10 +20,14 @@ export async function GET() {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // photographer_profiles has no display_name column — the name lives on
+  // users.name. Selecting pp.display_name threw, and the client's catch
+  // turned the 500 into an empty "No inquiries yet" board.
   const inquiries = await query(
-    `SELECT bi.*, pp.slug as photographer_slug, pp.display_name as photographer_name
+    `SELECT bi.*, pp.slug as photographer_slug, u.name as photographer_name
      FROM business_inquiries bi
      LEFT JOIN photographer_profiles pp ON pp.id = bi.photographer_id
+     LEFT JOIN users u ON u.id = pp.user_id
      ORDER BY bi.created_at DESC
      LIMIT 200`
   );

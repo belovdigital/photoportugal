@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -39,14 +39,24 @@ export async function POST(req: NextRequest) {
   // Optional photographer link when filed from a profile card
   let photographerId: string | null = null;
   let photographerName: string | null = null;
+  // Never let this lookup sink the inquiry: it runs before the INSERT, so a
+  // throw here loses the lead entirely (no row, no email, no Telegram). The
+  // name lives on users.name — photographer_profiles has no display_name.
   if (typeof photographer_slug === "string" && /^[a-z0-9-]+$/.test(photographer_slug)) {
-    const p = await queryOne<{ id: string; display_name: string }>(
-      "SELECT id, display_name FROM photographer_profiles WHERE slug = $1",
-      [photographer_slug]
-    );
-    if (p) {
-      photographerId = p.id;
-      photographerName = p.display_name;
+    try {
+      const p = await queryOne<{ id: string; display_name: string }>(
+        `SELECT pp.id, u.name AS display_name
+           FROM photographer_profiles pp
+           JOIN users u ON u.id = pp.user_id
+          WHERE pp.slug = $1`,
+        [photographer_slug]
+      );
+      if (p) {
+        photographerId = p.id;
+        photographerName = p.display_name;
+      }
+    } catch (e) {
+      console.error("[business-inquiry] photographer lookup failed:", e);
     }
   }
 
