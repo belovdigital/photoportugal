@@ -48,17 +48,33 @@ async function verifyAdmin(): Promise<boolean> {
  * Stripe cannot be reached: the dashboard showing an under-stated withdrawal is
  * awkward, a dashboard that fails to render is worse.
  */
-async function stripePaidOutTotal(): Promise<number> {
+async function stripePosition(): Promise<{
+  paidOut: number;
+  stripeAvailable: number;
+  stripePending: number;
+  stripeReadable: boolean;
+}> {
+  const none = { paidOut: 0, stripeAvailable: 0, stripePending: 0, stripeReadable: false };
   try {
     const { stripe } = await import("@/lib/stripe");
-    if (!stripe) return 0;
+    if (!stripe) return none;
+    const balance = await stripe.balance.retrieve();
+    const eur = (list: { amount: number; currency: string }[]) =>
+      list.filter((b) => b.currency === "eur").reduce((s, b) => s + b.amount, 0) / 100;
     let cents = 0;
     for await (const p of stripe.payouts.list({ limit: 100 })) {
       if (p.status !== "failed" && p.status !== "canceled") cents += p.amount;
     }
-    return cents / 100;
+    return {
+      paidOut: cents / 100,
+      stripeAvailable: eur(balance.available),
+      stripePending: eur(balance.pending),
+      stripeReadable: true,
+    };
   } catch {
-    return 0;
+    // A dashboard that renders without the Stripe panel beats one that does
+    // not render. `stripeReadable` lets the UI say so instead of showing €0.
+    return none;
   }
 }
 
@@ -527,7 +543,26 @@ export default async function AdminPage() {
     // we earned; this is what has already left. Read live from Stripe rather
     // than tracked locally — payouts can be made from the Stripe dashboard by
     // a human and no webhook of ours would know.
-    paidOut: await stripePaidOutTotal(),
+    ...(await stripePosition()),
+    // Money sitting in Stripe that is NOT ours: photographer payouts on paid
+    // bookings that have not been transferred yet. Cancelled bookings are
+    // excluded — that money is a refund question, not a payout.
+    owedToPhotographers: parseFloat(
+      (await queryOne<{ total: string }>(
+        `SELECT COALESCE(SUM(payout_amount), 0) AS total
+           FROM bookings
+          WHERE payment_status = 'paid' AND status <> 'cancelled'
+            AND payout_amount > 0 AND COALESCE(payout_transferred, FALSE) = FALSE`
+      ).catch(() => null))?.total || "0"
+    ) + parseFloat(
+      (await queryOne<{ total: string }>(
+        `SELECT COALESCE(
+                  (SELECT SUM(payout_cents) FROM tips WHERE status = 'paid' AND COALESCE(transferred, FALSE) = FALSE), 0
+                ) + COALESCE(
+                  (SELECT SUM(payout_cents) FROM delivery_extra_purchases WHERE status = 'paid' AND COALESCE(transferred, FALSE) = FALSE), 0
+                ) AS total`
+      ).catch(() => null))?.total || "0"
+    ) / 100,
     // Revenue, from 2026-08-11, is ONE number: what the client paid minus the
     // photographer's payout. Not "service fee plus commission from the
     // photographer" — under the model adopted 2026-08-09 nothing is charged to

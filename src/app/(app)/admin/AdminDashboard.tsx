@@ -168,6 +168,14 @@ interface AdminStats {
   revenueThisMonth: number;
   /** Everything already moved out of Stripe to the bank, all time. */
   paidOut: number;
+  /** Live Stripe balance. `stripeReadable` is false when Stripe could not be
+   *  reached — the panel says so rather than showing a confident €0. */
+  stripeAvailable: number;
+  stripePending: number;
+  stripeReadable: boolean;
+  /** Photographer money sitting in that balance: payouts not yet transferred,
+   *  plus untransferred tips and extras. Not ours to withdraw. */
+  owedToPhotographers: number;
   // Extra photos sold after delivery — already folded into revenue/turnover
   // above, broken out here so the numbers stay traceable.
   extrasTurnover: number;
@@ -917,6 +925,48 @@ export function AdminDashboard({
                   {stats.photographersReady > 0 && <p className="mt-1 text-xs text-green-600">{stats.photographersReady} ready for approval</p>}
                   {stats.photographersPending > 0 && stats.photographersPending > stats.photographersReady && <p className="text-xs text-gray-400">{stats.photographersPending - stats.photographersReady} filling profile</p>}
                 </div>
+              </div>
+
+              {/* What is actually withdrawable. The Stripe balance is the whole
+                  till: it still holds every photographer payout that has not
+                  been transferred yet. Subtracting that is the only number
+                  worth acting on, and doing the subtraction in the head at
+                  10pm is how people pay themselves someone else's money. */}
+              <div className="mt-2 sm:mt-4 rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Stripe</p>
+                  {!stats.stripeReadable && (
+                    <span className="text-[11px] text-amber-700">could not reach Stripe</span>
+                  )}
+                </div>
+                {stats.stripeReadable ? (
+                  <>
+                    <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">
+                      &euro;{Math.max(0, stats.stripeAvailable - stats.owedToPhotographers).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <span className="ml-2 align-middle text-xs font-normal text-gray-400">safe to withdraw</span>
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500 sm:max-w-md">
+                      <span>Available</span>
+                      <span className="text-right font-medium text-gray-700">&euro;{stats.stripeAvailable.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span>Owed to photographers</span>
+                      <span className="text-right font-medium text-red-600">&minus;&euro;{stats.owedToPhotographers.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      {stats.stripePending > 0 && (
+                        <>
+                          <span className="text-gray-400">In transit (not yet available)</span>
+                          <span className="text-right text-gray-400">&euro;{stats.stripePending.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </>
+                      )}
+                      {stats.paidOut > 0 && (
+                        <>
+                          <span className="text-gray-400">Paid out to bank, all time</span>
+                          <span className="text-right text-gray-400">&euro;{stats.paidOut.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-400">Balance unavailable — check Stripe directly before withdrawing.</p>
+                )}
               </div>
 
               {/* Action items — what needs attention */}
