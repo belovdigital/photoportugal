@@ -99,8 +99,8 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
     const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
     const bookingShort = bookingId.replace(/-/g, "").slice(0, 8);
     const zipFilename = set === "extras"
-      ? `PhotoPortugal_${sanitizedName}_${bookingShort}_extras.zip`
-      : `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
+      ? `${country.brand.replace(/\s+/g, "")}_${sanitizedName}_${bookingShort}_extras.zip`
+      : `${country.brand.replace(/\s+/g, "")}_${sanitizedName}_${bookingShort}.zip`;
 
     console.log(`[build-zip] Building zip for booking ${bookingId} with ${photos.length} photos`);
 

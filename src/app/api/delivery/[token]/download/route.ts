@@ -105,9 +105,12 @@ export async function GET(
 
   const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
   const bookingShort = booking.id.replace(/-/g, "").slice(0, 8);
+  // "Photo Spain" -> "PhotoSpain". The download name is the one artefact of ours
+  // the client keeps on their disk; it should not say Portugal on another market.
+  const brandSlug = country.brand.replace(/\s+/g, "");
   const zipDownloadName = wantsExtras
-    ? `PhotoPortugal_${sanitizedName}_${bookingShort}_extras.zip`
-    : `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
+    ? `${brandSlug}_${sanitizedName}_${bookingShort}_extras.zip`
+    : `${brandSlug}_${sanitizedName}_${bookingShort}.zip`;
 
   // Serve pre-built ZIP if available. Three URL formats coexist:
   //  - https://files.photoportugal.com/... → 302 redirect, browser downloads

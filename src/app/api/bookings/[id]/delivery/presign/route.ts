@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { getPresignedPutUrl } from "@/lib/s3";
+import { country } from "@/lib/country";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     .replace(/[^a-zA-Z0-9]/g, "");
   const bookingShort = id.replace(/-/g, "").slice(0, 8);
   const seq = totalCount + 1;
-  const downloadFilename = `PhotoPortugal_${sanitizedPhotographer}_${bookingShort}_${String(seq).padStart(3, "0")}.${rawExt}`;
+  const downloadFilename = `${country.brand.replace(/\s+/g, "")}_${sanitizedPhotographer}_${bookingShort}_${String(seq).padStart(3, "0")}.${rawExt}`;
 
   const uniqueName = `${crypto.randomUUID()}.${rawExt}`;
   const s3Key = `delivery/${id}/${uniqueName}`;

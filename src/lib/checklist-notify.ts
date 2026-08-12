@@ -53,7 +53,7 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
     );
 
     sendAdminSMS(
-      `Photo Portugal: ${profile.name} completed their profile and is ready for approval. Check admin panel.`
+      `${country.brand}: ${profile.name} completed their profile and is ready for approval. Check admin panel.`
     );
 
     import("@/lib/telegram").then(({ sendTelegram }) => {

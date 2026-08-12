@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
     // Localized strings per chat language (EN/PT/DE — others fall back to EN)
     const T = isDe
       ? {
-          subject: "Ihre 3 Fotografen-Matches in Portugal",
-          h2: "Ihre Fotografen-Matches in Portugal 📸",
+          subject: `Ihre 3 Fotografen-Matches ${country.countryIn.de}`,
+          h2: `Ihre Fotografen-Matches ${country.countryIn.de} 📸`,
           greeting: first_name ? `Hallo ${first_name},` : "Hallo,",
           intro: "Basierend auf Ihren Angaben an unseren Concierge — hier sind Ihre 3 handverlesenen Matches. Tippen Sie auf einen der Profile, um ein Gespräch zu starten — meist antworten sie innerhalb weniger Stunden.",
           talk: (n: string) => `Mit ${n} schreiben`,
@@ -105,8 +105,8 @@ export async function POST(req: NextRequest) {
         }
       : isPt
       ? {
-          subject: "Os seus 3 fotógrafos em Portugal",
-          h2: "Os seus fotógrafos em Portugal 📸",
+          subject: `Os seus 3 fotógrafos ${country.countryIn.pt}`,
+          h2: `Os seus fotógrafos ${country.countryIn.pt} 📸`,
           greeting: first_name ? `Olá ${first_name},` : "Olá,",
           intro: "Com base no que partilhou com o nosso concierge, aqui estão os seus 3 fotógrafos selecionados. Toque num para iniciar uma conversa — geralmente respondem em poucas horas.",
           talk: (n: string) => `Falar com ${n}`,
@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
           footer: "Recebeu este email porque usou o nosso concierge IA. Se não foi você, ignore esta mensagem.",
         }
       : {
-          subject: "Your 3 Portugal photographer matches",
-          h2: "Your Portugal photographer matches 📸",
+          subject: `Your 3 ${country.areaServed} photographer matches`,
+          h2: `Your ${country.areaServed} photographer matches 📸`,
           greeting: first_name ? `Hi ${first_name},` : "Hi,",
           intro: "Based on what you told our concierge, here are your 3 hand-picked matches. Tap any one to start a conversation — they'll usually reply within a few hours.",
           talk: (n: string) => `Talk to ${n}`,

@@ -187,7 +187,7 @@ function renderEmail(firstName: string, packages: PkgRow[]): string {
     ${emailButton(`${country.baseUrl}/dashboard/photographer`, "Open my dashboard")}
     <p style="font-size:14px;line-height:1.7;color:#5c5247;margin:22px 0 0 0;">
       Questions? Just reply to this email or ping us on WhatsApp.<br/><br/>
-      Thank you for being part of Photo Portugal.<br/>— The team
+      Thank you for being part of ${country.brand}.<br/>— The team
     </p>`;
 
   return emailLayout(body, "en");

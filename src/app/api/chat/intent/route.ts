@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
         {
           role: "system",
           content:
-            'You read a chat between a wedding/portrait photographer and a potential client on a booking platform in Portugal. Extract the client\'s booking intent into a strict JSON object with these keys (use null when missing, do NOT guess):\n' +
+            `You read a chat between a wedding/portrait photographer and a potential client on a booking platform ${country.countryIn.en}. Extract the client's booking intent into a strict JSON object with these keys (use null when missing, do NOT guess):\n` +
             '- shoot_date: ISO date "YYYY-MM-DD" if explicitly stated; otherwise null.\n' +
             `- location: city/region name as the client said it (e.g. ${byCountry({ pt: '"Comporta", "Lisbon"', es: '"Ronda", "Barcelona"', it: '"Positano", "Rome"' })}).\n` +
             '- occasion: one of "couples", "family", "wedding", "engagement", "maternity", "solo", "boudoir", "event", "real_estate", "other"; null if unclear.\n' +

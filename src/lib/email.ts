@@ -2267,7 +2267,7 @@ export function renderTrustpilotFollowUpToClient(
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
       <div style="height:8px"></div>
       ${emailButton(`https://www.trustpilot.com/evaluate/${country.host}`, "Review Us on Trustpilot", "#16A34A")}
-      <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!</p>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Even a few words make a huge difference. Thank you for supporting independent photography ${country.countryIn.en}!</p>
     `),
   };
 }
@@ -2483,7 +2483,7 @@ export async function sendAbandonedBookingReminder(
   const display0 = maskSurname(photographers[0].name);
   const subject = single
     ? `Still thinking about your photoshoot with ${display0}?`
-    : `Still looking for a photographer in Portugal?`;
+    : `Still looking for a photographer ${country.countryIn.en}?`;
   const photographerLinks = photographers
     .map(p => `<a href="${BASE_URL}/photographers/${p.slug}" style="color:#C94536;font-weight:600;text-decoration:none;">${maskSurname(p.name)}</a>`)
     .join(", ");
@@ -2507,7 +2507,7 @@ export async function sendNoBookingNudge(
   const firstName = toFirstName(clientName);
   await sendEmail(
     clientEmail,
-    `Need help finding a photographer in Portugal?`,
+    `Need help finding a photographer ${country.countryIn.en}?`,
     emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Hi ${firstName}!</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Welcome to ${country.brand}! We noticed you signed up but haven't booked a session yet.</p>

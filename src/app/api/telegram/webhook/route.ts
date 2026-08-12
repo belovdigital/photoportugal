@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +27,14 @@ export async function POST(req: NextRequest) {
 
     // Handle /start — connect Telegram (or bare /start)
     if (text === "/start") {
-      await replyToChat(chatId, "Welcome to Photo Portugal notifications!\n\nTo connect your account, use the \"Connect Telegram\" button in your dashboard settings at photoportugal.com/dashboard/settings");
+      await replyToChat(chatId, `Welcome to ${country.brand} notifications!\n\nTo connect your account, use the "Connect Telegram" button in your dashboard settings at ${country.host}/dashboard/settings`);
       return NextResponse.json({ ok: true });
     }
 
     if (text.startsWith("/start ")) {
       const code = text.replace("/start ", "").trim();
       if (!code) {
-        await replyToChat(chatId, "Invalid link. Please use the connect button from your Photo Portugal dashboard.");
+        await replyToChat(chatId, `Invalid link. Please use the connect button from your ${country.brand} dashboard.`);
         return NextResponse.json({ ok: true });
       }
 
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
           "UPDATE notification_preferences SET telegram_enabled = FALSE, updated_at = NOW() WHERE user_id = $1",
           [profile.user_id]
         );
-        await replyToChat(chatId, "Disconnected. You will no longer receive notifications here.\n\nTo reconnect, use the button in your Photo Portugal dashboard.");
+        await replyToChat(chatId, `Disconnected. You will no longer receive notifications here.\n\nTo reconnect, use the button in your ${country.brand} dashboard.`);
       } else {
         await replyToChat(chatId, "No account is linked to this chat.");
       }

@@ -172,7 +172,7 @@ function renderEmail(
       If anything's unclear — just reply to this email or ping us on WhatsApp. We're here.
     </p>
     <p style="font-size:14px;line-height:1.7;color:#5c5247;margin:14px 0 0 0;">
-      Thank you for being part of Photo Portugal.<br/>
+      Thank you for being part of ${country.brand}.<br/>
       — The team
     </p>
   `;

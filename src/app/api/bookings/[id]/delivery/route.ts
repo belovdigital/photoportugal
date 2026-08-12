@@ -776,7 +776,7 @@ export async function POST(
     const bookingShort = id.replace(/-/g, "").slice(0, 8);
     function prettyDownloadName(seq: number, ext: string): string {
       const padded = String(seq).padStart(3, "0");
-      return `PhotoPortugal_${sanitizedPhotographer}_${bookingShort}_${padded}.${ext}`;
+      return `${country.brand.replace(/\s+/g, "")}_${sanitizedPhotographer}_${bookingShort}_${padded}.${ext}`;
     }
 
     // Per-file processing errors (S3 outage, sharp OOM, DB hiccup, etc.)

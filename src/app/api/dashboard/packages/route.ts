@@ -207,7 +207,7 @@ export async function PUT(req: NextRequest) {
     );
     if (tierGuard?.tier) {
       return NextResponse.json({
-        error: "This is a Photo Portugal gift card package — you can't edit it. To stop accepting gift cards, use the toggle in Subscriptions.",
+        error: `This is a ${country.brand} gift card package — you can't edit it. To stop accepting gift cards, use the toggle in Subscriptions.`,
         code: "tier_package_protected",
       }, { status: 403 });
     }
@@ -320,7 +320,7 @@ export async function DELETE(req: NextRequest) {
     );
     if (tierGuard?.tier) {
       return NextResponse.json({
-        error: "This is a Photo Portugal gift card package and can't be deleted. To stop accepting gift cards, use the toggle in Subscriptions.",
+        error: `This is a ${country.brand} gift card package and can't be deleted. To stop accepting gift cards, use the toggle in Subscriptions.`,
         code: "tier_package_protected",
       }, { status: 403 });
     }

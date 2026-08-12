@@ -427,7 +427,7 @@ async function handleAssignPhotographer(opts: {
         `<div style="font-family: sans-serif; max-width: 540px; margin: 0 auto;">
           <h2 style="color:#16A34A;">You've got a new booking 🎉</h2>
           <p>Hi ${(ctx.photographer_name.split(" ")[0] || ctx.photographer_name).replace(/[<>]/g, "")},</p>
-          <p>${country.brand} matched you with <strong>${ctx.client_name.replace(/[<>]/g, "")}</strong> for a ${(ctx.location_slug || "Portugal").replace(/-/g, " ")} photoshoot${dateLine}. It's booked and paid — your payout is on the way once the session is delivered.</p>
+          <p>${country.brand} matched you with <strong>${ctx.client_name.replace(/[<>]/g, "")}</strong> for a ${(ctx.location_slug || country.areaServed).replace(/-/g, " ")} photoshoot${dateLine}. It's booked and paid — your payout is on the way once the session is delivered.</p>
           <p><strong>One quick step:</strong> open the booking in your dashboard and set how many photos the client should expect — it manages their expectations and unlocks a smooth delivery.</p>
           <p>Say hi and plan the details (meeting point, timing, outfits) with them in the chat.</p>
           <p><a href="${BASE}/dashboard/messages" style="display:inline-block;background:#16A34A;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Open chat with your client</a></p>

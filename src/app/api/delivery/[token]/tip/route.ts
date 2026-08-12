@@ -133,7 +133,7 @@ export async function POST(
       price_data: {
         currency: "eur",
         product_data: {
-          name: `Tip for ${firstName} — Photo Portugal`,
+          name: `Tip for ${firstName} — ${country.brand}`,
           description: "A thank-you for your photographer. Every cent goes to them.",
         },
         unit_amount: amountCents,

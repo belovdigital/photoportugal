@@ -1,4 +1,5 @@
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 function getStatusMessage(status: string, photographerName: string, clientName: string): string | null {
   const pName = photographerName.split(" ")[0];
@@ -99,7 +100,7 @@ export async function sendCancellationMessage(
     const who =
       cancelledBy === "photographer" ? booking.photographer_name.split(" ")[0]
       : cancelledBy === "client" ? booking.client_name.split(" ")[0]
-      : "Photo Portugal";
+      : country.brand;
     const trimmedReason = (reason || "").trim().slice(0, 500);
     const text = `❌ Booking cancelled by ${who}.\nReason: ${trimmedReason || "(no reason given)"}`;
 

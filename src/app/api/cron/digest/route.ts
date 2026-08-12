@@ -202,7 +202,7 @@ export async function GET(req: NextRequest) {
         <a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Admin Panel</a>
       </div>
 
-      <p style="color: #ccc; font-size: 11px; text-align: center; margin-top: 24px;">Photo Portugal — Daily Digest</p>
+      <p style="color: #ccc; font-size: 11px; text-align: center; margin-top: 24px;">${country.brand} — Daily Digest</p>
     </div>`;
 
     const adminEmail = await getAdminEmail();

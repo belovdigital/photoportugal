@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#9B8E82;">Sent because you used our AI concierge.</p>
   `);
 
-  await sendEmail(chat.email, "Your updated Portugal photographer matches", html).catch((e) => console.error("[concierge/email/resend] send error:", e));
+  await sendEmail(chat.email, `Your updated ${country.areaServed} photographer matches`, html).catch((e) => console.error("[concierge/email/resend] send error:", e));
 
   return NextResponse.json({ ok: true, matches_emailed: cards.length });
 }

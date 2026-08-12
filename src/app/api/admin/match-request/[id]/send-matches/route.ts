@@ -237,7 +237,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       <!-- Footer -->
       <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 0;border-top:1px solid #F3EDE6;">
         <tr><td style="padding:24px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#999;">${country.brand} — Connecting travelers with talented photographers across Portugal</p>
+          <p style="margin:0;font-size:12px;color:#999;">${country.brand} — Connecting travelers with talented photographers across ${country.areaServed}</p>
           <p style="margin:4px 0 0;font-size:12px;color:#999;"><a href="${BASE_URL}" style="color:#C94536;text-decoration:none;">${country.host}</a></p>
         </td></tr>
       </table>
@@ -548,7 +548,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         <p style="font-size:14px;color:#666;line-height:1.6;">Can't decide? Simply reply to this email — our team is happy to help you choose the best fit for your session.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 0;border-top:1px solid #F3EDE6;">
           <tr><td style="padding:24px 0;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#999;">${country.brand} — Connecting travelers with talented photographers across Portugal</p>
+            <p style="margin:0;font-size:12px;color:#999;">${country.brand} — Connecting travelers with talented photographers across ${country.areaServed}</p>
             <p style="margin:4px 0 0;font-size:12px;color:#999;"><a href="${BASE_URL}" style="color:#C94536;text-decoration:none;">${country.host}</a></p>
           </td></tr>
         </table>
