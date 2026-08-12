@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     if (ctx?.phone) {
       const digits = ctx.phone.replace(/\D/g, "");
       phoneLine = digits.length >= 6
-        ? `<b>WhatsApp:</b> <a href="https://wa.me/${digits}?text=${encodeURIComponent("Hi! This is Photo Portugal — about your photoshoot inquiry.")}">📱 ${escapeHtml(ctx.phone)}</a>`
+        ? `<b>WhatsApp:</b> <a href="https://wa.me/${digits}?text=${encodeURIComponent(`Hi! This is ${country.brand} — about your photoshoot inquiry.`)}">📱 ${escapeHtml(ctx.phone)}</a>`
         : `<b>Phone:</b> <code>${escapeHtml(ctx.phone)}</code>`;
     }
 

@@ -184,15 +184,15 @@ export async function PATCH(req: NextRequest) {
           [id]
         );
         if (photographer?.email) {
-          const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+          const BASE_URL = process.env.AUTH_URL || country.baseUrl;
           const profileUrl = `${BASE_URL}/photographers/${photographer.slug}`;
           sendEmail(
             photographer.email,
-            "Your profile is now live on Photo Portugal!",
+            `Your profile is now live on ${country.brand}!`,
             `
             <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
               <h2 style="color: #C94536;">Congratulations, ${photographer.name}!</h2>
-              <p>Great news — your photographer profile has been reviewed and approved. You're now live on Photo Portugal and visible to thousands of tourists planning their trips to Portugal.</p>
+              <p>Great news — your photographer profile has been reviewed and approved. You're now live on ${country.brand} and visible to thousands of tourists planning their trips to ${country.areaServed}.</p>
 
               <div style="margin: 24px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
                 <p style="margin: 0 0 8px; font-weight: bold; color: #166534;">Your profile is live:</p>
@@ -210,7 +210,7 @@ export async function PATCH(req: NextRequest) {
 
               <p><a href="${BASE_URL}/dashboard/profile" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Your Dashboard</a></p>
 
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>
             `
           ).catch((err) => console.error("[admin] Failed to send approval email:", err));
@@ -231,7 +231,7 @@ export async function PATCH(req: NextRequest) {
               if (smsPrefs?.sms_bookings !== false) {
                 sendSMS(
                   photographerPhone.phone,
-                  `Photo Portugal: Congratulations! Your profile is now live. Clients can find and book you at photoportugal.com`
+                  `${country.brand}: Congratulations! Your profile is now live. Clients can find and book you at ${country.host}`
                 ).catch(err => console.error("[sms] error:", err));
               }
             }
@@ -241,7 +241,7 @@ export async function PATCH(req: NextRequest) {
                 m.sendPushNotification(
                   photographerPhone.user_id,
                   "🎉 Your profile is live!",
-                  "Clients can now find and book you on Photo Portugal.",
+                  `Clients can now find and book you on ${country.brand}.`,
                   { type: "profile_approved", channelId: "default", categoryId: "ACCOUNT" }
                 )
               ).catch(err => console.error("[admin] approval push error:", err));

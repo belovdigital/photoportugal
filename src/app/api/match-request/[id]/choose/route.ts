@@ -181,7 +181,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (photographerInfo.phone && smsPrefs?.sms_bookings !== false) {
         sendSMS(
           photographerInfo.phone,
-          `Photo Portugal: ${matchReq.name} chose you for a ${shootTypeLabel.toLowerCase()} shoot in ${locationName}! Check your dashboard: ${BASE_URL}/dashboard/bookings`
+          `${country.brand}: ${matchReq.name} chose you for a ${shootTypeLabel.toLowerCase()} shoot in ${locationName}! Check your dashboard: ${BASE_URL}/dashboard/bookings`
         ).catch((err) => console.error("[match-request/choose] sms error:", err));
       }
     } catch (smsErr) {

@@ -2568,7 +2568,7 @@ async function runReminders(): Promise<NextResponse> {
           `Your ${country.brand} account has been deactivated`,
           `<p>Hi ${p.name},</p>
 <p>Your photographer profile on ${country.brand} has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
-<p>If you'd like to reactivate your account, please contact us at <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> and we'll help you get started again.</p>
+<p>If you'd like to reactivate your account, please contact us at <a href="mailto:${country.supportEmail}">${country.supportEmail}</a> and we'll help you get started again.</p>
 <p>Best,<br>${country.brand} Team</p>`
         );
         checklistDeactivated++;

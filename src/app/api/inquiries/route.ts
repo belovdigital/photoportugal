@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       if (isNewInquiry && recipient.phone && prefs?.sms_bookings !== false) {
         sendSMS(
           recipient.phone,
-          `Photo Portugal: New inquiry from ${senderName}. Log in to reply: ${BASE_URL}/dashboard/messages`
+          `${country.brand}: New inquiry from ${senderName}. Log in to reply: ${BASE_URL}/dashboard/messages`
         ).catch(err => console.error("[inquiry] sms error:", err));
       }
 

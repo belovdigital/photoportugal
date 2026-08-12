@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       // Clickable phone — wa.me requires digits only, no "+".
       const phoneDigits = cleanPhone.replace(/\D/g, "");
       const phoneLink = phoneDigits.length >= 6
-        ? `<a href="https://wa.me/${phoneDigits}?text=${encodeURIComponent("Hi! This is Photo Portugal — saw you wanted to chat about your photoshoot.")}">📱 ${escapeHtml(cleanPhone)}</a>`
+        ? `<a href="https://wa.me/${phoneDigits}?text=${encodeURIComponent(`Hi! This is ${country.brand} — saw you wanted to chat about your photoshoot.`)}">📱 ${escapeHtml(cleanPhone)}</a>`
         : `<code>${escapeHtml(cleanPhone)}</code>`;
 
       // Last 3 user messages for context (was just one before).

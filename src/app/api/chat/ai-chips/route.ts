@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -147,7 +148,7 @@ export async function GET(req: NextRequest) {
         {
           role: "system",
           content:
-            `You are helping a photographer on Photo Portugal draft a short, friendly reply to a client. Your job: propose 2-3 distinct short reply options (1-2 sentences each, max ~25 words each). Write in ${photographerLocale === "pt" ? "European Portuguese" : "natural conversational English"}.\n\n` +
+            `You are helping a photographer on ${country.brand} draft a short, friendly reply to a client. Your job: propose 2-3 distinct short reply options (1-2 sentences each, max ~25 words each). Write in ${photographerLocale === "pt" ? "European Portuguese" : "natural conversational English"}.\n\n` +
             `Constraints:\n` +
             `- Reply to the LAST CLIENT message in the transcript — not earlier ones.\n` +
             `- Stay grounded in the photographer's actual packages/specialties. Do NOT invent prices, dates, locations, or services they didn't mention.\n` +

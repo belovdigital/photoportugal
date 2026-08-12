@@ -4,6 +4,7 @@ import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
+import { country } from "@/lib/country";
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
     const metaTitle = (formData.get("meta_title") as string) || null;
     const metaDescription = (formData.get("meta_description") as string) || null;
     const targetKeywords = (formData.get("target_keywords") as string) || null;
-    const author = (formData.get("author") as string) || "Photo Portugal";
+    const author = (formData.get("author") as string) || country.brand;
     const isPublished = formData.get("is_published") === "true";
     const scheduledAt = (formData.get("scheduled_at") as string) || null;
     const coverFile = formData.get("cover_image") as File | null;
@@ -196,7 +197,7 @@ export async function PUT(req: NextRequest) {
     const metaTitle = (formData.get("meta_title") as string) || null;
     const metaDescription = (formData.get("meta_description") as string) || null;
     const targetKeywords = (formData.get("target_keywords") as string) || null;
-    const author = (formData.get("author") as string) || "Photo Portugal";
+    const author = (formData.get("author") as string) || country.brand;
     const isPublished = formData.get("is_published") === "true";
     const scheduledAt = (formData.get("scheduled_at") as string) || null;
     const coverFile = formData.get("cover_image") as File | null;
