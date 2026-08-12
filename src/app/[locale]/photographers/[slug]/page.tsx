@@ -16,7 +16,7 @@ import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
+import { ReviewsPaginated, REVIEWS_PAGE_SIZE } from "@/components/ui/ReviewsPaginated";
 import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { clientExtraPriceCents, DEFAULT_EXTRA_PHOTO_PAYOUT_CENTS } from "@/lib/extras-pricing";
@@ -331,10 +331,13 @@ export async function generateMetadata({
     .map((x) => resolveAbsoluteImageUrl(x.url))
     .filter((u): u is string => Boolean(u));
 
+  // Image alts carry the MASKED name (2026-08-12) — <title> and description
+  // above keep the full one, that's where name searches land.
+  const altName = normalizeName(maskSurname(p.name));
   const ogImages = [
     { url: ogImage, width: 1200, height: 630, alt: title },
-    ...reviewPhotoUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `Client review photo ${i + 1} — ${normalizeName(p.name)}` })),
-    ...portfolioImageUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `${normalizeName(p.name)} — portfolio ${i + 1}` })),
+    ...reviewPhotoUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `Client review photo ${i + 1} — ${altName}` })),
+    ...portfolioImageUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `${altName} — portfolio ${i + 1}` })),
   ];
   return {
     title,
@@ -452,10 +455,17 @@ export default async function PhotographerProfilePage({
 
   const photographer = result.data;
   // VISIBLE display name is masked ("Jennifer D.") to discourage clients from
-  // going off-platform. Meta/title/JSON-LD keep the FULL name on purpose, so
-  // name searches still lead to us. Image alts also keep the full name (SEO,
-  // not visible to a casual browser).
+  // going off-platform. <title> and meta description keep the FULL name on
+  // purpose, so name searches still lead to us.
+  //
+  // JSON-LD and image alts follow the VISIBLE name (2026-08-12). Google
+  // requires structured data to match what's on the page; a schema `name`
+  // of "Irina Fomina" against a rendered "Irina F" is a mismatch and costs
+  // us the review-snippet stars we're marking up for.
   const visibleName = maskSurname(photographer.name);
+  // The exact string the page renders — normalizeName strips the trailing
+  // dot, so this is "Irina F", character-for-character what a visitor sees.
+  const schemaName = normalizeName(visibleName);
 
   // Fully-booked-this-year photographers get a positive framing badge in
   // the packages column ("Accepting bookings for 2027–2028") instead of a
@@ -645,7 +655,7 @@ export default async function PhotographerProfilePage({
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": profileUrl,
-    name: normalizeName(photographer.name),
+    name: schemaName,
     description: photographer.bio || photographer.tagline,
     url: profileUrl,
     image: schemaImages.length > 0 ? schemaImages : undefined,
@@ -675,7 +685,10 @@ export default async function PhotographerProfilePage({
     // Search Console (saw this on photoportugal.com 2026-04-30).
     ...(reviews.length > 0
       ? {
-          review: reviews.map((r) => {
+          // Only the reviews actually painted before "show more" — marking up
+          // the rest would be marking up content Google can't see on the page.
+          // aggregateRating.reviewCount still covers all of them, as it should.
+          review: reviews.slice(0, REVIEWS_PAGE_SIZE).map((r) => {
             const body = r.text || r.title;
             const photoUrls = (r.photos || []).map((p: { url: string }) => toAbsoluteUrl(p.url));
             return {
@@ -691,10 +704,10 @@ export default async function PhotographerProfilePage({
                   "@type": "ImageObject",
                   contentUrl: url,
                   url,
-                  creator: { "@type": "Person", name: normalizeName(photographer.name) },
-                  copyrightHolder: { "@type": "Person", name: normalizeName(photographer.name) },
-                  copyrightNotice: `© ${new Date().getFullYear()} ${normalizeName(photographer.name)} — All rights reserved`,
-                  creditText: `${normalizeName(photographer.name)} — ${country.brand}`,
+                  creator: { "@type": "Person", name: schemaName },
+                  copyrightHolder: { "@type": "Person", name: schemaName },
+                  copyrightNotice: `© ${new Date().getFullYear()} ${schemaName} — All rights reserved`,
+                  creditText: `${schemaName} — ${country.brand}`,
                   license: `${country.baseUrl}/terms`,
                   acquireLicensePage: `${country.baseUrl}/photographers/${slug}`,
                 })),
@@ -730,7 +743,7 @@ export default async function PhotographerProfilePage({
   const personJsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: normalizeName(photographer.name),
+    name: schemaName,
     ...(avatarAbsoluteUrl && { image: avatarAbsoluteUrl }),
     jobTitle: "Photographer",
     url: `${country.baseUrl}/photographers/${slug}`,
@@ -764,7 +777,7 @@ export default async function PhotographerProfilePage({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: tc("home"), item: localizedAbsolute("/", locale) },
       { "@type": "ListItem", position: 2, name: tc("photographers"), item: localizedAbsolute("/photographers", locale) },
-      { "@type": "ListItem", position: 3, name: normalizeName(photographer.name), item: localizedAbsolute(`/photographers/${slug}`, locale) },
+      { "@type": "ListItem", position: 3, name: schemaName, item: localizedAbsolute(`/photographers/${slug}`, locale) },
     ],
   };
 
@@ -776,23 +789,19 @@ export default async function PhotographerProfilePage({
     "@context": "https://schema.org",
     "@type": "Service",
     serviceType: "Photography",
-    name: `${normalizeName(photographer.name)} — Photography in ${(photographer.locations?.[0]?.name) || "Portugal"}`,
+    name: `${schemaName} — Photography in ${(photographer.locations?.[0]?.name) || "Portugal"}`,
     provider: {
       "@type": "LocalBusiness",
       "@id": profileUrl,
-      name: normalizeName(photographer.name),
+      name: schemaName,
       ...(avatarAbsoluteUrl ? { image: avatarAbsoluteUrl } : {}),
     },
     areaServed: (photographer.locations || []).map((l: { name: string }) => ({ "@type": "City", name: l.name })),
-    ...(photographer.review_count > 0 ? {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: Number(photographer.rating).toFixed(1),
-        reviewCount: photographer.review_count,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    } : {}),
+    // NO aggregateRating here. `Service` is not on Google's review-snippet
+    // type whitelist, and carrying the same rating on two top-level nodes
+    // makes the rated entity ambiguous — Google then shows stars for
+    // neither. The rating lives on the LocalBusiness node only; this
+    // Service points at it via provider["@id"].
     offers: photographer.packages.map((pkg: { name: string; price: number; description: string | null; duration_minutes: number; num_photos: number }) => ({
       "@type": "Offer",
       name: pkg.name,
@@ -830,7 +839,7 @@ export default async function PhotographerProfilePage({
     })),
     hasOfferCatalog: {
       "@type": "OfferCatalog",
-      name: `${normalizeName(photographer.name)} — Photography Packages`,
+      name: `${schemaName} — Photography Packages`,
       itemListElement: photographer.packages.map((pkg: { name: string; price: number }, i: number) => ({
         "@type": "Offer",
         position: i + 1,
@@ -895,7 +904,7 @@ export default async function PhotographerProfilePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ImageGallery",
-            name: `${normalizeName(photographer.name)} — Portfolio`,
+            name: `${schemaName} — Portfolio`,
             url: `${country.baseUrl}/photographers/${slug}#portfolio`,
             image: portfolioItems.slice(0, 24).map((it) => ({
               "@type": "ImageObject",
@@ -903,10 +912,10 @@ export default async function PhotographerProfilePage({
               url: toAbsoluteUrl(it.url),
               ...(it.thumbnail_url ? { thumbnailUrl: toAbsoluteUrl(it.thumbnail_url) } : {}),
               ...(it.caption ? { caption: it.caption, name: it.caption } : {}),
-              creator: { "@type": "Person", name: normalizeName(photographer.name) },
-              copyrightHolder: { "@type": "Person", name: normalizeName(photographer.name) },
-              copyrightNotice: `© ${new Date().getFullYear()} ${normalizeName(photographer.name)} — All rights reserved`,
-              creditText: `${normalizeName(photographer.name)} — ${country.brand}`,
+              creator: { "@type": "Person", name: schemaName },
+              copyrightHolder: { "@type": "Person", name: schemaName },
+              copyrightNotice: `© ${new Date().getFullYear()} ${schemaName} — All rights reserved`,
+              creditText: `${schemaName} — ${country.brand}`,
               license: `${country.baseUrl}/terms`,
               acquireLicensePage: `${country.baseUrl}/photographers/${slug}`,
             })),
@@ -955,9 +964,9 @@ export default async function PhotographerProfilePage({
             <div className="relative shrink-0">
               <div className="flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white bg-primary-100 text-3xl font-bold text-primary-600 overflow-hidden shadow-md">
                 {photographer.avatar_url ? (
-                  <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.name)} width={400} priority className="h-full w-full" />
+                  <OptimizedImage src={photographer.avatar_url} alt={schemaName} width={400} priority className="h-full w-full" />
                 ) : (
-                  normalizeName(photographer.name).charAt(0)
+                  schemaName.charAt(0)
                 )}
               </div>
               <div className="mt-2 flex justify-center">

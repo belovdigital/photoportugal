@@ -204,7 +204,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       url: ogCanonical,
       type: "website",
-      images: [{ url: ogImageAbs, width: 1200, height: 630, alt: `${pkg.name} — ${photographer.display_name}` }],
+      images: [{ url: ogImageAbs, width: 1200, height: 630, alt: `${pkg.name} — ${maskSurname(photographer.display_name)}` }],
     },
     twitter: {
       card: "summary_large_image",
@@ -239,11 +239,17 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     permanentRedirect(`${localePrefix}/photographers/${slug}`);
   }
   const { pkg, photographer, portfolio, locations, reviews, otherPackages } = data!;
+  // Surname stays masked everywhere below: visible copy, image alts and the
+  // JSON-LD alike. Google requires structured data to match the rendered
+  // page, and a schema name of "Irina Fomina" against a visible "Irina F."
+  // is the kind of mismatch that costs us review-snippet stars.
+  // <title>/description in generateMetadata above keep the full name.
+  const displayName = maskSurname(photographer.display_name);
   const t = await getTranslations({ locale: loc, namespace: "packagePage" }).catch(() => null);
   const T = (k: string, fb: string, vars: Record<string, string | number> = {}) =>
     (t ? t(k as never, vars as never) : Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), fb));
 
-  const heroPhotos = portfolio.slice(0, 8).map((p) => ({ url: p.url, alt: p.caption || `${pkg.name} — ${photographer.display_name}` }));
+  const heroPhotos = portfolio.slice(0, 8).map((p) => ({ url: p.url, alt: p.caption || `${pkg.name} — ${displayName}` }));
   const galleryPhotos = portfolio.slice(0, 12);
   const where = locations.slice(0, 3).map((l) => l.name).filter(Boolean).join(" · ");
   // All-in client price, €5-rounded — the ONE number this page shows. It is
@@ -261,19 +267,19 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "Product",
     name: pkg.name,
-    description: pkg.description || `${pkg.name} by ${photographer.display_name}`,
+    description: pkg.description || `${pkg.name} by ${displayName}`,
     url: canonical,
     image: portfolio.slice(0, 6).map((p) => (p.url.startsWith("http") ? p.url : `${country.baseUrl}${p.url}`)),
     // "brand" must be a Brand or Organization, not Person — Search Console
     // flagged the Person variant as "Invalid object type for field brand".
-    brand: { "@type": "Brand", name: photographer.display_name },
+    brand: { "@type": "Brand", name: displayName },
     offers: {
       "@type": "Offer",
       priceCurrency: "EUR",
       price: String(totalPrice),
       availability: "https://schema.org/InStock",
       url: `${country.baseUrl}/book/${slug}?package=${pkg.id}`,
-      seller: { "@type": "Person", name: photographer.display_name },
+      seller: { "@type": "Person", name: displayName },
       // Google's Merchant-listings parser sees any priced Offer as a
       // potential product listing and demands these fields. We're a
       // photography SERVICE — digital delivery, no shipping, refund
@@ -324,7 +330,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: localizedAbsolute("/", locale) },
       { "@type": "ListItem", position: 2, name: "Photographers", item: localizedAbsolute("/photographers", locale) },
-      { "@type": "ListItem", position: 3, name: photographer.display_name, item: localizedAbsolute(`/photographers/${slug}`, locale) },
+      { "@type": "ListItem", position: 3, name: displayName, item: localizedAbsolute(`/photographers/${slug}`, locale) },
       { "@type": "ListItem", position: 4, name: pkg.name, item: canonical },
     ],
   };
@@ -338,10 +344,10 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
       contentUrl: p.url.startsWith("http") ? p.url : `${country.baseUrl}${p.url}`,
       ...(p.thumbnail_url ? { thumbnailUrl: p.thumbnail_url } : {}),
       ...(p.caption ? { caption: p.caption } : {}),
-      creator: { "@type": "Person", name: photographer.display_name },
-      copyrightHolder: { "@type": "Person", name: photographer.display_name },
-      copyrightNotice: `© ${new Date().getFullYear()} ${photographer.display_name} — All rights reserved`,
-      creditText: `${photographer.display_name} — ${country.brand}`,
+      creator: { "@type": "Person", name: displayName },
+      copyrightHolder: { "@type": "Person", name: displayName },
+      copyrightNotice: `© ${new Date().getFullYear()} ${displayName} — All rights reserved`,
+      creditText: `${displayName} — ${country.brand}`,
       license: `${country.baseUrl}/terms`,
       acquireLicensePage: canonical,
     })),
@@ -368,7 +374,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
             )}
             <h1 className="font-display text-3xl font-bold text-white drop-shadow-md sm:text-5xl md:text-6xl">{pkg.name}</h1>
             <p className="mt-2 text-base text-white/90 sm:text-lg">
-              {T("byPhotographerInLocation", "by {photographer}{locText}", { photographer: maskSurname(photographer.display_name), locText: where ? ` · ${where}` : "" })}
+              {T("byPhotographerInLocation", "by {photographer}{locText}", { photographer: displayName, locText: where ? ` · ${where}` : "" })}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <div className="rounded-2xl bg-white/95 px-5 py-3 shadow-lg backdrop-blur-sm">
@@ -442,7 +448,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
               </div>
             ) : (
               <p className="mt-4 text-base leading-relaxed text-gray-700">
-                {T("descFallback", "A {duration} session with {photographer}, capturing {photos} polished, edited photos delivered within {days} days.", { duration: pkg.duration_minutes < 60 ? `${pkg.duration_minutes}-minute` : `${pkg.duration_minutes / 60}-hour`, photographer: maskSurname(photographer.display_name), photos: pkg.num_photos, days: pkg.delivery_days })}
+                {T("descFallback", "A {duration} session with {photographer}, capturing {photos} polished, edited photos delivered within {days} days.", { duration: pkg.duration_minutes < 60 ? `${pkg.duration_minutes}-minute` : `${pkg.duration_minutes / 60}-hour`, photographer: displayName, photos: pkg.num_photos, days: pkg.delivery_days })}
               </p>
             )}
 
@@ -478,9 +484,9 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-2xl border border-warm-200 bg-white p-5">
               <Link href={`/photographers/${slug}` as never} className="flex items-center gap-3 group">
-                <Avatar src={photographer.avatar_url} fallback={photographer.display_name} size="lg" />
+                <Avatar src={photographer.avatar_url} fallback={displayName} size="lg" />
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 group-hover:text-primary-600">{maskSurname(photographer.display_name)}</p>
+                  <p className="font-semibold text-gray-900 group-hover:text-primary-600">{displayName}</p>
                   {photographer.review_count > 0 && (
                     <p className="text-xs text-gray-500">★ {ratingNum.toFixed(1)} · {photographer.review_count} {photographer.review_count === 1 ? T("review", "review") : T("reviews", "reviews")}</p>
                   )}
@@ -513,10 +519,10 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
         <section className="border-t border-warm-200 bg-warm-50/50 py-12 sm:py-16">
           <div className="mx-auto max-w-6xl px-4">
             <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {T("samplePortfolio", "Sample work from {photographer}", { photographer: maskSurname(photographer.display_name) })}
+              {T("samplePortfolio", "Sample work from {photographer}", { photographer: displayName })}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-gray-600">
-              {T("samplePortfolioDesc", "A taste of {photographer}'s style across recent shoots. Your final delivery will be edited with the same care.", { photographer: photographer.display_name })}
+              {T("samplePortfolioDesc", "A taste of {photographer}'s style across recent shoots. Your final delivery will be edited with the same care.", { photographer: displayName })}
             </p>
             <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {galleryPhotos.map((p, i) => (
@@ -533,7 +539,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
       {reviews.length > 0 && (
         <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
           <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-            {T("reviewsHeading", "What clients say about {photographer}", { photographer: photographer.display_name })}
+            {T("reviewsHeading", "What clients say about {photographer}", { photographer: displayName })}
           </h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {reviews.slice(0, 6).map((r) => (
@@ -563,10 +569,10 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
         <section className="border-t border-warm-200 bg-warm-50 py-12 sm:py-16">
           <div className="mx-auto max-w-5xl px-4">
             <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {T("otherPackagesHeading", "More sessions with {photographer}", { photographer: photographer.display_name })}
+              {T("otherPackagesHeading", "More sessions with {photographer}", { photographer: displayName })}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-gray-600">
-              {T("otherPackagesSubtitle", "Other ways to work with {photographer} — pick what fits your story best.", { photographer: photographer.display_name })}
+              {T("otherPackagesSubtitle", "Other ways to work with {photographer} — pick what fits your story best.", { photographer: displayName })}
             </p>
             <div className="mt-8 grid gap-5 sm:grid-cols-2">
               {otherPackages.map((op) => (
@@ -647,7 +653,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
       {/* Final breadcrumb-style nav back */}
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-500">
         <Link href={`/photographers/${slug}` as never} className="hover:text-primary-600">
-          ← {T("backToPhotographer", "Back to {photographer}'s profile", { photographer: photographer.display_name })}
+          ← {T("backToPhotographer", "Back to {photographer}'s profile", { photographer: displayName })}
         </Link>
       </div>
     </>

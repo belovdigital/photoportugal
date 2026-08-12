@@ -26,7 +26,12 @@ function codeToFlag(code: string): string {
   return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
 }
 
-const PAGE_SIZE = 5;
+// How many reviews are in the DOM before the visitor hits "show more".
+// The profile page slices its Review JSON-LD to the same number — anything
+// beyond this is marked up but not rendered, which disqualifies the whole
+// review snippet. Keep the two in sync via this export, don't hardcode.
+export const REVIEWS_PAGE_SIZE = 5;
+const PAGE_SIZE = REVIEWS_PAGE_SIZE;
 
 export function ReviewsPaginated({
   reviews,

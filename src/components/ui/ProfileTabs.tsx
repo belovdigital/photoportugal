@@ -104,12 +104,26 @@ export function ProfileTabs({
         </div>
       </div>
 
+      {/* Both panels stay mounted, the inactive one hidden with CSS.
+          Googlebot renders JS but never clicks a tab: with the old
+          `tab === "about" ? about : reviews` the review texts and author
+          names existed only in the JSON-LD, never in the DOM — which makes
+          the Review structured data ineligible for star ratings in search
+          ("don't mark up content that isn't visible"). Keep them mounted. */}
       <div className="relative mt-6 overflow-hidden">
         <div
-          key={tab}
-          className="animate-[fadeSlide_280ms_ease-out]"
+          key={`about-${tab === "about"}`}
+          hidden={tab !== "about"}
+          className={tab === "about" ? "animate-[fadeSlide_280ms_ease-out]" : undefined}
         >
-          {tab === "about" ? about : reviews}
+          {about}
+        </div>
+        <div
+          key={`reviews-${tab === "reviews"}`}
+          hidden={tab !== "reviews"}
+          className={tab === "reviews" ? "animate-[fadeSlide_280ms_ease-out]" : undefined}
+        >
+          {reviews}
         </div>
       </div>
 
