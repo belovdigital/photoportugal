@@ -133,6 +133,16 @@ export interface CountryPack {
   logoIconPath: string;
   /** Locales this market ships. First entry is the default. */
   locales: readonly string[];
+  /**
+   * The market's own language: locale code plus a label an LLM prompt can use.
+   * Assistant copy offers English and this, never another market's language.
+   * The chat reply suggestions used to branch "European Portuguese or English",
+   * so a Spanish photographer writing to a Spanish client was handed English.
+   * Kept separate from `code` because a future market's country code and
+   * language code need not match.
+   */
+  nativeLocale: string;
+  languageLabel: string;
   /** IANA timezone used for business-hours logic and date formatting. */
   timezone: string;
   /** Year this market opened. Quoted as fact in llms.txt, so it must be its own. */
@@ -220,6 +230,8 @@ const PACKS: Record<CountryCode, CountryPack> = {
     logoPath: "/logo.svg",
     logoIconPath: "/favicon.svg",
     locales: ["en", "pt", "de", "es", "fr"],
+    nativeLocale: "pt",
+    languageLabel: "European Portuguese",
     timezone: "Europe/Lisbon",
     foundedYear: 2024,
     hasOwnLocationImagery: true,
@@ -275,6 +287,8 @@ const PACKS: Record<CountryCode, CountryPack> = {
     logoIconPath: "/favicon.svg",
     // Portuguese is deliberately absent: it earns nothing in the Spanish market.
     locales: ["en", "es", "de", "fr"],
+    nativeLocale: "es",
+    languageLabel: "peninsular Spanish",
     timezone: "Europe/Madrid",
     foundedYear: 2026,
     hasOwnLocationImagery: false,
@@ -333,6 +347,8 @@ const PACKS: Record<CountryCode, CountryPack> = {
     // is one of Italy's largest inbound markets and the catalogue already
     // exists, so it costs a country override and nothing else.
     locales: ["en", "it", "de", "fr", "es"],
+    nativeLocale: "it",
+    languageLabel: "Italian",
     timezone: "Europe/Rome",
     foundedYear: 2026,
     hasOwnLocationImagery: false,

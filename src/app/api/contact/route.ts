@@ -30,10 +30,13 @@ export async function POST(req: NextRequest) {
 
     const topicLabel = TOPIC_LABELS[topic] || topic;
 
-    // Always send to CTO + CEO, plus any admin emails from DB
-    // Internal team mailboxes, deliberately the same for both markets — one team
-    // reads them. Only the subject prefix tells the markets apart.
-    const CONTACT_RECIPIENTS = ["cto@photoportugal.com", "ceo@photoportugal.com"];
+    // Portugal keeps the internal team mailboxes it has always used. Every
+    // other market goes to its own info@ instead: routing a Spanish or Italian
+    // visitor's message into a photoportugal.com inbox buries it somewhere
+    // nobody reads on that market's behalf.
+    const CONTACT_RECIPIENTS = country.code === "pt"
+      ? ["cto@photoportugal.com", "ceo@photoportugal.com"]
+      : [country.supportEmail];
     const adminEmailStr = await getAdminEmail();
     const adminEmails = adminEmailStr.split(",").map((e: string) => e.trim()).filter(Boolean);
     const recipients = [...new Set([...CONTACT_RECIPIENTS, ...adminEmails])];

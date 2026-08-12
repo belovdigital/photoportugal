@@ -9,8 +9,16 @@
 //     (their detail page + every locations/<city>/<occasion> they show up
 //     on) in one round-trip.
 
+import { country } from "@/lib/country";
+
 const KEY = "72b9a40a20bed6ebab49f7bd96c91eac";
-const HOST = "photoportugal.com";
+// The host must be the one the submitted URLs actually live on, and the key
+// file must be reachable there. `public/<key>.txt` is served by every market
+// off the shared build, so one key covers all of them — verified 200 on
+// photoportugal.com, photospain.co and photoitaly.co. Hardcoding Portugal
+// here meant Spain and Italy were submitting their URLs under Portugal's
+// host, which IndexNow rejects as a host mismatch.
+const HOST = country.host;
 const ENDPOINT = "https://api.indexnow.org/indexnow";
 
 export async function pingIndexNow(urls: string[]): Promise<void> {

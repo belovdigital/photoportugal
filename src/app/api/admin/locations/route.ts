@@ -4,8 +4,9 @@ import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
+import { country } from "@/lib/country";
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();

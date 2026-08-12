@@ -6,14 +6,14 @@ import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import { country } from "@/lib/country";
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 // Ping Google to re-crawl sitemap after blog changes
 async function pingSitemap() {
   try {
     await fetch(
-      "https://www.google.com/ping?sitemap=https%3A%2F%2Fphotoportugal.com%2Fsitemap.xml"
+      `https://www.google.com/ping?sitemap=${encodeURIComponent(`${country.baseUrl}/sitemap.xml`)}`
     );
   } catch {
     // Non-critical — don't block the response
@@ -165,8 +165,8 @@ export async function POST(req: NextRequest) {
       pingSitemap();
       import("@/lib/indexnow").then(({ pingIndexNow }) =>
         pingIndexNow([
-          `https://photoportugal.com/blog/${slug}`,
-          `https://photoportugal.com/blog`,
+          `${country.baseUrl}/blog/${slug}`,
+          `${country.baseUrl}/blog`,
         ])
       ).catch(() => {});
     }
@@ -262,8 +262,8 @@ export async function PUT(req: NextRequest) {
       pingSitemap();
       import("@/lib/indexnow").then(({ pingIndexNow }) =>
         pingIndexNow([
-          `https://photoportugal.com/blog/${slug}`,
-          `https://photoportugal.com/blog`,
+          `${country.baseUrl}/blog/${slug}`,
+          `${country.baseUrl}/blog`,
         ])
       ).catch(() => {});
     }
