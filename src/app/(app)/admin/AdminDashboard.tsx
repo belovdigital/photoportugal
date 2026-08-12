@@ -510,22 +510,25 @@ function RevenueCharts() {
             filled={rows} field="turnover" color="bg-primary-500 hover:bg-primary-600"
             bucket={bucket}
           />
+          {/* Two bars, one story: since 2026-08-09 nothing is charged to a
+              photographer — our whole share is billed to the client, and these
+              are its two historical components rather than two sources. */}
           <BarChart
-            title="Service fee (from clients)"
+            title="Booking fee"
             subtitle={
               totalServiceFee > 0
-                ? `€${totalServiceFee.toLocaleString()} earned · ${SERVICE_FEE_RATE * 100}% on top of every paid booking`
+                ? `€${totalServiceFee.toLocaleString()} · ${SERVICE_FEE_RATE * 100}% of the photographer's rate, inside the all-in price`
                 : "No paid bookings yet"
             }
             filled={rows} field="service_fee" color="bg-emerald-500 hover:bg-emerald-600"
             bucket={bucket}
           />
           <BarChart
-            title="Platform commission (from photographers)"
+            title="Plan share"
             subtitle={
               totalPlatformFee > 0
-                ? `€${totalPlatformFee.toLocaleString()} released · 10–20% of package, paid out after delivery accepted`
-                : "No deliveries accepted yet"
+                ? `€${totalPlatformFee.toLocaleString()} · 10–20% by plan, also inside what the client pays`
+                : "Nothing yet"
             }
             filled={rows} field="platform_fee" color="bg-green-600 hover:bg-green-700"
             bucket={bucket}
@@ -533,6 +536,7 @@ function RevenueCharts() {
           {totalRevenue > 0 && (
             <p className="px-1 text-right text-xs text-gray-500">
               Total revenue: <span className="font-semibold text-gray-700">€{totalRevenue.toLocaleString()}</span>
+              <span className="ml-1 text-gray-400">— what clients paid, less photographer payouts</span>
             </p>
           )}
         </>

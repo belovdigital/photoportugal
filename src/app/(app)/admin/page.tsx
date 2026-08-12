@@ -528,14 +528,16 @@ export default async function AdminPage() {
     // than tracked locally — payouts can be made from the Stripe dashboard by
     // a human and no webhook of ours would know.
     paidOut: await stripePaidOutTotal(),
-    // Revenue = service_fee on every paid booking (locked at payment) +
-    // platform_fee, which from 2026-08-11 is also locked at payment: under the
-    // all-in model the commission is ours as soon as the client pays, and
-    // waiting for delivery only understated the number. Older bookings keep
-    // the delivery_accepted rule so past figures stay where they were.
+    // Revenue, from 2026-08-11, is ONE number: what the client paid minus the
+    // photographer's payout. Not "service fee plus commission from the
+    // photographer" — under the model adopted 2026-08-09 nothing is charged to
+    // photographers at all; our whole share is billed to the client, and this
+    // is the same arithmetic as the invoice we issue for it, so the dashboard
+    // and the fiscal documents reconcile. Bookings before the cutoff keep the
+    // old split so past figures stay where they were.
     // Same accounting as /api/admin/revenue-chart so the top KPI matches the chart total.
-    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN (delivery_accepted = TRUE OR created_at >= DATE '2026-08-11') THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
-    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN (delivery_accepted = TRUE OR created_at >= DATE '2026-08-11') THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
+    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(CASE WHEN created_at >= DATE '2026-08-11' THEN COALESCE(stripe_amount_paid_cents / 100.0 - payout_amount, service_fee + platform_fee) ELSE service_fee + CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
+    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(CASE WHEN created_at >= DATE '2026-08-11' THEN COALESCE(stripe_amount_paid_cents / 100.0 - payout_amount, service_fee + platform_fee) ELSE service_fee + CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),

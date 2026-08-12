@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
         COALESCE(SUM(COALESCE(b.stripe_amount_paid_cents / 100.0, b.total_price + COALESCE(b.service_fee, 0))), 0) AS turnover,
         COALESCE(SUM(b.service_fee), 0) AS service_fee,
         COALESCE(SUM(CASE WHEN (b.delivery_accepted = TRUE OR b.created_at >= DATE '2026-08-11') THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
-        COALESCE(SUM(b.service_fee) + SUM(CASE WHEN (b.delivery_accepted = TRUE OR b.created_at >= DATE '2026-08-11') THEN b.platform_fee ELSE 0 END), 0) AS revenue,
+        COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, b.service_fee + b.platform_fee) ELSE b.service_fee + CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END END), 0) AS revenue,
         COUNT(*) AS count
        FROM bookings b
       WHERE b.payment_status = 'paid'
