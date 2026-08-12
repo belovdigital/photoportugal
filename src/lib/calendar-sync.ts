@@ -1,4 +1,4 @@
-import { query, queryOne } from "@/lib/db";
+import { query, queryOne, withTransaction } from "@/lib/db";
 
 // Window for which we cache busy slots. Anything beyond is rebuilt on demand.
 // 12 months is enough for a wedding photographer's calendar without bloating
@@ -455,22 +455,58 @@ export async function syncConnection(connection: ConnectionRow): Promise<{ ok: t
     return { ok: false, error: msg };
   }
 
-  // Replace cached slots for this connection in a single transaction.
-  // (queryOne uses the shared pool — fine for a quick DELETE + bulk INSERT.)
-  await query("DELETE FROM calendar_busy_slots WHERE connection_id = $1", [connection.id]);
-  if (slots.length > 0) {
-    // Bulk insert — pg's parameter limit is high enough for typical calendars.
-    const values: string[] = [];
-    const params: unknown[] = [];
-    let i = 1;
-    for (const slot of slots) {
-      values.push(`($${i++}, $${i++}, $${i++}, $${i++}, $${i++})`);
-      params.push(connection.photographer_id, connection.id, slot.starts_at, slot.ends_at, slot.source_uid);
-    }
-    await query(
-      `INSERT INTO calendar_busy_slots (photographer_id, connection_id, starts_at, ends_at, source_uid) VALUES ${values.join(", ")}`,
-      params
-    );
+  // Zero-length and inverted intervals block nothing, and calendar_busy_slots
+  // has CHECK (ends_at > starts_at), so keeping them kills the whole INSERT.
+  // Google's freeBusy really does return them — a Spanish photographer's
+  // calendar had 13 of 28 as "10:00 -> 10:00" (reminders and tasks marked
+  // busy), which wiped his cached slots every 15 minutes for a day and a half.
+  const usableSlots = slots.filter((s) => s.ends_at.getTime() > s.starts_at.getTime());
+  const droppedSlots = slots.length - usableSlots.length;
+  if (droppedSlots > 0) {
+    console.warn(`[calendar-sync] connection ${connection.id}: skipped ${droppedSlots} zero-length interval(s)`);
+  }
+
+  // Replace cached slots for this connection in one transaction. This used to
+  // be a bare DELETE followed by a bare INSERT on the shared pool despite the
+  // comment claiming otherwise: when the INSERT threw, the DELETE had already
+  // committed and the photographer was left with no busy slots at all, so
+  // their calendar silently stopped blocking bookings.
+  // The persist half needs the same error handling as the fetch half. It had
+  // none, so when the INSERT threw, the exception left syncConnection entirely:
+  // the cron counted a failure but last_sync_error and sync_error_since were
+  // never written. The photographer's Calendar Sync page kept showing a stale
+  // "503 Backend Error" from the last time the FETCH had failed — days old and
+  // long since resolved — while the real fault went unrecorded, and the
+  // "broken for over 24h" email fired off that frozen timestamp.
+  try {
+    await withTransaction(async (tx) => {
+      await tx.query("DELETE FROM calendar_busy_slots WHERE connection_id = $1", [connection.id]);
+      if (usableSlots.length > 0) {
+        // Bulk insert — pg's parameter limit is high enough for typical calendars.
+        const values: string[] = [];
+        const params: unknown[] = [];
+        let i = 1;
+        for (const slot of usableSlots) {
+          values.push(`($${i++}, $${i++}, $${i++}, $${i++}, $${i++})`);
+          params.push(connection.photographer_id, connection.id, slot.starts_at, slot.ends_at, slot.source_uid);
+        }
+        await tx.query(
+          `INSERT INTO calendar_busy_slots (photographer_id, connection_id, starts_at, ends_at, source_uid) VALUES ${values.join(", ")}`,
+          params
+        );
+      }
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await queryOne(
+      `UPDATE calendar_connections
+          SET last_sync_error = $1,
+              sync_error_since = COALESCE(sync_error_since, NOW()),
+              last_synced_at = NOW(), updated_at = NOW()
+        WHERE id = $2 RETURNING id`,
+      [`storing busy slots failed: ${msg}`.slice(0, 500), connection.id]
+    ).catch(() => {});
+    return { ok: false, error: msg };
   }
 
   await queryOne(
@@ -478,10 +514,10 @@ export async function syncConnection(connection: ConnectionRow): Promise<{ ok: t
         SET last_synced_at = NOW(), last_sync_error = NULL, last_sync_event_count = $1,
             sync_error_since = NULL, sync_error_notified_at = NULL, updated_at = NOW()
       WHERE id = $2 RETURNING id`,
-    [slots.length, connection.id]
+    [usableSlots.length, connection.id]
   );
 
-  return { ok: true, count: slots.length };
+  return { ok: true, count: usableSlots.length };
 }
 
 /**
