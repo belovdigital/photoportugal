@@ -29,7 +29,7 @@
  * Exits non-zero on the precise checks, so it can gate a deploy. The code scan
  * is advisory only and never fails the run — see the note above `report`.
  * This script is necessary but NOT sufficient: it reads source, not pages, so
- * the live sweep of text, <meta> and JSON-LD in docs/SPAIN.md still has to run.
+ * the live sweep of text, <meta> and JSON-LD in docs/MARKETS.md §11 still has to run.
  */
 
 import fs from "node:fs";
@@ -152,7 +152,7 @@ const advisories = [];
  * the live site provably does not show. A check that cries wolf gets skimmed,
  * which is how the original leaks survived in the first place, so it is listed
  * separately and does NOT fail the run. The gate is the precise checks plus the
- * live sweep of text, <meta> and JSON-LD described in docs/SPAIN.md.
+ * live sweep of text, <meta> and JSON-LD described in docs/MARKETS.md §11.
  */
 const report = (kind, locale, key, detail) =>
   problems.push({ kind, locale, key, detail });
@@ -296,7 +296,7 @@ for (const file of walkFiles("src")) {
 
 if (advisories.length) {
   console.log(`ℹ️  справочно (не блокирует): ${advisories.length} строк со страной, зашитой в country-aware файлах`);
-  console.log("   живой скан текста/меты/JSON-LD — единственная надёжная проверка, см. docs/SPAIN.md\n");
+  console.log("   живой скан текста/меты/JSON-LD — единственная надёжная проверка, см. docs/MARKETS.md §11\n");
 }
 
 if (problems.length === 0) {

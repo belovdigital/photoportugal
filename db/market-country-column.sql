@@ -5,7 +5,7 @@
 -- country from `cf-ipcountry`, nullable, no default. This one is the MARKET the
 -- row belongs to — pt / es / it — and it is never null.
 --
--- Why it exists at all: docs/SPAIN.md §1 fixed "separate databases per market"
+-- Why it exists at all: docs/MARKETS.md §1 fixed "separate databases per market"
 -- with the compromise that a `country` column goes in from day one, so that
 -- merging markets one day is a data copy rather than a schema redesign. That
 -- was honoured on the Spanish and Italian databases when they were bootstrapped

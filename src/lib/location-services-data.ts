@@ -272,7 +272,7 @@ const locationServicesPT: Record<string, LocationService[]> = {
 /**
  * Country pack switch. NEXT_PUBLIC_ prefix is required — this module reaches
  * client components, and a server-only variable reads as undefined in the
- * browser bundle, silently falling back to Portugal. See docs/SPAIN.md §6.4.
+ * browser bundle, silently falling back to Portugal. See docs/MARKETS.md §7.
  *
  * Portugal stays the default: absent or unrecognised value → the PT dataset.
  */

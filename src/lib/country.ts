@@ -11,7 +11,7 @@
  * 2. **Anything that can reach the browser reads `NEXT_PUBLIC_COUNTRY`.**
  *    Variables without the prefix are stripped from the client bundle and read
  *    as `undefined` there, which silently falls back to Portugal — see the
- *    header/footer locations bug documented in docs/SPAIN.md §6.4.
+ *    header/footer locations bug documented in docs/MARKETS.md §7.
  */
 
 import { portugalCoverageStats } from "./location-coverage-stats";
@@ -359,9 +359,6 @@ const PACKS: Record<CountryCode, CountryPack> = {
     // Footer links go up now; the concierge holds off until Italy has a
     // roster, so no live lead is sent to an empty catalogue.
     referralsWelcome: false,
-    // The operating company is Portuguese and is not registered in Spain, so
-    // Stripe Connect onboarding is not available to Spanish photographers.
-    // They are paid by bank transfer after the money clears. See docs/SPAIN.md §6.2.
   },
 };
 
