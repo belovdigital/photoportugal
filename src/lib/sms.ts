@@ -1,6 +1,6 @@
 import twilio from "twilio";
 import { queryOne } from "@/lib/db";
-import { country } from "@/lib/country";
+import { country, type CountryCode } from "@/lib/country";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -33,8 +33,17 @@ export function normalizePhone(raw: string): string {
 }
 
 // Alphanumeric sender ID, max 11 chars. Named per market so a Spanish
-// recipient does not get an SMS signed "PHOTO PT".
-const ALPHA_SENDER = country.code === "pt" ? "PHOTO PT" : "PHOTO ES";
+// recipient does not get an SMS signed "PHOTO PT". This was a ternary on
+// `code === "pt"`, which meant every non-Portuguese market fell into the
+// Spanish branch — Italy would have signed its SMS "PHOTO ES". It never
+// shipped a message (the Italian market had sent zero SMS when this was
+// found), but a map is the only shape that survives the next country.
+const ALPHA_SENDER_BY_MARKET: Record<CountryCode, string> = {
+  pt: "PHOTO PT",
+  es: "PHOTO ES",
+  it: "PHOTO IT",
+};
+const ALPHA_SENDER = ALPHA_SENDER_BY_MARKET[country.code];
 
 function getSender(toE164: string): string {
   for (const prefix of NUMERIC_ONLY_COUNTRIES) {
