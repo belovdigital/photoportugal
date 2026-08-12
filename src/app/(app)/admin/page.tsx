@@ -41,6 +41,27 @@ async function verifyAdmin(): Promise<boolean> {
   return user?.role === "admin";
 }
 
+/**
+ * Everything already paid out of Stripe to the bank account, all time.
+ *
+ * Failed and cancelled payouts are excluded — the money came back. Returns 0 if
+ * Stripe cannot be reached: the dashboard showing an under-stated withdrawal is
+ * awkward, a dashboard that fails to render is worse.
+ */
+async function stripePaidOutTotal(): Promise<number> {
+  try {
+    const { stripe } = await import("@/lib/stripe");
+    if (!stripe) return 0;
+    let cents = 0;
+    for await (const p of stripe.payouts.list({ limit: 100 })) {
+      if (p.status !== "failed" && p.status !== "canceled") cents += p.amount;
+    }
+    return cents / 100;
+  } catch {
+    return 0;
+  }
+}
+
 export default async function AdminPage() {
   const isAdmin = await verifyAdmin();
 
@@ -502,11 +523,19 @@ export default async function AdminPage() {
     extrasPayout: parseFloat(extrasAll?.payout || "0"),
     extrasSold: parseInt(extrasAll?.sold || "0"),
     extrasGifted: parseInt(extrasAll?.gifted || "0"),
+    // What has actually been taken out of Stripe to the bank. Revenue is what
+    // we earned; this is what has already left. Read live from Stripe rather
+    // than tracked locally — payouts can be made from the Stripe dashboard by
+    // a human and no webhook of ours would know.
+    paidOut: await stripePaidOutTotal(),
     // Revenue = service_fee on every paid booking (locked at payment) +
-    // platform_fee on delivered+accepted bookings (released at payout).
+    // platform_fee, which from 2026-08-11 is also locked at payment: under the
+    // all-in model the commission is ours as soon as the client pays, and
+    // waiting for delivery only understated the number. Older bookings keep
+    // the delivery_accepted rule so past figures stay where they were.
     // Same accounting as /api/admin/revenue-chart so the top KPI matches the chart total.
-    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
-    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
+    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN (delivery_accepted = TRUE OR created_at >= DATE '2026-08-11') THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
+    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN (delivery_accepted = TRUE OR created_at >= DATE '2026-08-11') THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),

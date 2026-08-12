@@ -166,6 +166,8 @@ interface AdminStats {
   turnoverThisMonth: number;
   revenue: number;
   revenueThisMonth: number;
+  /** Everything already moved out of Stripe to the bank, all time. */
+  paidOut: number;
   // Extra photos sold after delivery — already folded into revenue/turnover
   // above, broken out here so the numbers stay traceable.
   extrasTurnover: number;
@@ -866,10 +868,22 @@ export function AdminDashboard({
               {/* Key metrics — what actually matters: money in, money flow, photographers */}
               <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
                 <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-3 sm:p-5">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Revenue</p>
-                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.revenue.toLocaleString()}</p>
+                  {/* Earned, then what is left after withdrawals. The big
+                      number is what is still ours to take; the line under it
+                      keeps the gross visible so the two never get confused. */}
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    {stats.paidOut > 0 ? "Revenue left" : "Revenue"}
+                  </p>
+                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">
+                    &euro;{(stats.revenue - stats.paidOut).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  {stats.paidOut > 0 && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      &euro;{stats.revenue.toLocaleString(undefined, { maximumFractionDigits: 2 })} earned &minus; &euro;{stats.paidOut.toLocaleString(undefined, { maximumFractionDigits: 2 })} paid out
+                    </p>
+                  )}
                   {stats.revenueThisMonth > 0 ? (
-                    <p className="mt-1 text-xs text-emerald-700">&euro;{stats.revenueThisMonth.toLocaleString()} this month</p>
+                    <p className="mt-1 text-xs text-emerald-700">&euro;{stats.revenueThisMonth.toLocaleString()} earned this month</p>
                   ) : (
                     <p className="mt-1 text-xs text-gray-400">service fees + commissions earned</p>
                   )}

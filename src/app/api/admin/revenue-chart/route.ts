@@ -65,7 +65,12 @@ export async function GET(req: NextRequest) {
   // dashboard can chart them side-by-side:
   //   service_fee — earned at payment_status='paid' (added on top of
   //     package price, lands in our Stripe immediately).
-  //   platform_fee — earned at delivery_accepted=TRUE (deducted from
+  //   platform_fee — from 2026-08-11 it is earned at PAYMENT, because under the
+  //     all-in model the commission is ours the moment the client pays and
+  //     there is nothing to wait for. Bookings before that date keep the old
+  //     rule (earned at delivery_accepted) so historical figures do not move
+  //     under anyone who already read them.
+  //   platform_fee (legacy) — earned at delivery_accepted=TRUE (deducted from
   //     photographer's payout, released when client accepts delivery).
   // `revenue` is kept as the sum for any consumer that still expects it.
   const rows = await query<{ bucket: string; turnover: string; service_fee: string; platform_fee: string; revenue: string; count: string }>(
@@ -76,8 +81,8 @@ export async function GET(req: NextRequest) {
         -- back to base + service_fee. Matches the KPI card in admin/page.tsx.
         COALESCE(SUM(COALESCE(b.stripe_amount_paid_cents / 100.0, b.total_price + COALESCE(b.service_fee, 0))), 0) AS turnover,
         COALESCE(SUM(b.service_fee), 0) AS service_fee,
-        COALESCE(SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
-        COALESCE(SUM(b.service_fee) + SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END), 0) AS revenue,
+        COALESCE(SUM(CASE WHEN (b.delivery_accepted = TRUE OR b.created_at >= DATE '2026-08-11') THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
+        COALESCE(SUM(b.service_fee) + SUM(CASE WHEN (b.delivery_accepted = TRUE OR b.created_at >= DATE '2026-08-11') THEN b.platform_fee ELSE 0 END), 0) AS revenue,
         COUNT(*) AS count
        FROM bookings b
       WHERE b.payment_status = 'paid'
