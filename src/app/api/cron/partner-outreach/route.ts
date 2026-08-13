@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { sendEmailWithResult } from "@/lib/email";
-import { buildPitch, outreachHeaders, type OutreachPartner } from "@/lib/partner-outreach-pitch";
+import { buildPitch, outreachHeaders, pitchLanguage, type OutreachPartner } from "@/lib/partner-outreach-pitch";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     // A row with no address can never be sent and would otherwise sit at the
     // head of the queue forever, eating a slot a day.
     const partners = await query<PartnerRow>(
-      `SELECT id, company_name, contact_name, region, segment, email
+      `SELECT id, company_name, contact_name, region, segment, language, email
          FROM partner_outreach
         WHERE status = 'queued' AND email IS NOT NULL
         ORDER BY created_at
@@ -47,15 +47,30 @@ export async function GET(req: NextRequest) {
       [cap]
     );
 
+    // Read once per run, not per letter: it is the same number for all of them
+    // and it is the only claim in the copy that can go stale.
+    const roster = await queryOne<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM photographer_profiles WHERE is_approved = TRUE`
+    );
+    const pitchOptions = { photographerCount: Number(roster?.count || 0) };
+
     if (dry) {
       return NextResponse.json({
         ok: true,
         dry: true,
         cap,
+        photographers: pitchOptions.photographerCount,
         would_send: partners.length,
         preview: partners.slice(0, 5).map((p) => {
-          const pitch = buildPitch(p);
-          return { to: p.email, company: p.company_name, segment: p.segment, subject: pitch.subject, text: pitch.text };
+          const pitch = buildPitch(p, pitchOptions);
+          return {
+            to: p.email,
+            company: p.company_name,
+            segment: p.segment,
+            language: pitchLanguage(p),
+            subject: pitch.subject,
+            text: pitch.text,
+          };
         }),
       });
     }
@@ -64,7 +79,7 @@ export async function GET(req: NextRequest) {
     const failed: { company: string; error: string }[] = [];
 
     for (const [i, p] of partners.entries()) {
-      const pitch = buildPitch(p);
+      const pitch = buildPitch(p, pitchOptions);
       // park:false — the queue exists to keep a booking confirmation alive for
       // a day. A cold lead with a dead mailbox is not worth 24h of retries.
       const result = await sendEmailWithResult(p.email, pitch.subject, pitch.html, {

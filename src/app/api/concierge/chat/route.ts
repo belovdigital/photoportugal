@@ -273,7 +273,7 @@ export async function POST(req: NextRequest) {
     email?: string;
     first_name?: string;
     language?: string;
-    source?: "page" | "drawer";
+    source?: "page" | "drawer" | "app";
     attribution?: {
       utm_source?: string;
       utm_medium?: string;
@@ -394,7 +394,7 @@ export async function POST(req: NextRequest) {
       || await detectLanguageViaAI(openai, latestUserMsg);
   }
   const detectedLang = explicitSwitchLang || latestLang || firstLang || "en";
-  let systemPrompt = buildSystemPrompt(photographers, { language: detectedLang });
+  let systemPrompt = buildSystemPrompt(photographers, { language: detectedLang, channel: source === "app" ? "app" : "web" });
   // Per-turn language anchor. We say "stay in X unless visitor asks
   // otherwise" instead of the old absolute "do not switch", because the
   // detection above already gave us the latest-truth lang.

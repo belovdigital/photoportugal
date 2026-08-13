@@ -43,8 +43,10 @@ export default async function GettingStartedPage() {
         <h1 className="mt-3 font-display text-3xl font-bold text-gray-900 sm:text-4xl">
           {t("welcome", { brand: country.brand, name: firstName })}
         </h1>
+        {/* The count is spelled out in the copy, and the app step only renders
+            where the app exists — so the promise has to follow the market. */}
         <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-gray-600">
-          {t("intro")}
+          {country.hasMobileApp ? t("intro") : t("introNoApp")}
         </p>
       </header>
 
@@ -76,11 +78,14 @@ export default async function GettingStartedPage() {
       )}
 
       <div className="space-y-12">
+        {/* Step 1's default copy sells the app and cites "Step 8" for push.
+            Markets without a listing render neither, so they get a variant
+            with that sentence dropped. */}
         <Section
           n={1}
           icon="⚡"
           title={t("s1title")}
-          body={t("s1body")}
+          body={country.hasMobileApp ? t("s1body") : t("s1bodyNoApp")}
           cta={{ href: "/dashboard/messages", label: "Open messages →" }}
           mockup={<FastReplyMockup />}
           extra={<ToneTipBlock />}

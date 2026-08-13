@@ -33,6 +33,7 @@ const EDITABLE = [
   "notes",
   "their_link_url",
   "our_link_url",
+  "language",
 ] as const;
 
 // Paged deliberately: the list is thousands of rows once the harvester has

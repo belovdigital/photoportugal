@@ -4338,9 +4338,11 @@
   "gettingStarted": {
     "eyebrow": "Primeros pasos",
     "welcome": "Te damos la bienvenida a {brand}, {name} 👋",
-    "intro": "Ocho cosas que hacen distinto los fotógrafos con más reservas. Baja leyendo — son unos 4 minutos. Cada consejo enlaza al sitio donde se hace el trabajo.",
+    "intro": "Nueve cosas que hacen distinto los fotógrafos con más reservas. Baja leyendo — son unos 4 minutos. Cada consejo enlaza al sitio donde se hace el trabajo.",
+    "introNoApp": "Ocho cosas que hacen distinto los fotógrafos con más reservas. Baja leyendo — son unos 4 minutos. Cada consejo enlaza al sitio donde se hace el trabajo.",
     "s1title": "Responde rápido y rompe el hielo",
     "s1body": "Los que más reservan responden en menos de 60 minutos. Medimos tu tiempo medio de respuesta y colocamos más arriba en las búsquedas a quien contesta antes. Instala la app y activa las notificaciones (paso 8): es la palanca que más pesa.",
+    "s1bodyNoApp": "Los que más reservan responden en menos de 60 minutos. Medimos tu tiempo medio de respuesta y colocamos más arriba en las búsquedas a quien contesta antes.",
     "s2title": "Conecta tu calendario",
     "s2body": "Sincroniza tu Google Calendar para que los clientes solo puedan pedir huecos en los que estás realmente libre. Tus eventos personales siguen siendo privados: solo vemos ocupado/libre, nunca los títulos. Se actualiza cada 15 minutos e incluye un margen automático alrededor de las sesiones para desplazamiento y preparación (se ajusta en los ajustes del calendario). También puedes bloquear fechas concretas a mano para vacaciones o asuntos personales. Resultado: cero dobles reservas, menos correos de \"lo siento, ya estoy ocupado\" y clientes más contentos.",
     "s3title": "Diseña los paquetes por la ocasión",

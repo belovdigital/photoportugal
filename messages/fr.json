@@ -4338,9 +4338,11 @@
   "gettingStarted": {
     "eyebrow": "Premiers pas",
     "welcome": "Bienvenue chez {brand}, {name} 👋",
-    "intro": "Huit choses que font différemment les photographes qui réservent le plus. Faites défiler — comptez 4 minutes. Chaque conseil renvoie là où le travail se fait.",
+    "intro": "Neuf choses que font différemment les photographes qui réservent le plus. Faites défiler — comptez 4 minutes. Chaque conseil renvoie là où le travail se fait.",
+    "introNoApp": "Huit choses que font différemment les photographes qui réservent le plus. Faites défiler — comptez 4 minutes. Chaque conseil renvoie là où le travail se fait.",
     "s1title": "Répondez vite, créez le lien",
     "s1body": "Les meilleurs répondent en moins de 60 minutes. Nous mesurons votre temps de réponse moyen et remontons les plus rapides dans les résultats. Installez l'application et activez les notifications (étape 8) — c'est le levier le plus puissant.",
+    "s1bodyNoApp": "Les meilleurs répondent en moins de 60 minutes. Nous mesurons votre temps de réponse moyen et remontons les plus rapides dans les résultats.",
     "s2title": "Connectez votre agenda",
     "s2body": "Synchronisez votre Google Agenda pour que les clients ne puissent demander que des créneaux où vous êtes réellement libre. Vos événements personnels restent privés : nous voyons seulement occupé/libre, jamais les intitulés. Mise à jour toutes les 15 minutes, avec une marge automatique autour des séances pour le trajet et la préparation (réglable dans les paramètres de l'agenda). Vous pouvez aussi bloquer des dates à la main pour des vacances ou du personnel. Résultat : zéro double réservation, moins d'emails \"désolé, je suis déjà pris\", des clients plus contents.",
     "s3title": "Construisez les forfaits autour de l'occasion",

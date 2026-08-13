@@ -4338,9 +4338,11 @@
   "gettingStarted": {
     "eyebrow": "Erste Schritte",
     "welcome": "Willkommen bei {brand}, {name} 👋",
-    "intro": "Acht Dinge, die die Fotografen mit den meisten Buchungen anders machen. Einmal durchscrollen — dauert etwa 4 Minuten. Jeder Tipp verlinkt dorthin, wo die Arbeit passiert.",
+    "intro": "Neun Dinge, die die Fotografen mit den meisten Buchungen anders machen. Einmal durchscrollen — dauert etwa 4 Minuten. Jeder Tipp verlinkt dorthin, wo die Arbeit passiert.",
+    "introNoApp": "Acht Dinge, die die Fotografen mit den meisten Buchungen anders machen. Einmal durchscrollen — dauert etwa 4 Minuten. Jeder Tipp verlinkt dorthin, wo die Arbeit passiert.",
     "s1title": "Schnell antworten, Stimmung aufbauen",
     "s1body": "Die Erfolgreichsten antworten in unter 60 Minuten. Wir messen Ihre durchschnittliche Antwortzeit und platzieren schnellere Antworter weiter oben in der Suche. Installieren Sie die App und aktivieren Sie Push (Schritt 8) — das ist der größte Hebel.",
+    "s1bodyNoApp": "Die Erfolgreichsten antworten in unter 60 Minuten. Wir messen Ihre durchschnittliche Antwortzeit und platzieren schnellere Antworter weiter oben in der Suche.",
     "s2title": "Kalender verbinden",
     "s2body": "Synchronisieren Sie Ihren Google Kalender, damit Kunden nur Zeiten anfragen können, an denen Sie wirklich frei sind. Private Termine bleiben privat: Wir sehen nur belegt/frei, keine Titel. Aktualisiert alle 15 Minuten, mit automatischem Puffer um Shootings für Anfahrt und Vorbereitung (in den Kalendereinstellungen). Einzelne Tage können Sie auch manuell für Urlaub oder Privates blocken. Ergebnis: keine Doppelbuchungen, weniger \"sorry, schon ausgebucht\"-Mails, zufriedenere Kunden.",
     "s3title": "Pakete um den Anlass herum bauen",

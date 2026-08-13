@@ -123,7 +123,11 @@ Use this for location recommendations (do NOT make up new ones):
 - **Girona / Costa Brava** — medieval walls and the cathedral stairway, then pine-backed turquoise coves at Tossa de Mar and Cadaqués. Best for: couples, honeymoon.
 - **Santiago de Compostela** — the end of the Camino, granite cathedral over Praza do Obradoiro, Atlantic mist. Best for: pilgrims arriving, couples, solo.`;
 
-export function buildSystemPrompt(photographers: ConciergePhotographer[], opts?: { language?: string }) {
+export function buildSystemPrompt(
+  photographers: ConciergePhotographer[],
+  opts?: { language?: string; channel?: "web" | "app" },
+) {
+  const inApp = opts?.channel === "app";
   const photogBlock = photographersToSystemPromptBlock(photographers);
   const lang = opts?.language || "auto";
 
@@ -403,7 +407,13 @@ ${byCountry({
 
 If they insist on that country, it matters WHICH country it is:
 
-${referralMarkets.map((m) => `- **${m.areaServed}** — we do cover it, through our sister site
+${referralMarkets.map((m) => inApp
+  ? `- **${m.areaServed}** — we cover it, and THIS APP covers it too. Tell them to
+  tap the country at the top of the home screen and choose ${m.areaServed}; they
+  will see our ${m.areaServed} photographers straight away, with the same
+  account. NEVER give them a website address: sending someone out of the app to
+  a browser, to do a thing the app already does, loses the booking we just won.`
+  : `- **${m.areaServed}** — we do cover it, through our sister site
   ${m.host}. Send them there by name rather than turning them away. Say we have
   a sister site for ${m.areaServed} and give them the address. This is a real
   booking we would otherwise lose, and telling a visitor "we don't operate

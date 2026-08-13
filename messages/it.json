@@ -4337,9 +4337,11 @@
   "gettingStarted": {
     "eyebrow": "Per iniziare",
     "welcome": "Ti diamo il benvenuto su {brand}, {name} 👋",
-    "intro": "Otto cose che i fotografi con più prenotazioni fanno in modo diverso. Scorri per scoprirle: bastano 4 minuti. Ogni consiglio rimanda direttamente alla sezione in cui metterlo in pratica.",
+    "intro": "Nove cose che i fotografi con più prenotazioni fanno in modo diverso. Scorri per scoprirle: bastano 4 minuti. Ogni consiglio rimanda direttamente alla sezione in cui metterlo in pratica.",
+    "introNoApp": "Otto cose che i fotografi con più prenotazioni fanno in modo diverso. Scorri per scoprirle: bastano 4 minuti. Ogni consiglio rimanda direttamente alla sezione in cui metterlo in pratica.",
     "s1title": "Rispondi rapidamente e rompi il ghiaccio",
     "s1body": "I fotografi migliori rispondono in meno di 60 minuti. Monitoriamo il tuo tempo medio di risposta e diamo maggiore visibilità nei risultati di ricerca a chi risponde più velocemente. Installa l'app mobile e attiva le notifiche push (Passaggio 8): è la cosa che fa davvero la differenza.",
+    "s1bodyNoApp": "I fotografi migliori rispondono in meno di 60 minuti. Monitoriamo il tuo tempo medio di risposta e diamo maggiore visibilità nei risultati di ricerca a chi risponde più velocemente.",
     "s2title": "Collega il tuo calendario",
     "s2body": "Sincronizza Google Calendar, così i clienti potranno richiedere solo gli orari in cui sei davvero disponibile. I tuoi eventi personali restano privati: vediamo soltanto se sei disponibile o meno, non i titoli degli eventi. Il calendario si aggiorna ogni 15 minuti e aggiunge automaticamente un intervallo prima e dopo i servizi per gli spostamenti e la preparazione, configurabile nelle impostazioni. Puoi anche bloccare manualmente date specifiche per vacanze o impegni personali. Il risultato? Nessuna doppia prenotazione, meno email del tipo \"mi dispiace, sono già impegnato\" e clienti più soddisfatti.",
     "s3title": "Crea pacchetti pensati per ogni occasione",

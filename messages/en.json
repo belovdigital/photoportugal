@@ -4337,9 +4337,11 @@
   "gettingStarted": {
     "eyebrow": "Getting started",
     "welcome": "Welcome to {brand}, {name} 👋",
-    "intro": "Eight things the photographers who book the most do differently. Scroll through — should take 4 minutes. Each tip links to where the work happens.",
+    "intro": "Nine things the photographers who book the most do differently. Scroll through — should take 4 minutes. Each tip links to where the work happens.",
+    "introNoApp": "Eight things the photographers who book the most do differently. Scroll through — should take 4 minutes. Each tip links to where the work happens.",
     "s1title": "Reply fast, warm up the room",
     "s1body": "Top performers reply in under 60 minutes. We track your average response time and surface faster repliers higher in search. Install the mobile app and turn on push (Step 8) — that's the single biggest lever.",
+    "s1bodyNoApp": "Top performers reply in under 60 minutes. We track your average response time and surface faster repliers higher in search.",
     "s2title": "Connect your calendar",
     "s2body": "Sync your Google Calendar so clients can only request slots you're actually free. Personal events stay private — we only see busy/free, not event titles. Pulls in every 15 min, plus an auto-buffer around shoots for travel/prep (set in calendar settings). You can also block specific dates manually for vacation or personal stuff. Net result: zero double-bookings, fewer \"sorry I'm booked\" emails, happier clients.",
     "s3title": "Design packages around the occasion",

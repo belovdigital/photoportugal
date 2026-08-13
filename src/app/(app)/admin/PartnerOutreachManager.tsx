@@ -16,8 +16,17 @@ interface Partner {
   contact_count: number;
   their_link_url: string | null;
   our_link_url: string | null;
+  language: string | null;
   created_at: string;
 }
+
+// NULL = this market's default (Portuguese here). Rows whose business runs in
+// English are flipped to 'en' by hand.
+const LANGUAGES = [
+  { value: "", label: "🇵🇹 PT (default)" },
+  { value: "en", label: "🇬🇧 EN" },
+  { value: "pt", label: "🇵🇹 PT" },
+];
 
 const STATUSES = ["new", "queued", "contacted", "replied", "partner", "declined", "failed"];
 
@@ -362,10 +371,21 @@ export function PartnerOutreachManager() {
               <span className="text-xs text-gray-400">✉ never mailed</span>
             )}
             <select
+              value={p.language ?? ""}
+              disabled={savingId === p.id}
+              onChange={(e) => patch(p.id, { language: e.target.value })}
+              title="Language of the letter"
+              className="ml-auto rounded-lg border border-warm-200 px-2 py-1 text-xs"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
+            <select
               value={p.status}
               disabled={savingId === p.id}
               onChange={(e) => patch(p.id, { status: e.target.value })}
-              className="ml-auto rounded-lg border border-warm-200 px-2 py-1 text-xs"
+              className="rounded-lg border border-warm-200 px-2 py-1 text-xs"
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>{s}</option>
