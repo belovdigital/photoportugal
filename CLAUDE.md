@@ -16,6 +16,40 @@ user explicitly banned it on 2026-06-12 ("только не запускай л�
   start the dev server themselves or check on prod after deploy.
 - This overrides any older note suggesting localhost:3000 is available.
 
+## Email — NEVER send through Airmail
+
+Do NOT use the Airmail MCP tools (`send_email`, `compose_email`, …) to
+send anything on behalf of the platform. Airmail is the user's personal
+mail client. It happens to hold `info@photoportugal.com`, so a message
+sent through it looks right to the recipient — which is exactly what
+makes it a trap.
+
+**This already happened once on 2026-08-13.** A nudge to a client with an
+unconfirmed €1800 wedding booking was sent via Airmail. The user's
+reaction: "какой airmail ты совсем еблан? у нас смтп для кого
+настроено." DO NOT REPEAT.
+
+Why it matters: the platform's own path writes a row to
+`notification_logs` (`channel='email'`). Everything that reads delivery
+history — the admin notification screen, the "did they get it" checks,
+the failed-send audits — reads that table. Mail sent outside it is
+invisible: nobody can tell whether the client was ever contacted.
+
+**Send through the market's own SMTP instead.** It is configured in each
+market's `/var/www/<app>/.env` (Migadu, port **587**, not 465 — Hetzner
+blocks 465 and 25 outbound).
+
+- In app code: `sendEmail()` from `src/lib/email.ts`. It logs to
+  `notification_logs` itself.
+- One-off / bulk sends: a script on the server, in the shape of
+  `scripts/send-ghost-client-nudges.mjs` — nodemailer built from the
+  `SMTP_*` env vars, and log the send yourself.
+- Never hardcode the sender or the brand: use `country.emailFrom` /
+  `country.brand` / `country.supportEmail`, see docs/MARKETS.md §7.
+
+If a message genuinely should come from the user personally rather than
+from the platform, ASK first — do not decide that on your own.
+
 ## i18n — NEVER ship raw key paths to the UI
 
 `useTranslations("ns")` + `t("foo") || "fallback"` is a footgun. When the
