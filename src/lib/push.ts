@@ -1,4 +1,5 @@
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 interface ExpoPushMessage {
   to: string;
@@ -105,6 +106,12 @@ export async function sendPushNotification(
     delete payload.threadId;
     delete payload.channelId;
     delete payload.categoryId;
+    // Which country sent this. A client can now hold a session in more than
+    // one, and every id in the payload is a UUID that exists in exactly one
+    // database — without this the app routes a tap into whichever country
+    // happens to be active and finds nothing. Stamped here rather than at the
+    // sixteen call sites so it cannot be forgotten by a new one.
+    payload.country = country.code;
 
     const message: ExpoPushMessage = {
       to: user.push_token,

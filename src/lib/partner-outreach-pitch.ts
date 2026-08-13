@@ -35,7 +35,10 @@ interface RawPitch {
 
 // A region needs two shapes in English and the wrong one is exactly what makes
 // a letter read as mail-merge: "across THE Algarve" but "your Algarve guide".
-const ARTICLE_REGIONS = /^(algarve|douro|alentejo|azores|madeira|silver coast|west|centro)$/i;
+// Islands and cities take no article — "the Madeira included" is exactly the
+// tell that a letter was generated. Only regions that are genuinely "the ___"
+// belong here.
+const ARTICLE_REGIONS = /^(algarve|douro( valley)?|alentejo|azores|silver coast)$/i;
 
 function regionParts(p: OutreachPartner): string[] {
   const raw = (p.region || "").trim();
