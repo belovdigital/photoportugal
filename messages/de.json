@@ -1028,7 +1028,7 @@
         },
         "uploadPortfolio": {
           "title": "Portfolio hochladen",
-          "desc": "Zeigen Sie Ihre besten Arbeiten. Wir empfehlen mindestens 10 Fotos in verschiedenen Stilen."
+          "desc": "Zeigen Sie Ihre besten Arbeiten. Für die Prüfung sind mindestens 25 Fotos erforderlich – mehr, in verschiedenen Stilen, ist besser."
         },
         "createPackages": {
           "title": "Pakete erstellen",
@@ -3712,7 +3712,7 @@
       "writeBioTagline": "Schreiben Sie Ihre Bio & Ihren Slogan",
       "writeBioTaglineTip": "Erwähnen Sie Ihre Erfahrung, Ihren Stil und das, was Sie einzigartig macht",
       "uploadPortfolioPhotos": "Mindestens 25 Portfolio-Fotos hochladen",
-      "uploadPortfolioPhotosTip": "Laden Sie mindestens 20 vielfältige Fotos hoch, die Ihre Bandbreite zeigen",
+      "uploadPortfolioPhotosTip": "Zeigen Sie Ihre Bandbreite – verschiedene Stile, Orte und Lichtstimmungen",
       "createFirstPackage": "Erstellen Sie Ihr erstes Paket",
       "createFirstPackageTip": "Beginnen Sie mit 2-3 Paketen zu unterschiedlichen Preisen",
       "selectLocations": "Wählen Sie Ihre Standorte",
@@ -4287,7 +4287,7 @@
     "action_replyFaster": "Antworten Sie schneller",
     "action_replyFaster_why": "Ihre mediane erste Antwort dauert über einen Tag. Schnelle Antworten sind der stärkste Buchungsfaktor.",
     "action_portfolio": "Fügen Sie Portfolio-Fotos hinzu",
-    "action_portfolio_why": "Profile mit 8+ Fotos halten Besucher länger.",
+    "action_portfolio_why": "Profile mit mehr Fotos halten Besucher länger.",
     "action_packages": "Erstellen Sie ein Paket",
     "action_packages_why": "Ohne Pakete sehen Besucher keinen Preis — die meisten schreiben nicht zuerst.",
     "action_languages": "Geben Sie Ihre Sprachen an",

@@ -1028,7 +1028,7 @@
         },
         "uploadPortfolio": {
           "title": "Carregue o seu portfólio",
-          "desc": "Mostre o seu melhor trabalho. Recomendamos pelo menos 10 fotos de diferentes estilos."
+          "desc": "Mostre o seu melhor trabalho. São necessárias pelo menos 25 fotos para o perfil ser analisado — mais, de estilos diferentes, é melhor."
         },
         "createPackages": {
           "title": "Crie pacotes",
@@ -3486,7 +3486,7 @@
       "writeBioTagline": "Escreva a sua bio e tagline",
       "writeBioTaglineTip": "Mencione a sua experiência, estilo e o que o torna único",
       "uploadPortfolioPhotos": "Carregar pelo menos 25 fotos de portfólio",
-      "uploadPortfolioPhotosTip": "Carregue pelo menos 20 fotos diversas que mostrem a sua versatilidade",
+      "uploadPortfolioPhotosTip": "Mostre a sua versatilidade — estilos, locais e luz diferentes",
       "createFirstPackage": "Criar o seu primeiro pacote",
       "createFirstPackageTip": "Comece com 2-3 pacotes em diferentes faixas de preço",
       "selectLocations": "Selecionar as suas localizações",
@@ -4287,7 +4287,7 @@
     "action_replyFaster": "Responda mais depressa",
     "action_replyFaster_why": "A sua primeira resposta mediana demora mais de um dia. Respostas rápidas são o factor mais forte de reserva.",
     "action_portfolio": "Adicione fotos ao portfólio",
-    "action_portfolio_why": "Perfis com 8+ fotos retêm os visitantes por mais tempo.",
+    "action_portfolio_why": "Perfis com mais fotos retêm os visitantes por mais tempo.",
     "action_packages": "Crie um pacote",
     "action_packages_why": "Sem pacotes os visitantes não vêem preço — a maioria não escreve primeiro.",
     "action_languages": "Adicione os seus idiomas",

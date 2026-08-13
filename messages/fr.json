@@ -1451,7 +1451,7 @@
         },
         "uploadPortfolio": {
           "title": "Téléchargez votre portfolio",
-          "desc": "Présentez votre meilleur travail. Nous recommandons au moins 10 photos couvrant différents styles."
+          "desc": "Présentez votre meilleur travail. Au moins 25 photos sont requises pour que votre profil soit examiné ; plus, dans différents styles, c'est mieux."
         },
         "createPackages": {
           "title": "Créez des forfaits",
@@ -3957,7 +3957,7 @@
       "writeBioTagline": "Écrire votre bio et slogan",
       "writeBioTaglineTip": "Mentionnez votre expérience, style et ce qui vous rend unique",
       "uploadPortfolioPhotos": "Téléverser au moins 25 photos de portfolio",
-      "uploadPortfolioPhotosTip": "Téléversez au moins 20 photos variées montrant votre éventail",
+      "uploadPortfolioPhotosTip": "Montrez votre éventail — styles, lieux et lumières différents",
       "createFirstPackage": "Créer votre premier forfait",
       "createFirstPackageTip": "Commencez avec 2-3 forfaits à différents prix",
       "selectLocations": "Sélectionner vos lieux",
@@ -4287,7 +4287,7 @@
     "action_replyFaster": "Répondez plus vite",
     "action_replyFaster_why": "Votre première réponse médiane dépasse une journée. La rapidité est le facteur de réservation le plus fort.",
     "action_portfolio": "Ajoutez des photos au portfolio",
-    "action_portfolio_why": "Les profils avec 8+ photos retiennent les visiteurs plus longtemps.",
+    "action_portfolio_why": "Les profils avec plus de photos retiennent les visiteurs plus longtemps.",
     "action_packages": "Créez un forfait",
     "action_packages_why": "Sans forfaits, les visiteurs ne voient pas de prix — la plupart n'écrivent pas en premier.",
     "action_languages": "Ajoutez vos langues",

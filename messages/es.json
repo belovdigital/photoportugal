@@ -1986,7 +1986,7 @@
         },
         "uploadPortfolio": {
           "title": "Suba su portafolio",
-          "desc": "Presente su mejor trabajo. Recomendamos al menos 10 fotos cubriendo diferentes estilos."
+          "desc": "Presente su mejor trabajo. Se necesitan al menos 25 fotos para que revisemos su perfil; más, de distintos estilos, es mejor."
         },
         "createPackages": {
           "title": "Cree paquetes",
@@ -3058,7 +3058,7 @@
       "photographers": {
         "getStarted": {
           "question": "¿Cómo empiezo como fotógrafo?",
-          "answer": "Empezar es simple:\n\n1. **Cree su cuenta** — Regístrese y seleccione 'Hago fotos'\n2. **Complete su perfil** — Añada foto, imagen de portada, bio y slogan\n3. **Suba su portafolio** — Presente al menos 25-20 de sus mejores fotos\n4. **Cree paquetes** — Configure 2-3 paquetes a diferentes niveles de precio\n5. **Seleccione sus lugares** — Marque dónde está disponible para fotografiar\n6. **Conecte Stripe** — Requerido para recibir pagos\n\nUna vez que su perfil esté completo y aprobado por nuestro equipo, aparecerá en los resultados de búsqueda y podrá empezar a recibir reservas."
+          "answer": "Empezar es simple:\n\n1. **Cree su cuenta** — Regístrese y seleccione 'Hago fotos'\n2. **Complete su perfil** — Añada foto, imagen de portada, bio y slogan\n3. **Suba su portafolio** — Al menos 25 de sus mejores fotos; con menos no se revisa el perfil\n4. **Cree paquetes** — Configure 2-3 paquetes a diferentes niveles de precio\n5. **Seleccione sus lugares** — Marque dónde está disponible para fotografiar\n6. **Conecte Stripe** — Requerido para recibir pagos\n\nUna vez que su perfil esté completo y aprobado por nuestro equipo, aparecerá en los resultados de búsqueda y podrá empezar a recibir reservas."
         },
         "subscriptionPlans": {
           "question": "¿Qué planes de suscripción están disponibles?",
@@ -3957,7 +3957,7 @@
       "writeBioTagline": "Escribir su bio y slogan",
       "writeBioTaglineTip": "Mencione su experiencia, estilo y lo que le hace único",
       "uploadPortfolioPhotos": "Subir al menos 25 fotos de portafolio",
-      "uploadPortfolioPhotosTip": "Suba al menos 20 fotos variadas mostrando su rango",
+      "uploadPortfolioPhotosTip": "Muestre su versatilidad: distintos estilos, lugares y luces",
       "createFirstPackage": "Crear su primer paquete",
       "createFirstPackageTip": "Empiece con 2-3 paquetes a diferentes precios",
       "selectLocations": "Seleccionar sus lugares",
@@ -4287,7 +4287,7 @@
     "action_replyFaster": "Responde más rápido",
     "action_replyFaster_why": "Tu primera respuesta mediana tarda más de un día. Responder rápido es el factor de reserva más fuerte.",
     "action_portfolio": "Añade fotos a tu portafolio",
-    "action_portfolio_why": "Los perfiles con 8+ fotos retienen más a los visitantes.",
+    "action_portfolio_why": "Los perfiles con más fotos retienen más a los visitantes.",
     "action_packages": "Crea un paquete",
     "action_packages_why": "Sin paquetes los visitantes no ven precio — la mayoría no escribe primero.",
     "action_languages": "Añade tus idiomas",

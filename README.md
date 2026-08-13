@@ -32,7 +32,7 @@ Professional photographer marketplace for tourists visiting Portugal. Find and b
 
 ### For Photographers
 - Profile management (bio, languages, shoot types, 23 locations)
-- Portfolio upload (plan-based limits: Free 10, Pro 50, Premium unlimited)
+- Portfolio upload (up to 500 photos on all plans)
 - Avatar upload
 - Package creation (name, duration, photos, price, "Most Popular" flag)
 - Incoming booking management (confirm/decline/complete)

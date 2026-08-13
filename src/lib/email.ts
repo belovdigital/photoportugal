@@ -7,6 +7,7 @@ import { maskSurname } from "@/lib/photographer-name";
 import { clientPriceWithFee } from "@/lib/service-fee";
 import { country } from "@/lib/country";
 import { locations } from "@/lib/locations-data";
+import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
 
 // Default to 587 + STARTTLS — Hetzner blocks the implicit-TLS port 465
 // outbound by default (their anti-abuse policy), so we use the submission
@@ -1422,7 +1423,7 @@ export async function sendWelcomeEmail(
           <table style="width:100%;border-collapse:collapse;">
             <tr><td style="padding:6px 0;color:#9B8E82;">1.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Complete your profile</strong> — Add a photo, bio, and tagline</td></tr>
             <tr><td style="padding:6px 0;color:#9B8E82;">2.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Upload a cover image</strong> — This appears on your card</td></tr>
-            <tr><td style="padding:6px 0;color:#9B8E82;">3.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Add portfolio photos</strong> — At least 5, we recommend 10+</td></tr>
+            <tr><td style="padding:6px 0;color:#9B8E82;">3.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Add portfolio photos</strong> — At least ${MIN_PORTFOLIO_PHOTOS}, required before we review your profile</td></tr>
             <tr><td style="padding:6px 0;color:#9B8E82;">4.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Create packages</strong> — Set up 2-3 at different price points</td></tr>
             <tr><td style="padding:6px 0;color:#9B8E82;">5.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Select your locations</strong> — Where you're available to shoot</td></tr>
             <tr><td style="padding:6px 0;color:#9B8E82;">6.</td><td style="padding:6px 8px;font-size:15px;color:#4A4A4A;"><strong>Connect Stripe</strong> — Required to receive payments</td></tr>

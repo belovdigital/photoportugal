@@ -1028,7 +1028,7 @@
         },
         "uploadPortfolio": {
           "title": "Upload your portfolio",
-          "desc": "Show off your best work. We recommend at least 10 photos across different styles."
+          "desc": "Show off your best work. At least 25 photos are required before your profile goes to review — more, across different styles, is better."
         },
         "createPackages": {
           "title": "Create packages",
@@ -3711,7 +3711,7 @@
       "writeBioTagline": "Write your bio & tagline",
       "writeBioTaglineTip": "Mention your experience, style, and what makes you unique",
       "uploadPortfolioPhotos": "Upload at least 25 portfolio photos",
-      "uploadPortfolioPhotosTip": "Upload at least 20 diverse photos showing your range",
+      "uploadPortfolioPhotosTip": "Show your range — different styles, locations, and light",
       "createFirstPackage": "Create your first package",
       "createFirstPackageTip": "Start with 2-3 packages at different price points",
       "selectLocations": "Select your locations",
@@ -4286,7 +4286,7 @@
     "action_replyFaster": "Reply faster",
     "action_replyFaster_why": "Your median first reply is over a day. Fast replies are the strongest booking factor.",
     "action_portfolio": "Add photos to your portfolio",
-    "action_portfolio_why": "Profiles with 8+ photos hold visitors longer.",
+    "action_portfolio_why": "Profiles with more photos hold visitors longer.",
     "action_packages": "Create a package",
     "action_packages_why": "Without packages visitors can't see a price — most won't write first.",
     "action_languages": "Add your languages",

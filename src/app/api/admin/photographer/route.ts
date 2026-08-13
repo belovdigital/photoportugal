@@ -201,7 +201,7 @@ export async function PATCH(req: NextRequest) {
 
               <p style="font-weight: bold; color: #333;">Tips to get your first booking:</p>
               <ul style="line-height: 1.8; color: #555;">
-                <li><strong>Complete your portfolio</strong> — Profiles with 10+ photos get 3x more enquiries</li>
+                <li><strong>Keep your portfolio growing</strong> — the more range clients see, the more enquiries you get</li>
                 <li><strong>Set competitive prices</strong> — Start with an attractive intro rate to build reviews</li>
                 <li><strong>Add multiple locations</strong> — The more places you cover, the more clients find you</li>
                 <li><strong>Write a compelling bio</strong> — Tell clients what makes your style unique</li>
