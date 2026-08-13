@@ -21,8 +21,13 @@ export async function GET(req: NextRequest) {
     const user = await queryOne<{
       id: string; email: string; name: string; role: string; avatar_url: string | null;
       is_banned: boolean;
+      has_google: boolean; has_apple: boolean;
     }>(
-      `SELECT id, email, name, role, avatar_url, COALESCE(is_banned, FALSE) as is_banned
+      // The provider flags, not the ids: the app needs to know HOW this person
+      // signs in (so adding a second country can replay the same method) and
+      // never needs the subs themselves.
+      `SELECT id, email, name, role, avatar_url, COALESCE(is_banned, FALSE) as is_banned,
+              (google_id IS NOT NULL) AS has_google, (apple_id IS NOT NULL) AS has_apple
        FROM users WHERE id = $1`,
       [decoded.id]
     );
@@ -39,6 +44,8 @@ export async function GET(req: NextRequest) {
         role: user.role,
         avatar_url: user.avatar_url,
       },
+      has_google: user.has_google,
+      has_apple: user.has_apple,
     });
   } catch {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
