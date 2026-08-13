@@ -4,7 +4,7 @@ import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification, sendAdminBookingConfirmedNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { maskSurname } from "@/lib/photographer-name";
-import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { requireStripe, calculatePayment, SERVICE_FEE_RATE, photographerPayoutFor } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 import { payoutSetupCopy } from "@/lib/payout";
 import { country } from "@/lib/country";
@@ -27,6 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               pu.name as photographer_name, pp.slug as photographer_slug,
               pu.avatar_url as photographer_avatar,
               p.name as package_name, p.duration_minutes, p.num_photos,
+              pp.plan as photographer_plan,
               -- Pair-level flag: has ANY booking between this (client,
               -- photographer) pair been paid? Mirrors the same field on
               -- /messages/conversations so the chat link-renderer behaves
@@ -79,7 +80,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // they must never see: the 15% service fee added on top, the gross the
     // client paid, and promo/coupon details. They keep total_price (their
     // base rate), payout_amount (take-home), and platform_fee (our cut).
-    if (b.client_id !== user.id) {
+    //
+    // Branch on viewer_role, NOT on client_id: a gift recipient is neither the
+    // client_id nor the photographer, so `client_id !== user.id` swept them
+    // into the photographer branch and handed them the payout, the platform
+    // fee and the base price — while the gift_recipient strip below could
+    // never run for the people it was written for.
+    if (b.viewer_role === "photographer") {
       delete b.service_fee;
       // The client's price for an extra photo is the client's business.
       // extra_photo_payout_cents stays — that one IS the photographer's rate.
@@ -95,6 +102,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       delete b.payment_url;
       delete b.stripe_payment_intent_id;
       delete b.stripe_currency;
+      // Same projection the list endpoint fills in. payout_amount is only
+      // written at confirm or checkout, so it is NULL on every pending
+      // request — and the app now shows the photographer nothing but their
+      // payout, so without this the number on the list row vanished the
+      // moment they opened the booking.
+      if (b.payout_amount == null && b.total_price != null) {
+        b.payout_amount = photographerPayoutFor(Number(b.total_price), b.photographer_plan as string | undefined);
+      }
     } else {
       // Client viewer: the photographer's money story is not theirs.
       delete b.payout_amount;
@@ -113,6 +128,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         delete b.payment_url;
       }
     }
+
+    // Joined only to compute the payout projection above — nobody renders the
+    // photographer's subscription tier, least of all a client.
+    delete b.photographer_plan;
 
     return NextResponse.json(booking);
   } catch (error) {
