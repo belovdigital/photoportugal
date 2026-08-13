@@ -106,6 +106,37 @@ export function replyToAddress(raw?: string | null): string | undefined {
 // retrying a dead address for 24 hours costs nothing, and guessing wrong
 // about which failures are permanent costs a real message.
 
+// Cold partner outreach leaves from its own mailbox when one is configured.
+// The point is isolation, not disguise: volume complaints land on partners@,
+// and the booking confirmations that go out of info@ keep their reputation
+// even if that mailbox gets throttled. Same domain, so Migadu's existing SPF
+// and DKIM already cover it — a different domain would need its own records
+// and a warm-up before it could carry this volume.
+//
+// Unset → outreach falls back to the platform sender, which is today's
+// behaviour. The fallback is logged rather than silent: a typo in the env
+// would otherwise quietly put us back on info@, which is the exact thing this
+// exists to prevent.
+const OUTREACH_PORT = parseInt(process.env.OUTREACH_SMTP_PORT || process.env.SMTP_PORT || "587");
+const outreachUser = process.env.OUTREACH_SMTP_USER || `partners@${country.host}`;
+
+const outreachTransporter = process.env.OUTREACH_SMTP_PASS
+  ? nodemailer.createTransport({
+      host: process.env.OUTREACH_SMTP_HOST || process.env.SMTP_HOST || "smtp.migadu.com",
+      port: OUTREACH_PORT,
+      secure: OUTREACH_PORT === 465,
+      auth: { user: outreachUser, pass: process.env.OUTREACH_SMTP_PASS },
+      ...SMTP_TIMEOUTS,
+    })
+  : null;
+
+/** Which mailbox outreach would actually leave from right now. */
+export function outreachSender(): { configured: boolean; from: string } {
+  return outreachTransporter
+    ? { configured: true, from: process.env.OUTREACH_FROM || `${country.brand} <${outreachUser}>` }
+    : { configured: false, from: FROM };
+}
+
 export interface EmailSendResult {
   ok: boolean;
   error?: string;
@@ -122,9 +153,22 @@ export async function sendEmailWithResult(
   to: string,
   subject: string,
   html: string,
-  options?: { replyTo?: string; park?: boolean; text?: string; headers?: Record<string, string> }
+  options?: {
+    replyTo?: string;
+    park?: boolean;
+    text?: string;
+    headers?: Record<string, string>;
+    sender?: "platform" | "outreach";
+  }
 ): Promise<EmailSendResult> {
-  if (!process.env.SMTP_PASS) {
+  const wantsOutreach = options?.sender === "outreach";
+  const viaOutreach = wantsOutreach && !!outreachTransporter;
+  if (wantsOutreach && !viaOutreach) {
+    console.warn(`[email] OUTREACH_SMTP_PASS not set — outreach falling back to ${FROM}`);
+  }
+  const transport = viaOutreach ? outreachTransporter! : transporter;
+
+  if (!(viaOutreach ? process.env.OUTREACH_SMTP_PASS : process.env.SMTP_PASS)) {
     console.log(`[email] SMTP not configured, skipping: ${subject} → ${to}`);
     return { ok: true };
   }
@@ -133,7 +177,7 @@ export async function sendEmailWithResult(
   // plain-text part and no List-Unsubscribe is scored as bulk by most
   // receivers, and this account also carries booking confirmations.
   const mail = {
-    from: FROM,
+    from: viaOutreach ? outreachSender().from : FROM,
     to,
     subject,
     html,
@@ -146,7 +190,7 @@ export async function sendEmailWithResult(
   for (let attempt = 1; attempt <= 2; attempt++) {
     const startedAt = Date.now();
     try {
-      await transporter.sendMail(mail);
+      await transport.sendMail(mail);
       console.log(`[email] Sent: ${subject} → ${to}${attempt > 1 ? " (2nd attempt)" : ""}`);
       import("@/lib/notification-log").then(m => m.logNotification("email", to, subject.slice(0, 100), "sent")).catch(() => {});
       return { ok: true };

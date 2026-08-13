@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
-import { sendEmailWithResult } from "@/lib/email";
+import { outreachSender, sendEmailWithResult } from "@/lib/email";
 import { buildPitch, outreachHeaders, pitchLanguage, type OutreachPartner } from "@/lib/partner-outreach-pitch";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +11,15 @@ export const maxDuration = 300;
 //
 // The cap is the point. A thousand-row list mailed in one night is a spam
 // complaint per hour against the same mailbox that sends booking
-// confirmations, so this sends 50 a day and the list drains over weeks.
+// confirmations, so this drips and the list drains over weeks.
+//
+// 30 a day, down from 50 on 2026-08-13: this account is also the transactional
+// sender, and there is no upside to draining the list a week sooner. Override
+// per-run with ?limit=, or permanently with OUTREACH_DAILY_CAP in .env.
 //
 // Sends are spaced by SEND_GAP_MS. Migadu throttles bursts, and a rejected
 // burst looks exactly like a dead address from here.
-const DEFAULT_CAP = 50;
+const DEFAULT_CAP = 30;
 const SEND_GAP_MS = 2_000;
 
 interface PartnerRow extends OutreachPartner {
@@ -60,6 +64,7 @@ export async function GET(req: NextRequest) {
         dry: true,
         cap,
         photographers: pitchOptions.photographerCount,
+        sender: outreachSender(),
         would_send: partners.length,
         preview: partners.slice(0, 5).map((p) => {
           const pitch = buildPitch(p, pitchOptions);
@@ -86,6 +91,7 @@ export async function GET(req: NextRequest) {
         text: pitch.text,
         headers: outreachHeaders(),
         park: false,
+        sender: "outreach",
       });
 
       if (result.ok) {
@@ -121,7 +127,15 @@ export async function GET(req: NextRequest) {
     );
 
     console.log(`[cron/partner-outreach] sent ${sent}, failed ${failed.length}, ${remaining?.count} still queued`);
-    return NextResponse.json({ ok: true, sent, failed, queued_remaining: Number(remaining?.count || 0) });
+    return NextResponse.json({
+      ok: true,
+      sent,
+      failed,
+      // Reported on every run: a silent fallback to info@ is the one failure
+      // mode of the separate-mailbox setup that nothing else would surface.
+      sender: outreachSender(),
+      queued_remaining: Number(remaining?.count || 0),
+    });
   } catch (error) {
     console.error("[cron/partner-outreach] error:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
