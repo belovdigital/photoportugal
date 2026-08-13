@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { identityToken, fullName, email: clientEmail } = await req.json();
+    const { identityToken, fullName, email: clientEmail, secondary_market } = await req.json();
 
     if (!identityToken) {
       return NextResponse.json({ error: "Identity token required" }, { status: 400 });
@@ -111,14 +111,19 @@ export async function POST(req: NextRequest) {
         [user.id]
       );
 
-      // Notify admin + queue the welcome (held in case the role changes)
-      import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
-        enqueueClientWelcome(user!.id, email.toLowerCase(), name)
-      ).catch((err) => console.error("[auth/apple] welcome queue error:", err));
-      sendAdminNewClientNotification(name, email.toLowerCase()).catch((err) => console.error("[auth/apple] admin notification error:", err));
-      import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Client (Apple, app)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`, "clients");
-      }).catch((err) => console.error("[auth/apple] telegram error:", err));
+      // Same person, second country — see the note in the Google route. They
+      // have already been welcomed and already counted; announcing them once
+      // per country they browse is noise, not a signup.
+      if (!secondary_market) {
+        // Notify admin + queue the welcome (held in case the role changes)
+        import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+          enqueueClientWelcome(user!.id, email.toLowerCase(), name)
+        ).catch((err) => console.error("[auth/apple] welcome queue error:", err));
+        sendAdminNewClientNotification(name, email.toLowerCase()).catch((err) => console.error("[auth/apple] admin notification error:", err));
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`👤 <b>New Client (Apple, app)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`, "clients");
+        }).catch((err) => console.error("[auth/apple] telegram error:", err));
+      }
     }
 
     // Update name if we have it and current is "Apple User"

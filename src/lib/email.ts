@@ -121,18 +121,23 @@ export async function sendEmailWithResult(
   to: string,
   subject: string,
   html: string,
-  options?: { replyTo?: string; park?: boolean }
+  options?: { replyTo?: string; park?: boolean; text?: string; headers?: Record<string, string> }
 ): Promise<EmailSendResult> {
   if (!process.env.SMTP_PASS) {
     console.log(`[email] SMTP not configured, skipping: ${subject} → ${to}`);
     return { ok: true };
   }
 
+  // text + headers exist for cold outreach (partner emails): a message with no
+  // plain-text part and no List-Unsubscribe is scored as bulk by most
+  // receivers, and this account also carries booking confirmations.
   const mail = {
     from: FROM,
     to,
     subject,
     html,
+    ...(options?.text ? { text: options.text } : {}),
+    ...(options?.headers ? { headers: options.headers } : {}),
     ...(options?.replyTo ? { replyTo: options.replyTo } : {}),
   };
 

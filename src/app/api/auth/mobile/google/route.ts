@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { id_token } = await req.json();
+    const { id_token, secondary_market } = await req.json();
 
     if (!id_token) {
       return NextResponse.json({ error: "Google ID token required" }, { status: 400 });
@@ -120,15 +120,23 @@ export async function POST(req: NextRequest) {
         avatar_url: avatarUrl,
       };
 
-      // Queued like every other client welcome — an app signup can still turn
-      // into a photographer account on the web ten minutes later.
-      import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
-        enqueueClientWelcome(newUser.id, googleUser.email, googleUser.name)
-      ).catch((err) => console.error("[auth/google] welcome queue error:", err));
-      sendAdminNewClientNotification(googleUser.name, googleUser.email).catch((err) => console.error("[auth/google] admin notification error:", err));
-      import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Client (Google, app)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`, "clients");
-      }).catch((err) => console.error("[auth/google] telegram error:", err));
+      // `secondary_market` means the app is giving an EXISTING client of
+      // another country a session here so they can book abroad. It is the same
+      // person, already welcomed and already counted — announcing them again
+      // would send one human three welcome emails and three Telegram pings,
+      // and would inflate every new-client number by the number of countries
+      // they browse.
+      if (!secondary_market) {
+        // Queued like every other client welcome — an app signup can still turn
+        // into a photographer account on the web ten minutes later.
+        import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+          enqueueClientWelcome(newUser.id, googleUser.email, googleUser.name)
+        ).catch((err) => console.error("[auth/google] welcome queue error:", err));
+        sendAdminNewClientNotification(googleUser.name, googleUser.email).catch((err) => console.error("[auth/google] admin notification error:", err));
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`👤 <b>New Client (Google, app)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`, "clients");
+        }).catch((err) => console.error("[auth/google] telegram error:", err));
+      }
       query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[auth/google] admin_notified update error:", err));
     } else {
       // Update google_id and avatar if missing

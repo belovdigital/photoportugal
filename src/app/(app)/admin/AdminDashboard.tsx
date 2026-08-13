@@ -11,6 +11,7 @@ import type { PhotographerOption } from "./IssueWarningModal";
 // AdminPopupStats removed 2026-05-07 — feature retired. File kept for reference.
 import { RedirectsManager } from "./RedirectsManager";
 import { BusinessInquiriesManager } from "./BusinessInquiriesManager";
+import { PartnerOutreachManager } from "./PartnerOutreachManager";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { NO_TRACK_COOKIE, NO_TRACK_COOKIE_OPTIONS } from "@/lib/no-track";
 import { NotFoundManager } from "./NotFoundManager";
@@ -217,6 +218,7 @@ const tabGroups = [
       { key: "inquiries", label: "Inquiries", icon: "message" },
       { key: "matchRequests", label: "Match Requests", icon: "search" },
       { key: "businessInquiries", label: "B2B Inquiries", icon: "briefcase" },
+      { key: "partnerOutreach", label: "Partner Outreach", icon: "briefcase" },
       { key: "concierge", label: "Concierge AI", icon: "sparkles" },
       { key: "disputes", label: "Disputes", icon: "flag" },
       { key: "reviews", label: "Reviews", icon: "star" },
@@ -256,7 +258,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "photographerStats" | "businessInquiries" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "stripeHealth" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "manualPayouts" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
+type TabKey = "overview" | "photographerStats" | "businessInquiries" | "partnerOutreach" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "stripeHealth" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "manualPayouts" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -1057,6 +1059,7 @@ export function AdminDashboard({
           {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}
           {activeTab === "businessInquiries" && <BusinessInquiriesManager />}
+          {activeTab === "partnerOutreach" && <PartnerOutreachManager />}
           {activeTab === "reviews" && reviewsSection}
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
