@@ -1346,47 +1346,6 @@ const locationsPT: Location[] = [
       "Réservez un photographe professionnel à Sesimbra, Portugal. Vues du château, plages cristallines et séances sur la côte de l'Arrábida. À partir de 299 €.",
   },
   {
-    id: "ericeira",
-    slug: "ericeira",
-    name: "Ericeira",
-    region: "Greater Lisbon",
-    description: "World-class surf town with rugged Atlantic cliffs, whitewashed streets, and a laid-back bohemian vibe.",
-    long_description: "Ericeira is a World Surfing Reserve and one of Portugal's coolest coastal towns, just 35 minutes from Lisbon. The dramatic Atlantic cliffs, vibrant street art, whitewashed buildings with blue trim, and colorful fishing boats make it incredibly photogenic. The laid-back surf culture creates a relaxed, natural energy perfect for authentic, candid photoshoots.",
-    cover_image: "/images/locations/ericeira-cover.jpg",
-    gallery_images: [],
-    lat: 38.9631,
-    lng: -9.4154,
-    photographer_count: 0,
-    seo_title: "Photographer in Ericeira — Surf Town & Cliff Photoshoots",
-    seo_description: "Book a professional photographer in Ericeira, Portugal. Surf town, Atlantic cliffs & bohemian vibes near Lisbon. From EUR299.",
-    description_pt: "Vila de surf de classe mundial com falésias atlânticas agrestes, ruas caiadas de branco e ambiente boémio descontraído.",
-    long_description_pt: "Ericeira é uma Reserva Mundial de Surf e uma das vilas costeiras mais cool de Portugal, a apenas 35 minutos de Lisboa. As falésias atlânticas dramáticas, a arte de rua vibrante, os edifícios caiados com apontamentos azuis e os barcos de pesca coloridos tornam-na incrivelmente fotogénica.",
-    seo_title_pt: "Fotógrafo em Ericeira — Sessões na Vila de Surf e Falésias",
-    seo_description_pt: "Reserve um fotógrafo profissional em Ericeira, Portugal. Vila de surf, falésias atlânticas e ambiente boémio perto de Lisboa. Desde 299€.",
-    name_de: "Ericeira",
-    name_pt: "Ericeira",
-    name_es: "Ericeira",
-    name_fr: "Ericeira",
-    description_de: "Weltklasse-Surfstadt mit zerklüfteten Atlantikklippen, weiß getünchten Gassen und entspannter Bohemian-Atmosphäre.",
-    long_description_de: "Ericeira ist eine World Surfing Reserve und eine der coolsten Küstenstädte Portugals, nur 35 Minuten von Lissabon entfernt. Die dramatischen Atlantikklippen, die lebendige Street-Art, die weiß getünchten Gebäude mit blauen Akzenten und die bunten Fischerboote machen den Ort unglaublich fotogen. Die entspannte Surf-Kultur sorgt für eine lockere, natürliche Energie — perfekt für authentische, ungestellte Fotoshootings.",
-    seo_title_de: "Fotograf in Ericeira — Surfstadt- und Klippen-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Ericeira, Portugal. Surfstadt-, Atlantikklippen- und Bohemian-Vibe-Fotoshootings nahe Lissabon. Ab 299 €.",
-    description_es:
-      "Pueblo surfista de nivel mundial con acantilados atlánticos abruptos, calles encaladas y un ambiente bohemio relajado.",
-    description_fr:
-      "Un haut lieu du surf mondial avec falaises atlantiques abruptes, rues blanchies à la chaux et ambiance bohème décontractée.",
-    long_description_es:
-      "Ericeira es Reserva Mundial de Surf y uno de los pueblos costeros más cool de Portugal, a solo 35 minutos de Lisboa. Los espectaculares acantilados atlánticos, el vibrante arte callejero, los edificios encalados con remates azules y los coloridos barcos de pesca lo hacen increíblemente fotogénico. La cultura surf relajada crea una energía natural y desenfadada perfecta para sesiones auténticas y espontáneas.",
-    long_description_fr:
-      "Ericeira est Réserve mondiale de surf et l'un des villages côtiers les plus cool du Portugal, à seulement 35 minutes de Lisbonne. Les spectaculaires falaises atlantiques, le street art vibrant, les bâtiments blanchis à la chaux soulignés de bleu et les bateaux de pêche colorés en font un cadre incroyablement photogénique. La culture surf décontractée crée une énergie naturelle et tranquille parfaite pour des séances authentiques et spontanées.",
-    seo_title_es: "Fotógrafo en Ericeira, Portugal | Sesiones surf y bohemias",
-    seo_description_es:
-      "Reserve un fotógrafo profesional en Ericeira, Portugal. Pueblo surfista, acantilados atlánticos y vibras bohemias cerca de Lisboa. Desde 299 €.",
-    seo_title_fr: "Photographe à Ericeira, Portugal | Séances surf et ambiance bohème",
-    seo_description_fr:
-      "Réservez un photographe professionnel à Ericeira, Portugal. Village surf, falaises atlantiques et ambiance bohème près de Lisbonne. À partir de 299 €.",
-  },
-  {
     id: "arrabida",
     slug: "arrabida",
     name: "Arrabida",
