@@ -206,6 +206,7 @@ inquiry → pending → confirmed → completed → delivered
 | `db/schema.sql` | мёртв, отстал от прода; смотреть боевую базу (`MARKETS.md §4.2`) |
 | `visitor_sessions.country` | гео посетителя из `cf-ipcountry`, к рынку отношения не имеет |
 | греп по SQL-литералам | статусы часто приходят из тела запроса (`const { status } = body`), а не пишутся строкой в SQL. «Никто не выставляет X» по грепу — почти всегда неправда; проверять UI и разбор `body` |
+| `early_bird_tier = 'early50'` | мест в тире **25, не 50** — имя историческое. Структура когорт на /join: founding **10** → early bird **25** (закрыт; Premium на 3 года от даты апрува) → first **100** внешняя (границы `[10, 35, 100]` в join/page.tsx) |
 
 ---
 
