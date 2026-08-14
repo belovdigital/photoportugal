@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { unsplashSrcSet } from "@/lib/unsplash-images";
+import { r2SrcSet } from "@/lib/image-variants";
 
 interface OptimizedImageProps {
   src: string;
@@ -12,7 +13,41 @@ interface OptimizedImageProps {
   style?: React.CSSProperties;
   priority?: boolean;
   onClick?: (e: React.MouseEvent) => void;
+  /** How wide the image is drawn, e.g. "40px" for an avatar circle or "100vw"
+   *  for a full-bleed band. Defaults depend on the srcset source: the grid
+   *  heuristic for Unsplash, the `width` prop for avatars. */
   sizes?: string;
+}
+
+/**
+ * The three markets' R2 hosts. Only `avatars/` behind these gets a srcset:
+ * every avatar in each market's database was verified to have all of its
+ * 160/400/800 WebP rungs before this shipped (97 PT + 9 ES + 3 IT, checked
+ * per rung over HTTP on 2026-08-14), and the upload route now writes the
+ * rungs alongside every new original. Portfolio and cover photos stay on
+ * their originals — their coverage has not been proven the same way.
+ */
+const AVATAR_HOSTS = [
+  "files.photoportugal.com",
+  "files.photospain.co",
+  "files.photoitaly.co",
+];
+
+export function avatarSrcSet(src: string): string | undefined {
+  const host = AVATAR_HOSTS.find((h) => src.startsWith(`https://${h}/avatars/`));
+  return host ? r2SrcSet(src, host) : undefined;
+}
+
+/**
+ * The srcset fallback guard for hand-written `<img>` tags in CLIENT
+ * components. Never pass this from a server component — a function prop
+ * crossing the server boundary is a 500 on the whole page (2026-08-14).
+ */
+export function dropBrokenSrcSet(e: { currentTarget: HTMLImageElement }): void {
+  const img = e.currentTarget;
+  if (!img.getAttribute("srcset")) return;
+  img.removeAttribute("srcset");
+  img.removeAttribute("sizes");
 }
 
 /**
@@ -31,7 +66,7 @@ export function OptimizedImage({
   style,
   priority = false,
   onClick,
-  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  sizes,
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -46,14 +81,25 @@ export function OptimizedImage({
 
   const optimizedSrc = getOptimizedSrc(src, width, quality);
 
-  // R2 originals still ship as-is: they are capped at 2000px q=85 at upload
-  // time and Cloudflare caches them globally. The Image Transformations layer
-  // we tried on top added cold-cache MISS latency without a clear win.
+  // R2 portfolio/cover originals still ship as-is: capped at 2000px q=85 at
+  // upload time, cached globally by Cloudflare. The Image Transformations
+  // layer we tried on top added cold-cache MISS latency without a clear win.
   //
-  // Unsplash is a different case — they resize on their own CDN, so a ladder
-  // costs us nothing and fixes an actual quality bug: a single hardcoded width
-  // both overserved phones and left large retina screens upscaling.
-  const srcSet = unsplashSrcSet(optimizedSrc, quality);
+  // Unsplash resizes on its own CDN, so a ladder there costs nothing.
+  //
+  // Avatars are our own pre-rendered rungs (see AVATAR_HOSTS above): an
+  // 800x800 ~100 kB original was being downloaded whole for circles drawn at
+  // 28-96px; the 160 rung is a few kB and still sharp at 3x on the common
+  // sizes. The browser picks by `sizes` × dpr, so retina never gets fewer
+  // pixels than the slot needs.
+  const isAvatar = optimizedSrc.includes("/avatars/");
+  const srcSet = unsplashSrcSet(optimizedSrc, quality) ?? avatarSrcSet(optimizedSrc);
+  // Callers may say how wide the slot is; otherwise avatars fall back to the
+  // `width` prop (an upper bound on their drawn size) and Unsplash photos to
+  // the historical grid heuristic.
+  const sizesAttr = srcSet
+    ? sizes ?? (isAvatar ? `${Math.min(width, 800)}px` : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw")
+    : undefined;
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -66,13 +112,29 @@ export function OptimizedImage({
         ref={imgRef}
         src={optimizedSrc}
         srcSet={srcSet}
-        sizes={srcSet ? sizes : undefined}
+        sizes={sizesAttr}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : undefined}
         onLoad={() => setLoaded(true)}
-        onError={() => { setError(true); setLoaded(true); }}
+        onError={(e) => {
+          // A srcset candidate that 404s renders BLANK — `src` is not its
+          // fallback (measured in Chrome; it is how photographer cards
+          // blanked on 2026-08-10). Dropping srcset makes the browser
+          // re-resolve to the original, so a missing rung costs one wasted
+          // request instead of an empty circle. React does not restore the
+          // attribute on re-render: it diffs against its own previous props,
+          // not the DOM.
+          const img = e.currentTarget;
+          if (img.getAttribute("srcset")) {
+            img.removeAttribute("srcset");
+            img.removeAttribute("sizes");
+            return;
+          }
+          setError(true);
+          setLoaded(true);
+        }}
         onClick={onClick}
         // The fade-in transition (opacity-0 → 100 on load) made images
         // invisible whenever hydration was delayed or didn't fire — SSR

@@ -967,7 +967,7 @@ export default async function PhotographerProfilePage({
             <div className="relative shrink-0">
               <div className="flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white bg-primary-100 text-3xl font-bold text-primary-600 overflow-hidden shadow-md">
                 {photographer.avatar_url ? (
-                  <OptimizedImage src={photographer.avatar_url} alt={schemaName} width={400} priority className="h-full w-full" />
+                  <OptimizedImage src={photographer.avatar_url} alt={schemaName} width={400} priority sizes="96px" className="h-full w-full" />
                 ) : (
                   schemaName.charAt(0)
                 )}

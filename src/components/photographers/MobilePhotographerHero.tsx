@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeName } from "@/lib/format-name";
 import { resolveImageUrl } from "@/lib/image-url";
+import { avatarSrcSet, dropBrokenSrcSet } from "@/components/ui/OptimizedImage";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 
@@ -133,6 +134,9 @@ export function MobilePhotographerHero({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={resolveImageUrl(avatarUrl)}
+                srcSet={avatarSrcSet(resolveImageUrl(avatarUrl))}
+                sizes="44px"
+                onError={dropBrokenSrcSet}
                 alt={cleanName}
                 width={88}
                 height={88}
