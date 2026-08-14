@@ -99,12 +99,43 @@ export function r2SrcSet(originalUrl: string, filesHost: string): string | undef
  * Returns an empty object for anything that is not one of our R2 photos, so
  * it is always safe to spread.
  */
+/**
+ * The guard that makes a missing rung survivable.
+ *
+ * `src` is NOT a fallback for a srcset that 404s — it is only for browsers
+ * that do not understand srcset at all. Verified in Chrome: an <img> with a
+ * working src and a srcset pointing at a missing file renders nothing,
+ * naturalWidth 0. That is how a skipped backfill prefix blanked every
+ * photographer card on Portugal on 2026-08-10.
+ *
+ * Dropping srcset in onError makes the browser re-resolve to `src`, which the
+ * same test confirmed loads the original. So the worst a missing rung can cost
+ * is one wasted request and a moment without the image — never a blank card.
+ */
+export function onVariantError(event: { currentTarget: HTMLImageElement }): void {
+  const img = event.currentTarget;
+  if (!img.getAttribute("srcset")) return; // already fell back; let it fail honestly
+  img.removeAttribute("srcset");
+  img.removeAttribute("sizes");
+}
+
+/**
+ * srcset + sizes + the fallback guard, ready to spread onto a plain `<img>`.
+ *
+ * Most photos on the site are rendered by hand-written `<img>` tags rather than
+ * by OptimizedImage, and those were the ones still pulling full originals.
+ * Spreading this is a one-line change per call site, and it carries the guard
+ * with it so no call site can adopt the ladder without the safety net.
+ *
+ * Returns an empty object for anything that is not one of our R2 photos, so it
+ * is always safe to spread.
+ */
 export function r2ImgProps(
   src: string | null | undefined,
   filesHost: string,
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-): { srcSet?: string; sizes?: string } {
+): { srcSet?: string; sizes?: string; onError?: (e: { currentTarget: HTMLImageElement }) => void } {
   if (!src) return {};
   const srcSet = r2SrcSet(src, filesHost);
-  return srcSet ? { srcSet, sizes } : {};
+  return srcSet ? { srcSet, sizes, onError: onVariantError } : {};
 }

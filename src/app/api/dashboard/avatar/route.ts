@@ -6,6 +6,7 @@ import { queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
+import { variantWidthsFor, VARIANT_QUALITY, variantKey } from "@/lib/image-variants";
 import { country } from "@/lib/country";
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
@@ -62,6 +63,17 @@ export async function POST(req: NextRequest) {
 
     const r2Key = `${subdir}/${filename}`;
     await uploadToS3(r2Key, finalBuffer, "image/jpeg");
+    // An 800x800 avatar was being downloaded whole for a 56px circle. The
+    // 160 rung is a few kB. Covers get the photo ladder; the widths come
+    // from the key so the two never diverge.
+    await Promise.all((variantWidthsFor(r2Key) ?? []).map(async (w) => {
+      try {
+        const out = await sharp(finalBuffer).rotate().resize(w, undefined, { fit: "inside", withoutEnlargement: true }).webp({ quality: VARIANT_QUALITY }).toBuffer();
+        await uploadToS3(variantKey(r2Key, w), out, "image/webp");
+      } catch (err) {
+        console.warn(`[avatar] variant ${w} failed for ${r2Key}:`, err);
+      }
+    }));
     const url = `${R2_PUBLIC_URL}/${r2Key}`;
 
     if (type === "cover") {

@@ -22,9 +22,27 @@ const DRY = args.includes("--dry-run");
 const onlyPrefix = args.includes("--prefix") ? args[args.indexOf("--prefix") + 1] : null;
 const CONCURRENCY = args.includes("--concurrency") ? Number(args[args.indexOf("--concurrency") + 1]) : 4;
 
-const WIDTHS = [400, 800, 1600];
+// Mirrors src/lib/image-variants.ts. Avatars are stored 800x800 and drawn in
+// ~50px circles, so their interesting rung is far below anything a photo needs;
+// giving photos a 160 would be thousands of files nothing ever picks.
+const WIDTHS_BY_PREFIX = {
+  "avatars/": [160, 400, 800],
+  "portfolio/": [400, 800, 1600],
+  "covers/": [400, 800, 1600],
+};
+const widthsFor = (key) => {
+  const p = Object.keys(WIDTHS_BY_PREFIX).find((x) => key.startsWith(x));
+  return p ? WIDTHS_BY_PREFIX[p] : [];
+};
 const QUALITY = 82;
-const PREFIXES = onlyPrefix ? [onlyPrefix] : ["portfolio/", "avatars/", "covers/"];
+const PREFIXES = onlyPrefix ? [onlyPrefix] : Object.keys(WIDTHS_BY_PREFIX);
+if (onlyPrefix) {
+  // Running one prefix at a time is how covers/ got skipped on Portugal and
+  // every photographer card went blank. Still allowed for debugging, but it
+  // must be loud, and check-image-variants.mjs is the gate either way.
+  console.log(`\n!! PARTIAL RUN: only ${onlyPrefix}. This does NOT make the market safe to serve.`);
+  console.log(`!! Run without --prefix, then verify with scripts/check-image-variants.mjs.\n`);
+}
 
 // Same env the app reads. Run from a deploy directory so these are present.
 const ENV_FILE = process.env.ENV_FILE || "/var/www/photoportugal/.env";
@@ -72,7 +90,7 @@ let done = 0, written = 0, skipped = 0, failed = 0, bytesIn = 0, bytesOut = 0;
 
 async function processOne(item) {
   const missing = [];
-  for (const w of WIDTHS) {
+  for (const w of widthsFor(item.key)) {
     if (!(await exists(variantKey(item.key, w)))) missing.push(w);
   }
   if (!missing.length) { skipped++; return; }
