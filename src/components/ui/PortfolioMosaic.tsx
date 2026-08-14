@@ -2,6 +2,22 @@
 
 import { useState, useEffect, useRef } from "react";
 import { maskSurname } from "@/lib/photographer-name";
+import { dropBrokenSrcSet } from "@/components/ui/OptimizedImage";
+import { r2SrcSet } from "@/lib/image-variants";
+import { country } from "@/lib/country";
+
+/**
+ * sizes="100vw" on purpose, not the cell width. Cells here can be far taller
+ * than wide (the col-span-3 row-span-4 cell measures 286x836 on a 1440
+ * viewport) and photos are object-cover, so a landscape photo needs
+ * height x aspect worth of horizontal pixels — up to ~2500 on retina, more
+ * than the cell width by an order of magnitude. 100vw overshoots to the top
+ * rung (the original's own pixels as WebP, ~40% lighter), which can never
+ * look worse than the original the cell renders today. Downshifting small
+ * cells to smaller rungs needs per-cell measured geometry + the photo's
+ * aspect — a later, separate step.
+ */
+const MOSAIC_SIZES = "100vw";
 
 export interface MosaicPhoto {
   url: string;
@@ -225,6 +241,9 @@ function MosaicCell({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={previous.url}
+          srcSet={r2SrcSet(previous.url, country.filesHost)}
+          sizes={MOSAIC_SIZES}
+          onError={dropBrokenSrcSet}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           aria-hidden="true"
@@ -234,6 +253,9 @@ function MosaicCell({
       <img
         key={current.url}
         src={current.url}
+        srcSet={r2SrcSet(current.url, country.filesHost)}
+        sizes={MOSAIC_SIZES}
+        onError={dropBrokenSrcSet}
         alt={current.name + (current.location ? ` photoshoot in ${current.location}` : "")}
         // Always lazy, even for the priority cell: the mosaic is hidden on
         // mobile (`hidden lg:block`), and `loading="eager"` ignores
