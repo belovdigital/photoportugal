@@ -10,13 +10,13 @@ Photo Portugal is a photographer marketplace connecting English-speaking tourist
 |-------|-----------|
 | Frontend & Backend | Next.js 16 (App Router, Server Components) |
 | Styling | Tailwind CSS v4 |
-| Database | PostgreSQL 16 (on DO Droplet) |
+| Database | PostgreSQL 16 (on the market's own box) |
 | Auth | NextAuth.js (Google OAuth + Email/Password) |
 | File Storage | Local disk (`/var/www/photoportugal/uploads`) |
 | Process Manager | PM2 |
 | Web Server | Nginx (reverse proxy) |
 | CDN / DNS / SSL | Cloudflare |
-| Hosting | DigitalOcean Droplet (2 vCPU, 4GB RAM, 80GB SSD) |
+| Hosting | Hetzner Cloud — one box per market (PT / ES / IT), see docs/MARKETS.md |
 
 ## Project Structure
 
@@ -56,8 +56,10 @@ src/
 
 ## Deployment
 
-- Code pushed to GitHub → SSH into droplet → git pull → npm build → PM2 restart
-- Nginx proxies port 3000, handles static caching
+- `scripts/deploy.sh <pt|es|it|all>` — rsync from the Mac into `<app>-incoming/`,
+  then the server's `/var/www/deploy.sh` builds into the inactive blue/green slot
+  and switches only on a passing health check. There is no git on the servers.
+- Nginx proxies the active slot (port 3000 or 3001 — read `<app>-active`), handles static caching
 - Cloudflare handles SSL termination, CDN, and DNS
 
 ## Database Schema

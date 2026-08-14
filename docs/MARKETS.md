@@ -339,6 +339,16 @@ users` — причём права проверяются ДО `IF NOT EXISTS`, 
 
 Git на серверах нет — код заливается rsync'ом с ноутбука.
 
+```bash
+scripts/deploy.sh pt            # один рынок
+scripts/deploy.sh all           # es → it → pt
+scripts/deploy.sh pt --dry-run  # показать, что уедет, и ничего не отправлять
+```
+
+Скрипт держит в одном месте исключения rsync, порядок раскатки и проверку, что
+`.env.local` не доехал. Руками ту же команду набирать не надо — именно так в
+августе 2026 и уехал `.env.local`.
+
 ### ⛔ Исключения rsync
 
 `.env` **и `.env.local`**. Next грузит `.env.local` раньше `.env`, поэтому
@@ -346,12 +356,17 @@ Git на серверах нет — код заливается rsync'ом с �
 `DATABASE_URL`. Рынок начнёт писать в чужую базу, и никакой ошибки видно не
 будет.
 
+Что делает `scripts/deploy.sh` (и что придётся набрать руками, если скрипта под
+рукой нет — например с другой машины):
+
 ```bash
-rsync -a --delete \
+rsync -az --delete \
   --exclude=node_modules --exclude=.next --exclude=.git \
   --exclude=.env --exclude=.env.local \
   --exclude=uploads --exclude=google-credentials.json \
+  --exclude=tsconfig.tsbuildinfo \
   /Users/alex/projects/photoportugal/ <host>:/var/www/<app>-incoming/
+ssh <host> 'bash /var/www/deploy.sh'
 ```
 
 ### Порядок раскатки
@@ -529,10 +544,15 @@ TELEGRAM_TOPIC_IDS={"bookings":2,"daily_digest":3,"photographers":4,...}
 ## 12. Грабли, общие для всех рынков
 
 1. **`db/schema.sql` мёртв** — см. §4.2.
-2. **`scripts/deploy.sh` в репозитории устарел** — тычет в старый IP и делает
-   `git pull` на месте. Реальный скрипт живёт на сервере, `/var/www/deploy.sh`.
-3. **`docs/ARCHITECTURE.md` устарел** — описывает DigitalOcean и локальное
-   хранение файлов. Не ориентироваться.
+2. **`deploy.sh` — их два, и это не одно и то же.** `scripts/deploy.sh` в репо
+   работает на Маке (rsync в `<app>-incoming/` и вызов серверного);
+   `/var/www/deploy.sh` живёт на каждом боксе и делает blue/green. Запускать
+   надо локальный. До 14.08.2026 репозиторный был мёртвым огрызком от
+   DigitalOcean — тыкал в `146.190.166.142` и делал `git pull` в каталоге без
+   `.git`; заменён.
+3. **`docs/ARCHITECTURE.md` частично устарел.** Хостинг и деплой поправлены
+   14.08.2026; строка про хранение файлов («local disk») всё ещё врёт — часть
+   давно в R2. Остальное не проверялось.
 4. **i18n**: `useTranslations("ns")` без ключей в `messages/*.json` рендерит
    сырые пути ключей в проде, и `|| "fallback"` это не ловит. Ключи заводить во
    все локали одновременно с компонентом. См. CLAUDE.md.

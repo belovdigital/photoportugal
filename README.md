@@ -1,9 +1,8 @@
 # Photo Portugal
 
-> **🚨 Production now runs on Hetzner** — `178.105.16.131` (Falkenstein, DE), Ubuntu 24.04.
-> SSH alias: `hetzner-pp` (key: `~/.ssh/photoportugal_hetzner`).
-> Migrated from DigitalOcean Santa Clara on 2026-05-05. Old DO droplet (`146.190.166.142`) is firewalled off and PM2/nginx stopped — kept cold for ~1 week as rollback safety net before destruction.
-> Deploy workflow unchanged: rsync local → `/var/www/photoportugal-incoming/` → `bash /var/www/deploy.sh`. **Always exclude both `.env` AND `.env.local`** in rsync (a stray `.env.local` caused full prod outage during cutover — Next loads `.env.local` BEFORE `.env`).
+> **Production:** Hetzner Falkenstein, `178.105.16.131`, Ubuntu 24.04. SSH alias `hetzner-pp` (key `~/.ssh/photoportugal_hetzner`).
+> **This repo runs three markets** off the same `main` — 🇵🇹 photoportugal.com, 🇪🇸 photospain.co, 🇮🇹 photoitaly.co. See [docs/MARKETS.md](docs/MARKETS.md).
+> **Deploy: `scripts/deploy.sh pt`** (or `es` / `it` / `all`). Don't hand-type the rsync — see [Deployment](#deployment).
 
 Professional photographer marketplace for tourists visiting Portugal. Find and book local photographers for vacation photoshoots across 23+ stunning locations.
 
@@ -160,34 +159,50 @@ VALUES ('info@photoportugal.com', 'Admin', '<bcrypt-hash>', 'admin', TRUE);
 
 ## Deployment
 
-Server: DO Droplet (146.190.166.142)
+There is no git on the servers. Code is rsynced from the Mac into
+`<app>-incoming/`, and the server builds it into the inactive blue/green slot
+and switches only if the build and health check pass.
 
 ```bash
-# SSH to server
-ssh root@146.190.166.142
-
-# Deploy
-cd /var/www/photoportugal
-git pull origin main
-npm run build
-pm2 restart photoportugal
-
-# PM2 config
-pm2 start ecosystem.config.cjs
-pm2 save
-
-# SSL (Let's Encrypt, auto-renews)
-certbot --nginx -d photoportugal.com -d www.photoportugal.com
-
-# Nginx config
-/etc/nginx/sites-available/photoportugal
-
-# Uploads directory
-/var/www/photoportugal/uploads/ (portfolio/, avatars/)
-
-# DB credentials
-/root/.db_credentials
+scripts/deploy.sh pt            # one market
+scripts/deploy.sh all           # es → it → pt (small markets first)
+scripts/deploy.sh pt --dry-run  # show what would be sent, ship nothing
 ```
+
+**Two different files are called `deploy.sh`:**
+
+| | what it does |
+|---|---|
+| `scripts/deploy.sh` (this repo, runs on the Mac) | rsync → `<app>-incoming/`, then triggers the one below |
+| `/var/www/deploy.sh` (on each server) | blue/green switch, `npm install`, build, health check, rollback |
+
+Run the local one. The server one takes no arguments and is invoked for you.
+
+⛔ **`.env` and `.env.local` must both stay out of the rsync.** Next loads
+`.env.local` *before* `.env`, so one stale file from the Mac silently replaces
+production config — on 2026-08-09 that took the DB out on all three markets at
+once. `scripts/deploy.sh` excludes both and verifies afterwards that no
+`.env.local` reached the server; that's the reason to use it instead of typing
+rsync by hand.
+
+If the server says a deploy is already running, wait — it holds an `flock`
+because two concurrent deploys build into the same slot and corrupt `.next`.
+Never clear the lock.
+
+Server layout (PT; ES and IT are identical with their own names):
+
+```
+/var/www/photoportugal/            # canonical: .env, uploads/, ws-server.js
+/var/www/photoportugal-incoming/   # rsync target
+/var/www/photoportugal-{blue,green}/  # slots, ports 3000 / 3001
+/var/www/photoportugal-active      # file naming the live colour
+/etc/nginx/sites-available/photoportugal
+```
+
+pm2 processes are `photoportugal-{blue,green}` plus `photoportugal-ws` — there
+is no process called plain `photoportugal`. Don't assume which colour is live
+or which port it holds: read `photoportugal-active`, or `ss -ltnp` on the box.
+SSL is Let's Encrypt via certbot and auto-renews.
 
 ## Project Structure
 

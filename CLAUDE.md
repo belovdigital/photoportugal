@@ -128,23 +128,29 @@ WhatsApp-ing a client at 4am.
 
 See: `~/.claude/projects/-Users-alex-projects-photoportugal/memory/feedback_always_run_date.md`
 
-## Deploy — the ONLY correct rsync (any Claude session, no exceptions)
+## Deploy — use the script, never hand-typed rsync (any Claude session)
 
 ```bash
-rsync -az --delete \
-  --exclude=node_modules --exclude=.next --exclude=.git \
-  --exclude=.env --exclude=.env.local --exclude=uploads \
-  --exclude=google-credentials.json --exclude=tsconfig.tsbuildinfo \
-  ./ <host>:/var/www/<app>-incoming/
-ssh <host> 'bash /var/www/deploy.sh'
+scripts/deploy.sh pt --yes      # or es / it / all
+scripts/deploy.sh pt --dry-run  # show what would be sent, ship nothing
 ```
 
-Hosts: hetzner-pp/photoportugal, hetzner-ps/photospain, hetzner-pi/photoitaly.
+`--yes` is required for any non-interactive caller (i.e. me — the script
+refuses to deploy without a TTY otherwise). That refusal is a backstop, not
+permission: **web deploys still need Alex to say so for that specific deploy.**
 
-**`--exclude='.env.local'` is NOT optional.** On 2026-08-09 one session rsynced
-without it; the stale local file overrode prod `.env` (`@next/env` loads
-`.env.local` first), all three markets lost their DB and the retry storm ate
-every Postgres connection slot. deploy.sh now purges the file from slots,
-monitors alert on it, and stray-DB clients are auto-killed — but do not rely on
-the safety net: use the exact command above. deploy.sh also holds an flock;
-if it says another deploy is running, WAIT — never kill the lock.
+Two files are called deploy.sh and they are different: `scripts/deploy.sh` runs
+on the Mac (rsync into `<app>-incoming/`, then triggers the other one);
+`/var/www/deploy.sh` runs on each box (blue/green, build, health check). Hosts:
+hetzner-pp/photoportugal, hetzner-ps/photospain, hetzner-pi/photoitaly.
+
+**Do not retype the rsync by hand.** On 2026-08-09 one session did, dropped
+`--exclude=.env.local`, and the stale local file overrode prod `.env`
+(`@next/env` loads `.env.local` first): all three markets lost their DB and the
+retry storm ate every Postgres connection slot. The script holds the exclude
+list in one place and verifies afterwards that no `.env.local` reached the
+server. If you genuinely cannot use it, the exact fallback command is in
+docs/MARKETS.md §6 — copy it, don't reconstruct it.
+
+`/var/www/deploy.sh` holds an flock; if it says another deploy is running,
+WAIT — never kill the lock.
