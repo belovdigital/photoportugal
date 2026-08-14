@@ -181,6 +181,33 @@ export interface Location {
   seo_description_it?: string;
 }
 
+/** Mirrors the Postgres enum `booking_status` exactly — all 9 labels, in the
+ *  order pg reports them. It had drifted to 7: `refunded` (written by the
+ *  dispute resolver) and `unmatched` (every blind booking starts there) were
+ *  missing, so any exhaustive switch over a booking status was silently
+ *  incomplete and tsc could not see it — the value arrives from pg as a
+ *  string. Adding a label to the DB enum means adding it here in the same
+ *  change. See docs/DOMAIN.md §3. */
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "inquiry"
+  | "delivered"
+  | "disputed"
+  | "refunded"
+  | "unmatched";
+
+/** Mirrors the Postgres enum `payment_status`. Orthogonal to BookingStatus:
+ *  a booking can be `confirmed` while its money is `failed`. */
+export type PaymentStatus =
+  | "pending"
+  | "paid"
+  | "refunded"
+  | "failed"
+  | "partially_refunded";
+
 export interface Booking {
   id: string;
   client_id: string;
@@ -190,7 +217,7 @@ export interface Booking {
   shoot_date: string | null;
   shoot_time: string | null;
   message: string | null;
-  status: "inquiry" | "pending" | "confirmed" | "completed" | "delivered" | "cancelled" | "disputed";
+  status: BookingStatus;
   total_price: number | null;
   created_at: string;
 }

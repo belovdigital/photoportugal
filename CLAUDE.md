@@ -1,6 +1,24 @@
 # Photo Portugal — Claude project notes
 
-Operational rules that must hold across all sessions on this codebase.
+## What this is (read before touching anything)
+
+A photographer marketplace for travellers. One repo serves **three separate
+markets** — 🇵🇹 PT, 🇪🇸 ES, 🇮🇹 IT — with separate databases, domains, Stripe
+accounts and locales. Only the code is shared, so **every change ships to all
+three**.
+
+The money model in one line: the client pays `base × 1.15` rounded up to €5,
+the photographer receives `base − commission(plan)`, and **neither of them ever
+sees `base`**.
+
+- **`docs/DOMAIN.md` — the product's invariants.** Money, booking lifecycle,
+  photographer visibility, the fields that lie, and the axes a change has to
+  cover before it counts as done. Read it before non-trivial work; correct it
+  in the same commit when an invariant changes.
+- `docs/MARKETS.md` — servers, per-market config, what must stay separate.
+
+The rest of this file is operational rules: things that have already gone
+wrong, written down so they don't go wrong again.
 
 ## Local dev server — NEVER start it on this machine
 
