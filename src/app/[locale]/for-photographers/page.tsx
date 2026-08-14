@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates, openGraphIdentity } from "@/lib/seo";
+import { approvedPhotographerCount, activeJoinTier } from "@/lib/join-tiers";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -25,6 +26,11 @@ export default async function ForPhotographersPage({
   setRequestLocale(locale);
   const t = await getTranslations("forPhotographers");
   const tc = await getTranslations("common");
+
+  // The hero CTA names whichever cohort is actually open on THIS market —
+  // founding on a young market, first 100 on PT — matching what the join
+  // page it links to will show. null = all 100 spots claimed.
+  const tier = activeJoinTier(await approvedPhotographerCount());
 
   const steps = [
     { step: "1", key: "createProfile" as const },
@@ -75,15 +81,17 @@ export default async function ForPhotographersPage({
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link href="/for-photographers/join" className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-base font-bold text-white hover:from-amber-600 hover:to-orange-600 shadow-lg">
-              {t("joinEarlyBird")}
+              {tier ? t(`joinCta.${tier}`) : t("joinCta.open")}
             </Link>
             <Link href="/for-photographers/pricing" className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white hover:bg-white/5">
               {t("viewPlans")}
             </Link>
           </div>
-          <p className="mt-4 text-sm text-gray-400">
-            {t("earlyBirdNote")}
-          </p>
+          {tier && (
+            <p className="mt-4 text-sm text-gray-400">
+              {t(`tierNote.${tier}`)}
+            </p>
+          )}
         </div>
       </section>
 

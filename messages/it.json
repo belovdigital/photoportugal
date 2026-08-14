@@ -1069,9 +1069,18 @@
     "metaDescription": "Entra nel marketplace italiano dedicato ai fotografi, in continua crescita. Entra in contatto con viaggiatori internazionali, gestisci le prenotazioni e fai crescere la tua attività.",
     "heroTitle": "Tu concentrati sugli scatti. Al resto pensiamo noi.",
     "heroSubtitle": "Migliaia di turisti sognano splendide foto nelle località più suggestive d'Italia e cercano proprio te. Noi troviamo i clienti, gestiamo prenotazioni e pagamenti e ti lasciamo fare ciò che ami.",
-    "joinEarlyBird": "Aderisci al programma Early Bird",
+    "joinCta": {
+      "founding": "Diventa Fotografo Fondatore",
+      "early50": "Aderisci al programma Early Bird",
+      "first100": "Entra nei Primi 100",
+      "open": "Candidati come fotografo"
+    },
     "viewPlans": "Scopri i piani",
-    "earlyBirdNote": "I primi 10 fotografi ricevono Premium gratis per sempre",
+    "tierNote": {
+      "founding": "I primi 10 fotografi ricevono Premium gratis per sempre",
+      "early50": "I fotografi Early Bird ricevono Premium gratis per 3 anni",
+      "first100": "I primi 100 fotografi ricevono 6 mesi di Premium gratis"
+    },
     "howItWorks": {
       "title": "Come funziona",
       "createProfile": {

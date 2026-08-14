@@ -2027,9 +2027,18 @@
     "metaDescription": "Únase al marketplace creciente de fotógrafos en Portugal. Conéctese con viajeros internacionales, gestione reservas y haga crecer su negocio fotográfico.",
     "heroTitle": "Concéntrese en fotografiar. Nosotros gestionamos el resto.",
     "heroSubtitle": "Miles de turistas sueñan con fotos hermosas en los lugares más espectaculares de Portugal — y le están buscando. Traemos los clientes, gestionamos las reservas, gestionamos los pagos y le dejamos hacer lo que ama.",
-    "joinEarlyBird": "Unirse al programa Early Bird",
+    "joinCta": {
+      "founding": "Conviértase en fotógrafo fundador",
+      "early50": "Unirse al programa Early Bird",
+      "first100": "Únase a los primeros 100",
+      "open": "Solicite unirse como fotógrafo"
+    },
     "viewPlans": "Ver planes",
-    "earlyBirdNote": "Los primeros 10 fotógrafos obtienen Premium gratis para siempre",
+    "tierNote": {
+      "founding": "Los primeros 10 fotógrafos reciben Premium gratis para siempre",
+      "early50": "Los fotógrafos Early Bird reciben Premium gratis durante 3 años",
+      "first100": "Los primeros 100 fotógrafos reciben 6 meses de Premium gratis"
+    },
     "howItWorks": {
       "title": "Cómo funciona",
       "createProfile": {

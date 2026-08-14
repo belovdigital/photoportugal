@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-const TIER_KEYS = ["founding", "early50", "first100"] as const;
+import { approvedPhotographerCount, activeJoinTier, TIER_KEYS } from "@/lib/join-tiers";
 
 const TIER_CONFIG = [
   { key: "founding" as const, spots: 10, color: "from-amber-500 to-orange-500", textColor: "text-amber-700", bgColor: "bg-amber-50", borderColor: "border-amber-200" },
@@ -69,24 +69,11 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
   }
   const isPhotographerViewer = viewer?.role === "photographer";
 
-  let totalPhotographers = 0;
-  try {
-    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_test = FALSE AND pp.is_approved = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE");
-    totalPhotographers = parseInt(row?.count || "0");
-  } catch {}
-
-  // Determine which tier is active. Three tiers, three thresholds:
-  //  0..9  — founding (10 spots)
-  //  10..34 — early bird (kept as fallback; in practice already filled at 35)
-  //  35..99 — first 100 (65 spots remaining once early bird closed)
-  let activeTierIndex = -1;
-  const thresholds = [10, 35, 100];
-  for (let i = 0; i < thresholds.length; i++) {
-    if (totalPhotographers < thresholds[i]) {
-      activeTierIndex = i;
-      break;
-    }
-  }
+  // Count + tier thresholds live in lib/join-tiers — shared with the
+  // /for-photographers hero, so its CTA names the tier this page shows as open.
+  const totalPhotographers = await approvedPhotographerCount();
+  const activeTierKey = activeJoinTier(totalPhotographers);
+  const activeTierIndex = activeTierKey ? TIER_KEYS.indexOf(activeTierKey) : -1;
 
   const jsonLd = {
     "@context": "https://schema.org",
