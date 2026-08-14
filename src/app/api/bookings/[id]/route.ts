@@ -107,7 +107,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       // request — and the app now shows the photographer nothing but their
       // payout, so without this the number on the list row vanished the
       // moment they opened the booking.
-      if (b.payout_amount == null && b.total_price != null) {
+      // Same as the list endpoint: the column defaults to 0, so "not computed
+      // yet" is 0 rather than NULL.
+      if (!Number(b.payout_amount) && Number(b.total_price)) {
         b.payout_amount = photographerPayoutFor(Number(b.total_price), b.photographer_plan as string | undefined);
       }
     } else {

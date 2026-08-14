@@ -769,7 +769,11 @@ export async function GET(req: NextRequest) {
         delete b.stripe_payment_intent_id;
         delete b.stripe_currency;
         delete b.payment_url;
-        if (b.payout_amount == null && b.total_price != null) {
+        // `== null` never matched: the column is DEFAULT 0, so an
+        // un-computed payout arrives as 0, not NULL (verified on prod). The
+        // photographer's only number is this one, so a falsy payout on a
+        // priced booking has to be filled or they see no money at all.
+        if (!Number(b.payout_amount) && Number(b.total_price)) {
           b.payout_amount = photographerPayoutFor(Number(b.total_price), planRow?.plan);
         }
       }
