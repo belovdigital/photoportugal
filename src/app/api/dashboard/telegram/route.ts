@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 import crypto from "crypto";
 
 // GET — check connection status
@@ -53,8 +54,10 @@ export async function POST(req: NextRequest) {
       [`tg_connect:${code}`, JSON.stringify({ userId: user.id, expiresAt: expiresAt.toISOString() })]
     );
 
+    // Each market's bot reads only its own database, so the link must point at
+    // this market's bot — Portugal's would look the code up in the wrong one.
     return NextResponse.json({
-      url: `https://t.me/photopt_bot?start=${code}`,
+      url: `https://t.me/${country.telegramBot}?start=${code}`,
     });
   } catch (err) {
     console.error("[dashboard/telegram] POST error:", err);

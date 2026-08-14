@@ -34,6 +34,16 @@ export interface CountryPack {
   /** Transactional sender. */
   emailFrom: string;
   supportEmail: string;
+  /**
+   * Username of this market's notification bot, without the "@".
+   *
+   * Each market runs its own bot against its own database. The connect deep
+   * link used to be hardcoded to Portugal's bot, so a Spanish photographer
+   * generated a code in the Spanish database and then handed it to a bot whose
+   * webhook reads the Portuguese one: every attempt answered "invalid or
+   * expired link", and ES and IT sat at zero connections.
+   */
+  telegramBot: string;
   /** Country name for schema.org areaServed and geo-targeted copy. */
   areaServed: string;
   /**
@@ -189,6 +199,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     filesHost: "files.photoportugal.com",
     emailFrom: "Photo Portugal <info@photoportugal.com>",
     supportEmail: "info@photoportugal.com",
+    telegramBot: "photopt_bot",
     areaServed: "Portugal",
     countryName: { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal", it: "Portogallo" },
     countryIn: { en: "in Portugal", pt: "em Portugal", de: "in Portugal", es: "en Portugal", fr: "au Portugal", it: "in Portogallo" },
@@ -246,6 +257,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     filesHost: "files.photospain.co",
     emailFrom: "Photo Spain <info@photospain.co>",
     supportEmail: "info@photospain.co",
+    telegramBot: "photospain_bot",
     areaServed: "Spain",
     countryName: { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne", it: "Spagna" },
     countryIn: { en: "in Spain", pt: "em Espanha", de: "in Spanien", es: "en España", fr: "en Espagne", it: "in Spagna" },
@@ -303,6 +315,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     filesHost: "files.photoitaly.co",
     emailFrom: "Photo Italy <info@photoitaly.co>",
     supportEmail: "info@photoitaly.co",
+    telegramBot: "photoitaly_bot",
     areaServed: "Italy",
     countryName: { en: "Italy", pt: "Itália", de: "Italien", es: "Italia", fr: "Italie", it: "Italia" },
     countryIn: { en: "in Italy", pt: "em Itália", de: "in Italien", es: "en Italia", fr: "en Italie", it: "in Italia" },
