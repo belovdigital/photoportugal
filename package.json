@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint .",
-    "eval:concierge": "node scripts/eval-concierge.mjs"
+    "eval:concierge": "node scripts/eval-concierge.mjs",
+    "verify": "node scripts/verify.mjs"
   },
   "author": "belovdigital",
   "license": "UNLICENSED",

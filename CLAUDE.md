@@ -17,6 +17,10 @@ sees `base`**.
   in the same commit when an invariant changes.
 - `docs/MARKETS.md` — servers, per-market config, what must stay separate.
 
+**Before saying "done" on any code change: `npm run verify`.** One command:
+i18n key parity across all six locales + namespaces-used-vs-en.json + tsc +
+eslint. No network, ~1 min. If it fails, the work is not done.
+
 The rest of this file is operational rules: things that have already gone
 wrong, written down so they don't go wrong again.
 
