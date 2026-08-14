@@ -2040,31 +2040,13 @@ async function runReminders(): Promise<NextResponse> {
     results.errors.push(`Expired delivery cleanup query: ${err}`);
   }
 
-  // === Checklist complete → notify admins (cron catch-up) ===
-  try {
-    const readyPhotographers = await query<{ id: string }>(
-      `SELECT pp.id FROM photographer_profiles pp
-       JOIN users u ON u.id = pp.user_id
-       WHERE COALESCE(pp.checklist_notified, FALSE) = FALSE
-         AND COALESCE(u.is_banned, FALSE) = FALSE
-         AND u.avatar_url IS NOT NULL
-         AND pp.cover_url IS NOT NULL
-         AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-         AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
-         AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
-         AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-         AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
-         AND u.phone IS NOT NULL`
-    );
-    for (const p of readyPhotographers) {
-      try {
-        const { checkAndNotifyChecklistComplete } = await import("@/lib/checklist-notify");
-        await checkAndNotifyChecklistComplete(p.id);
-      } catch {}
-    }
-  } catch (err) {
-    results.errors.push(`Checklist ready notification: ${err}`);
-  }
+  // The "checklist complete → tell the admins" catch-up that used to sit here
+  // is gone. It predates two-stage onboarding and still counted Stripe as a
+  // checklist step, so it fired when a photographer finished paying-in — days
+  // after we had approved them — announcing them as "ready for approval" on
+  // Telegram, admin email and admin SMS at once. What replaces it: the
+  // photographer's own "send me for review" (stage one) and the Stripe sweep
+  // below (stage two), each of which announces itself exactly once.
 
   // === Checklist deadline reminders (last day — 6-7 days after registration) ===
   let checklistDeadlineEmails = 0;

@@ -3,7 +3,6 @@ import { capitalizeName } from "@/lib/format-name";
 import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
-import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { revalidatePath } from "next/cache";
 import {
   expandCoverageForLegacyLocations,
@@ -252,7 +251,6 @@ export async function PUT(req: NextRequest) {
     if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
     revalidatePath("/photographers");
 
-    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     logProfileChange(profile.id, "profile");
     return NextResponse.json({ success: true });
   } catch (error) {

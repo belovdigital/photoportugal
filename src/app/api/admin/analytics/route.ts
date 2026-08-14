@@ -376,7 +376,11 @@ export async function GET(req: Request) {
     const photographerStats = await queryOne<{ approved: string; pending: string; total: string }>(
       `SELECT
         COUNT(*) FILTER (WHERE is_approved AND NOT COALESCE(u.is_banned, FALSE))::text as approved,
-        COUNT(*) FILTER (WHERE NOT is_approved AND NOT COALESCE(u.is_banned, FALSE) AND checklist_notified)::text as pending,
+        -- "Awaiting review" means they asked to be reviewed. This counted
+        -- checklist_notified, a one-stage-era flag that was only ever set for
+        -- photographers who had finished Stripe — which now happens after
+        -- approval, so the number counted a set that no longer exists.
+        COUNT(*) FILTER (WHERE NOT is_approved AND NOT COALESCE(u.is_banned, FALSE) AND pp.approval_requested_at IS NOT NULL)::text as pending,
         COUNT(*)::text as total
        FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id`
     );

@@ -3,7 +3,6 @@ import { titleCasePackageName } from "@/lib/format-package-name";
 import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
-import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { DURATION_OPTIONS, getPricingForDuration } from "@/lib/package-pricing";
 import { country } from "@/lib/country";
 
@@ -120,7 +119,6 @@ export async function POST(req: NextRequest) {
       [profile.id, cleanName, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, !!is_group_package, cleanFeatures, slug]
     );
 
-    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     logProfileChange(profile.id, "packages");
 
     // Ping IndexNow + revalidate the photographer page so the new
@@ -239,7 +237,6 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });
     }
 
-    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     logProfileChange(profile.id, "packages");
     const nameChanged = (prev?.name || "") !== (name || "");
     const descChanged = (prev?.description || null) !== (description || null);

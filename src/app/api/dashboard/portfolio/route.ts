@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
-import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 import { canonicalizeShootType } from "@/lib/shoot-type-labels";
 import crypto from "crypto";
@@ -187,7 +186,6 @@ export async function POST(req: NextRequest) {
       [profile.id, url, thumbnailUrl, locationSlug, shootType, imgWidth, imgHeight]
     );
 
-    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     logProfileChange(profile.id, "portfolio");
     return NextResponse.json({ success: true, item });
   } catch (error) {

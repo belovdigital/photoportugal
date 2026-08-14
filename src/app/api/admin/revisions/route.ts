@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
 
       // Telegram to photographer
       import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`📝 <b>Revision Request Sent</b>\n\n<b>Photographer:</b> ${profile.name}\n<b>Items:</b> ${items.length}\n<b>Round:</b> ${round}\n\n<a href="https://photoportugal.com/admin">View in Admin →</a>`, "photographers");
+        sendTelegram(`📝 <b>Revision Request Sent</b>\n\n<b>Photographer:</b> ${profile.name}\n<b>Items:</b> ${items.length}\n<b>Round:</b> ${round}\n\n<a href="${country.baseUrl}/admin">View in Admin →</a>`, "photographers");
       }).catch(e => console.error("[admin/revisions] telegram error:", e));
     }
 
@@ -127,11 +127,20 @@ export async function PATCH(req: NextRequest) {
 
     if (!revision) return NextResponse.json({ error: "Revision not found" }, { status: 404 });
 
-    // Clear revision status and approve photographer
-    await queryOne(
-      "UPDATE photographer_profiles SET revision_status = NULL, is_approved = TRUE WHERE id = $1",
+    // Clear revision status and approve photographer. RETURNING the previous
+    // value is what makes the notifications below fire once: approving a
+    // second revision for someone already live is a normal thing for an admin
+    // to do, and it used to re-send the whole welcome sequence.
+    const approved = await queryOne<{ was_approved: boolean }>(
+      `UPDATE photographer_profiles pp
+          SET revision_status = NULL, is_approved = TRUE
+         FROM (SELECT id, COALESCE(is_approved, FALSE) AS was_approved
+                 FROM photographer_profiles WHERE id = $1) prev
+        WHERE pp.id = prev.id
+        RETURNING prev.was_approved`,
       [revision.photographer_id]
     );
+    const firstApproval = approved ? !approved.was_approved : false;
 
     // Auto-create Express + Full gift-card tier packages so the new
     // photographer is immediately available in the gift-mode catalog.
@@ -150,27 +159,14 @@ export async function PATCH(req: NextRequest) {
       [revision.photographer_id, "Full Gift Session", "A 2-hour photo session across up to 2 locations, with one outfit change. Includes 60 edited photos delivered within 7 days — ideal for engagements, anniversaries, or family shoots."]
     ).catch((e) => console.error("[admin/revisions] tier full insert error:", e));
 
-    // Trigger normal approval notifications (email + SMS + Telegram)
-    const profile = await queryOne<{ name: string; email: string; slug: string; user_id: string; phone: string | null }>(
-      `SELECT u.name, u.email, pp.slug, pp.user_id, u.phone
-       FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
-      [revision.photographer_id]
-    );
-
-    if (profile) {
-      sendEmail(
-        profile.email,
-        "Your profile is now live! 🎉",
-        emailLayout(`
-          <h2 style="margin:0 0 16px;font-size:20px;color:#1F1F1F;">Congratulations, ${profile.name}!</h2>
-          <p style="color:#6B7280;margin:0 0 16px;">Your profile has been approved and is now live on ${country.brand}. Clients can find and book you!</p>
-          ${emailButton(`${country.baseUrl}/photographers/${profile.slug}`, "View Your Profile")}
-        `)
-      ).catch(e => console.error("[admin/revisions] approval email error:", e));
-
-      import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${profile.name}\n<b>Phone:</b> ${profile.phone || "not set"}\n\n👉 Add to WhatsApp group`, "photographers");
-      }).catch(e => console.error("[admin/revisions] telegram error:", e));
+    // Approving the revision is an approval like any other, so it runs the
+    // same side effects as the roster toggle — including the Stripe deadline,
+    // which this screen never stamped. A photographer approved here therefore
+    // skipped the whole grace week: no nudges, no hiding, and no "Stripe
+    // подключён" close-out, since all three key off that column.
+    if (firstApproval) {
+      const { runApprovalSideEffects } = await import("@/lib/photographer-approval");
+      await runApprovalSideEffects(revision.photographer_id);
     }
 
     revalidatePath("/dashboard");

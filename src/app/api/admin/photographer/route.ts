@@ -3,10 +3,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
-import { sendEmail } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
 import { country } from "@/lib/country";
-import { STRIPE_GRACE_DAYS } from "@/lib/onboarding-stage";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -110,156 +107,13 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Approval opens stage two: the profile is live, and the photographer now
-    // has a week to connect a payout account. The deadline is stamped here
-    // and nowhere else — the cron sweep keys off it, so a KYC lapse years
-    // later cannot drag someone back into the new-joiner nudge sequence.
-    let approvalPayoutConnected = true;
+    // has a week to connect a payout account. Shared with the revision-approve
+    // screen so both buttons stamp the deadline and send the same messages.
     if (updates.is_approved === true && !wasAlreadyApproved) {
-      const row = await queryOne<{
-        email: string; name: string; phone: string | null; locale: string | null;
-        stripe_account_id: string | null; stripe_onboarding_complete: boolean;
-      }>(
-        `SELECT u.email, u.name, u.phone, u.locale, pp.stripe_account_id,
-                COALESCE(pp.stripe_onboarding_complete, FALSE) AS stripe_onboarding_complete
-           FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
-          WHERE pp.id = $1`,
-        [id]
-      );
-      approvalPayoutConnected = Boolean(row?.stripe_account_id && row?.stripe_onboarding_complete);
-      let approvalDeadline: string | null = null;
-      if (row && !approvalPayoutConnected) {
-        const stamped = await query<{ stripe_deadline_at: Date }>(
-          `UPDATE photographer_profiles
-              SET stripe_deadline_at = NOW() + INTERVAL '${STRIPE_GRACE_DAYS} days',
-                  stripe_hidden_at = NULL,
-                  stripe_nudge_d1_sent = FALSE,
-                  stripe_nudge_d4_sent = FALSE,
-                  stripe_nudge_d6_sent = FALSE,
-                  stripe_overdue_admin_notified = FALSE
-            WHERE id = $1
-            RETURNING stripe_deadline_at`,
-          [id]
-        );
-        const deadlineAt = stamped[0]?.stripe_deadline_at;
-        approvalDeadline = deadlineAt ? new Date(deadlineAt).toISOString().slice(0, 10) : null;
-        try {
-          const { normalizeLocale } = await import("@/lib/email-locale");
-          const { sendApprovedConnectStripeEmail } = await import("@/lib/email");
-          await sendApprovedConnectStripeEmail(
-            row.email, row.name, STRIPE_GRACE_DAYS, normalizeLocale(row.locale)
-          );
-        } catch (e) {
-          console.error("[admin] approved/connect-stripe email failed:", e);
-        }
-      }
-
-      // Admins hear about every approval, not only the ones already payable.
-      // This ping carries the phone number the WhatsApp group is built from,
-      // and it used to live inside the "already connected" branch below —
-      // which the two-stage split turned into the rare case, so a week of
-      // approvals went unannounced.
-      if (row) {
-        const stripeLine = approvalPayoutConnected
-          ? "💳 Stripe подключён — платить можем."
-          : `⏳ Stripe нет. Срок: ${approvalDeadline || `${STRIPE_GRACE_DAYS} дней`} — дальше профиль скроется сам.`;
-        import("@/lib/telegram").then(({ sendTelegram }) =>
-          sendTelegram(
-            `✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${row.name}\n<b>Phone:</b> ${row.phone || "not set"}\n${stripeLine}\n\n👉 Add to WhatsApp group`,
-            "photographers"
-          )
-        ).catch((err) => console.error("[admin] telegram approval error:", err));
-      }
+      const { runApprovalSideEffects } = await import("@/lib/photographer-approval");
+      await runApprovalSideEffects(id);
     }
 
-    // The legacy "you're live" email only fits someone who is already
-    // payable; anyone else gets the stage-two email above instead of two
-    // messages that contradict each other about what is left to do.
-    if (updates.is_approved === true && !wasAlreadyApproved && approvalPayoutConnected) {
-      try {
-        const photographer = await queryOne<{ email: string; name: string; slug: string }>(
-          `SELECT u.email, u.name, pp.slug
-           FROM photographer_profiles pp
-           JOIN users u ON u.id = pp.user_id
-           WHERE pp.id = $1`,
-          [id]
-        );
-        if (photographer?.email) {
-          const BASE_URL = process.env.AUTH_URL || country.baseUrl;
-          const profileUrl = `${BASE_URL}/photographers/${photographer.slug}`;
-          sendEmail(
-            photographer.email,
-            `Your profile is now live on ${country.brand}!`,
-            `
-            <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-              <h2 style="color: #C94536;">Congratulations, ${photographer.name}!</h2>
-              <p>Great news — your photographer profile has been reviewed and approved. You're now live on ${country.brand} and visible to thousands of tourists planning their trips to ${country.areaServed}.</p>
-
-              <div style="margin: 24px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
-                <p style="margin: 0 0 8px; font-weight: bold; color: #166534;">Your profile is live:</p>
-                <p style="margin: 0;"><a href="${profileUrl}" style="color: #C94536; font-weight: bold;">${profileUrl}</a></p>
-              </div>
-
-              <p style="font-weight: bold; color: #333;">Tips to get your first booking:</p>
-              <ul style="line-height: 1.8; color: #555;">
-                <li><strong>Keep your portfolio growing</strong> — the more range clients see, the more enquiries you get</li>
-                <li><strong>Set competitive prices</strong> — Start with an attractive intro rate to build reviews</li>
-                <li><strong>Add multiple locations</strong> — The more places you cover, the more clients find you</li>
-                <li><strong>Write a compelling bio</strong> — Tell clients what makes your style unique</li>
-                <li><strong>Connect Stripe</strong> — Required to accept paid bookings and receive payouts</li>
-              </ul>
-
-              <p><a href="${BASE_URL}/dashboard/profile" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Your Dashboard</a></p>
-
-              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
-            </div>
-            `
-          ).catch((err) => console.error("[admin] Failed to send approval email:", err));
-
-          // WhatsApp/SMS to photographer about approval
-          try {
-            const photographerPhone = await queryOne<{ phone: string | null; user_id: string }>(
-              `SELECT u.phone, u.id as user_id FROM users u
-               JOIN photographer_profiles pp ON pp.user_id = u.id
-               WHERE pp.id = $1`,
-              [id]
-            );
-            if (photographerPhone?.phone) {
-              const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
-                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
-                [photographerPhone.user_id]
-              );
-              if (smsPrefs?.sms_bookings !== false) {
-                sendSMS(
-                  photographerPhone.phone,
-                  `${country.brand}: Congratulations! Your profile is now live. Clients can find and book you at ${country.host}`
-                ).catch(err => console.error("[sms] error:", err));
-              }
-            }
-            // Push to photographer — celebratory notif, opens dashboard
-            if (photographerPhone?.user_id) {
-              import("@/lib/push").then(m =>
-                m.sendPushNotification(
-                  photographerPhone.user_id,
-                  "🎉 Your profile is live!",
-                  `Clients can now find and book you on ${country.brand}.`,
-                  { type: "profile_approved", channelId: "default", categoryId: "ACCOUNT" }
-                )
-              ).catch(err => console.error("[admin] approval push error:", err));
-              import("@/lib/realtime").then((m) =>
-                m.notifyUser(photographerPhone.user_id, "profile_approved")
-              );
-            }
-            // No Telegram here — the approval ping now fires for every
-            // first-time approval above, payable or not. Two sends would be
-            // two "add to WhatsApp group" reminders for the same person.
-          } catch (smsErr) {
-            console.error("[admin] approval whatsapp/sms error:", smsErr);
-          }
-        }
-      } catch (emailErr) {
-        console.error("[admin] Error sending approval email:", emailErr);
-      }
-    }
 
     // If deactivating, also ban the user so their session is invalidated
     if ("is_deactivated" in updates) {
@@ -322,24 +176,6 @@ export async function PATCH(req: NextRequest) {
           }
         }
       }
-    }
-
-    // First-time approval → ping IndexNow for the photographer's URLs so
-    // Bing/Yandex pick them up in minutes instead of days.
-    if (updates.is_approved === true && !wasAlreadyApproved) {
-      try {
-        const slug = await queryOne<{ slug: string }>(
-          "SELECT slug FROM photographer_profiles WHERE id = $1", [id]
-        );
-        if (slug?.slug) {
-          const { pingIndexNow } = await import("@/lib/indexnow");
-          pingIndexNow([
-            `https://photoportugal.com/photographers/${slug.slug}`,
-            `https://photoportugal.com/photographers`,
-            `https://photoportugal.com/`,
-          ]).catch(() => {});
-        }
-      } catch {}
     }
 
     return NextResponse.json({ success: true });

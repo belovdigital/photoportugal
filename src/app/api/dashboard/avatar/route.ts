@@ -3,7 +3,6 @@ import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { readFormData } from "@/lib/form-data";
 import { queryOne } from "@/lib/db";
-import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
@@ -79,7 +78,6 @@ export async function POST(req: NextRequest) {
 
     const profile = await queryOne<{ id: string }>("SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]);
     if (profile) {
-      checkAndNotifyChecklistComplete(profile.id).catch(() => {});
       logProfileChange(profile.id, type === "cover" ? "cover" : "avatar");
     }
     return NextResponse.json({ success: true, url });

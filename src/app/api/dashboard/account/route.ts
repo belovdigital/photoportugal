@@ -3,7 +3,6 @@ import { capitalizeName } from "@/lib/format-name";
 import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -51,8 +50,6 @@ export async function PUT(req: NextRequest) {
 
   try {
     await queryOne("UPDATE users SET name = $1, first_name = $2, last_name = $3, phone = $4 WHERE id = $5 RETURNING id", [fullName, firstName, lastName, phone || null, userId]);
-    const profile = await queryOne<{ id: string }>("SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]);
-    if (profile) checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });

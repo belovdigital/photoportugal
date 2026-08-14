@@ -108,16 +108,15 @@ export async function GET() {
     const onboarded = account.charges_enabled && account.payouts_enabled;
 
     if (onboarded && !profile.stripe_onboarding_complete) {
-      const updated = await queryOne<{ id: string }>(
+      // Connecting Stripe is the end of stage two, and the cron sweep is what
+      // announces it — it is also what clears the deadline and un-hides anyone
+      // who missed it. Nothing to notify from here: this used to fire "ready
+      // for approval", which was true in the one-stage flow and became a
+      // message about someone we had already approved days earlier.
+      await queryOne(
         "UPDATE photographer_profiles SET stripe_onboarding_complete = TRUE WHERE user_id = $1 RETURNING id",
         [userId]
       );
-      // Stripe was the last checklist step — check if ready for review now
-      if (updated) {
-        import("@/lib/checklist-notify").then(m =>
-          m.checkAndNotifyChecklistComplete(updated.id)
-        ).catch(e => console.error("[stripe/connect] checklist notify error:", e));
-      }
     } else if (!onboarded && profile.stripe_onboarding_complete) {
       // Stripe restricted an account we still had marked as complete —
       // clear the flag so the checklist and admin board stop showing green.
