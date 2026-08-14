@@ -6,6 +6,7 @@ import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 import { canonicalizeShootType } from "@/lib/shoot-type-labels";
 import crypto from "crypto";
 import sharp from "sharp";
+import { variantWidthsFor, VARIANT_QUALITY, variantKey } from "@/lib/image-variants";
 import { country } from "@/lib/country";
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
@@ -154,6 +155,26 @@ export async function POST(req: NextRequest) {
       thumbnailUrl = `${R2_PUBLIC_URL}/${thumbKey}`;
     } catch {
       // Thumbnail generation failed — not critical, will fallback to API optimization
+    }
+
+    // The srcset rungs, written beside the original so the hero slider's
+    // srcset never points at a missing file. Non-fatal on failure: the
+    // onError guard in the consumers drops the srcset and the original
+    // still renders — but log it, because a silent gap here is how
+    // photographer cards went blank on 2026-08-10.
+    if (convertedToJpeg) {
+      await Promise.all((variantWidthsFor(r2Key) ?? []).map(async (w) => {
+        try {
+          const out = await sharp(buffer)
+            .rotate()
+            .resize(w, undefined, { fit: "inside", withoutEnlargement: true })
+            .webp({ quality: VARIANT_QUALITY })
+            .toBuffer();
+          await uploadToS3(variantKey(r2Key, w), out, "image/webp");
+        } catch (err) {
+          console.warn(`[portfolio] variant ${w} failed for ${r2Key}:`, err);
+        }
+      }));
     }
 
     const url = `${R2_PUBLIC_URL}/${r2Key}`;

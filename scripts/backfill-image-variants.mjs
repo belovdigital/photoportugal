@@ -22,9 +22,26 @@ const DRY = args.includes("--dry-run");
 const onlyPrefix = args.includes("--prefix") ? args[args.indexOf("--prefix") + 1] : null;
 const CONCURRENCY = args.includes("--concurrency") ? Number(args[args.indexOf("--concurrency") + 1]) : 4;
 
-const WIDTHS = [400, 800, 1600];
+// KEEP IN SYNC with WIDTHS_BY_PREFIX in src/lib/image-variants.ts — that map
+// decides what the srcset offers, this one decides what exists. If they drift,
+// the srcset points at files this script never wrote.
+const WIDTHS_BY_PREFIX = {
+  "avatars/": [160, 400, 800],
+  "portfolio/": [400, 800, 1600, 2000],
+  "covers/": [400, 800, 1600, 2000],
+};
 const QUALITY = 82;
-const PREFIXES = onlyPrefix ? [onlyPrefix] : ["portfolio/", "avatars/", "covers/"];
+const PREFIXES = onlyPrefix ? [onlyPrefix] : Object.keys(WIDTHS_BY_PREFIX);
+const widthsFor = (key) => {
+  const p = Object.keys(WIDTHS_BY_PREFIX).find((x) => key.startsWith(x));
+  return p ? WIDTHS_BY_PREFIX[p] : [];
+};
+
+if (onlyPrefix) {
+  // A partial run left covers/ without rungs on 2026-08-10 and every
+  // photographer card rendered blank. Make partiality impossible to miss.
+  console.log(`\n!! PARTIAL RUN: only ${onlyPrefix} — the other prefixes are NOT covered by this run !!\n`);
+}
 
 // Same env the app reads. Run from a deploy directory so these are present.
 const ENV_FILE = process.env.ENV_FILE || "/var/www/photoportugal/.env";
@@ -72,7 +89,7 @@ let done = 0, written = 0, skipped = 0, failed = 0, bytesIn = 0, bytesOut = 0;
 
 async function processOne(item) {
   const missing = [];
-  for (const w of WIDTHS) {
+  for (const w of widthsFor(item.key)) {
     if (!(await exists(variantKey(item.key, w)))) missing.push(w);
   }
   if (!missing.length) { skipped++; return; }

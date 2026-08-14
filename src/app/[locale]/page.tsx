@@ -18,6 +18,7 @@ import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews, getSiteReviewStats } from "@/lib/reviews-data";
 import { heroImages, heroImagesNeutral } from "@/lib/hero-images";
 import { country, isPortugal } from "@/lib/country";
+import { r2SrcSet } from "@/lib/image-variants";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { BrandHero } from "@/components/ui/BrandHero";
@@ -488,7 +489,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     || heroPhotographer?.cover_url
     || heroCovers[0].cover_url;
   const lcpSrc = resolveImageUrl(heroFirstPhoto);
-  const lcpSrcset: string | undefined = undefined;
+  // Must stay identical to what HeroSingleVariant puts on the first slide
+  // (same srcset, same "200vw" sizes), or the browser treats the preload and
+  // the <img> as different resources and fetches the hero photo twice.
+  const lcpSrcset = r2SrcSet(lcpSrc, country.filesHost);
 
   const socialProofTexts = {
     photographers: t("socialProofStrip.photographers"),
@@ -509,7 +513,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         rel="preload"
         as="image"
         href={lcpSrc}
-        {...(lcpSrcset ? { imageSrcSet: lcpSrcset, imageSizes: "(min-width: 1280px) 800px, 60vw" } : {})}
+        {...(lcpSrcset ? { imageSrcSet: lcpSrcset, imageSizes: "200vw" } : {})}
         fetchPriority="high"
         media="(min-width: 1024px)"
       />

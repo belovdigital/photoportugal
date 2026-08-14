@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { maskSurname } from "@/lib/photographer-name";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { OptimizedImage, dropBrokenSrcSet } from "@/components/ui/OptimizedImage";
+import { r2SrcSet } from "@/lib/image-variants";
+import { country } from "@/lib/country";
 import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
 import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
@@ -361,6 +363,15 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={photos[0]}
+            // "200vw" deliberately overshoots so the browser always resolves
+            // to the top rung — the original's own pixels re-encoded as WebP.
+            // The photo is object-cover in a full-height box, so its needed
+            // width is height-driven and can exceed the viewport width; any
+            // honest vw value would risk picking a smaller rung than what the
+            // original delivers today, and the hero must never lose quality.
+            srcSet={r2SrcSet(photos[0], country.filesHost)}
+            sizes="200vw"
+            onError={dropBrokenSrcSet}
             alt={t("coverAlt", { name: photographer.name, location: photographer.location_name })}
             className="h-full w-full object-cover object-center"
             loading="eager"
@@ -413,6 +424,15 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={url}
+                  // First occurrence is the LCP candidate and must match the
+                  // preload in page.tsx exactly (same srcset, same "200vw"),
+                  // or the browser fetches the photo twice. The other slides
+                  // are height-bound (h-full w-auto), so 100vw comfortably
+                  // covers their real drawn width and still lets narrow
+                  // portraits pick a smaller rung.
+                  srcSet={r2SrcSet(url, country.filesHost)}
+                  sizes={isFirstOccurrence ? "200vw" : "100vw"}
+                  onError={dropBrokenSrcSet}
                   alt={isFirstOccurrence ? t("coverAlt", { name: photographer.name, location: photographer.location_name }) : ""}
                   onLoad={(e) => {
                     const img = e.currentTarget;

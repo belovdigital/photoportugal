@@ -40,10 +40,18 @@ export const VARIANT_QUALITY = 82;
  * kilobytes against the 130 kB original. Giving photos a 160 rung would just
  * be four thousand files nothing ever picks.
  */
+/**
+ * The 2000 rung is the original's own pixels re-encoded as WebP: uploads are
+ * capped at 2000px, so `resize(2000, withoutEnlargement)` never scales — it
+ * only changes the codec. It exists so a srcset can offer the full original
+ * resolution (the hero on a large retina display must never get fewer pixels
+ * than it does today) while still saving the ~40% that WebP q82 buys at equal
+ * PSNR over the stored JPEG q85.
+ */
 const WIDTHS_BY_PREFIX: Record<string, readonly number[]> = {
   "avatars/": [160, 400, 800],
-  "portfolio/": [400, 800, 1600],
-  "covers/": [400, 800, 1600],
+  "portfolio/": [400, 800, 1600, 2000],
+  "covers/": [400, 800, 1600, 2000],
 };
 
 /** Default ladder, for callers that do not know the prefix. */
