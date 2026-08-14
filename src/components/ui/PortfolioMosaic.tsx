@@ -235,7 +235,13 @@ function MosaicCell({
         key={current.url}
         src={current.url}
         alt={current.name + (current.location ? ` photoshoot in ${current.location}` : "")}
-        loading={priority ? "eager" : "lazy"}
+        // Always lazy, even for the priority cell: the mosaic is hidden on
+        // mobile (`hidden lg:block`), and `loading="eager"` ignores
+        // display:none — phones were downloading a ~500 kB photo into a 0x0
+        // box. Lazy inside a hidden container never fetches; on desktop the
+        // cell is in the first viewport, so lazy still loads immediately
+        // after layout. `priority` keeps steering decoding only.
+        loading="lazy"
         decoding={priority ? "sync" : "async"}
         className="relative h-full w-full object-cover transition duration-700 group-hover:scale-[1.04] animate-mosaic-fade-in"
       />

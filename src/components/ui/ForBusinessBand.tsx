@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getBusinessPhotos } from "@/lib/business-showcase";
+import { r2SrcSet, variantUrl } from "@/lib/image-variants";
+import { country } from "@/lib/country";
 
 /** Homepage B2B band — same visual grammar as the homepage's dark CTA
  *  section (bg-gray-900 + font-display heading + primary CTA). Deliberately
@@ -24,8 +26,18 @@ export async function ForBusinessBand() {
         <>
           {/* Backdrop is decorative — the copy carries the meaning, so it's
               intentionally alt-empty and pushed behind everything. */}
+          {/* This is a SERVER component: srcSet/sizes are strings and safe to
+              render here, but never add an onError (or any function prop) —
+              that exact mistake 500'd every page on 2026-08-14. The band sits
+              at the bottom of the page, so both images are lazy: on phones
+              (where this used to eager-load ~250 kB before any scroll) it now
+              costs nothing until the visitor actually gets here. */}
           <img
             src={backdrop}
+            srcSet={r2SrcSet(backdrop, country.filesHost)}
+            sizes="100vw"
+            loading="lazy"
+            decoding="async"
             alt=""
             aria-hidden
             className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-40"
@@ -48,9 +60,16 @@ export async function ForBusinessBand() {
           {strip.length > 0 && (
             <div className="flex gap-2" aria-hidden>
               {strip.map((url) => (
+                // The 400 rung served directly: these chips draw at 64-80px,
+                // so 400 covers any dpr up to 5x, and each one replaces a
+                // 350-500 kB portfolio original with ~25 kB. No srcset needed
+                // for a fixed-size slot; coverage of the rung is guaranteed by
+                // the DB-wide verifier plus generation on upload.
                 <img
                   key={url}
-                  src={url}
+                  src={variantUrl(url, 400)}
+                  loading="lazy"
+                  decoding="async"
                   alt=""
                   className="h-16 w-16 rounded-lg object-cover ring-1 ring-white/20 sm:h-20 sm:w-20"
                 />

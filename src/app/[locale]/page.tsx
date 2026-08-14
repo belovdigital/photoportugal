@@ -508,14 +508,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      {/* Preload the desktop hero LCP image. media query so mobile (where collage is display:none) never fetches it. */}
+      {/* Preload the hero LCP image. No media gate: the old collage layout
+          hid the photo on mobile, but HeroSingleVariant renders photos[0]
+          eagerly on BOTH form factors now, with the same srcset and the same
+          "200vw" sizes — one preload serves both, and mobile (where LCP is
+          worst) finally starts the fetch from the first bytes of HTML. */}
       <link
         rel="preload"
         as="image"
         href={lcpSrc}
         {...(lcpSrcset ? { imageSrcSet: lcpSrcset, imageSizes: "200vw" } : {})}
         fetchPriority="high"
-        media="(min-width: 1024px)"
       />
 
       {/* JSON-LD schema scripts — data-dependent, streamed via Suspense so they don't block initial paint. */}
