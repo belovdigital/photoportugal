@@ -72,8 +72,18 @@ export async function GET(req: NextRequest) {
       query<{ name: string; email: string; role: string; created_at: string }>(
         "SELECT name, email, role, created_at::timestamp(0)::text FROM users WHERE created_at > NOW() - INTERVAL '24 hours' ORDER BY created_at DESC"
       ),
-      query<{ client_name: string; photographer_name: string; total_price: number; service_fee: number; platform_fee: number; status: string }>(
-        `SELECT cu.name as client_name, pu.name as photographer_name, b.total_price, b.service_fee, b.platform_fee, b.payment_status as status
+      query<{ client_name: string; photographer_name: string; total_price: number; service_fee: number; platform_fee: number; status: string; platform_share: number }>(
+        // platform_share is the SAME arithmetic as the admin KPI and the
+        // revenue chart — client gross minus payout after 2026-08-11, the old
+        // split before it, then less Stripe's cut. Computed in SQL rather than
+        // re-added in JS below, because this digest reporting one definition
+        // while the dashboard reported another is exactly how two numbers that
+        // both claim to be "platform revenue" end up disagreeing by hundreds.
+        `SELECT cu.name as client_name, pu.name as photographer_name, b.total_price, b.service_fee, b.platform_fee, b.payment_status as status,
+                (CASE WHEN b.created_at >= DATE '2026-08-11'
+                      THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0))
+                      ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END
+                 END - COALESCE(b.stripe_fee_cents, 0) / 100.0) as platform_share
          FROM bookings b
          JOIN users cu ON cu.id = b.client_id
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -90,7 +100,7 @@ export async function GET(req: NextRequest) {
     const sessionCount = parseInt(sessions?.count || "0");
     const visitorCount = parseInt(sessions?.visitors || "0");
     const grossRevenue = payments.reduce((sum, p) => sum + (p.total_price || 0) + (p.service_fee || 0), 0);
-    const platformRevenue = payments.reduce((sum, p) => sum + (p.service_fee || 0) + (p.platform_fee || 0), 0);
+    const platformRevenue = payments.reduce((sum, p) => sum + Number(p.platform_share || 0), 0);
 
     // Skip if absolutely nothing happened
     if (bookings.length === 0 && messageCount === 0 && users.length === 0 && sessionCount === 0) {

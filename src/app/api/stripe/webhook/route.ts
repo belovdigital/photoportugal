@@ -10,6 +10,7 @@ import { queueNotification } from "@/lib/notification-queue";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { sendTelegram } from "@/lib/telegram";
 import { bookingStripePaymentColumnsExist } from "@/lib/booking-stripe-payment-fields";
+import { recordStripeFee } from "@/lib/stripe-fees";
 import { country } from "@/lib/country";
 
 // Stripe events we surface in the `stripe` Telegram topic. Anything
@@ -1242,6 +1243,16 @@ export async function POST(req: NextRequest) {
         const paymentIntent = event.data.object;
         const bookingId = paymentIntent.metadata?.booking_id;
         const giftCardId = paymentIntent.metadata?.gift_card_id;
+
+        // What Stripe charged us to take this money, recorded so revenue can be
+        // reported net of it. This event is the right and only place for it:
+        // with manual capture — which every blind booking uses — Stripe emits
+        // payment_intent.succeeded at CAPTURE, which is the first moment a
+        // balance transaction, and therefore a fee, exists at all.
+        // checkout.session.completed fires on the authorisation, days earlier,
+        // with nothing to read. Fire-and-forget; the nightly sweep picks up
+        // anything this misses.
+        void recordStripeFee(stripeClient, paymentIntent.id);
 
         // `booking_id` alone does NOT mean "this is the payment for the
         // booking". A tip carries the same key so the notification can name

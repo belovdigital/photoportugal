@@ -165,8 +165,14 @@ interface AdminStats {
   bookingsPaidThisMonth: number;
   turnover: number;
   turnoverThisMonth: number;
+  /** Net of what Stripe charged to take the money — see the SQL in page.tsx. */
   revenue: number;
   revenueThisMonth: number;
+  /** What Stripe kept, across bookings, extra photos and tips. Shown rather
+   *  than only deducted: it is the platform's largest single cost and ran near
+   *  2.7% of turnover, not the 1.5% the pricing assumes, because most clients
+   *  pay with non-EEA cards. */
+  stripeFeesPaid: number;
   /** Everything already moved out of Stripe to the bank, all time. */
   paidOut: number;
   /** Live Stripe balance. `stripeReadable` is false when Stripe could not be
@@ -321,7 +327,7 @@ function fmtDate(day: string, bucket: "day" | "week" | "month" = "day") {
 
 function BarChart({ title, subtitle, filled, field, color, bucket }: {
   title: string; subtitle: string;
-  filled: { day: string; turnover: number; service_fee: number; platform_fee: number; extras: number; revenue: number; count: number }[];
+  filled: { day: string; turnover: number; service_fee: number; platform_fee: number; stripe_fee: number; extras: number; revenue: number; count: number }[];
   field: "turnover" | "revenue" | "service_fee" | "platform_fee" | "extras"; color: string;
   bucket: "day" | "week" | "month";
 }) {
@@ -425,7 +431,7 @@ function UpcomingEvents({ onNavigate }: { onNavigate: () => void }) {
 type RevenuePreset = "7" | "30" | "90" | "365" | "all" | "custom";
 
 function RevenueCharts() {
-  const [rows, setRows] = useState<{ day: string; turnover: number; service_fee: number; platform_fee: number; extras: number; revenue: number; count: number }[]>([]);
+  const [rows, setRows] = useState<{ day: string; turnover: number; service_fee: number; platform_fee: number; stripe_fee: number; extras: number; revenue: number; count: number }[]>([]);
   const [bucket, setBucket] = useState<"day" | "week" | "month">("day");
   const [preset, setPreset] = useState<RevenuePreset>("all");
   const [customFrom, setCustomFrom] = useState("");
@@ -454,7 +460,13 @@ function RevenueCharts() {
   const totalTurnover = rows.reduce((s, d) => s + d.turnover, 0);
   const totalServiceFee = rows.reduce((s, d) => s + d.service_fee, 0);
   const totalPlatformFee = rows.reduce((s, d) => s + d.platform_fee, 0);
-  const totalRevenue = totalServiceFee + totalPlatformFee;
+  const totalStripeFee = rows.reduce((s, d) => s + (d.stripe_fee || 0), 0);
+  // Read the API's own `revenue`, do NOT re-derive it from the two component
+  // columns. Those columns are the old split and know nothing about promo
+  // codes, blind bookings, the €5 rounding, extra-photo sales or Stripe's cut —
+  // adding them up produced a footer that disagreed with the KPI card directly
+  // above it while its caption described the KPI's definition.
+  const totalRevenue = rows.reduce((s, d) => s + d.revenue, 0);
   const paidBookings = rows.reduce((s, d) => s + d.count, 0);
 
   const presets: { key: RevenuePreset; label: string }[] = [
@@ -545,8 +557,11 @@ function RevenueCharts() {
           />
           {totalRevenue > 0 && (
             <p className="px-1 text-right text-xs text-gray-500">
-              Total revenue: <span className="font-semibold text-gray-700">€{totalRevenue.toLocaleString()}</span>
-              <span className="ml-1 text-gray-400">— what clients paid, less photographer payouts</span>
+              Total revenue: <span className="font-semibold text-gray-700">€{Math.round(totalRevenue).toLocaleString()}</span>
+              <span className="ml-1 text-gray-400">
+                — what clients paid, less photographer payouts
+                {totalStripeFee > 0 ? `, less €${Math.round(totalStripeFee).toLocaleString()} Stripe took` : ""}
+              </span>
             </p>
           )}
         </>
@@ -897,9 +912,12 @@ export function AdminDashboard({
                     </p>
                   )}
                   {stats.revenueThisMonth > 0 ? (
-                    <p className="mt-1 text-xs text-emerald-700">&euro;{stats.revenueThisMonth.toLocaleString()} earned this month</p>
+                    <p className="mt-1 text-xs text-emerald-700">&euro;{stats.revenueThisMonth.toLocaleString(undefined, { maximumFractionDigits: 2 })} earned this month</p>
                   ) : (
-                    <p className="mt-1 text-xs text-gray-400">service fees + commissions earned</p>
+                    <p className="mt-1 text-xs text-gray-400">what clients paid, less photographer payouts</p>
+                  )}
+                  {stats.stripeFeesPaid > 0 && (
+                    <p className="mt-1 text-xs text-gray-400">after &euro;{stats.stripeFeesPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Stripe took</p>
                   )}
                   {stats.extrasRevenue > 0 && (
                     <p className="mt-1 text-xs text-gray-400">incl. &euro;{stats.extrasRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} from extra photos</p>

@@ -72,8 +72,10 @@ export async function GET(req: NextRequest) {
   //     under anyone who already read them.
   //   platform_fee (legacy) — earned at delivery_accepted=TRUE (deducted from
   //     photographer's payout, released when client accepts delivery).
-  // `revenue` is kept as the sum for any consumer that still expects it.
-  const rows = await query<{ bucket: string; turnover: string; service_fee: string; platform_fee: string; revenue: string; count: string }>(
+  // `revenue` is kept as the sum for any consumer that still expects it, and is
+  // net of what Stripe charged to take the money — the same subtraction the KPI
+  // card makes, applied per bucket so the two agree.
+  const rows = await query<{ bucket: string; turnover: string; service_fee: string; platform_fee: string; stripe_fee: string; revenue: string; count: string }>(
     `SELECT
         DATE_TRUNC($1, b.created_at)::date::text AS bucket,
         -- Turnover = client gross (base + 15% service fee). stripe_amount_paid_cents
@@ -82,7 +84,8 @@ export async function GET(req: NextRequest) {
         COALESCE(SUM(COALESCE(b.stripe_amount_paid_cents / 100.0, b.total_price + COALESCE(b.service_fee, 0))), 0) AS turnover,
         COALESCE(SUM(b.service_fee), 0) AS service_fee,
         COALESCE(SUM(CASE WHEN (b.delivery_accepted = TRUE OR b.created_at >= DATE '2026-08-11') THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
-        COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, b.service_fee + b.platform_fee) ELSE b.service_fee + CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END END), 0) AS revenue,
+        COALESCE(SUM(COALESCE(b.stripe_fee_cents, 0)), 0) / 100.0 AS stripe_fee,
+        COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0)) ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END END - COALESCE(b.stripe_fee_cents, 0) / 100.0), 0) AS revenue,
         COUNT(*) AS count
        FROM bookings b
       WHERE b.payment_status = 'paid'
@@ -100,7 +103,7 @@ export async function GET(req: NextRequest) {
   const extrasRows = await query<{ bucket: string; gross: string; fee: string }>(
     `SELECT DATE_TRUNC($1, paid_at)::date::text AS bucket,
             COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
-            COALESCE(SUM(platform_fee_cents), 0) / 100.0 AS fee
+            COALESCE(SUM(platform_fee_cents - COALESCE(stripe_fee_cents, 0)), 0) / 100.0 AS fee
        FROM delivery_extra_purchases
       WHERE status = 'paid' AND paid_at >= $2 AND paid_at <= $3
       GROUP BY DATE_TRUNC($1, paid_at)`,
@@ -110,7 +113,7 @@ export async function GET(req: NextRequest) {
 
   // Fill missing buckets so the chart has contiguous bars.
   const byBucket = new Map(rows.map((r) => [r.bucket, r]));
-  const filled: { day: string; turnover: number; service_fee: number; platform_fee: number; extras: number; revenue: number; count: number }[] = [];
+  const filled: { day: string; turnover: number; service_fee: number; platform_fee: number; stripe_fee: number; extras: number; revenue: number; count: number }[] = [];
   const cursor = new Date(fromDate);
   cursor.setUTCHours(0, 0, 0, 0);
   if (bucket === "week") {
@@ -132,6 +135,7 @@ export async function GET(req: NextRequest) {
       turnover: (found ? Number(found.turnover) : 0) + exGross,
       service_fee: found ? Number(found.service_fee) : 0,
       platform_fee: found ? Number(found.platform_fee) : 0,
+      stripe_fee: found ? Number(found.stripe_fee) : 0,
       extras: exFee,
       revenue: (found ? Number(found.revenue) : 0) + exFee,
       count: found ? Number(found.count) : 0,
