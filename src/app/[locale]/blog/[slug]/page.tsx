@@ -10,6 +10,7 @@ import { localeAlternates, localeAlternatesFiltered, openGraphIdentity, localeAl
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
+import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 import { BUSINESS_SHOOT_TYPE, shootTypeHref } from "@/lib/shoot-type-labels";
 import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
 import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
@@ -53,7 +54,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale, slug } = await params;
 
   const post = await queryOne<BlogPost>(
-    "SELECT id, slug, title, excerpt, content, meta_title, meta_description, target_keywords, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+    // `category` is not cosmetic here: the isBusiness split below reads it, and
+    // leaving it out of the SELECT made every post look consumer-side to the
+    // metadata. A team-headshots article was advertising a wedding photo as its
+    // social preview while the page body, which does select it, rendered
+    // corporate work.
+    "SELECT id, slug, title, excerpt, content, meta_title, meta_description, target_keywords, cover_image_url, author, published_at, created_at, category FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
     [slug, locale]
   );
 
@@ -123,6 +129,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       if (heroPhoto?.url) ogImageUrl = heroPhoto.url;
     }
   }
+
+  // Last resort: the branded share card. Both blocks below declare
+  // `summary_large_image`, and a card with no image attached is rendered by
+  // Twitter, Facebook and WhatsApp as a bare text link — which is what 99 of
+  // the 220 Spanish and Italian posts were shipping, because a post that names
+  // no city and no shoot type never reaches the query above.
+  if (!ogImageUrl) ogImageUrl = `${country.baseUrl}${country.ogImage}`;
 
   // hreflang must only point at locales where this exact slug is
   // actually published, otherwise the alternate URL would 308-redirect
@@ -523,6 +536,10 @@ export default async function BlogPostPage({ params }: PageProps) {
     published_at: string;
     target_keywords: string | null;
     content: string;
+    // Not selected — attachBlogHeroPhotos fills these in on the top 3 below.
+    hero_photo_url?: string | null;
+    hero_photographer_name?: string | null;
+    hero_photographer_slug?: string | null;
   }>(
     "SELECT id, slug, title, excerpt, cover_image_url, published_at, target_keywords, content FROM blog_posts WHERE is_published = TRUE AND id != $1 AND locale = $2 ORDER BY published_at DESC",
     [post.id, locale]
@@ -567,7 +584,15 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   // Sort by score desc, then by date desc; pick top 3
   scoredPosts.sort((a, b) => b.score - a.score || new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
-  const relatedPosts = scoredPosts.slice(0, 3).map(({ score, target_keywords, content: _c, ...rest }) => rest);
+  // The strip read cover_image_url straight off the row, so on the markets where
+  // no post has one it was three grey icons under every article — 660 tiles
+  // across Spain and Italy, more than the blog grid itself. Same machinery as
+  // the grid: a matching portfolio photo where one exists, a filler otherwise.
+  const relatedWithHero = await attachBlogHeroPhotos(
+    scoredPosts.slice(0, 3).map(({ score, content: _c, ...rest }) => rest),
+    locale,
+  );
+  const relatedPosts = relatedWithHero.map(({ target_keywords, ...rest }) => rest);
 
   // Primary topic drives conversion blocks. Secondary mentions stay available
   // for internal links, but they must not hijack "Featured in ..." modules.
@@ -889,7 +914,10 @@ export default async function BlogPostPage({ params }: PageProps) {
     // the branded share card, which is ours and claims nothing about a place.
     image: (() => {
       const raw = post.cover_image_url || heroSrc;
-      if (!raw) return `${country.baseUrl}/og`;
+      // country.ogImage, not a hardcoded "/og": Portugal serves its share card
+      // at /og-image.png and returns 404 for /og, so every PT post that reached
+      // this branch put a dead URL in its Article markup.
+      if (!raw) return `${country.baseUrl}${country.ogImage}`;
       return raw.startsWith("http") ? raw : `${country.baseUrl}${raw}`;
     })(),
   };
@@ -1340,14 +1368,19 @@ export default async function BlogPostPage({ params }: PageProps) {
                   href={`/blog/${related.slug}`}
                   className="group overflow-hidden rounded-xl border border-warm-200 transition hover:shadow-lg"
                 >
-                  {related.cover_image_url ? (
-                    <div className="aspect-[16/9] overflow-hidden">
+                  {related.hero_photo_url || related.cover_image_url ? (
+                    <div className="relative aspect-[16/9] overflow-hidden">
                       <OptimizedImage
-                        src={related.cover_image_url}
-                        alt={related.title}
+                        src={(related.hero_photo_url || related.cover_image_url) as string}
+                        alt={related.hero_photographer_name ? `Photo by ${related.hero_photographer_name}` : related.title}
                         width={400}
                         className="h-full w-full transition group-hover:scale-105"
                       />
+                      {related.hero_photographer_name && (
+                        <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/40 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white">
+                          ◉ {maskSurname(related.hero_photographer_name)}
+                        </span>
+                      )}
                     </div>
                   ) : (
                     <div className="flex aspect-[16/9] items-center justify-center bg-warm-100">
