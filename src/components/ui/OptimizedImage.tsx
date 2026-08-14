@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { unsplashSrcSet } from "@/lib/unsplash-images";
-import { r2ImgProps, onVariantError } from "@/lib/image-variants";
-import { country } from "@/lib/country";
 
 interface OptimizedImageProps {
   src: string;
@@ -48,19 +46,14 @@ export function OptimizedImage({
 
   const optimizedSrc = getOptimizedSrc(src, width, quality);
 
-  // Two ladders, one rule: send the number of pixels the slot actually has.
+  // R2 originals still ship as-is: they are capped at 2000px q=85 at upload
+  // time and Cloudflare caches them globally. The Image Transformations layer
+  // we tried on top added cold-cache MISS latency without a clear win.
   //
-  // Unsplash resizes on their own CDN. R2 photos are resized once at upload and
-  // backfilled for everything older, so the rungs are plain static objects
-  // beside the original — which is why this is safe where Cloudflare Image
-  // Transformations was not: there is no request-time resize to miss on.
-  //
-  // This component is what draws the avatars, among much else; wiring it is the
-  // only way to reach them. `onError` below drops srcset on a miss so the
-  // browser falls back to the original — src alone is NOT a fallback for a
-  // 404'd candidate, which is how a skipped backfill blanked the Portugal cards.
-  const r2 = r2ImgProps(optimizedSrc, country.filesHost, sizes);
-  const srcSet = unsplashSrcSet(optimizedSrc, quality) ?? r2.srcSet;
+  // Unsplash is a different case — they resize on their own CDN, so a ladder
+  // costs us nothing and fixes an actual quality bug: a single hardcoded width
+  // both overserved phones and left large retina screens upscaling.
+  const srcSet = unsplashSrcSet(optimizedSrc, quality);
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -79,16 +72,7 @@ export function OptimizedImage({
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : undefined}
         onLoad={() => setLoaded(true)}
-        onError={(e) => {
-          // First a miss on a rung: drop srcset and let the original load.
-          // Only if that fails too is it a real error worth showing.
-          if (e.currentTarget.getAttribute("srcset")) {
-            onVariantError(e);
-            return;
-          }
-          setError(true);
-          setLoaded(true);
-        }}
+        onError={() => { setError(true); setLoaded(true); }}
         onClick={onClick}
         // The fade-in transition (opacity-0 → 100 on load) made images
         // invisible whenever hydration was delayed or didn't fire — SSR

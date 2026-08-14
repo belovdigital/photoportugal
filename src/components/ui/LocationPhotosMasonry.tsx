@@ -1,8 +1,5 @@
 "use client";
 
-import { r2ImgProps } from "@/lib/image-variants";
-import { country } from "@/lib/country";
-
 import { useTranslations } from "next-intl";
 import { maskSurname } from "@/lib/photographer-name";
 
@@ -132,7 +129,6 @@ function PhotoCard({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photo.url}
-          {...r2ImgProps(photo.url, country.filesHost, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px")}
           alt={`Photo by ${photo.photographer.name}`}
           loading="lazy"
           decoding="async"

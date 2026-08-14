@@ -1,8 +1,6 @@
 "use client";
 
 import { BLIND_COMPARE_AT_EUR } from "@/lib/blind-booking/compare-at";
-import { r2ImgProps } from "@/lib/image-variants";
-import { country } from "@/lib/country";
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -413,13 +411,8 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
                 className={`snap-center shrink-0 h-full${isWideShort ? " w-screen" : ""}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {/* The LCP element on the homepage and every profile. It fetched
-                    the 2000px original into a phone-width slot — 231 kB on a
-                    412px screen. 100vw because the hero is full-bleed; the card
-                    default would pick a rung far too small for it. */}
                 <img
                   src={url}
-                  {...r2ImgProps(url, country.filesHost, "100vw")}
                   alt={isFirstOccurrence ? t("coverAlt", { name: photographer.name, location: photographer.location_name }) : ""}
                   onLoad={(e) => {
                     const img = e.currentTarget;

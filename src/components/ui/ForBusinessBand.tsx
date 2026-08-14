@@ -1,8 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getBusinessPhotos } from "@/lib/business-showcase";
-import { r2ImgProps } from "@/lib/image-variants";
-import { country } from "@/lib/country";
 
 /** Homepage B2B band — same visual grammar as the homepage's dark CTA
  *  section (bg-gray-900 + font-display heading + primary CTA). Deliberately
@@ -28,7 +26,6 @@ export async function ForBusinessBand() {
               intentionally alt-empty and pushed behind everything. */}
           <img
             src={backdrop}
-          {...r2ImgProps(backdrop, country.filesHost, "100vw")}
             alt=""
             aria-hidden
             className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-40"

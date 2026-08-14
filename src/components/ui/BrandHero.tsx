@@ -1,7 +1,5 @@
 "use client";
 
-import { r2ImgProps } from "@/lib/image-variants";
-
 import { BLIND_COMPARE_AT_EUR } from "@/lib/blind-booking/compare-at";
 
 import { useTranslations } from "next-intl";
@@ -47,7 +45,6 @@ export function BrandHero({ photos }: { photos: string[] }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={resolveImageUrl(lead)}
-          {...r2ImgProps(resolveImageUrl(lead), country.filesHost, "100vw")}
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
           fetchPriority="high"
@@ -97,7 +94,6 @@ export function BrandHero({ photos }: { photos: string[] }) {
             <img
               key={url}
               src={resolveImageUrl(url)}
-          {...r2ImgProps(resolveImageUrl(url), country.filesHost, "(max-width: 640px) 50vw, 300px")}
               alt=""
               loading="lazy"
               decoding="async"
