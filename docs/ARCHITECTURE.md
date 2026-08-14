@@ -12,7 +12,7 @@ Photo Portugal is a photographer marketplace connecting English-speaking tourist
 | Styling | Tailwind CSS v4 |
 | Database | PostgreSQL 16 (on the market's own box) |
 | Auth | NextAuth.js (Google OAuth + Email/Password) |
-| File Storage | Local disk (`/var/www/photoportugal/uploads`) |
+| File Storage | Cloudflare R2 (`files.<domain>` CDN) — avatars, portfolio, delivery, WebP-ladder variants; legacy `/var/www/<app>/uploads` still serves old files |
 | Process Manager | PM2 |
 | Web Server | Nginx (reverse proxy) |
 | CDN / DNS / SSL | Cloudflare |
@@ -64,7 +64,7 @@ src/
 
 ## Database Schema
 
-See `docs/DATABASE.md` for full schema.
+Schema: `db/schema.sql` (generated from prod — refresh with `scripts/refresh-schema.sh`); semantics: `docs/DOMAIN.md`.
 
 ## Color Palette
 

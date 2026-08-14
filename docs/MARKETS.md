@@ -157,9 +157,10 @@ apt install -y postgresql postgresql-contrib nginx certbot python3-certbot-nginx
 
 ### 4.2. База данных
 
-**НЕ поднимать по `db/schema.sql`** — он мёртв (24 таблицы, нет
-`admin_audit_log`, `business_inquiries`, `calendar_*`, `concierge_*` и других).
-Схему берём с живого прода PT:
+`db/schema.sql` с 14.08.2026 живой: генерируется с прода PT скриптом
+`scripts/refresh-schema.sh`, дата генерации в шапке (до этого он был мёртв —
+24 таблицы против 65). Если дата в шапке старше последней миграции — сначала
+перегенерировать. Для нового рынка схему можно брать и напрямую с прода:
 
 ```bash
 sudo -u postgres pg_dump --schema-only --no-owner --no-acl photoportugal > /tmp/schema.sql
@@ -543,16 +544,16 @@ TELEGRAM_TOPIC_IDS={"bookings":2,"daily_digest":3,"photographers":4,...}
 
 ## 12. Грабли, общие для всех рынков
 
-1. **`db/schema.sql` мёртв** — см. §4.2.
+1. **`db/schema.sql` живой с 14.08.2026** (генерируется с прода,
+   `scripts/refresh-schema.sh`), но проверяй дату в шапке — см. §4.2.
 2. **`deploy.sh` — их два, и это не одно и то же.** `scripts/deploy.sh` в репо
    работает на Маке (rsync в `<app>-incoming/` и вызов серверного);
    `/var/www/deploy.sh` живёт на каждом боксе и делает blue/green. Запускать
    надо локальный. До 14.08.2026 репозиторный был мёртвым огрызком от
    DigitalOcean — тыкал в `146.190.166.142` и делал `git pull` в каталоге без
    `.git`; заменён.
-3. **`docs/ARCHITECTURE.md` частично устарел.** Хостинг и деплой поправлены
-   14.08.2026; строка про хранение файлов («local disk») всё ещё врёт — часть
-   давно в R2. Остальное не проверялось.
+3. `docs/ARCHITECTURE.md` актуализирован 14.08.2026 (хостинг, деплой,
+   хранение файлов, ссылка на схему).
 4. **i18n**: `useTranslations("ns")` без ключей в `messages/*.json` рендерит
    сырые пути ключей в проде, и `|| "fallback"` это не ловит. Ключи заводить во
    все локали одновременно с компонентом. См. CLAUDE.md.

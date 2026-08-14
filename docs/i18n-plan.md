@@ -1,3 +1,6 @@
+> ⚠️ **Архив (март 2026).** План выполнен и не отражает текущее состояние —
+> локалей теперь шесть, правила в CLAUDE.md §i18n и docs/DOMAIN.md.
+
 # Photo Portugal — Multilingual (EN + PT) Implementation
 
 ## Status: IN PROGRESS

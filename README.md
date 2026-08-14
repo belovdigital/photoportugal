@@ -15,7 +15,7 @@ Professional photographer marketplace for tourists visiting Portugal. Find and b
 - **Auth:** NextAuth.js v5 (Auth.js) — Google OAuth + Email/Password
 - **Real-time:** Server-Sent Events (SSE) for messaging
 - **Hosting:** Hetzner Cloud (Falkenstein, DE) — 4 vCPU, 7.6 GB RAM, 150 GB. Nginx + PM2 + Let's Encrypt SSL. Cloudflare proxy in front.
-- **Images:** Unsplash CDN (location photos), local uploads (portfolio/avatars)
+- **Images:** Cloudflare R2 (`files.<domain>`) for avatars/portfolio/delivery + WebP srcset ladder; Unsplash CDN for location stock
 - **DNS/CDN:** Cloudflare (optional, currently direct)
 
 ## Features
