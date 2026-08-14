@@ -83,11 +83,15 @@ DO NOT REPEAT.
 
 **Before committing/deploying any component that imports `useTranslations`:**
 
-1. Add the keys to **all five** locale files (`messages/en.json`,
-   `pt.json`, `de.json`, `es.json`, `fr.json`) at the same time you
-   write the component. EN value can be the final copy; other locales
-   may temporarily duplicate EN while translation is pending — that's
-   fine, but the keys MUST exist or next-intl will leak the path.
+1. Add the keys to **all SIX** locale files (`messages/en.json`,
+   `pt.json`, `de.json`, `es.json`, `fr.json`, `it.json` — it.json
+   arrived with the Italian market; "five" is how a key ships to 5 of 6)
+   at the same time you write the component. EN value can be the final
+   copy; other locales may temporarily duplicate EN while translation is
+   pending — that's fine, but the keys MUST exist or next-intl will leak
+   the path. Per-market overrides live in `messages/country/{es,it}/` —
+   new keys go in the six base files; an override entry only when a
+   market words it differently.
 2. The `useTranslations("ns")` namespace string must EXACTLY match a
    top-level key in messages/*.json (case-sensitive, no typos).
 3. Don't rely on `t(key) || "english fallback"` as a safety net. It is
