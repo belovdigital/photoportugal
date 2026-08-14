@@ -84,10 +84,11 @@ export async function GET(req: NextRequest) {
         COALESCE(SUM(COALESCE(b.stripe_amount_paid_cents / 100.0, b.total_price + COALESCE(b.service_fee, 0))), 0) AS turnover,
         COALESCE(SUM(b.service_fee), 0) AS service_fee,
         COALESCE(SUM(CASE WHEN (b.delivery_accepted = TRUE OR b.created_at >= DATE '2026-08-11') THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
-        COALESCE(SUM(COALESCE(b.stripe_fee_cents, 0)), 0) / 100.0 AS stripe_fee,
-        COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0)) ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END END - COALESCE(b.stripe_fee_cents, 0) / 100.0), 0) AS revenue,
+        COALESCE(SUM(COALESCE(f.fee_cents, 0)), 0) / 100.0 AS stripe_fee,
+        COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0)) ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END END - COALESCE(f.fee_cents, 0) / 100.0), 0) AS revenue,
         COUNT(*) AS count
        FROM bookings b
+       LEFT JOIN stripe_payment_fees f ON f.payment_intent_id = b.stripe_payment_intent_id
       WHERE b.payment_status = 'paid'
         AND b.created_at >= $2
         AND b.created_at <= $3
@@ -100,13 +101,22 @@ export async function GET(req: NextRequest) {
   // then, not when the booking was created — so this cannot be a JOIN onto the
   // query above and is merged bucket-by-bucket below. Matches the admin KPI
   // cards: gross adds to turnover, platform_fee_cents adds to revenue.
+  // Collapsed to one row per payment BEFORE bucketing. These rows are per
+  // photo but the Stripe fee is per basket, so joining the fee to the rows
+  // would charge a six-photo order six times.
   const extrasRows = await query<{ bucket: string; gross: string; fee: string }>(
-    `SELECT DATE_TRUNC($1, paid_at)::date::text AS bucket,
-            COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
-            COALESCE(SUM(platform_fee_cents - COALESCE(stripe_fee_cents, 0)), 0) / 100.0 AS fee
-       FROM delivery_extra_purchases
-      WHERE status = 'paid' AND paid_at >= $2 AND paid_at <= $3
-      GROUP BY DATE_TRUNC($1, paid_at)`,
+    `SELECT DATE_TRUNC($1, o.paid_at)::date::text AS bucket,
+            COALESCE(SUM(o.gross_cents), 0) / 100.0 AS gross,
+            (COALESCE(SUM(o.fee_cents), 0) - COALESCE(SUM(f.fee_cents), 0)) / 100.0 AS fee
+       FROM (SELECT stripe_payment_intent_id AS pi,
+                    MIN(paid_at) AS paid_at,
+                    SUM(amount_cents) AS gross_cents,
+                    SUM(platform_fee_cents) AS fee_cents
+               FROM delivery_extra_purchases
+              WHERE status = 'paid' AND paid_at >= $2 AND paid_at <= $3
+              GROUP BY stripe_payment_intent_id) o
+       LEFT JOIN stripe_payment_fees f ON f.payment_intent_id = o.pi
+      GROUP BY DATE_TRUNC($1, o.paid_at)`,
     [bucket, fromDate.toISOString(), toDate.toISOString()]
   ).catch(() => []);
   const extrasByBucket = new Map(extrasRows.map((r) => [r.bucket, r]));

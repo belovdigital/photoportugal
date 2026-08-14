@@ -133,17 +133,28 @@ export default async function AdminPage() {
     // Paid extra photos, all time and this month. .catch keeps the whole admin
     // dashboard alive on a database that has not run the extras migration yet.
     queryOne<{ gross: string; fee: string; payout: string; sold: string; gifted: string }>(
+      // The fee is per PAYMENT and these rows are per PHOTO, so it is joined to
+      // the distinct payments of this set rather than to the rows — joining it
+      // to the rows would charge a six-photo basket six times over.
       `SELECT COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
-              COALESCE(SUM(platform_fee_cents - COALESCE(stripe_fee_cents, 0)), 0) / 100.0 AS fee,
+              (COALESCE(SUM(platform_fee_cents), 0) - COALESCE((
+                 SELECT SUM(f.fee_cents) FROM stripe_payment_fees f
+                  WHERE f.payment_intent_id IN (
+                    SELECT DISTINCT stripe_payment_intent_id FROM delivery_extra_purchases
+                     WHERE status = 'paid' AND stripe_payment_intent_id IS NOT NULL)), 0)) / 100.0 AS fee,
               COALESCE(SUM(payout_cents), 0) / 100.0 AS payout,
-              COALESCE(SUM(stripe_fee_cents), 0) / 100.0 AS stripe_fee,
               COUNT(*) FILTER (WHERE amount_cents > 0)::text AS sold,
               COUNT(*) FILTER (WHERE amount_cents = 0)::text AS gifted
          FROM delivery_extra_purchases WHERE status = 'paid'`
     ).catch(() => null),
     queryOne<{ gross: string; fee: string }>(
       `SELECT COALESCE(SUM(amount_cents), 0) / 100.0 AS gross,
-              COALESCE(SUM(platform_fee_cents - COALESCE(stripe_fee_cents, 0)), 0) / 100.0 AS fee
+              (COALESCE(SUM(platform_fee_cents), 0) - COALESCE((
+                 SELECT SUM(f.fee_cents) FROM stripe_payment_fees f
+                  WHERE f.payment_intent_id IN (
+                    SELECT DISTINCT stripe_payment_intent_id FROM delivery_extra_purchases
+                     WHERE status = 'paid' AND stripe_payment_intent_id IS NOT NULL
+                       AND paid_at >= date_trunc('month', CURRENT_DATE))), 0)) / 100.0 AS fee
          FROM delivery_extra_purchases
         WHERE status = 'paid' AND paid_at >= date_trunc('month', CURRENT_DATE)`
     ).catch(() => null),
@@ -580,20 +591,19 @@ export default async function AdminPage() {
     // authorised but not yet captured has no fee to know yet, and overstating
     // by that much beats dropping the booking.
     // Same accounting as /api/admin/revenue-chart so the top KPI matches the chart total.
-    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(CASE WHEN created_at >= DATE '2026-08-11' THEN COALESCE(stripe_amount_paid_cents / 100.0 - payout_amount, COALESCE(service_fee, 0) + COALESCE(platform_fee, 0)) ELSE COALESCE(service_fee, 0) + CASE WHEN delivery_accepted = TRUE THEN COALESCE(platform_fee, 0) ELSE 0 END END - COALESCE(stripe_fee_cents, 0) / 100.0), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
-    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(CASE WHEN created_at >= DATE '2026-08-11' THEN COALESCE(stripe_amount_paid_cents / 100.0 - payout_amount, COALESCE(service_fee, 0) + COALESCE(platform_fee, 0)) ELSE COALESCE(service_fee, 0) + CASE WHEN delivery_accepted = TRUE THEN COALESCE(platform_fee, 0) ELSE 0 END END - COALESCE(stripe_fee_cents, 0) / 100.0), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
+    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0)) ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END END - COALESCE(f.fee_cents, 0) / 100.0), 0) as total FROM bookings b LEFT JOIN stripe_payment_fees f ON f.payment_intent_id = b.stripe_payment_intent_id WHERE b.payment_status = 'paid'").catch(() => null))?.total || "0") + parseFloat(extrasAll?.fee || "0"),
+    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(CASE WHEN b.created_at >= DATE '2026-08-11' THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0)) ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END END - COALESCE(f.fee_cents, 0) / 100.0), 0) as total FROM bookings b LEFT JOIN stripe_payment_fees f ON f.payment_intent_id = b.stripe_payment_intent_id WHERE b.payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0") + parseFloat(extrasMonth?.fee || "0"),
     // What Stripe took, surfaced so the cost is visible rather than merely
     // deducted. Tips are included: they are passed to the photographer in full,
     // so their fee is a pure loss with no revenue to offset it.
     stripeFeesPaid: parseFloat(
       (await queryOne<{ total: string }>(
-        `SELECT COALESCE(
-                  (SELECT SUM(stripe_fee_cents) FROM bookings WHERE payment_status = 'paid'), 0
-                ) + COALESCE(
-                  (SELECT SUM(stripe_fee_cents) FROM delivery_extra_purchases WHERE status = 'paid'), 0
-                ) + COALESCE(
-                  (SELECT SUM(stripe_fee_cents) FROM tips WHERE status = 'paid'), 0
-                ) AS total`
+        `SELECT COALESCE(SUM(f.fee_cents), 0) AS total
+           FROM stripe_payment_fees f
+          WHERE f.payment_intent_id IN (
+                SELECT stripe_payment_intent_id FROM bookings WHERE payment_status = 'paid'
+                 UNION SELECT stripe_payment_intent_id FROM delivery_extra_purchases WHERE status = 'paid'
+                 UNION SELECT stripe_payment_intent_id FROM tips WHERE status = 'paid')`
       ).catch(() => null))?.total || "0"
     ) / 100,
     reviews: parseInt(reviewCount?.count || "0"),

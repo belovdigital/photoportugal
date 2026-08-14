@@ -83,11 +83,12 @@ export async function GET(req: NextRequest) {
                 (CASE WHEN b.created_at >= DATE '2026-08-11'
                       THEN COALESCE(b.stripe_amount_paid_cents / 100.0 - b.payout_amount, COALESCE(b.service_fee, 0) + COALESCE(b.platform_fee, 0))
                       ELSE COALESCE(b.service_fee, 0) + CASE WHEN b.delivery_accepted = TRUE THEN COALESCE(b.platform_fee, 0) ELSE 0 END
-                 END - COALESCE(b.stripe_fee_cents, 0) / 100.0) as platform_share
+                 END - COALESCE(f.fee_cents, 0) / 100.0) as platform_share
          FROM bookings b
          JOIN users cu ON cu.id = b.client_id
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users pu ON pu.id = pp.user_id
+         LEFT JOIN stripe_payment_fees f ON f.payment_intent_id = b.stripe_payment_intent_id
          WHERE b.payment_status = 'paid' AND b.updated_at > NOW() - INTERVAL '24 hours'`
       ),
       queryOne<{ count: string; visitors: string }>(
