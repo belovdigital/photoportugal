@@ -1,6 +1,6 @@
 {
   "common": {
-    "summerSeasonNotice": "La saison estivale se remplit — réservez tôt pour garantir votre date",
+    "peakDatesNotice": "Les meilleures dates partent en premier — réservez tôt pour garantir la vôtre",
     "privateClient": "Client privé",
     "photographerRole": "Photographe",
     "clientReviewPhotoAlt": "Photo de l'avis client — {name}",
@@ -1638,7 +1638,7 @@
     "trustLine": "Chaque photographe est personnellement vérifié et approuvé par notre équipe",
     "teamOnlineNow": "L'équipe est en ligne maintenant",
     "teamWillBeOnlineIn": "L'équipe sera en ligne dans {hours} h",
-    "summerSeasonNotice": "La saison estivale se remplit — réservez tôt pour garantir votre date",
+    "peakDatesNotice": "Les meilleures dates partent en premier — réservez tôt pour garantir la vôtre",
     "blindBookingHeadline": "Pas envie de choisir ? On en réserve un pour vous.",
     "blindBookingSubline": "Dites-nous ce qu'il vous faut en 60 secondes — confirmé en 24h ou remboursement intégral.",
     "blindBookingCta": "Réserver pour moi",
