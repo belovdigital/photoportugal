@@ -33,6 +33,13 @@ export async function GET(req: NextRequest) {
   // and the generic abandoned-booking cron in reminders/route.ts filters on
   // `NOT EXISTS (SELECT 1 FROM bookings ...)`, which excludes anyone who
   // has a cancelled row — i.e. exactly these. They fell between both nets.
+  //
+  // 'failed' is in the filter alongside 'pending' because a declined/expired
+  // payment lands the row in payment_status='failed', which this sweep used
+  // to skip: booking 784bd7af (IT, 2026-08-08) sat invisible for 6 days,
+  // then the deadline branch below mailed the client "your booking was
+  // refunded" for money that never moved. Failed checkouts die here, at 2h,
+  // with the honest "nothing was charged" recovery email.
   try {
     const unpaid = await query<{
       id: string; client_id: string; location_slug: string | null;
@@ -45,7 +52,7 @@ export async function GET(req: NextRequest) {
         WHERE blind_booking = TRUE
           AND status = 'confirmed'
           AND photographer_id IS NULL
-          AND payment_status = 'pending'
+          AND payment_status IN ('pending', 'failed')
           AND created_at <= NOW() - INTERVAL '2 hours'
         RETURNING id, client_id, location_slug, shoot_date, group_size, occasion`
     );
@@ -120,10 +127,11 @@ export async function GET(req: NextRequest) {
       stripe_payment_intent_id: string | null;
       client_id: string;
       total_price: number | null;
+      payment_status: string | null;
       auto_refund_at: string | null;
       created_at: string;
     }>(
-      `SELECT id, stripe_payment_intent_id, client_id, total_price,
+      `SELECT id, stripe_payment_intent_id, client_id, total_price, payment_status,
               auto_refund_at::text, created_at::text
          FROM bookings
         WHERE status = 'confirmed'
@@ -196,16 +204,28 @@ export async function GET(req: NextRequest) {
             WHERE bk.id = $1`,
           [b.id]
         );
+        // What the client is told depends on whether money ever moved.
+        // 'paid' → an auth hold existed and was released: say "refunded".
+        // Anything else (failed/pending stragglers) → the payment never
+        // completed: saying "refunded" invents a transaction that did not
+        // happen (booking 784bd7af got exactly that email, then a manual
+        // apology). Same split for the admin alert below.
+        const wasPaid = b.payment_status === "paid";
         if (ctx?.email) {
           import("@/lib/email").then(({ sendEmail }) => {
             const BASE = process.env.AUTH_URL || country.baseUrl;
+            const moneyLine = wasPaid
+              ? "Your card was authorised but never charged — the hold has been released and you'll see it drop off within a few days."
+              : "Your payment was never completed, so you were not charged — there is nothing to refund on our side.";
             return sendEmail(
               ctx.email,
-              "Your booking was refunded — let's find another way",
+              wasPaid
+                ? "Your booking was refunded — let's find another way"
+                : "Your booking request expired — let's find another way",
               `<div style="font-family: sans-serif; max-width: 540px; margin: 0 auto;">
                 <h2 style="color:#C94536;">We couldn't lock in a photographer in time</h2>
                 <p>Hi ${(ctx.name.split(" ")[0] || ctx.name).replace(/[<>]/g, "")},</p>
-                <p>Our team couldn't confirm a photographer for your ${ctx.location_slug || "photoshoot"} session ${ctx.shoot_date ? `on ${ctx.shoot_date}` : ""} within the 24-hour window. Your card was authorised but never charged — the hold has been released and you'll see it drop off within a few days.</p>
+                <p>Our team couldn't confirm a photographer for your ${ctx.location_slug || "photoshoot"} session ${ctx.shoot_date ? `on ${ctx.shoot_date}` : ""} within the 24-hour window. ${moneyLine}</p>
                 <p>If you'd still like to book, our directory is right here — many photographers are available for the same date:</p>
                 <p><a href="${BASE}/find-photographer" style="display:inline-block;background:#C94536;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse photographers</a></p>
                 <p style="color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
@@ -214,10 +234,13 @@ export async function GET(req: NextRequest) {
           }).catch((err) => console.error("[cron/auto-refund-blind] email error:", err));
         }
 
-        // Alert admins.
+        // Alert admins — with the payment state spelled out, so "€279" can
+        // never again read as money lost when nothing was ever charged.
         import("@/lib/telegram").then(({ sendTelegram }) =>
           sendTelegram(
-            `<b>⚠️ Blind booking auto-refunded</b>\nBooking: <code>${b.id.slice(0, 8)}</code>\nAmount: €${b.total_price ? Math.round(Number(b.total_price) / 0.85) : "?"} all-in (base €${b.total_price ? Math.round(Number(b.total_price)) : "?"})\nReason: no photographer assigned within 24h.`,
+            wasPaid
+              ? `<b>⚠️ Blind booking auto-refunded</b>\nBooking: <code>${b.id.slice(0, 8)}</code>\nAmount: €${b.total_price ? Math.round(Number(b.total_price) / 0.85) : "?"} all-in (base €${b.total_price ? Math.round(Number(b.total_price)) : "?"})\nPayment: auth hold released.\nReason: no photographer assigned within 24h.`
+              : `<b>🧹 Blind booking closed (payment never completed)</b>\nBooking: <code>${b.id.slice(0, 8)}</code>\nWould-be amount: €${b.total_price ? Math.round(Number(b.total_price) / 0.85) : "?"} all-in — client was NOT charged, nothing refunded.\nReason: no photographer assigned within deadline.`,
             "bookings"
           )
         ).catch((err) => console.error("[cron/auto-refund-blind] telegram error:", err));
