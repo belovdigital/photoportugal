@@ -116,12 +116,16 @@ function visibleText(html) {
 
 // token.token(.token)* of letter-words, excluding things that legitimately
 // contain dots: domains/TLDs, filenames, "e.g."-style, version-ish strings.
+// Every segment must START LOWERCASE: our i18n keys are camelCase
+// ("quickBooking.title" — 0 uppercase-led segments across all 3631 keys,
+// checked 2026-08-15), while user-written content glues sentences as
+// "word.Capital" — a PT review's "photo session.You won't" blocked a deploy.
 const NOT_A_KEY =
   /\.(com|net|org|io|co|pt|es|it|de|fr|eu|app|dev|js|ts|jsx|tsx|json|md|png|jpe?g|webp|svg|gif|ico|css|html?|pdf|zip|mjs|cjs|txt|xml|yml|sh)(\.|$)/i;
 function findRawKeys(html) {
   const text = visibleText(html);
   const hits = new Set();
-  for (const m of text.matchAll(/\b[a-z][a-zA-Z0-9]{2,}(?:\.[a-zA-Z][a-zA-Z0-9]{2,}){1,3}\b/g)) {
+  for (const m of text.matchAll(/\b[a-z][a-zA-Z0-9]{2,}(?:\.[a-z][a-zA-Z0-9]{2,}){1,3}\b/g)) {
     const tok = m[0];
     if (NOT_A_KEY.test(tok + ".")) continue;
     if (tok.includes("@")) continue;
